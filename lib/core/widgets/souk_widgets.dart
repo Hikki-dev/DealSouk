@@ -16,7 +16,12 @@ class ArcBottomClipper extends CustomClipper<Path> {
   Path getClip(Size size) {
     final path = Path();
     path.lineTo(0, size.height - depth);
-    path.quadraticBezierTo(size.width / 2, size.height + depth, size.width, size.height - depth);
+    path.quadraticBezierTo(
+      size.width / 2,
+      size.height + depth,
+      size.width,
+      size.height - depth,
+    );
     path.lineTo(size.width, 0);
     path.close();
     return path;
@@ -30,7 +35,8 @@ class ArcBottomClipper extends CustomClipper<Path> {
 /// (the awning trim from the reference design).
 class ScallopClipper extends CustomClipper<Path> {
   final double scallopRadius;
-  final bool bulgeDown; // true: bottom edge scalloped; false: top edge scalloped
+  final bool
+  bulgeDown; // true: bottom edge scalloped; false: top edge scalloped
 
   const ScallopClipper.down({this.scallopRadius = 9}) : bulgeDown = true;
   const ScallopClipper.up({this.scallopRadius = 9}) : bulgeDown = false;
@@ -50,7 +56,12 @@ class ScallopClipper extends CustomClipper<Path> {
       for (int i = 0; i < n; i++) {
         final x0 = i * sw;
         // quadratic through control point below the edge => apex touches h
-        path.quadraticBezierTo(x0 + sw / 2, h + scallopRadius, x0 + sw, h - scallopRadius);
+        path.quadraticBezierTo(
+          x0 + sw / 2,
+          h + scallopRadius,
+          x0 + sw,
+          h - scallopRadius,
+        );
       }
       path.lineTo(w, 0);
     } else {
@@ -59,7 +70,12 @@ class ScallopClipper extends CustomClipper<Path> {
       path.lineTo(0, scallopRadius);
       for (int i = 0; i < n; i++) {
         final x0 = i * sw;
-        path.quadraticBezierTo(x0 + sw / 2, -scallopRadius, x0 + sw, scallopRadius);
+        path.quadraticBezierTo(
+          x0 + sw / 2,
+          -scallopRadius,
+          x0 + sw,
+          scallopRadius,
+        );
       }
       path.lineTo(w, h);
     }
@@ -69,10 +85,11 @@ class ScallopClipper extends CustomClipper<Path> {
 
   @override
   bool shouldReclip(ScallopClipper oldClipper) =>
-      oldClipper.scallopRadius != scallopRadius || oldClipper.bulgeDown != bulgeDown;
+      oldClipper.scallopRadius != scallopRadius ||
+      oldClipper.bulgeDown != bulgeDown;
 }
 
-/// Price with superscript decimals, e.g. 17.^29 $ — reference design style.
+/// PRD price format, e.g. AED 14.75.
 class SoukPrice extends StatelessWidget {
   final double price;
   final double size;
@@ -86,28 +103,21 @@ class SoukPrice extends StatelessWidget {
     this.size = 15,
     this.color = AppTheme.forestDeep,
     this.showCurrency = true,
-    this.currency = '\$',
+    this.currency = 'AED',
   });
 
   @override
   Widget build(BuildContext context) {
-    final whole = price.floor().toString();
-    final cents = ((price * 100).round() % 100).toString().padLeft(2, '0');
-    return Text.rich(
-      TextSpan(
-        children: [
-          TextSpan(
-            text: '$whole.',
-            style: TextStyle(fontSize: size, fontWeight: FontWeight.w900, color: color),
-          ),
-          WidgetSpan(
-            alignment: PlaceholderAlignment.top,
-            child: Text(
-              showCurrency ? '$cents$currency' : cents,
-              style: TextStyle(fontSize: size * 0.65, fontWeight: FontWeight.w800, color: color),
-            ),
-          ),
-        ],
+    return Text(
+      showCurrency
+          ? '$currency ${price.toStringAsFixed(2)}'
+          : price.toStringAsFixed(2),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(
+        fontSize: size,
+        fontWeight: FontWeight.w900,
+        color: color,
       ),
     );
   }
@@ -115,23 +125,51 @@ class SoukPrice extends StatelessWidget {
 
 Color categoryColor(String category) {
   switch (category.toLowerCase()) {
-    case 'dairy & eggs': return const Color(0xFF1E88E5);
-    case 'pantry': return const Color(0xFFFF8F00);
-    case 'meat & seafood': return const Color(0xFFE53935);
-    case 'beverages': return const Color(0xFF8E24AA);
-    case 'household': return const Color(0xFF00ACC1);
-    default: return AppTheme.forestDeep;
+    case 'meats':
+    case 'meat':
+    case 'meat & seafood':
+      return const Color(0xFF0C3B2E);
+    case 'vegetable':
+      return const Color(0xFF1B5E20);
+    case 'fruits':
+      return const Color(0xFFE65100);
+    case 'breads':
+      return const Color(0xFF5D4037);
+    case 'snacks':
+      return const Color(0xFFD81B60);
+    case 'bakery':
+      return const Color(0xFF8D6E63);
+    case 'dairy & sweet':
+      return const Color(0xFF1E88E5);
+    case 'chicken':
+      return const Color(0xFFD84315);
+    default:
+      return AppTheme.forestDeep;
   }
 }
 
 IconData categoryIcon(String category) {
   switch (category.toLowerCase()) {
-    case 'dairy & eggs': return Icons.egg_alt_outlined;
-    case 'pantry': return Icons.breakfast_dining_outlined;
-    case 'meat & seafood': return Icons.kebab_dining_outlined;
-    case 'beverages': return Icons.local_drink_outlined;
-    case 'household': return Icons.clean_hands_outlined;
-    default: return Icons.shopping_basket_outlined;
+    case 'meats':
+    case 'meat':
+    case 'meat & seafood':
+      return Icons.kebab_dining_outlined;
+    case 'vegetable':
+      return Icons.spa_outlined;
+    case 'fruits':
+      return Icons.apple_outlined;
+    case 'breads':
+      return Icons.bakery_dining_outlined;
+    case 'snacks':
+      return Icons.fastfood_outlined;
+    case 'bakery':
+      return Icons.breakfast_dining_outlined;
+    case 'dairy & sweet':
+      return Icons.egg_alt_outlined;
+    case 'chicken':
+      return Icons.restaurant_rounded;
+    default:
+      return Icons.shopping_basket_outlined;
   }
 }
 
@@ -150,8 +188,6 @@ class ProductGridCard extends ConsumerWidget {
         .where((item) => item.product.id == product.id)
         .fold<int>(0, (sum, item) => sum + item.quantity);
 
-    final theme = Theme.of(context);
-
     // Split name like "Beetroot (Local shop)" into main and subtitle
     final parts = product.name.split('(');
     final coreName = parts[0].trim();
@@ -162,10 +198,10 @@ class ProductGridCard extends ConsumerWidget {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -178,32 +214,7 @@ class ProductGridCard extends ConsumerWidget {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
-                  child: SizedBox.expand(
-                    child: product.imageUrl.isNotEmpty
-                        ? Image.network(
-                            product.imageUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => ColoredBox(
-                              color: const Color(0xFFF6F4EE),
-                              child: Icon(
-                                categoryIcon(product.category),
-                                color: categoryColor(product.category).withOpacity(0.5),
-                                size: 32,
-                              ),
-                            ),
-                          )
-                        : ColoredBox(
-                            color: const Color(0xFFF6F4EE),
-                            child: Icon(
-                              categoryIcon(product.category),
-                              color: categoryColor(product.category).withOpacity(0.5),
-                              size: 32,
-                            ),
-                          ),
-                  ),
-                ),
+                child: SoukProductVisual(product: product, fit: BoxFit.contain),
               ),
             ),
             const SizedBox(height: 8),
@@ -249,13 +260,28 @@ class ProductGridCard extends ConsumerWidget {
             // Pack size
             Text(
               product.packSize,
-              style: TextStyle(fontSize: 10, color: Colors.grey.shade500, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.grey.shade500,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             const SizedBox(height: 4),
 
             // Price tag
             SoukPrice(product.lowestPrice, size: 15, color: AppTheme.textDark),
-            const SizedBox(height: 8),
+            const SizedBox(height: 3),
+            Text(
+              product.updatedAtLabel.replaceFirst('Updated ', ''),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 8.5,
+                color: Colors.grey.shade400,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 5),
 
             // Bottom control: soft "+" pill, or lime stepper when in cart
             Padding(
@@ -264,15 +290,22 @@ class ProductGridCard extends ConsumerWidget {
                 duration: const Duration(milliseconds: 200),
                 height: 32,
                 decoration: BoxDecoration(
-                  color: inCartQty == 0 ? const Color(0xFFEDF1E4) : AppTheme.limeAccent,
+                  color: inCartQty == 0
+                      ? const Color(0xFFEDF1E4)
+                      : AppTheme.limeAccent,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: inCartQty == 0
                     ? InkWell(
-                        onTap: () => ref.read(cartProvider.notifier).addToCart(product),
+                        onTap: () =>
+                            ref.read(cartProvider.notifier).addToCart(product),
                         borderRadius: BorderRadius.circular(16),
                         child: const Center(
-                          child: Icon(Icons.add, size: 20, color: AppTheme.forestDeep),
+                          child: Icon(
+                            Icons.add,
+                            size: 20,
+                            color: AppTheme.forestDeep,
+                          ),
                         ),
                       )
                     : Row(
@@ -284,7 +317,11 @@ class ProductGridCard extends ConsumerWidget {
                                 .updateQuantity(product.id, inCartQty - 1),
                             child: const Padding(
                               padding: EdgeInsets.symmetric(horizontal: 4),
-                              child: Icon(Icons.remove, size: 14, color: AppTheme.forestDeep),
+                              child: Icon(
+                                Icons.remove,
+                                size: 14,
+                                color: AppTheme.forestDeep,
+                              ),
                             ),
                           ),
                           Text(
@@ -296,10 +333,16 @@ class ProductGridCard extends ConsumerWidget {
                             ),
                           ),
                           GestureDetector(
-                            onTap: () => ref.read(cartProvider.notifier).addToCart(product),
+                            onTap: () => ref
+                                .read(cartProvider.notifier)
+                                .addToCart(product),
                             child: const Padding(
                               padding: EdgeInsets.symmetric(horizontal: 4),
-                              child: Icon(Icons.add, size: 14, color: AppTheme.forestDeep),
+                              child: Icon(
+                                Icons.add,
+                                size: 14,
+                                color: AppTheme.forestDeep,
+                              ),
                             ),
                           ),
                         ],
@@ -309,6 +352,70 @@ class ProductGridCard extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class SoukProductVisual extends StatelessWidget {
+  final Product product;
+  final BoxFit fit;
+  final double borderRadius;
+
+  const SoukProductVisual({
+    super.key,
+    required this.product,
+    this.fit = BoxFit.contain,
+    this.borderRadius = 14,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = categoryColor(product.category);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFF7F3EA),
+          borderRadius: BorderRadius.circular(borderRadius),
+        ),
+        child: product.imageUrl.isNotEmpty
+            ? Image.network(
+                product.imageUrl,
+                fit: fit,
+                errorBuilder: (context, error, stackTrace) =>
+                    _FallbackProductIcon(product: product, color: color),
+              )
+            : _FallbackProductIcon(product: product, color: color),
+      ),
+    );
+  }
+}
+
+class _FallbackProductIcon extends StatelessWidget {
+  final Product product;
+  final Color color;
+
+  const _FallbackProductIcon({required this.product, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Container(
+          width: 54,
+          height: 54,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.10),
+            shape: BoxShape.circle,
+          ),
+        ),
+        Icon(
+          categoryIcon(product.category),
+          color: color.withValues(alpha: 0.78),
+          size: 34,
+        ),
+      ],
     );
   }
 }

@@ -37,7 +37,9 @@ class ResponsiveContainer extends StatelessWidget {
 
     // Web/Desktop view: wrap in a centered "mock device" shell for premium preview
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F4F6), // Light grey outer desktop background
+      backgroundColor: const Color(
+        0xFFF3F4F6,
+      ), // Light grey outer desktop background
       body: Center(
         child: Container(
           width: maxWidth,
@@ -47,7 +49,7 @@ class ResponsiveContainer extends StatelessWidget {
             borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.06),
+                color: Colors.black.withValues(alpha: 0.06),
                 blurRadius: 24,
                 offset: const Offset(0, 12),
               ),

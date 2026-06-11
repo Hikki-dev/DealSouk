@@ -15,14 +15,20 @@ class SubmitPriceScreen extends ConsumerStatefulWidget {
 
 class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
   final _formKey = GlobalKey<FormState>();
-  
+
   String? selectedStoreId;
   String? selectedProductId;
   final _priceController = TextEditingController();
-  
+
   bool uploadedPriceLabel = false;
   bool uploadedReceipt = false;
   String selectedPromo = 'None';
+
+  @override
+  void initState() {
+    super.initState();
+    _priceController.addListener(() => setState(() {}));
+  }
 
   @override
   void dispose() {
@@ -36,13 +42,15 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
     final stores = MockData.initialStores;
     final products = MockData.initialProducts;
 
-    // Calculate dynamic tokens (1.5x multiplier with verified receipt per PRD FR-35)
-    const int baseReward = 10;
-    final int totalReward = uploadedReceipt ? (baseReward * 1.5).round() : baseReward;
+    final priceEntered = double.tryParse(_priceController.text.trim()) != null;
+    final int baseReward = _tokenEstimateBeforeReceipt(priceEntered);
+    final int totalReward = uploadedReceipt
+        ? (baseReward * 1.5).round()
+        : baseReward;
 
     return ResponsiveContainer(
       appBar: AppBar(
-        title: const Text('Submit Price'),
+        title: const Text('Upload Price'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -55,32 +63,99 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Info Banner
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer.withOpacity(0.4),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: theme.colorScheme.primaryContainer),
+                  color: AppTheme.forestDeep,
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.forestDeep.withValues(alpha: 0.14),
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info, color: theme.colorScheme.primary, size: 20),
-                    const SizedBox(width: 12),
+                    Container(
+                      width: 46,
+                      height: 46,
+                      decoration: const BoxDecoration(
+                        color: AppTheme.limeAccent,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.add_a_photo_outlined,
+                        color: AppTheme.forestDeep,
+                        size: 21,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
                     const Expanded(
-                      child: Text(
-                        'Earn rewards for submitting real-time grocery prices. Submit a photo of the price tag and the receipt for bonus tokens.',
-                        style: TextStyle(fontSize: 12, color: Colors.black87),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Earn tokens nearby',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          SizedBox(height: 3),
+                          Text(
+                            'Upload a Dubai shelf label and optional receipt so the community sees fresher prices.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white70,
+                              height: 1.3,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppTheme.limeAccent.withValues(alpha: 0.22),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: AppTheme.limeAccent.withValues(alpha: 0.65),
+                  ),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline_rounded,
+                      color: AppTheme.forestDeep,
+                      size: 18,
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Daily demo limit: 3 of 10 submissions used. Prices and discounts are entered manually, not scanned with OCR.',
+                        style: TextStyle(
+                          color: AppTheme.forestDeep,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          height: 1.25,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
 
               // Supermarket Dropdown
               DropdownButtonFormField<String>(
-                value: selectedStoreId,
+                initialValue: selectedStoreId,
                 decoration: const InputDecoration(
                   labelText: 'Select Supermarket',
                   prefixIcon: Icon(Icons.store),
@@ -96,13 +171,14 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                     selectedStoreId = val;
                   });
                 },
-                validator: (val) => val == null ? 'Please select a supermarket' : null,
+                validator: (val) =>
+                    val == null ? 'Please select a supermarket' : null,
               ),
               const SizedBox(height: 16),
 
               // Product Dropdown
               DropdownButtonFormField<String>(
-                value: selectedProductId,
+                initialValue: selectedProductId,
                 decoration: const InputDecoration(
                   labelText: 'Select Product',
                   prefixIcon: Icon(Icons.shopping_basket_outlined),
@@ -118,18 +194,22 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                     selectedProductId = val;
                   });
                 },
-                validator: (val) => val == null ? 'Please select a product' : null,
+                validator: (val) =>
+                    val == null ? 'Please select a product' : null,
               ),
               const SizedBox(height: 16),
 
               // Price Input
               TextFormField(
                 controller: _priceController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: const InputDecoration(
                   labelText: 'Enter Price (AED)',
                   prefixIcon: Icon(Icons.payments_outlined),
                   suffixText: 'AED',
+                  helperText: 'Manual shelf price entry, e.g. AED 14.75',
                 ),
                 validator: (val) {
                   if (val == null || val.isEmpty) {
@@ -145,7 +225,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
 
               // Promo Type Dropdown
               DropdownButtonFormField<String>(
-                value: selectedPromo,
+                initialValue: selectedPromo,
                 decoration: const InputDecoration(
                   labelText: 'Promotion Type',
                   prefixIcon: Icon(Icons.local_offer_outlined),
@@ -210,18 +290,31 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
-                            'Estimated Tokens Reward',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey),
+                            'Token reward estimate',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 13,
+                              color: AppTheme.forestDeep,
+                            ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
-                              color: AppTheme.amberAccent.withOpacity(0.15),
+                              color: AppTheme.amberAccent.withValues(
+                                alpha: 0.15,
+                              ),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.bolt, color: AppTheme.amberAccent, size: 14),
+                                const Icon(
+                                  Icons.bolt,
+                                  color: AppTheme.amberAccent,
+                                  size: 14,
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   '+$totalReward Tokens',
@@ -233,14 +326,54 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                                 ),
                               ],
                             ),
-                          )
+                          ),
                         ],
                       ),
                       const SizedBox(height: 16),
-                      _tokenRow('Base Submission Reward', '+10 tokens'),
+                      _tokenRow('Fresh shelf price', '+10 tokens'),
                       const SizedBox(height: 8),
                       _tokenRow(
-                        uploadedReceipt ? '1.5× Verified Receipt Multiplier' : 'Attach Receipt for 1.5× Bonus',
+                        selectedStoreId == null
+                            ? 'Choose store'
+                            : 'Store selected',
+                        selectedStoreId == null ? '+0 tokens' : '+2 tokens',
+                        isEnabled: selectedStoreId != null,
+                      ),
+                      const SizedBox(height: 8),
+                      _tokenRow(
+                        selectedProductId == null
+                            ? 'Choose product'
+                            : 'Product selected',
+                        selectedProductId == null ? '+0 tokens' : '+2 tokens',
+                        isEnabled: selectedProductId != null,
+                      ),
+                      const SizedBox(height: 8),
+                      _tokenRow(
+                        priceEntered ? 'AED price entered' : 'Enter AED price',
+                        priceEntered ? '+2 tokens' : '+0 tokens',
+                        isEnabled: priceEntered,
+                      ),
+                      const SizedBox(height: 8),
+                      _tokenRow(
+                        uploadedPriceLabel
+                            ? 'Price label attached'
+                            : 'Attach price label',
+                        uploadedPriceLabel ? '+4 tokens' : '+0 tokens',
+                        isEnabled: uploadedPriceLabel,
+                      ),
+                      const SizedBox(height: 8),
+                      _tokenRow(
+                        selectedPromo == 'None'
+                            ? 'No promotion selected'
+                            : '$selectedPromo promo noted',
+                        selectedPromo == 'None' ? '+0 tokens' : '+1 token',
+                        isEnabled: selectedPromo != 'None',
+                      ),
+                      const SizedBox(height: 8),
+                      _tokenRow(
+                        uploadedReceipt
+                            ? '1.5× Verified Receipt Multiplier'
+                            : 'Attach Receipt for 1.5× Bonus',
                         uploadedReceipt ? '×1.5 applied' : 'not applied',
                         isEnabled: uploadedReceipt,
                       ),
@@ -250,10 +383,20 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Total Reward Estimate', style: TextStyle(fontWeight: FontWeight.bold)),
-                          Text('$totalReward Tokens', style: TextStyle(fontWeight: FontWeight.w900, color: theme.colorScheme.primary, fontSize: 15)),
+                          const Text(
+                            'Total Reward Estimate',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            '$totalReward Tokens',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w900,
+                              color: theme.colorScheme.primary,
+                              fontSize: 15,
+                            ),
+                          ),
                         ],
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -264,21 +407,27 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
               GestureDetector(
                 onTap: () {
                   if (_formKey.currentState!.validate()) {
-                    final store = stores.firstWhere((s) => s.id == selectedStoreId);
-                    final product = products.firstWhere((p) => p.id == selectedProductId);
+                    final store = stores.firstWhere(
+                      (s) => s.id == selectedStoreId,
+                    );
+                    final product = products.firstWhere(
+                      (p) => p.id == selectedProductId,
+                    );
                     final price = double.parse(_priceController.text);
 
                     // Add to admin submissions
-                    ref.read(adminSubmissionsProvider.notifier).addSubmission(
-                      productName: product.name,
-                      brand: product.brand,
-                      storeName: store.name,
-                      price: price,
-                      hasReceipt: uploadedReceipt,
-                      hasPhoto: uploadedPriceLabel,
-                      promoType: selectedPromo,
-                      tokensReward: totalReward,
-                    );
+                    ref
+                        .read(adminSubmissionsProvider.notifier)
+                        .addSubmission(
+                          productName: product.name,
+                          brand: product.brand,
+                          storeName: store.name,
+                          price: price,
+                          hasReceipt: uploadedReceipt,
+                          hasPhoto: uploadedPriceLabel,
+                          promoType: selectedPromo,
+                          tokensReward: totalReward,
+                        );
 
                     _showSuccessDialog(context, totalReward);
                   }
@@ -290,7 +439,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                     borderRadius: BorderRadius.circular(27),
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.limeAccent.withOpacity(0.45),
+                        color: AppTheme.limeAccent.withValues(alpha: 0.45),
                         blurRadius: 14,
                         offset: const Offset(0, 5),
                       ),
@@ -298,7 +447,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                   ),
                   child: const Center(
                     child: Text(
-                      'Submit Price for Review',
+                      'Send for review',
                       style: TextStyle(
                         color: AppTheme.forestDeep,
                         fontSize: 15.5,
@@ -339,6 +488,16 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
     );
   }
 
+  int _tokenEstimateBeforeReceipt(bool priceEntered) {
+    var reward = 10;
+    if (selectedStoreId != null) reward += 2;
+    if (selectedProductId != null) reward += 2;
+    if (priceEntered) reward += 2;
+    if (uploadedPriceLabel) reward += 4;
+    if (selectedPromo != 'None') reward += 1;
+    return reward;
+  }
+
   Widget _photoUploadButton({
     required String title,
     required bool isUploaded,
@@ -350,19 +509,28 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
       child: Container(
         height: 110,
         decoration: BoxDecoration(
-          color: isUploaded ? AppTheme.emeraldLight.withOpacity(0.3) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          color: isUploaded
+              ? AppTheme.limeAccent.withValues(alpha: 0.26)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isUploaded ? AppTheme.emeraldPrimary : Colors.grey.shade300,
+            color: isUploaded ? AppTheme.forestDeep : Colors.grey.shade200,
             width: isUploaded ? 1.5 : 1,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.025),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               isUploaded ? Icons.check_circle : Icons.camera_alt_outlined,
-              color: isUploaded ? AppTheme.emeraldPrimary : Colors.grey.shade500,
+              color: isUploaded ? AppTheme.forestDeep : Colors.grey.shade500,
               size: 28,
             ),
             const SizedBox(height: 8),
@@ -371,7 +539,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
-                color: isUploaded ? AppTheme.emeraldPrimary : Colors.black87,
+                color: isUploaded ? AppTheme.forestDeep : Colors.black87,
               ),
             ),
             const SizedBox(height: 2),
@@ -379,7 +547,9 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
               isUploaded ? 'Photo Uploaded' : 'Tap to Upload',
               style: TextStyle(
                 fontSize: 9,
-                color: isUploaded ? AppTheme.emeraldPrimary.withOpacity(0.8) : Colors.grey.shade500,
+                color: isUploaded
+                    ? AppTheme.forestDeep.withValues(alpha: 0.8)
+                    : Colors.grey.shade500,
               ),
             ),
           ],
@@ -394,7 +564,9 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -417,21 +589,45 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: reward.toDouble()),
+                duration: const Duration(milliseconds: 750),
+                curve: Curves.easeOutBack,
+                builder: (context, value, child) {
+                  return Text(
+                    '+${value.round()} tokens',
+                    style: const TextStyle(
+                      color: AppTheme.forestDeep,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
               Text(
-                'Your price submission has been sent to review.\n\n+$reward tokens will be credited to Hessa\'s account upon admin approval.',
+                'Your price submission is pending review.\nTokens will be credited to Hessa after admin approval.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 13, height: 1.4),
               ),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context); // Pop dialog
-                  context.pop(); // Pop submit screen
+                  Navigator.pop(context);
+                  context.go('/admin');
                 },
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
                 ),
-                child: const Text('Return to Home'),
+                child: const Text('Open Admin Review'),
+              ),
+              const SizedBox(height: 10),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  context.go('/leaderboard');
+                },
+                child: const Text('View Token Balance'),
               ),
             ],
           ),

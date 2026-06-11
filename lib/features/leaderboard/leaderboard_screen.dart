@@ -14,32 +14,42 @@ class LeaderboardScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final tokens = ref.watch(userTokensProvider);
     final transactions = ref.watch(userTransactionsProvider);
-    
+
     // Initial leaderboard list from mock data
     final baseLeaderboard = MockData.initialLeaderboard;
     // Replace the current user tokens dynamically in the leaderboard list
     final leaderboard = baseLeaderboard.map((user) {
       if (user.isCurrentUser) {
         // Find Hessa's rank dynamically. We can recalculate it or just display rank #7
-        return LeaderboardUser(rank: user.rank, name: user.name, tokens: tokens, isCurrentUser: true);
+        return LeaderboardUser(
+          rank: user.rank,
+          name: user.name,
+          tokens: tokens,
+          isCurrentUser: true,
+        );
       }
       return user;
     }).toList();
 
     // Sort leaderboard by tokens descending, update ranks
     leaderboard.sort((a, b) => b.tokens.compareTo(a.tokens));
-    final rankedLeaderboard = List<LeaderboardUser>.generate(leaderboard.length, (index) {
-      final user = leaderboard[index];
-      return LeaderboardUser(
-        rank: index + 1,
-        name: user.name,
-        tokens: user.tokens,
-        isCurrentUser: user.isCurrentUser,
-      );
-    });
+    final rankedLeaderboard = List<LeaderboardUser>.generate(
+      leaderboard.length,
+      (index) {
+        final user = leaderboard[index];
+        return LeaderboardUser(
+          rank: index + 1,
+          name: user.name,
+          tokens: user.tokens,
+          isCurrentUser: user.isCurrentUser,
+        );
+      },
+    );
 
     // Find current user's rank
-    final int userRank = rankedLeaderboard.firstWhere((u) => u.isCurrentUser).rank;
+    final int userRank = rankedLeaderboard
+        .firstWhere((u) => u.isCurrentUser)
+        .rank;
 
     return Scaffold(
       body: CustomScrollView(
@@ -51,11 +61,20 @@ class LeaderboardScreen extends ConsumerWidget {
                 Container(
                   width: double.infinity,
                   color: AppTheme.forestDeep,
-                  padding: EdgeInsets.fromLTRB(16, MediaQuery.of(context).padding.top + 14, 16, 16),
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    MediaQuery.of(context).padding.top + 14,
+                    16,
+                    16,
+                  ),
                   child: const Text(
                     'Rewards & Ranks',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
                 Stack(
@@ -80,20 +99,23 @@ class LeaderboardScreen extends ConsumerWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      theme.colorScheme.primary.withOpacity(0.06),
-                      theme.colorScheme.primary.withOpacity(0.01),
+                      theme.colorScheme.primary.withValues(alpha: 0.06),
+                      theme.colorScheme.primary.withValues(alpha: 0.01),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: theme.colorScheme.primary.withOpacity(0.12), width: 1.5),
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                    width: 1.5,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
+                      color: Colors.black.withValues(alpha: 0.02),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
-                    )
+                    ),
                   ],
                 ),
                 child: Padding(
@@ -105,11 +127,17 @@ class LeaderboardScreen extends ConsumerWidget {
                           Container(
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              border: Border.all(color: theme.colorScheme.primary.withOpacity(0.2), width: 2),
+                              border: Border.all(
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.2,
+                                ),
+                                width: 2,
+                              ),
                             ),
                             child: CircleAvatar(
                               radius: 30,
-                              backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                              backgroundColor: theme.colorScheme.primary
+                                  .withValues(alpha: 0.1),
                               child: Text(
                                 'H',
                                 style: TextStyle(
@@ -127,7 +155,11 @@ class LeaderboardScreen extends ConsumerWidget {
                               children: [
                                 const Text(
                                   'Hessa Al Maktoum',
-                                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppTheme.textDark),
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppTheme.textDark,
+                                  ),
                                 ),
                                 const SizedBox(height: 6),
                                 Wrap(
@@ -135,15 +167,24 @@ class LeaderboardScreen extends ConsumerWidget {
                                   runSpacing: 4,
                                   children: [
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 3,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: AppTheme.amberAccent.withOpacity(0.15),
+                                        color: AppTheme.amberAccent.withValues(
+                                          alpha: 0.15,
+                                        ),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          const Icon(Icons.stars, color: AppTheme.amberAccent, size: 12),
+                                          const Icon(
+                                            Icons.stars,
+                                            color: AppTheme.amberAccent,
+                                            size: 12,
+                                          ),
                                           const SizedBox(width: 4),
                                           Text(
                                             'Rank #$userRank',
@@ -157,7 +198,10 @@ class LeaderboardScreen extends ConsumerWidget {
                                       ),
                                     ),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 3,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: Colors.orange.shade50,
                                         borderRadius: BorderRadius.circular(8),
@@ -165,7 +209,11 @@ class LeaderboardScreen extends ConsumerWidget {
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          const Icon(Icons.local_fire_department, color: Colors.orange, size: 12),
+                                          const Icon(
+                                            Icons.local_fire_department,
+                                            color: Colors.orange,
+                                            size: 12,
+                                          ),
                                           const SizedBox(width: 4),
                                           Text(
                                             '5 Day Streak',
@@ -197,10 +245,14 @@ class LeaderboardScreen extends ConsumerWidget {
                               ),
                               const Text(
                                 'Tokens',
-                                style: TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ],
-                          )
+                          ),
                         ],
                       ),
                       const SizedBox(height: 20),
@@ -213,7 +265,11 @@ class LeaderboardScreen extends ConsumerWidget {
                         children: [
                           const Text(
                             'AED 50 Union Coop Voucher',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textDark),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                              color: AppTheme.textDark,
+                            ),
                           ),
                           Text(
                             '$tokens / 500 T',
@@ -231,7 +287,9 @@ class LeaderboardScreen extends ConsumerWidget {
                         child: LinearProgressIndicator(
                           value: (tokens / 500).clamp(0.0, 1.0),
                           backgroundColor: Colors.grey.shade100,
-                          valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            theme.colorScheme.primary,
+                          ),
                           minHeight: 8,
                         ),
                       ),
@@ -240,8 +298,12 @@ class LeaderboardScreen extends ConsumerWidget {
                         ElevatedButton.icon(
                           onPressed: () {
                             // Deduct tokens and log transaction
-                            ref.read(userTokensProvider.notifier).deductTokens(500);
-                            ref.read(userTransactionsProvider.notifier).addTransaction(
+                            ref
+                                .read(userTokensProvider.notifier)
+                                .deductTokens(500);
+                            ref
+                                .read(userTransactionsProvider.notifier)
+                                .addTransaction(
                                   -500,
                                   'Redeemed AED 50 Union Coop Voucher',
                                 );
@@ -252,7 +314,9 @@ class LeaderboardScreen extends ConsumerWidget {
                               backgroundColor: Colors.white,
                               isScrollControlled: true,
                               shape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                                borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(28),
+                                ),
                               ),
                               builder: (context) {
                                 return Padding(
@@ -260,7 +324,8 @@ class LeaderboardScreen extends ConsumerWidget {
                                     24.0,
                                     24.0,
                                     24.0,
-                                    MediaQuery.of(context).viewInsets.bottom + 32.0,
+                                    MediaQuery.of(context).viewInsets.bottom +
+                                        32.0,
                                   ),
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
@@ -270,7 +335,9 @@ class LeaderboardScreen extends ConsumerWidget {
                                         height: 5,
                                         decoration: BoxDecoration(
                                           color: Colors.grey.shade300,
-                                          borderRadius: BorderRadius.circular(2.5),
+                                          borderRadius: BorderRadius.circular(
+                                            2.5,
+                                          ),
                                         ),
                                       ),
                                       const SizedBox(height: 24),
@@ -280,40 +347,72 @@ class LeaderboardScreen extends ConsumerWidget {
                                           color: Colors.green.shade50,
                                           shape: BoxShape.circle,
                                         ),
-                                        child: const Icon(Icons.check_circle, color: Colors.green, size: 54),
+                                        child: const Icon(
+                                          Icons.check_circle,
+                                          color: Colors.green,
+                                          size: 54,
+                                        ),
                                       ),
                                       const SizedBox(height: 16),
                                       const Text(
                                         'Voucher Claimed!',
-                                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppTheme.textDark),
+                                        style: TextStyle(
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.w900,
+                                          color: AppTheme.textDark,
+                                        ),
                                       ),
                                       const SizedBox(height: 8),
                                       const Text(
                                         'Show the barcode or code below to the cashier at any Union Coop checkout in Dubai.',
                                         textAlign: TextAlign.center,
-                                        style: TextStyle(color: Colors.grey, fontSize: 13),
+                                        style: TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 13,
+                                        ),
                                       ),
                                       const SizedBox(height: 24),
                                       Container(
                                         width: double.infinity,
-                                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 24,
+                                          vertical: 20,
+                                        ),
                                         decoration: BoxDecoration(
                                           color: Colors.grey.shade50,
-                                          borderRadius: BorderRadius.circular(16),
-                                          border: Border.all(color: Colors.grey.shade200, width: 1.5),
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                          border: Border.all(
+                                            color: Colors.grey.shade200,
+                                            width: 1.5,
+                                          ),
                                         ),
                                         child: Column(
                                           children: [
                                             // Mock Barcode Lines
                                             Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: List.generate(24, (index) {
-                                                final double width = (index % 3 == 0) ? 4.0 : (index % 2 == 0) ? 2.0 : 1.0;
-                                                final double spacing = (index % 4 == 0) ? 3.0 : 1.5;
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: List.generate(24, (
+                                                index,
+                                              ) {
+                                                final double width =
+                                                    (index % 3 == 0)
+                                                    ? 4.0
+                                                    : (index % 2 == 0)
+                                                    ? 2.0
+                                                    : 1.0;
+                                                final double spacing =
+                                                    (index % 4 == 0)
+                                                    ? 3.0
+                                                    : 1.5;
                                                 return Container(
                                                   width: width,
                                                   height: 48,
-                                                  margin: EdgeInsets.only(right: spacing),
+                                                  margin: EdgeInsets.only(
+                                                    right: spacing,
+                                                  ),
                                                   color: Colors.black87,
                                                 );
                                               }),
@@ -336,7 +435,10 @@ class LeaderboardScreen extends ConsumerWidget {
                                       ElevatedButton(
                                         onPressed: () => Navigator.pop(context),
                                         style: ElevatedButton.styleFrom(
-                                          minimumSize: const Size(double.infinity, 50),
+                                          minimumSize: const Size(
+                                            double.infinity,
+                                            50,
+                                          ),
                                         ),
                                         child: const Text('Back to Rewards'),
                                       ),
@@ -346,7 +448,10 @@ class LeaderboardScreen extends ConsumerWidget {
                               },
                             );
                           },
-                          icon: const Icon(Icons.confirmation_num_outlined, size: 18),
+                          icon: const Icon(
+                            Icons.confirmation_num_outlined,
+                            size: 18,
+                          ),
                           label: const Text('Claim Voucher Now'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.amberAccent,
@@ -360,12 +465,20 @@ class LeaderboardScreen extends ConsumerWidget {
                       ] else ...[
                         Row(
                           children: [
-                            Icon(Icons.info_outline, size: 14, color: Colors.grey.shade600),
+                            Icon(
+                              Icons.info_outline,
+                              size: 14,
+                              color: Colors.grey.shade600,
+                            ),
                             const SizedBox(width: 6),
                             Expanded(
                               child: Text(
                                 'Earn ${500 - tokens} more tokens to redeem your voucher.',
-                                style: TextStyle(fontSize: 11, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey.shade600,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ),
                           ],
@@ -377,18 +490,24 @@ class LeaderboardScreen extends ConsumerWidget {
               ),
             ),
           ),
-          
+
           // Achievement Badges Row Label
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 8.0),
               child: Row(
                 children: [
-                  Icon(Icons.workspace_premium_rounded, color: AppTheme.amberAccent, size: 18),
+                  Icon(
+                    Icons.workspace_premium_rounded,
+                    color: AppTheme.amberAccent,
+                    size: 18,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     'Sourcer Badges',
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -402,9 +521,74 @@ class LeaderboardScreen extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Row(
                 children: [
-                  _badgeCard(Icons.workspace_premium, 'First Submission', 'Awarded on first pricing upload', theme),
-                  _badgeCard(Icons.local_fire_department, '7 Day Streak', 'Submitted daily for a week', theme),
-                  _badgeCard(Icons.verified_user, 'Verified Sourcer', 'Over 95% price accuracy rating', theme),
+                  _badgeCard(
+                    Icons.workspace_premium,
+                    'First Submission',
+                    'Awarded on first pricing upload',
+                    theme,
+                  ),
+                  _badgeCard(
+                    Icons.local_fire_department,
+                    '7 Day Streak',
+                    'Submitted daily for a week',
+                    theme,
+                  ),
+                  _badgeCard(
+                    Icons.verified_user,
+                    'Verified Sourcer',
+                    'Over 95% price accuracy rating',
+                    theme,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 8.0),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.flag_circle_outlined,
+                    color: AppTheme.forestDeep,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Today\'s Challenges',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                children: [
+                  _challengeCard(
+                    Icons.receipt_long_outlined,
+                    'Upload 2 receipts',
+                    '+30 tokens',
+                    '1 / 2 done',
+                  ),
+                  _challengeCard(
+                    Icons.storefront_outlined,
+                    'Visit one nearby store',
+                    '+20 tokens',
+                    'Dubai Marina',
+                  ),
+                  _challengeCard(
+                    Icons.verified_outlined,
+                    'Verify 3 fresh prices',
+                    '+25 tokens',
+                    'Expires tonight',
+                  ),
                 ],
               ),
             ),
@@ -416,11 +600,17 @@ class LeaderboardScreen extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 10.0),
               child: Row(
                 children: [
-                  Icon(Icons.emoji_events, color: AppTheme.amberAccent, size: 18),
+                  Icon(
+                    Icons.emoji_events,
+                    color: AppTheme.amberAccent,
+                    size: 18,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     'Last Month\'s Champions',
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -431,11 +621,29 @@ class LeaderboardScreen extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Row(
                 children: [
-                  _hallOfFameCard(2, 'Meera', '980', const Color(0xFFC0C0C0), theme),
+                  _hallOfFameCard(
+                    2,
+                    'Meera',
+                    '980',
+                    const Color(0xFFC0C0C0),
+                    theme,
+                  ),
                   const SizedBox(width: 8),
-                  _hallOfFameCard(1, 'Khalid', '1,240', const Color(0xFFFFD700), theme),
+                  _hallOfFameCard(
+                    1,
+                    'Khalid',
+                    '1,240',
+                    const Color(0xFFFFD700),
+                    theme,
+                  ),
                   const SizedBox(width: 8),
-                  _hallOfFameCard(3, 'Ahmed', '750', const Color(0xFFCD7F32), theme),
+                  _hallOfFameCard(
+                    3,
+                    'Ahmed',
+                    '750',
+                    const Color(0xFFCD7F32),
+                    theme,
+                  ),
                 ],
               ),
             ),
@@ -447,11 +655,17 @@ class LeaderboardScreen extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 8.0),
               child: Row(
                 children: [
-                  Icon(Icons.leaderboard_rounded, color: theme.colorScheme.primary, size: 18),
+                  Icon(
+                    Icons.leaderboard_rounded,
+                    color: theme.colorScheme.primary,
+                    size: 18,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     'Dubai Leaderboard',
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -462,74 +676,92 @@ class LeaderboardScreen extends ConsumerWidget {
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final user = rankedLeaderboard[index];
-                  final isMe = user.isCurrentUser;
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final user = rankedLeaderboard[index];
+                final isMe = user.isCurrentUser;
 
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    color: isMe ? theme.colorScheme.primaryContainer.withOpacity(0.25) : Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(
-                        color: isMe ? theme.colorScheme.primary : Colors.grey.shade100,
-                      ),
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  color: isMe
+                      ? theme.colorScheme.primaryContainer.withValues(
+                          alpha: 0.25,
+                        )
+                      : Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(
+                      color: isMe
+                          ? theme.colorScheme.primary
+                          : Colors.grey.shade100,
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                      child: Row(
-                        children: [
-                          // Rank Circle
-                          Container(
-                            width: 32,
-                            height: 32,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: _getRankColor(user.rank),
-                              shape: BoxShape.circle,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 12.0,
+                    ),
+                    child: Row(
+                      children: [
+                        // Rank Circle
+                        Container(
+                          width: 32,
+                          height: 32,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: _getRankColor(user.rank),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            '${user.rank}',
+                            style: TextStyle(
+                              color: user.rank <= 3
+                                  ? Colors.white
+                                  : Colors.black87,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
                             ),
-                            child: Text(
-                              '${user.rank}',
-                              style: TextStyle(
-                                color: user.rank <= 3 ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+
+                        // Name
+                        Expanded(
+                          child: Text(
+                            user.name,
+                            style: TextStyle(
+                              fontWeight: isMe
+                                  ? FontWeight.bold
+                                  : FontWeight.w500,
+                              color: isMe
+                                  ? theme.colorScheme.primary
+                                  : Colors.black87,
+                            ),
+                          ),
+                        ),
+
+                        // Tokens display
+                        Row(
+                          children: [
+                            Text(
+                              '${user.tokens}',
+                              style: const TextStyle(
                                 fontWeight: FontWeight.bold,
-                                fontSize: 13,
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 16),
-
-                          // Name
-                          Expanded(
-                            child: Text(
-                              user.name,
-                              style: TextStyle(
-                                fontWeight: isMe ? FontWeight.bold : FontWeight.w500,
-                                color: isMe ? theme.colorScheme.primary : Colors.black87,
-                              ),
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.bolt,
+                              color: AppTheme.amberAccent,
+                              size: 16,
                             ),
-                          ),
-
-                          // Tokens display
-                          Row(
-                            children: [
-                              Text(
-                                '${user.tokens}',
-                                style: const TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(width: 4),
-                              const Icon(Icons.bolt, color: AppTheme.amberAccent, size: 16),
-                            ],
-                          ),
-                        ],
-                      ),
+                          ],
+                        ),
+                      ],
                     ),
-                  );
-                },
-                childCount: rankedLeaderboard.length,
-              ),
+                  ),
+                );
+              }, childCount: rankedLeaderboard.length),
             ),
           ),
 
@@ -539,11 +771,17 @@ class LeaderboardScreen extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 8.0),
               child: Row(
                 children: [
-                  Icon(Icons.receipt_long_outlined, color: theme.colorScheme.primary, size: 18),
+                  Icon(
+                    Icons.receipt_long_outlined,
+                    color: theme.colorScheme.primary,
+                    size: 18,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     'Token History',
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -554,61 +792,87 @@ class LeaderboardScreen extends ConsumerWidget {
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 110),
             sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final tx = transactions[index];
-                  final isPositive = tx.amount > 0;
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final tx = transactions[index];
+                final isPositive = tx.amount > 0;
 
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade100),
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade100),
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
                     ),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                      title: Text(
-                        tx.title,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                      subtitle: Text(
-                        tx.timestampLabel,
-                        style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
-                      ),
-                      trailing: Text(
-                        isPositive ? '+${tx.amount}' : '${tx.amount}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 14,
-                          color: isPositive ? AppTheme.emeraldPrimary : Colors.red,
-                        ),
+                    title: Text(
+                      tx.title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
                       ),
                     ),
-                  );
-                },
-                childCount: transactions.length,
-              ),
+                    subtitle: Text(
+                      tx.timestampLabel,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
+                    trailing: Text(
+                      isPositive ? '+${tx.amount}' : '${tx.amount}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 14,
+                        color: isPositive
+                            ? AppTheme.emeraldPrimary
+                            : Colors.red,
+                      ),
+                    ),
+                  ),
+                );
+              }, childCount: transactions.length),
             ),
           ),
-          
+
           const SliverPadding(padding: EdgeInsets.only(bottom: 40)),
         ],
       ),
     );
   }
 
-  Widget _hallOfFameCard(int rank, String name, String tokenStr, Color medalColor, ThemeData theme) {
+  Widget _hallOfFameCard(
+    int rank,
+    String name,
+    String tokenStr,
+    Color medalColor,
+    ThemeData theme,
+  ) {
     final isFirst = rank == 1;
     return Expanded(
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: isFirst ? 20 : 16, horizontal: 12),
+        padding: EdgeInsets.symmetric(
+          vertical: isFirst ? 20 : 16,
+          horizontal: 12,
+        ),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: medalColor.withOpacity(0.35), width: isFirst ? 1.5 : 1),
+          border: Border.all(
+            color: medalColor.withValues(alpha: 0.35),
+            width: isFirst ? 1.5 : 1,
+          ),
           boxShadow: isFirst
-              ? [BoxShadow(color: medalColor.withOpacity(0.15), blurRadius: 8, offset: const Offset(0, 4))]
+              ? [
+                  BoxShadow(
+                    color: medalColor.withValues(alpha: 0.15),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
               : [],
         ),
         child: Column(
@@ -617,13 +881,19 @@ class LeaderboardScreen extends ConsumerWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: medalColor.withOpacity(0.15),
+                color: medalColor.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
               alignment: Alignment.center,
               child: Text(
-                rank == 1 ? '🥇' : rank == 2 ? '🥈' : '🥉',
-                style: const TextStyle(fontSize: 18),
+                '$rank',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                  color: medalColor.computeLuminance() > 0.55
+                      ? AppTheme.forestDeep
+                      : Colors.white,
+                ),
               ),
             ),
             const SizedBox(height: 8),
@@ -660,7 +930,12 @@ class LeaderboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _badgeCard(IconData icon, String title, String subtitle, ThemeData theme) {
+  Widget _badgeCard(
+    IconData icon,
+    String title,
+    String subtitle,
+    ThemeData theme,
+  ) {
     return Card(
       elevation: 0,
       margin: const EdgeInsets.only(right: 12),
@@ -699,6 +974,71 @@ class LeaderboardScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _challengeCard(
+    IconData icon,
+    String title,
+    String reward,
+    String status,
+  ) {
+    return Container(
+      width: 162,
+      margin: const EdgeInsets.only(right: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE8EEE4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: const BoxDecoration(
+              color: AppTheme.limeAccent,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: AppTheme.forestDeep, size: 17),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: AppTheme.textDark,
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                reward,
+                style: const TextStyle(
+                  color: AppTheme.forestDeep,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              Text(
+                status,
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

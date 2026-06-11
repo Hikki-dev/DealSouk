@@ -9,6 +9,7 @@ import '../../features/cart/cart_screen.dart';
 import '../../features/submissions/submit_price_screen.dart';
 import '../../features/leaderboard/leaderboard_screen.dart';
 import '../../features/admin/admin_screen.dart';
+import '../../features/profile/profile_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/welcome',
@@ -18,41 +19,36 @@ final GoRouter appRouter = GoRouter(
       path: '/welcome',
       builder: (context, state) => const WelcomeScreen(),
     ),
-    
+
     // Shell Layout wrapping Core Tabs
     ShellRoute(
       builder: (context, state, child) {
         return ShellLayout(child: child);
       },
       routes: [
+        GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
         GoRoute(
-          path: '/',
-          builder: (context, state) => const HomeScreen(),
+          path: '/search',
+          builder: (context, state) => const SearchScreen(),
         ),
         GoRoute(
           path: '/stores',
           builder: (context, state) => const StoreScreen(),
         ),
-        GoRoute(
-          path: '/cart',
-          builder: (context, state) => const CartScreen(),
-        ),
+        GoRoute(path: '/cart', builder: (context, state) => const CartScreen()),
         GoRoute(
           path: '/leaderboard',
           builder: (context, state) => const LeaderboardScreen(),
         ),
         GoRoute(
-          path: '/admin',
-          builder: (context, state) => const AdminScreen(),
+          path: '/profile',
+          builder: (context, state) => const ProfileScreen(),
         ),
       ],
     ),
-    
+
     // Standalone Screens
-    GoRoute(
-      path: '/search',
-      builder: (context, state) => const SearchScreen(),
-    ),
+    GoRoute(path: '/admin', builder: (context, state) => const AdminScreen()),
     GoRoute(
       path: '/product/:id',
       builder: (context, state) {

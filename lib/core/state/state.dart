@@ -17,9 +17,7 @@ class ProductsNotifier extends Notifier<List<Product>> {
             updatedAtLabel: 'Updated Just Now',
           );
         } else {
-          return product.copyWith(
-            updatedAtLabel: 'Updated Just Now',
-          );
+          return product.copyWith(updatedAtLabel: 'Updated Just Now');
         }
       }
       return product;
@@ -27,7 +25,9 @@ class ProductsNotifier extends Notifier<List<Product>> {
   }
 }
 
-final productsProvider = NotifierProvider<ProductsNotifier, List<Product>>(ProductsNotifier.new);
+final productsProvider = NotifierProvider<ProductsNotifier, List<Product>>(
+  ProductsNotifier.new,
+);
 
 // --- User Tokens State ---
 class UserTokensNotifier extends Notifier<int> {
@@ -43,7 +43,9 @@ class UserTokensNotifier extends Notifier<int> {
   }
 }
 
-final userTokensProvider = NotifierProvider<UserTokensNotifier, int>(UserTokensNotifier.new);
+final userTokensProvider = NotifierProvider<UserTokensNotifier, int>(
+  UserTokensNotifier.new,
+);
 
 // --- User Transactions State ---
 class UserTransactionsNotifier extends Notifier<List<TokenTransaction>> {
@@ -61,7 +63,10 @@ class UserTransactionsNotifier extends Notifier<List<TokenTransaction>> {
   }
 }
 
-final userTransactionsProvider = NotifierProvider<UserTransactionsNotifier, List<TokenTransaction>>(UserTransactionsNotifier.new);
+final userTransactionsProvider =
+    NotifierProvider<UserTransactionsNotifier, List<TokenTransaction>>(
+      UserTransactionsNotifier.new,
+    );
 
 // --- Cart State ---
 class CartNotifier extends Notifier<List<CartItem>> {
@@ -81,7 +86,9 @@ class CartNotifier extends Notifier<List<CartItem>> {
   }
 
   void addToCart(Product product) {
-    final existingIndex = state.indexWhere((item) => item.product.id == product.id);
+    final existingIndex = state.indexWhere(
+      (item) => item.product.id == product.id,
+    );
     if (existingIndex >= 0) {
       final existingItem = state[existingIndex];
       state = [
@@ -116,7 +123,9 @@ class CartNotifier extends Notifier<List<CartItem>> {
   }
 }
 
-final cartProvider = NotifierProvider<CartNotifier, List<CartItem>>(CartNotifier.new);
+final cartProvider = NotifierProvider<CartNotifier, List<CartItem>>(
+  CartNotifier.new,
+);
 
 // --- Admin Submissions State ---
 class AdminSubmissionsNotifier extends Notifier<List<AdminSubmission>> {
@@ -157,7 +166,9 @@ class AdminSubmissionsNotifier extends Notifier<List<AdminSubmission>> {
 
       // Award tokens to Hessa
       ref.read(userTokensProvider.notifier).addTokens(sub.tokensReward);
-      ref.read(userTransactionsProvider.notifier).addTransaction(
+      ref
+          .read(userTransactionsProvider.notifier)
+          .addTransaction(
             sub.tokensReward,
             '+${sub.tokensReward} tokens - Approved ${sub.productName} price',
           );
@@ -165,10 +176,14 @@ class AdminSubmissionsNotifier extends Notifier<List<AdminSubmission>> {
       // Find the product and update its lowest price if applicable
       final products = ref.read(productsProvider);
       final product = products.firstWhere(
-        (p) => p.name.toLowerCase().contains(sub.productName.toLowerCase()) || sub.productName.toLowerCase().contains(p.name.toLowerCase()),
+        (p) =>
+            p.name.toLowerCase().contains(sub.productName.toLowerCase()) ||
+            sub.productName.toLowerCase().contains(p.name.toLowerCase()),
         orElse: () => products.first,
       );
-      ref.read(productsProvider.notifier).updateProductPrice(product.id, sub.price, sub.storeName);
+      ref
+          .read(productsProvider.notifier)
+          .updateProductPrice(product.id, sub.price, sub.storeName);
     }
   }
 
@@ -177,7 +192,10 @@ class AdminSubmissionsNotifier extends Notifier<List<AdminSubmission>> {
   }
 }
 
-final adminSubmissionsProvider = NotifierProvider<AdminSubmissionsNotifier, List<AdminSubmission>>(AdminSubmissionsNotifier.new);
+final adminSubmissionsProvider =
+    NotifierProvider<AdminSubmissionsNotifier, List<AdminSubmission>>(
+      AdminSubmissionsNotifier.new,
+    );
 
 // --- Filters State ---
 class FilterState {
@@ -225,4 +243,6 @@ class FilterNotifier extends Notifier<FilterState> {
   }
 }
 
-final filterProvider = NotifierProvider<FilterNotifier, FilterState>(FilterNotifier.new);
+final filterProvider = NotifierProvider<FilterNotifier, FilterState>(
+  FilterNotifier.new,
+);

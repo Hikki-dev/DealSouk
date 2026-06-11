@@ -25,7 +25,8 @@ class WelcomeScreen extends StatelessWidget {
                   'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=80&w=1000&auto=format&fit=crop',
                   height: 300,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => const SizedBox(height: 300),
+                  errorBuilder: (context, error, stackTrace) =>
+                      const SizedBox(height: 300),
                 ),
               ),
             ),
@@ -58,7 +59,7 @@ class WelcomeScreen extends StatelessWidget {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: AppTheme.limeAccent.withOpacity(0.3),
+                              color: AppTheme.limeAccent.withValues(alpha: 0.3),
                               blurRadius: 24,
                               offset: const Offset(0, 10),
                             ),
@@ -89,7 +90,7 @@ class WelcomeScreen extends StatelessWidget {
                       'Save money on groceries in Dubai',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.65),
+                        color: Colors.white.withValues(alpha: 0.65),
                         fontWeight: FontWeight.w500,
                         fontSize: 15,
                       ),
@@ -100,33 +101,50 @@ class WelcomeScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _ValuePillar(icon: Icons.compare_arrows_rounded, label: 'Compare\nPrices'),
+                        _ValuePillar(
+                          icon: Icons.compare_arrows_rounded,
+                          label: 'Compare\nPrices',
+                        ),
                         SizedBox(width: 20),
                         _ValuePillar(icon: Icons.bolt, label: 'Earn\nTokens'),
                         SizedBox(width: 20),
-                        _ValuePillar(icon: Icons.savings_outlined, label: 'Save\nMoney'),
+                        _ValuePillar(
+                          icon: Icons.savings_outlined,
+                          label: 'Save\nMoney',
+                        ),
                       ],
                     ),
 
                     const Spacer(flex: 2),
 
-                    // Demo banner
+                    // Value banner
                     Container(
                       margin: const EdgeInsets.only(bottom: 20),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
-                        color: AppTheme.limeAccent.withOpacity(0.12),
+                        color: AppTheme.limeAccent.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: AppTheme.limeAccent.withOpacity(0.3)),
+                        border: Border.all(
+                          color: AppTheme.limeAccent.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.info_outline, color: AppTheme.limeAccent, size: 20),
+                          Icon(
+                            Icons.info_outline,
+                            color: AppTheme.limeAccent,
+                            size: 20,
+                          ),
                           SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              'Demo Mode: Click any login option to enter the fully interactive prototype.',
+                              'Live Dubai prices. Earn tokens.',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.w600,
@@ -148,7 +166,9 @@ class WelcomeScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(27),
                           boxShadow: [
                             BoxShadow(
-                              color: AppTheme.limeAccent.withOpacity(0.35),
+                              color: AppTheme.limeAccent.withValues(
+                                alpha: 0.35,
+                              ),
                               blurRadius: 16,
                               offset: const Offset(0, 6),
                             ),
@@ -156,7 +176,7 @@ class WelcomeScreen extends StatelessWidget {
                         ),
                         child: const Center(
                           child: Text(
-                            'Continue as Demo User',
+                            'Enter DealSouk Demo',
                             style: TextStyle(
                               color: AppTheme.forestDeep,
                               fontSize: 16,
@@ -191,10 +211,10 @@ class WelcomeScreen extends StatelessWidget {
                     const SizedBox(height: 20),
 
                     Text(
-                      'By signing in, you agree to crowd-source grocery data in Dubai.',
+                      'Crowd-sourced grocery data for Dubai.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.4),
+                        color: Colors.white.withValues(alpha: 0.4),
                         fontSize: 11,
                       ),
                     ),
@@ -223,9 +243,9 @@ class _ValuePillar extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.08),
+            color: Colors.white.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.white.withOpacity(0.12)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
           ),
           child: Icon(icon, color: AppTheme.limeAccent, size: 22),
         ),
@@ -236,7 +256,7 @@ class _ValuePillar extends StatelessWidget {
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w600,
-            color: Colors.white.withOpacity(0.75),
+            color: Colors.white.withValues(alpha: 0.75),
             height: 1.3,
           ),
         ),
@@ -266,7 +286,10 @@ class _SignInButton extends StatelessWidget {
         height: 50,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(25),
-          border: Border.all(color: Colors.white.withOpacity(0.25), width: 1.3),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.25),
+            width: 1.3,
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

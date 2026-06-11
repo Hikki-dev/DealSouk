@@ -26,7 +26,8 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
 
     // Initialize or correct the selected submission
     if (pendingSubs.isNotEmpty) {
-      if (_selectedSubId == null || !pendingSubs.any((s) => s.id == _selectedSubId)) {
+      if (_selectedSubId == null ||
+          !pendingSubs.any((s) => s.id == _selectedSubId)) {
         _selectedSubId = pendingSubs.first.id;
       }
     } else {
@@ -34,7 +35,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     }
 
     final currentSub = _selectedSubId != null
-        ? pendingSubs.firstWhere((s) => s.id == _selectedSubId, orElse: () => pendingSubs.first)
+        ? pendingSubs.firstWhere(
+            (s) => s.id == _selectedSubId,
+            orElse: () => pendingSubs.first,
+          )
         : null;
 
     return Scaffold(
@@ -42,9 +46,24 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         builder: (context, constraints) {
           final isDesktop = constraints.maxWidth > 768;
           if (isDesktop) {
-            return _buildDesktopLayout(context, theme, pendingSubs, currentSub, pendingCount, approvedCount, tokensIssuedCount);
+            return _buildDesktopLayout(
+              context,
+              theme,
+              pendingSubs,
+              currentSub,
+              pendingCount,
+              approvedCount,
+              tokensIssuedCount,
+            );
           } else {
-            return _buildMobileLayout(context, theme, pendingSubs, pendingCount, approvedCount, tokensIssuedCount);
+            return _buildMobileLayout(
+              context,
+              theme,
+              pendingSubs,
+              pendingCount,
+              approvedCount,
+              tokensIssuedCount,
+            );
           }
         },
       ),
@@ -80,7 +99,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.red.shade50,
                               borderRadius: BorderRadius.circular(20),
@@ -88,7 +110,11 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.security, color: Colors.red.shade800, size: 12),
+                                Icon(
+                                  Icons.security,
+                                  color: Colors.red.shade800,
+                                  size: 12,
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   'SaaS Moderator Console',
@@ -118,7 +144,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                             icon: const Icon(Icons.refresh, size: 16),
                             label: const Text('Sync Queue'),
                             style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
                               minimumSize: Size.zero,
                             ),
                           ),
@@ -132,16 +161,51 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               // Horizontal Grid for stats
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20.0,
+                    vertical: 8.0,
+                  ),
                   child: Row(
                     children: [
-                      Expanded(child: _statCard('PENDING REVIEWS', '$pendingCount', Icons.hourglass_empty, Colors.orange, theme)),
+                      Expanded(
+                        child: _statCard(
+                          'PENDING REVIEWS',
+                          '$pendingCount',
+                          Icons.hourglass_empty,
+                          Colors.orange,
+                          theme,
+                        ),
+                      ),
                       const SizedBox(width: 12),
-                      Expanded(child: _statCard('APPROVED TODAY', '$approvedCount', Icons.check_circle_outline, Colors.green, theme)),
+                      Expanded(
+                        child: _statCard(
+                          'APPROVED TODAY',
+                          '$approvedCount',
+                          Icons.check_circle_outline,
+                          Colors.green,
+                          theme,
+                        ),
+                      ),
                       const SizedBox(width: 12),
-                      Expanded(child: _statCard('ACTIVE SOURCE FLOW', '1,240', Icons.people_outline, Colors.blue, theme)),
+                      Expanded(
+                        child: _statCard(
+                          'ACTIVE SOURCE FLOW',
+                          '1,240',
+                          Icons.people_outline,
+                          Colors.blue,
+                          theme,
+                        ),
+                      ),
                       const SizedBox(width: 12),
-                      Expanded(child: _statCard('TOKENS ISSUED', '$tokensIssuedCount', Icons.bolt, Colors.amber, theme)),
+                      Expanded(
+                        child: _statCard(
+                          'TOKENS ISSUED',
+                          '$tokensIssuedCount',
+                          Icons.bolt,
+                          Colors.amber,
+                          theme,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -153,7 +217,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                   padding: const EdgeInsets.fromLTRB(20.0, 24.0, 20.0, 8.0),
                   child: Text(
                     'Submissions Queue ($pendingCount)',
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800, color: AppTheme.textDark),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.textDark,
+                    ),
                   ),
                 ),
               ),
@@ -163,14 +230,16 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 sliver: pendingSubs.isEmpty
                     ? SliverToBoxAdapter(child: _buildEmptyQueueCard())
                     : SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final sub = pendingSubs[index];
-                            final isSelected = sub.id == _selectedSubId;
-                            return _buildSubmissionCard(context, sub, isSelected, true);
-                          },
-                          childCount: pendingSubs.length,
-                        ),
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final sub = pendingSubs[index];
+                          final isSelected = sub.id == _selectedSubId;
+                          return _buildSubmissionCard(
+                            context,
+                            sub,
+                            isSelected,
+                            true,
+                          );
+                        }, childCount: pendingSubs.length),
                       ),
               ),
               const SliverPadding(padding: EdgeInsets.only(bottom: 40)),
@@ -191,7 +260,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 ? _buildSidebarIdleState()
                 : _buildSidebarAuditState(context, currentSub),
           ),
-        )
+        ),
       ],
     );
   }
@@ -218,14 +287,21 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.red.shade100,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.security, color: Colors.red.shade800, size: 12),
+                          Icon(
+                            Icons.security,
+                            color: Colors.red.shade800,
+                            size: 12,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             'Admin Portal',
@@ -250,7 +326,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 IconButton(
                   icon: const Icon(Icons.settings_outlined),
                   onPressed: () {},
-                )
+                ),
               ],
             ),
           ),
@@ -259,7 +335,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         // Statistics Grid Deck
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
             child: GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -268,10 +347,34 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               mainAxisSpacing: 12,
               childAspectRatio: 1.7,
               children: [
-                _statCard('Pending Reviews', '$pendingCount', Icons.hourglass_top, Colors.orange, theme),
-                _statCard('Approved Today', '$approvedCount', Icons.check_circle_outline, Colors.green, theme),
-                _statCard('Active Users', '1,240', Icons.people_outline, Colors.blue, theme),
-                _statCard('Tokens Issued', '$tokensIssuedCount', Icons.bolt, Colors.amber, theme),
+                _statCard(
+                  'Pending Reviews',
+                  '$pendingCount',
+                  Icons.hourglass_top,
+                  Colors.orange,
+                  theme,
+                ),
+                _statCard(
+                  'Approved Today',
+                  '$approvedCount',
+                  Icons.check_circle_outline,
+                  Colors.green,
+                  theme,
+                ),
+                _statCard(
+                  'Active Users',
+                  '1,240',
+                  Icons.people_outline,
+                  Colors.blue,
+                  theme,
+                ),
+                _statCard(
+                  'Tokens Issued',
+                  '$tokensIssuedCount',
+                  Icons.bolt,
+                  Colors.amber,
+                  theme,
+                ),
               ],
             ),
           ),
@@ -283,7 +386,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             padding: const EdgeInsets.fromLTRB(16.0, 20.0, 16.0, 8.0),
             child: Text(
               'Pending Price Reviews ($pendingCount)',
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),
@@ -294,13 +399,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           sliver: pendingSubs.isEmpty
               ? SliverToBoxAdapter(child: _buildEmptyQueueCard())
               : SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final sub = pendingSubs[index];
-                      return _buildSubmissionCard(context, sub, false, false);
-                    },
-                    childCount: pendingSubs.length,
-                  ),
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final sub = pendingSubs[index];
+                    return _buildSubmissionCard(context, sub, false, false);
+                  }, childCount: pendingSubs.length),
                 ),
         ),
         const SliverPadding(padding: EdgeInsets.only(bottom: 40)),
@@ -324,7 +426,11 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             const SizedBox(height: 16),
             const Text(
               'All Clean!',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textDark),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: AppTheme.textDark,
+              ),
             ),
             const SizedBox(height: 6),
             const Text(
@@ -338,7 +444,12 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     );
   }
 
-  Widget _buildSubmissionCard(BuildContext context, AdminSubmission sub, bool isSelected, bool isDesktop) {
+  Widget _buildSubmissionCard(
+    BuildContext context,
+    AdminSubmission sub,
+    bool isSelected,
+    bool isDesktop,
+  ) {
     final theme = Theme.of(context);
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -397,7 +508,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                       fontWeight: FontWeight.w900,
                       color: theme.colorScheme.primary,
                     ),
-                  )
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -412,19 +523,26 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                         icon: Icons.camera_alt,
                         label: 'Price Photo',
                         isAttached: sub.hasPhoto,
-                        onTap: sub.hasPhoto ? () => _showPricePhotoDialog(context, sub) : null,
+                        onTap: sub.hasPhoto
+                            ? () => _showPricePhotoDialog(context, sub)
+                            : null,
                       ),
                       const SizedBox(width: 8),
                       _attachmentChip(
                         icon: Icons.receipt_long,
                         label: 'Receipt',
                         isAttached: sub.hasReceipt,
-                        onTap: sub.hasReceipt ? () => _showReceiptDialog(context, sub) : null,
+                        onTap: sub.hasReceipt
+                            ? () => _showReceiptDialog(context, sub)
+                            : null,
                       ),
                     ],
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.amberLight,
                       borderRadius: BorderRadius.circular(6),
@@ -437,7 +555,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                         color: Color(0xFFC77C02),
                       ),
                     ),
-                  )
+                  ),
                 ],
               ),
               if (!isDesktop) ...[
@@ -451,8 +569,13 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                           foregroundColor: Colors.red,
                           side: const BorderSide(color: Colors.red),
                           padding: const EdgeInsets.symmetric(vertical: 10),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         child: const Text('Reject'),
                       ),
@@ -464,15 +587,20 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
                           padding: const EdgeInsets.symmetric(vertical: 10),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         child: const Text('Approve'),
                       ),
                     ),
                   ],
-                )
-              ]
+                ),
+              ],
             ],
           ),
         ),
@@ -545,21 +673,31 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         // Visual Thumbnail previews of attachments
         const Text(
           'Evidence — tap to expand:',
-          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.grey),
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey,
+          ),
         ),
         const SizedBox(height: 8),
         Row(
           children: [
             Expanded(
               child: GestureDetector(
-                onTap: sub.hasPhoto ? () => _showPricePhotoDialog(context, sub) : null,
+                onTap: sub.hasPhoto
+                    ? () => _showPricePhotoDialog(context, sub)
+                    : null,
                 child: Container(
                   height: 90,
                   decoration: BoxDecoration(
-                    color: sub.hasPhoto ? Colors.blue.shade50 : Colors.grey.shade100,
+                    color: sub.hasPhoto
+                        ? Colors.blue.shade50
+                        : Colors.grey.shade100,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: sub.hasPhoto ? Colors.blue.shade200 : Colors.grey.shade200,
+                      color: sub.hasPhoto
+                          ? Colors.blue.shade200
+                          : Colors.grey.shade200,
                     ),
                   ),
                   child: Column(
@@ -567,7 +705,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                     children: [
                       Icon(
                         Icons.camera_alt,
-                        color: sub.hasPhoto ? Colors.blue.shade700 : Colors.grey.shade400,
+                        color: sub.hasPhoto
+                            ? Colors.blue.shade700
+                            : Colors.grey.shade400,
                         size: 24,
                       ),
                       const SizedBox(height: 4),
@@ -576,7 +716,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
-                          color: sub.hasPhoto ? Colors.blue.shade800 : Colors.grey.shade500,
+                          color: sub.hasPhoto
+                              ? Colors.blue.shade800
+                              : Colors.grey.shade500,
                         ),
                       ),
                     ],
@@ -587,14 +729,20 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: GestureDetector(
-                onTap: sub.hasReceipt ? () => _showReceiptDialog(context, sub) : null,
+                onTap: sub.hasReceipt
+                    ? () => _showReceiptDialog(context, sub)
+                    : null,
                 child: Container(
                   height: 90,
                   decoration: BoxDecoration(
-                    color: sub.hasReceipt ? Colors.teal.shade50 : Colors.grey.shade100,
+                    color: sub.hasReceipt
+                        ? Colors.teal.shade50
+                        : Colors.grey.shade100,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: sub.hasReceipt ? Colors.teal.shade200 : Colors.grey.shade200,
+                      color: sub.hasReceipt
+                          ? Colors.teal.shade200
+                          : Colors.grey.shade200,
                     ),
                   ),
                   child: Column(
@@ -602,7 +750,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                     children: [
                       Icon(
                         Icons.receipt_long,
-                        color: sub.hasReceipt ? Colors.teal.shade700 : Colors.grey.shade400,
+                        color: sub.hasReceipt
+                            ? Colors.teal.shade700
+                            : Colors.grey.shade400,
                         size: 24,
                       ),
                       const SizedBox(height: 4),
@@ -611,7 +761,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
-                          color: sub.hasReceipt ? Colors.teal.shade800 : Colors.grey.shade500,
+                          color: sub.hasReceipt
+                              ? Colors.teal.shade800
+                              : Colors.grey.shade500,
                         ),
                       ),
                     ],
@@ -628,13 +780,26 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         const SizedBox(height: 16),
         const Text(
           'Moderator Checklist',
-          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.grey),
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: Colors.grey,
+          ),
         ),
         const SizedBox(height: 8),
-        _auditCheckItem('Confirm receipt matches store: ${sub.storeName}', true),
+        _auditCheckItem(
+          'Confirm receipt matches store: ${sub.storeName}',
+          true,
+        ),
         _auditCheckItem('Validate price matches packaging size', true),
-        _auditCheckItem('Double-check for discount/promo tags', sub.promoType != 'None'),
-        _auditCheckItem('Freshness: Check receipt timestamp matches', sub.hasReceipt),
+        _auditCheckItem(
+          'Double-check for discount/promo tags',
+          sub.promoType != 'None',
+        ),
+        _auditCheckItem(
+          'Freshness: Check receipt timestamp matches',
+          sub.hasReceipt,
+        ),
         const Spacer(),
 
         // Audit health KPI
@@ -653,7 +818,11 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                   color: Colors.green.shade100,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.health_and_safety_outlined, color: Colors.green.shade700, size: 16),
+                child: Icon(
+                  Icons.health_and_safety_outlined,
+                  color: Colors.green.shade700,
+                  size: 16,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -662,18 +831,29 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                   children: [
                     const Text(
                       'Audit Health Score',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.black87),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
                     ),
                     Text(
                       'Historical match accuracy',
-                      style: TextStyle(fontSize: 9, color: Colors.grey.shade600),
+                      style: TextStyle(
+                        fontSize: 9,
+                        color: Colors.grey.shade600,
+                      ),
                     ),
                   ],
                 ),
               ),
               const Text(
                 '98.4%',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Colors.green),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.green,
+                ),
               ),
             ],
           ),
@@ -707,7 +887,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               ),
             ),
           ],
-        )
+        ),
       ],
     );
   }
@@ -732,7 +912,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 fontWeight: FontWeight.w500,
               ),
             ),
-          )
+          ),
         ],
       ),
     );
@@ -744,7 +924,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     _selectNextAfterRemoval(id);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Submission approved! ${sub.tokensReward} tokens awarded to Hessa.'),
+        content: Text(
+          'Submission approved! ${sub.tokensReward} tokens awarded to Hessa.',
+        ),
         backgroundColor: Colors.green,
       ),
     );
@@ -774,7 +956,13 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
   }
 
   // --- STAT CARD ---
-  Widget _statCard(String label, String value, IconData icon, Color color, ThemeData theme) {
+  Widget _statCard(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+    ThemeData theme,
+  ) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -804,7 +992,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.12),
+                    color: color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(icon, color: color, size: 16),
@@ -859,7 +1047,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               style: TextStyle(
                 fontSize: 9,
                 fontWeight: FontWeight.bold,
-                color: isAttached ? Colors.green.shade900 : Colors.grey.shade600,
+                color: isAttached
+                    ? Colors.green.shade900
+                    : Colors.grey.shade600,
               ),
             ),
             if (isAttached && onTap != null) ...[
@@ -892,10 +1082,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                   borderRadius: BorderRadius.circular(4),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black.withValues(alpha: 0.3),
                       blurRadius: 24,
                       offset: const Offset(0, 10),
-                    )
+                    ),
                   ],
                 ),
                 child: Column(
@@ -945,7 +1135,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                     const Text(
                       '--------------------------------',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontFamily: 'monospace', color: Colors.grey),
+                      style: TextStyle(
+                        fontFamily: 'monospace',
+                        color: Colors.grey,
+                      ),
                     ),
                     const SizedBox(height: 8),
 
@@ -959,20 +1152,48 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                     const Text(
                       '--------------------------------',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontFamily: 'monospace', color: Colors.grey),
+                      style: TextStyle(
+                        fontFamily: 'monospace',
+                        color: Colors.grey,
+                      ),
                     ),
                     const SizedBox(height: 8),
 
                     // Totals
-                    _receiptRow('SUBTOTAL', sub.price + 8.50 + 12.95 + (sub.promoType == 'Discount' ? -1.50 : 0), isBold: true),
-                    _receiptRow('5% VAT INCL.', (sub.price + 8.50 + 12.95 + (sub.promoType == 'Discount' ? -1.50 : 0)) * 0.05),
+                    _receiptRow(
+                      'SUBTOTAL',
+                      sub.price +
+                          8.50 +
+                          12.95 +
+                          (sub.promoType == 'Discount' ? -1.50 : 0),
+                      isBold: true,
+                    ),
+                    _receiptRow(
+                      '5% VAT INCL.',
+                      (sub.price +
+                              8.50 +
+                              12.95 +
+                              (sub.promoType == 'Discount' ? -1.50 : 0)) *
+                          0.05,
+                    ),
                     const SizedBox(height: 4),
-                    _receiptRow('TOTAL', sub.price + 8.50 + 12.95 + (sub.promoType == 'Discount' ? -1.50 : 0), isBold: true, isLarge: true),
+                    _receiptRow(
+                      'TOTAL',
+                      sub.price +
+                          8.50 +
+                          12.95 +
+                          (sub.promoType == 'Discount' ? -1.50 : 0),
+                      isBold: true,
+                      isLarge: true,
+                    ),
                     const SizedBox(height: 12),
                     const Text(
                       '--------------------------------',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontFamily: 'monospace', color: Colors.grey),
+                      style: TextStyle(
+                        fontFamily: 'monospace',
+                        color: Colors.grey,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -989,7 +1210,11 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(24, (index) {
-                        final double width = (index % 4 == 0) ? 3.0 : (index % 2 == 0) ? 1.5 : 0.8;
+                        final double width = (index % 4 == 0)
+                            ? 3.0
+                            : (index % 2 == 0)
+                            ? 1.5
+                            : 0.8;
                         return Container(
                           width: width,
                           height: 30,
@@ -1025,7 +1250,13 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     );
   }
 
-  Widget _receiptRow(String name, double value, {bool isBold = false, bool isLarge = false, bool isDiscount = false}) {
+  Widget _receiptRow(
+    String name,
+    double value, {
+    bool isBold = false,
+    bool isLarge = false,
+    bool isDiscount = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.0),
       child: Row(
@@ -1079,10 +1310,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black.withValues(alpha: 0.3),
                       blurRadius: 24,
                       offset: const Offset(0, 10),
-                    )
+                    ),
                   ],
                 ),
                 child: ClipRRect(
@@ -1101,8 +1332,8 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                   sub.productName.contains('Milk')
                                       ? Icons.local_cafe
                                       : sub.productName.contains('Eggs')
-                                          ? Icons.egg
-                                          : Icons.breakfast_dining,
+                                      ? Icons.egg
+                                      : Icons.breakfast_dining,
                                   size: 84,
                                   color: Colors.grey.shade400,
                                 ),
@@ -1111,9 +1342,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                           ),
                           Expanded(
                             flex: 1,
-                            child: Container(
-                              color: Colors.blueGrey.shade800,
-                            ),
+                            child: Container(color: Colors.blueGrey.shade800),
                           ),
                         ],
                       ),
@@ -1133,7 +1362,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                 color: Colors.black38,
                                 blurRadius: 8,
                                 offset: Offset(0, 4),
-                              )
+                              ),
                             ],
                             border: Border.all(color: Colors.grey.shade300),
                           ),
@@ -1144,19 +1373,27 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                 sub.productName.contains('Milk')
                                     ? Icons.local_cafe
                                     : sub.productName.contains('Eggs')
-                                        ? Icons.egg
-                                        : Icons.breakfast_dining,
+                                    ? Icons.egg
+                                    : Icons.breakfast_dining,
                                 color: AppTheme.emeraldPrimary,
                                 size: 40,
                               ),
                               const SizedBox(height: 8),
                               Text(
                                 sub.brand,
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppTheme.textDark),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11,
+                                  color: AppTheme.textDark,
+                                ),
                               ),
                               Text(
                                 sub.productName.split(' ').first,
-                                style: const TextStyle(fontSize: 8, color: Colors.grey, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                  fontSize: 8,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ],
                           ),
@@ -1169,17 +1406,23 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                         left: 60,
                         child: Container(
                           width: 200,
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFFFFDE7), // Yellow tag
                             borderRadius: BorderRadius.circular(4),
-                            border: Border.all(color: Colors.amber.shade400, width: 1.5),
+                            border: Border.all(
+                              color: Colors.amber.shade400,
+                              width: 1.5,
+                            ),
                             boxShadow: const [
                               BoxShadow(
                                 color: Colors.black26,
                                 blurRadius: 3,
                                 offset: Offset(0, 1),
-                              )
+                              ),
                             ],
                           ),
                           child: Row(
@@ -1201,7 +1444,11 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                     ),
                                     Text(
                                       'BARCODE: 62911000${sub.id.hashCode.abs().toString().substring(0, 4)}',
-                                      style: const TextStyle(fontSize: 5, fontFamily: 'monospace', color: Colors.black54),
+                                      style: const TextStyle(
+                                        fontSize: 5,
+                                        fontFamily: 'monospace',
+                                        color: Colors.black54,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -1224,14 +1471,21 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                         top: 12,
                         right: 12,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.6),
+                            color: Colors.black.withValues(alpha: 0.6),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             sub.storeName,
-                            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
@@ -1242,7 +1496,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                           top: 12,
                           left: 12,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.red,
                               borderRadius: BorderRadius.circular(6),

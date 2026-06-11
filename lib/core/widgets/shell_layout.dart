@@ -4,11 +4,41 @@ import 'package:go_router/go_router.dart';
 import '../state/state.dart';
 import '../theme/theme.dart';
 import 'responsive_container.dart';
+import 'tutorial_overlay.dart';
 
-class ShellLayout extends ConsumerWidget {
+class ShellLayout extends StatefulWidget {
   final Widget child;
 
   const ShellLayout({super.key, required this.child});
+
+  @override
+  State<ShellLayout> createState() => _ShellLayoutState();
+}
+
+class _ShellLayoutState extends State<ShellLayout> {
+  static bool _hasShownTutorial = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!_hasShownTutorial) {
+      _hasShownTutorial = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        TutorialOverlay.show(context);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _ShellLayoutBody(child: widget.child);
+  }
+}
+
+class _ShellLayoutBody extends ConsumerWidget {
+  final Widget child;
+
+  const _ShellLayoutBody({required this.child});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

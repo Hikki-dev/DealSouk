@@ -752,13 +752,20 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     bool isSelected,
     bool isDesktop,
   ) {
+    final isFlaggedReport = sub.promoType == 'Flagged Report';
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isFlaggedReport
+            ? const Color(0xFFFFF8F8) // Subtle red background for flagged reports
+            : Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isSelected ? AppTheme.forestDeep : const Color(0xFFE8EEE4),
+          color: isSelected
+              ? AppTheme.forestDeep
+              : (isFlaggedReport
+                  ? Colors.red.shade300
+                  : const Color(0xFFE8EEE4)),
           width: isSelected ? 1.8 : 1.2,
         ),
         boxShadow: isSelected
@@ -794,13 +801,23 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            sub.productName,
-                            style: GoogleFonts.fredoka(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                              color: AppTheme.textDark,
-                            ),
+                          Row(
+                            children: [
+                              if (isFlaggedReport) ...[
+                                Icon(Icons.report_problem_rounded, color: Colors.red.shade700, size: 16),
+                                const SizedBox(width: 6),
+                              ],
+                              Expanded(
+                                child: Text(
+                                  sub.productName,
+                                  style: GoogleFonts.fredoka(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                    color: AppTheme.textDark,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 2),
                           Text(
@@ -819,7 +836,8 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                       style: GoogleFonts.fredoka(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.forestDeep,
+                        color: isFlaggedReport ? Colors.red : AppTheme.forestDeep,
+                        decoration: isFlaggedReport ? TextDecoration.lineThrough : null,
                       ),
                     ),
                   ],
@@ -847,21 +865,38 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                         ),
                       ],
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: AppTheme.amberAccent.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        'Reward: +${sub.tokensReward}T',
-                        style: GoogleFonts.nunito(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 10,
-                          color: const Color(0xFFC77C02),
+                    if (isFlaggedReport)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'Community Flagged',
+                          style: GoogleFonts.nunito(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 10,
+                            color: Colors.red.shade700,
+                          ),
+                        ),
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppTheme.amberAccent.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'Reward: +${sub.tokensReward}T',
+                          style: GoogleFonts.nunito(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 10,
+                            color: const Color(0xFFC77C02),
+                          ),
                         ),
                       ),
-                    ),
                   ],
                 ),
                 if (!isDesktop) ...[
@@ -878,7 +913,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             textStyle: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.bold),
                           ),
-                          child: const Text('Reject'),
+                          child: Text(isFlaggedReport ? 'Confirm Deletion' : 'Reject'),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -891,7 +926,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             textStyle: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.bold),
                           ),
-                          child: const Text('Approve'),
+                          child: Text(isFlaggedReport ? 'Reinstate Price' : 'Approve'),
                         ),
                       ),
                     ],
@@ -932,6 +967,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
   }
 
   Widget _buildSidebarAuditState(BuildContext context, AdminSubmission sub) {
+    final isFlaggedReport = sub.promoType == 'Flagged Report';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -940,7 +976,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           children: [
             Expanded(
               child: Text(
-                'Submission Audit',
+                isFlaggedReport ? 'Moderation Review' : 'Submission Audit',
                 style: GoogleFonts.fredoka(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -951,16 +987,16 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: Colors.orange.shade50,
+                color: isFlaggedReport ? Colors.red.shade50 : Colors.orange.shade50,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.orange.shade200),
+                border: Border.all(color: isFlaggedReport ? Colors.red.shade200 : Colors.orange.shade200),
               ),
               child: Text(
-                'PENDING',
+                isFlaggedReport ? 'FLAGGED' : 'PENDING',
                 style: GoogleFonts.nunito(
                   fontSize: 9,
                   fontWeight: FontWeight.w900,
-                  color: Colors.orange.shade800,
+                  color: isFlaggedReport ? Colors.red.shade800 : Colors.orange.shade800,
                   letterSpacing: 0.5,
                 ),
               ),
@@ -974,96 +1010,137 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         ),
         const SizedBox(height: 20),
 
-        // Visual Thumbnail previews of attachments
-        Text(
-          'ATTACHED EVIDENCE (TAP TO VIEW):',
-          style: GoogleFonts.nunito(
-            fontSize: 10,
-            fontWeight: FontWeight.w800,
-            color: Colors.grey.shade500,
+        if (isFlaggedReport) ...[
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.red.shade50,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.red.shade100),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.report_problem_rounded, color: Colors.red.shade700, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Accuracy Verification Alert',
+                      style: GoogleFonts.fredoka(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: Colors.red.shade900,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'This price entry has been flagged 3+ times by DealSouk shoppers. The price of AED ${sub.price.toStringAsFixed(2)} is reported as incorrect for ${sub.productName} at ${sub.storeName}.',
+                  style: GoogleFonts.nunito(
+                    fontSize: 11.5,
+                    color: Colors.red.shade800,
+                    fontWeight: FontWeight.w600,
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: GestureDetector(
-                onTap: sub.hasPhoto ? () => _showPricePhotoDialog(context, sub) : null,
-                child: Container(
-                  height: 84,
-                  decoration: BoxDecoration(
-                    color: sub.hasPhoto ? const Color(0xFFE3F2FD) : Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: sub.hasPhoto ? const Color(0xFF90CAF9) : const Color(0xFFE8EEE4),
+          const SizedBox(height: 24),
+        ] else ...[
+          // Visual Thumbnail previews of attachments
+          Text(
+            'ATTACHED EVIDENCE (TAP TO VIEW):',
+            style: GoogleFonts.nunito(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: Colors.grey.shade500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: sub.hasPhoto ? () => _showPricePhotoDialog(context, sub) : null,
+                  child: Container(
+                    height: 84,
+                    decoration: BoxDecoration(
+                      color: sub.hasPhoto ? const Color(0xFFE3F2FD) : Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: sub.hasPhoto ? const Color(0xFF90CAF9) : const Color(0xFFE8EEE4),
+                      ),
                     ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.camera_alt_rounded,
-                        color: sub.hasPhoto ? Colors.blue.shade700 : Colors.grey.shade400,
-                        size: 22,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        sub.hasPhoto ? 'Price Label Pic' : 'No Photo',
-                        style: GoogleFonts.nunito(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: sub.hasPhoto ? Colors.blue.shade800 : Colors.grey.shade500,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.camera_alt_rounded,
+                          color: sub.hasPhoto ? Colors.blue.shade700 : Colors.grey.shade400,
+                          size: 22,
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 4),
+                        Text(
+                          sub.hasPhoto ? 'Price Label Pic' : 'No Photo',
+                          style: GoogleFonts.nunito(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: sub.hasPhoto ? Colors.blue.shade800 : Colors.grey.shade500,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: GestureDetector(
-                onTap: sub.hasReceipt ? () => _showReceiptDialog(context, sub) : null,
-                child: Container(
-                  height: 84,
-                  decoration: BoxDecoration(
-                    color: sub.hasReceipt ? const Color(0xFFE0F2F1) : Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: sub.hasReceipt ? const Color(0xFF80CBC4) : const Color(0xFFE8EEE4),
+              const SizedBox(width: 12),
+              Expanded(
+                child: GestureDetector(
+                  onTap: sub.hasReceipt ? () => _showReceiptDialog(context, sub) : null,
+                  child: Container(
+                    height: 84,
+                    decoration: BoxDecoration(
+                      color: sub.hasReceipt ? const Color(0xFFE0F2F1) : Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: sub.hasReceipt ? const Color(0xFF80CBC4) : const Color(0xFFE8EEE4),
+                      ),
                     ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.receipt_long_rounded,
-                        color: sub.hasReceipt ? Colors.teal.shade700 : Colors.grey.shade400,
-                        size: 22,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        sub.hasReceipt ? 'Receipt Scan' : 'No Receipt',
-                        style: GoogleFonts.nunito(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: sub.hasReceipt ? Colors.teal.shade800 : Colors.grey.shade500,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.receipt_long_rounded,
+                          color: sub.hasReceipt ? Colors.teal.shade700 : Colors.grey.shade400,
+                          size: 22,
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 4),
+                        Text(
+                          sub.hasReceipt ? 'Receipt Scan' : 'No Receipt',
+                          style: GoogleFonts.nunito(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: sub.hasReceipt ? Colors.teal.shade800 : Colors.grey.shade500,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
+            ],
+          ),
+          const SizedBox(height: 24),
+        ],
 
         // Guidelines Checklist
         const Divider(height: 1),
         const SizedBox(height: 20),
         Text(
-          'CHECKLIST PROTOCOLS:',
+          isFlaggedReport ? 'INVESTIGATION PROTOCOLS:' : 'CHECKLIST PROTOCOLS:',
           style: GoogleFonts.nunito(
             fontSize: 10,
             fontWeight: FontWeight.w800,
@@ -1071,31 +1148,38 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        _auditCheckItem('Confirm receipt matches store: ${sub.storeName}', true),
-        _auditCheckItem('Validate price matches packaging size', true),
-        _auditCheckItem('Double-check for discount/promo tags', sub.promoType != 'None'),
-        _auditCheckItem('Freshness: Check receipt timestamp matches', sub.hasReceipt),
+        if (isFlaggedReport) ...[
+          _auditCheckItem('Cross-check price with latest online store catalog', true),
+          _auditCheckItem('Verify if the item has a regional distributor price change', true),
+          _auditCheckItem('Verify if this price entry was submitted by a trusted user', false),
+          _auditCheckItem('Flag reason: Shopper claims price is outdated/wrong', true),
+        ] else ...[
+          _auditCheckItem('Confirm receipt matches store: ${sub.storeName}', true),
+          _auditCheckItem('Validate price matches packaging size', true),
+          _auditCheckItem('Double-check for discount/promo tags', sub.promoType != 'None'),
+          _auditCheckItem('Freshness: Check receipt timestamp matches', sub.hasReceipt),
+        ],
         const Spacer(),
 
         // Audit health KPI
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: const Color(0xFFE8F5E9),
+            color: isFlaggedReport ? const Color(0xFFFFF3E0) : const Color(0xFFE8F5E9),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFC8E6C9)),
+            border: Border.all(color: isFlaggedReport ? const Color(0xFFFFE0B2) : const Color(0xFFC8E6C9)),
           ),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(6),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFC8E6C9),
+                decoration: BoxDecoration(
+                  color: isFlaggedReport ? const Color(0xFFFFE0B2) : const Color(0xFFC8E6C9),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.health_and_safety_outlined,
-                  color: AppTheme.forestDeep,
+                child: Icon(
+                  isFlaggedReport ? Icons.warning_amber_rounded : Icons.health_and_safety_outlined,
+                  color: isFlaggedReport ? Colors.orange.shade800 : AppTheme.forestDeep,
                   size: 16,
                 ),
               ),
@@ -1105,15 +1189,15 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Auditing Accuracy Score',
+                      isFlaggedReport ? 'Community Trust Level' : 'Auditing Accuracy Score',
                       style: GoogleFonts.fredoka(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.forestDeep,
+                        color: isFlaggedReport ? Colors.orange.shade900 : AppTheme.forestDeep,
                       ),
                     ),
                     Text(
-                      'Sourcer trustworthiness KPI',
+                      isFlaggedReport ? 'Based on reporter history' : 'Sourcer trustworthiness KPI',
                       style: GoogleFonts.nunito(
                         fontSize: 9,
                         color: Colors.grey.shade600,
@@ -1124,11 +1208,11 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 ),
               ),
               Text(
-                '98.4%',
+                isFlaggedReport ? '92.0%' : '98.4%',
                 style: GoogleFonts.fredoka(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.forestDeep,
+                  color: isFlaggedReport ? Colors.orange.shade900 : AppTheme.forestDeep,
                 ),
               ),
             ],
@@ -1148,7 +1232,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
-                child: Text('Reject', style: GoogleFonts.nunito(fontWeight: FontWeight.bold)),
+                child: Text(
+                  isFlaggedReport ? 'Confirm Deletion' : 'Reject',
+                  style: GoogleFonts.nunito(fontWeight: FontWeight.bold),
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -1161,7 +1248,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
-                child: Text('Approve', style: GoogleFonts.nunito(fontWeight: FontWeight.bold)),
+                child: Text(
+                  isFlaggedReport ? 'Reinstate Price' : 'Approve',
+                  style: GoogleFonts.nunito(fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],
@@ -1203,7 +1293,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Submission approved! ${sub.tokensReward} tokens awarded to sourcer.',
+          sub.promoType == 'Flagged Report'
+              ? 'Price reinstated. Flags cleared.'
+              : 'Submission approved! ${sub.tokensReward} tokens awarded to sourcer.',
         ),
         backgroundColor: Colors.green,
       ),
@@ -1211,11 +1303,17 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
   }
 
   void _reject(String id) {
+    final pendingSubs = ref.read(adminSubmissionsProvider);
+    final sub = pendingSubs.firstWhere((s) => s.id == id, orElse: () => pendingSubs.first);
     ref.read(adminSubmissionsProvider.notifier).rejectSubmission(id);
     _selectNextAfterRemoval(id);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Submission rejected.'),
+      SnackBar(
+        content: Text(
+          sub.promoType == 'Flagged Report'
+              ? 'Report confirmed. Price entry permanently deleted.'
+              : 'Submission rejected.',
+        ),
         backgroundColor: Colors.redAccent,
       ),
     );

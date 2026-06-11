@@ -86,7 +86,7 @@ class MockData {
       category: 'Fresh',
       lowestPrice: 1.50,
       lowestPriceStore: 'Union Coop',
-      updatedAtLabel: 'Updated 15m ago',
+      updatedAtLabel: 'Updated 8h ago',
       imageUrl:
           'https://images.unsplash.com/photo-1622484211148-716598e04141?w=300&q=80&auto=format&fit=crop',
     ),
@@ -98,7 +98,7 @@ class MockData {
       category: 'Fresh',
       lowestPrice: 17.29,
       lowestPriceStore: 'Lulu Hypermarket',
-      updatedAtLabel: 'Updated 10m ago',
+      updatedAtLabel: 'Updated 18h ago',
       imageUrl:
           'https://images.unsplash.com/photo-1582515073490-39981397c445?w=300&q=80&auto=format&fit=crop',
     ),
@@ -122,7 +122,7 @@ class MockData {
       category: 'Fresh',
       lowestPrice: 27.29,
       lowestPriceStore: 'Union Coop',
-      updatedAtLabel: 'Updated 1h ago',
+      updatedAtLabel: 'Updated 12h ago',
       imageUrl:
           'https://images.unsplash.com/photo-1598170845058-32b996a7024e?w=300&q=80&auto=format&fit=crop',
     ),
@@ -146,7 +146,7 @@ class MockData {
       category: 'Bakery',
       lowestPrice: 4.50,
       lowestPriceStore: 'Carrefour',
-      updatedAtLabel: 'Updated 30m ago',
+      updatedAtLabel: 'Updated 2d ago',
       imageUrl:
           'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300&q=80&auto=format&fit=crop',
     ),
@@ -170,7 +170,7 @@ class MockData {
       category: 'Dairy & Sweet',
       lowestPrice: 11.50,
       lowestPriceStore: 'Carrefour',
-      updatedAtLabel: 'Updated 4h ago',
+      updatedAtLabel: 'Updated 36h ago',
       imageUrl:
           'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=200&q=80&auto=format&fit=crop',
     ),
@@ -182,7 +182,7 @@ class MockData {
       category: 'Bakery',
       lowestPrice: 32.75,
       lowestPriceStore: 'Union Coop',
-      updatedAtLabel: 'Updated 6h ago',
+      updatedAtLabel: 'Updated 4d ago',
       imageUrl:
           'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=200&q=80&auto=format&fit=crop',
     ),
@@ -218,7 +218,7 @@ class MockData {
       category: 'Bakery',
       lowestPrice: 38.00,
       lowestPriceStore: 'Lulu Hypermarket',
-      updatedAtLabel: 'Updated 1d ago',
+      updatedAtLabel: 'Updated 3d ago',
       imageUrl:
           'https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=200&q=80&auto=format&fit=crop',
     ),
@@ -659,4 +659,38 @@ class MockData {
       timestampLabel: '1h ago',
     ),
   ];
+
+  static final List<PriceRequest> initialPriceRequests = [
+    PriceRequest(
+      id: 'req1',
+      productName: 'Fresh Organic Avocados 1kg',
+      storeName: 'Lulu Hypermarket',
+      tokensBounty: 20,
+      requesterName: 'Adil-ur Rahman',
+      status: 'pending',
+      timestampLabel: '1h ago',
+      distance: 1.4,
+    ),
+    PriceRequest(
+      id: 'req2',
+      productName: 'Al Baker Basmati Rice 5kg',
+      storeName: 'Carrefour',
+      tokensBounty: 15,
+      requesterName: 'Meera Al Maktoum',
+      status: 'pending',
+      timestampLabel: '3h ago',
+      distance: 2.1,
+    ),
+    PriceRequest(
+      id: 'req3',
+      productName: 'Al Rawabi Full Cream Milk 1L',
+      storeName: 'Spinneys',
+      tokensBounty: 10,
+      requesterName: 'Khalid Al Ameri',
+      status: 'pending',
+      timestampLabel: '5h ago',
+      distance: 3.2,
+    ),
+  ];
 }
+

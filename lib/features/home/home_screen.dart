@@ -407,12 +407,26 @@ class HomeScreen extends ConsumerWidget {
                         color: Colors.black,
                       ),
                     ),
-                    Text(
-                      '${feedProducts.length} nearby',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.redAccent,
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      transitionBuilder: (child, animation) => FadeTransition(
+                        opacity: animation,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0, 0.3),
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: child,
+                        ),
+                      ),
+                      child: Text(
+                        '${feedProducts.length} fresh prices',
+                        key: ValueKey<int>(feedProducts.length),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.redAccent,
+                        ),
                       ),
                     ),
                   ],
@@ -420,15 +434,46 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
 
-            // Verified prices list cards
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              sliver: SliverList.builder(
-                itemCount: feedProducts.take(4).length,
-                itemBuilder: (context, index) =>
-                    _FreshPriceEntryCard(product: feedProducts[index]),
+            // Verified prices list cards (show up to 8 filtered results)
+            if (feedProducts.isEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        Icon(Icons.search_off_rounded, size: 48, color: Colors.grey.shade300),
+                        const SizedBox(height: 12),
+                        Text(
+                          'No prices found for this filter',
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Try selecting a wider time range',
+                          style: TextStyle(
+                            color: Colors.grey.shade400,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              )
+            else
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                sliver: SliverList.builder(
+                  itemCount: feedProducts.take(8).length,
+                  itemBuilder: (context, index) =>
+                      _FreshPriceEntryCard(product: feedProducts[index]),
+                ),
               ),
-            ),
 
             // 7. Fresh Products Feed
             SliverToBoxAdapter(
@@ -464,7 +509,7 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
 
-            // 2-column grid displaying products
+            // 2-column grid displaying filtered products
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               sliver: SliverGrid(
@@ -475,8 +520,8 @@ class HomeScreen extends ConsumerWidget {
                   mainAxisSpacing: 14,
                 ),
                 delegate: SliverChildBuilderDelegate(
-                  (context, index) => ProductGridCard(product: products[index]),
-                  childCount: 4.clamp(0, products.length), // Display top items (Spinach, Apples, Lettuce, Beetroot)
+                  (context, index) => ProductGridCard(product: feedProducts[index]),
+                  childCount: feedProducts.take(4).length,
                 ),
               ),
             ),

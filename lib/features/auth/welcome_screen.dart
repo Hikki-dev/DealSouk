@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/responsive_container.dart';
 import '../../core/widgets/souk_widgets.dart';
+import '../../core/widgets/tutorial_overlay.dart';
+
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -232,46 +234,53 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     const Spacer(flex: 2),
 
                     // Value banner
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 20),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.15),
+                    GestureDetector(
+                      onTap: () {
+                        if (!_isAdminMode) {
+                          TutorialOverlay.show(context);
+                        }
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 20),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
                         ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.info_outline,
-                            color: Colors.white,
-                            size: 20,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.15),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: AnimatedSize(
-                              duration: const Duration(milliseconds: 200),
-                              child: Text(
-                                _isAdminMode
-                                    ? 'Moderator Panel: Verify receipts and shelf prices.'
-                                    : 'Live Dubai prices. Earn tokens.',
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.info_outline,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: AnimatedSize(
+                                duration: const Duration(milliseconds: 200),
+                                child: Text(
+                                  _isAdminMode
+                                      ? 'Moderator Panel: Verify receipts and shelf prices.'
+                                      : 'Live Dubai prices. Earn tokens • Tap to learn how!',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
 

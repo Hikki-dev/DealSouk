@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/state/state.dart';
 import '../../core/theme/theme.dart';
+import '../../core/widgets/tutorial_overlay.dart';
+
+
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -161,6 +165,22 @@ class ProfileScreen extends ConsumerWidget {
                     title: 'Price drop alerts',
                     subtitle: 'Demo-only preview, no real push notifications',
                   ),
+                  GestureDetector(
+                    onTap: () => _showMyRequestsSheet(context, ref),
+                    child: const _SettingsRow(
+                      icon: Icons.assignment_outlined,
+                      title: 'My Price Requests',
+                      subtitle: 'Track your open and completed price check bounties',
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => TutorialOverlay.show(context),
+                    child: const _SettingsRow(
+                      icon: Icons.help_outline_rounded,
+                      title: 'View App Tutorial',
+                      subtitle: 'Re-run the 3-screen DealSouk intro guide',
+                    ),
+                  ),
                   const SizedBox(height: 24),
                   GestureDetector(
                     onTap: () => context.go('/welcome'),
@@ -196,7 +216,105 @@ class ProfileScreen extends ConsumerWidget {
       ),
     );
   }
+
+  void _showMyRequestsSheet(BuildContext context, WidgetRef ref) {
+    final requests = ref.read(priceRequestsProvider);
+    final myRequests = requests.where((r) => r.requesterName == 'Hessa Al Maktoum').toList();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2.5),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'My Price Requests',
+                style: GoogleFonts.fredoka(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.forestDeep,
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (myRequests.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 40),
+                  child: Center(
+                    child: Text(
+                      'You haven\'t posted any price requests yet.',
+                      style: TextStyle(color: Colors.grey, fontSize: 13.5),
+                    ),
+                  ),
+                )
+              else
+                SizedBox(
+                  height: 300,
+                  child: ListView.builder(
+                    itemCount: myRequests.length,
+                    itemBuilder: (context, index) {
+                      final req = myRequests[index];
+                      final isFulfilled = req.status == 'fulfilled';
+                      return ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: CircleAvatar(
+                          backgroundColor: isFulfilled ? Colors.green.shade50 : Colors.amber.shade50,
+                          child: Icon(
+                            isFulfilled ? Icons.check_circle_rounded : Icons.pending_rounded,
+                            color: isFulfilled ? Colors.green : Colors.amber.shade800,
+                            size: 20,
+                          ),
+                        ),
+                        title: Text(
+                          req.productName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                        subtitle: Text(
+                          '${req.storeName} • ${req.timestampLabel}',
+                          style: const TextStyle(fontSize: 11),
+                        ),
+                        trailing: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '${req.tokensBounty} T',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }
+
 
 class _ShortcutCard extends StatelessWidget {
   final IconData icon;

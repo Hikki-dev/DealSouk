@@ -228,6 +228,40 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                   )
                                 : Column(
                                     children: sortedPrices.map((sp) {
+                                      final key = '${product.id}_${sp.storeName}';
+                                      final flaggedState = ref.watch(flaggedPricesProvider);
+                                      final flagCount = flaggedState[key] ?? 0;
+                                      final isHidden = flagCount >= 3;
+
+                                      if (isHidden) {
+                                        return Container(
+                                          margin: const EdgeInsets.symmetric(vertical: 6),
+                                          padding: const EdgeInsets.all(12),
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey.shade100,
+                                            borderRadius: BorderRadius.circular(12),
+                                            border: Border.all(color: Colors.grey.shade300, width: 1.2),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.report_problem_rounded, color: Colors.orange.shade700, size: 20),
+                                              const SizedBox(width: 12),
+                                              const Expanded(
+                                                child: Text(
+                                                  'Price flagged & hidden (Pending admin audit)',
+                                                  style: TextStyle(
+                                                    color: Colors.black54,
+                                                    fontSize: 12.5,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontStyle: FontStyle.italic,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }
+
                                       final isCheapest = sp.price == selectedPrice;
                                       return Container(
                                         margin: const EdgeInsets.symmetric(vertical: 6),
@@ -302,6 +336,34 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                                   ),
                                                 ),
                                               ),
+                                            IconButton(
+                                              icon: Icon(
+                                                Icons.outlined_flag_rounded,
+                                                color: flagCount > 0 ? Colors.redAccent : Colors.grey.shade400,
+                                                size: 20,
+                                              ),
+                                              tooltip: 'Flag incorrect price',
+                                              onPressed: () {
+                                                ref.read(flaggedPricesProvider.notifier).flagPrice(
+                                                      product.id,
+                                                      sp.storeName,
+                                                      product.name,
+                                                      sp.price,
+                                                    );
+                                                final newCount = flagCount + 1;
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(
+                                                      newCount >= 3
+                                                          ? 'Price report flagged 3 times! Hidden and sent to Admin Queue.'
+                                                          : 'Price report flagged ($newCount/3). Auto-hides at 3.',
+                                                    ),
+                                                    duration: const Duration(seconds: 2),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                            const SizedBox(width: 4),
                                             SoukPrice(sp.price, size: 14.5),
                                           ],
                                         ),

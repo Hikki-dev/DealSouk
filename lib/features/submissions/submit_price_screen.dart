@@ -7,7 +7,18 @@ import '../../core/theme/theme.dart';
 import '../../core/widgets/responsive_container.dart';
 
 class SubmitPriceScreen extends ConsumerStatefulWidget {
-  const SubmitPriceScreen({super.key});
+  final String? requestId;
+  final String? prefilledProductName;
+  final String? prefilledStoreName;
+  final int? bounty;
+
+  const SubmitPriceScreen({
+    super.key,
+    this.requestId,
+    this.prefilledProductName,
+    this.prefilledStoreName,
+    this.bounty,
+  });
 
   @override
   ConsumerState<SubmitPriceScreen> createState() => _SubmitPriceScreenState();
@@ -28,6 +39,26 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
   void initState() {
     super.initState();
     _priceController.addListener(() => setState(() {}));
+
+    // Prefill fields if fulfilling a Request Board bounty
+    if (widget.prefilledStoreName != null) {
+      final match = MockData.initialStores.where(
+        (s) => s.name.toLowerCase().contains(widget.prefilledStoreName!.toLowerCase()) ||
+               widget.prefilledStoreName!.toLowerCase().contains(s.name.toLowerCase()),
+      );
+      if (match.isNotEmpty) {
+        selectedStoreId = match.first.id;
+      }
+    }
+    if (widget.prefilledProductName != null) {
+      final match = MockData.initialProducts.where(
+        (p) => p.name.toLowerCase().contains(widget.prefilledProductName!.toLowerCase()) ||
+               widget.prefilledProductName!.toLowerCase().contains(p.name.toLowerCase()),
+      );
+      if (match.isNotEmpty) {
+        selectedProductId = match.first.id;
+      }
+    }
   }
 
   @override
@@ -44,9 +75,14 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
 
     final priceEntered = double.tryParse(_priceController.text.trim()) != null;
     final int baseReward = _tokenEstimateBeforeReceipt(priceEntered);
-    final int totalReward = uploadedReceipt
+    var totalReward = uploadedReceipt
         ? (baseReward * 1.5).round()
         : baseReward;
+
+    // Add active request bounty if fulfilling a request
+    if (widget.bounty != null) {
+      totalReward += widget.bounty!;
+    }
 
     return ResponsiveContainer(
       appBar: AppBar(
@@ -428,6 +464,11 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                           promoType: selectedPromo,
                           tokensReward: totalReward,
                         );
+
+                    // Fulfill the request if applicable
+                    if (widget.requestId != null) {
+                      ref.read(priceRequestsProvider.notifier).fulfillPriceRequest(widget.requestId!);
+                    }
 
                     _showSuccessDialog(context, totalReward);
                   }

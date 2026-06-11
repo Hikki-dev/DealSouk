@@ -143,3 +143,42 @@ class AdminSubmission {
     required this.timestampLabel,
   });
 }
+
+class PriceRequest {
+  final String id;
+  final String productName;
+  final String storeName;
+  final int tokensBounty;
+  final String requesterName;
+  final String status; // 'pending', 'fulfilled'
+  final String timestampLabel;
+  final double distance;
+
+  PriceRequest({
+    required this.id,
+    required this.productName,
+    required this.storeName,
+    required this.tokensBounty,
+    required this.requesterName,
+    this.status = 'pending',
+    required this.timestampLabel,
+    required this.distance,
+  });
+
+  PriceRequest copyWith({
+    String? status,
+    String? timestampLabel,
+  }) {
+    return PriceRequest(
+      id: id,
+      productName: productName,
+      storeName: storeName,
+      tokensBounty: tokensBounty,
+      requesterName: requesterName,
+      status: status ?? this.status,
+      timestampLabel: timestampLabel ?? this.timestampLabel,
+      distance: distance,
+    );
+  }
+}
+

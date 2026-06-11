@@ -6,12 +6,21 @@ import '../../core/state/state.dart';
 import '../../core/mock_data/mock_data.dart';
 import '../../core/models/models.dart';
 import '../../core/theme/theme.dart';
+import 'request_board_view.dart';
 
-class LeaderboardScreen extends ConsumerWidget {
+class LeaderboardScreen extends ConsumerStatefulWidget {
   const LeaderboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LeaderboardScreen> createState() => _LeaderboardScreenState();
+}
+
+class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
+  bool _showRequestBoard = false;
+
+  @override
+  Widget build(BuildContext context) {
+
     final theme = Theme.of(context);
     final tokens = ref.watch(userTokensProvider);
     final transactions = ref.watch(userTransactionsProvider);
@@ -103,11 +112,81 @@ class LeaderboardScreen extends ConsumerWidget {
               ),
             ),
 
-          // Top Profile Card Deck
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Container(
+            // Segmented Mode Toggle
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _showRequestBoard = false),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            decoration: BoxDecoration(
+                              color: !_showRequestBoard ? AppTheme.forestDeep : Colors.transparent,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'Leaderboard & Streaks',
+                                style: TextStyle(
+                                  color: !_showRequestBoard ? Colors.white : Colors.grey.shade600,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _showRequestBoard = true),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            decoration: BoxDecoration(
+                              color: _showRequestBoard ? AppTheme.forestDeep : Colors.transparent,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'Active Request Board',
+                                style: TextStyle(
+                                  color: _showRequestBoard ? Colors.white : Colors.grey.shade600,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            if (_showRequestBoard) ...[
+              const SliverToBoxAdapter(child: SizedBox(height: 12)),
+              const SliverToBoxAdapter(child: RequestBoardView()),
+              const SliverPadding(padding: EdgeInsets.only(bottom: 120)),
+            ] else ...[
+              // Top Profile Card Deck
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -859,7 +938,8 @@ class LeaderboardScreen extends ConsumerWidget {
             ),
           ),
 
-          const SliverPadding(padding: EdgeInsets.only(bottom: 40)),
+            const SliverPadding(padding: EdgeInsets.only(bottom: 40)),
+          ],
         ],
       ),
      ),

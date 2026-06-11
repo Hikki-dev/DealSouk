@@ -58,7 +58,15 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/submit-price',
-      builder: (context, state) => const SubmitPriceScreen(),
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+        return SubmitPriceScreen(
+          requestId: extra?['requestId'] as String?,
+          prefilledProductName: extra?['productName'] as String?,
+          prefilledStoreName: extra?['storeName'] as String?,
+          bounty: extra?['bounty'] as int?,
+        );
+      },
     ),
   ],
 );

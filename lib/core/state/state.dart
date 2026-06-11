@@ -163,6 +163,18 @@ class AdminSubmissionsNotifier extends Notifier<List<AdminSubmission>> {
       // Remove from submissions
       state = state.where((s) => s.id != id).toList();
 
+      if (sub.promoType == 'Flagged Report') {
+        // Find matching product id
+        final products = ref.read(productsProvider);
+        final product = products.firstWhere(
+          (p) => p.name.toLowerCase().contains(sub.productName.toLowerCase()) ||
+                 sub.productName.toLowerCase().contains(p.name.toLowerCase()),
+          orElse: () => products.first,
+        );
+        ref.read(flaggedPricesProvider.notifier).resetFlags(product.id, sub.storeName);
+        return;
+      }
+
       // Award tokens to Hessa
       ref.read(userTokensProvider.notifier).addTokens(sub.tokensReward);
       ref
@@ -271,3 +283,109 @@ class UserProfileNotifier extends Notifier<UserProfile> {
 final userProfileProvider = NotifierProvider<UserProfileNotifier, UserProfile>(
   UserProfileNotifier.new,
 );
+
+// --- Price Requests State ---
+class PriceRequestsNotifier extends Notifier<List<PriceRequest>> {
+  @override
+  List<PriceRequest> build() => MockData.initialPriceRequests;
+
+  void addPriceRequest({
+    required String productName,
+    required String storeName,
+    required int bounty,
+    required String requesterName,
+  }) {
+    final newRequest = PriceRequest(
+      id: 'req_${DateTime.now().millisecondsSinceEpoch}',
+      productName: productName,
+      storeName: storeName,
+      tokensBounty: bounty,
+      requesterName: requesterName,
+      status: 'pending',
+      timestampLabel: 'Just now',
+      distance: 1.0 + (DateTime.now().millisecondsSinceEpoch % 500) / 100.0,
+    );
+
+    // Deduct tokens from userTokensProvider
+    ref.read(userTokensProvider.notifier).deductTokens(bounty);
+    ref.read(userTransactionsProvider.notifier).addTransaction(
+          -bounty,
+          'Requested price check: $productName at $storeName',
+        );
+
+    state = [newRequest, ...state];
+  }
+
+  void fulfillPriceRequest(String requestId) {
+    state = state.map((req) {
+      if (req.id == requestId) {
+        return req.copyWith(status: 'fulfilled', timestampLabel: 'Fulfilled Just Now');
+      }
+      return req;
+    }).toList();
+  }
+
+  void refundPriceRequest(String requestId) {
+    final reqIndex = state.indexWhere((r) => r.id == requestId);
+    if (reqIndex >= 0) {
+      final req = state[reqIndex];
+      // Refund tokens to user
+      ref.read(userTokensProvider.notifier).addTokens(req.tokensBounty);
+      ref.read(userTransactionsProvider.notifier).addTransaction(
+            req.tokensBounty,
+            'Refunded request: ${req.productName} check',
+          );
+      state = state.where((r) => r.id != requestId).toList();
+    }
+  }
+}
+
+final priceRequestsProvider =
+    NotifierProvider<PriceRequestsNotifier, List<PriceRequest>>(
+  PriceRequestsNotifier.new,
+);
+
+// --- Flagged Prices State ---
+class FlaggedPricesNotifier extends Notifier<Map<String, int>> {
+  // Maps "productId_storeName" to flag count
+  @override
+  Map<String, int> build() => {};
+
+  void flagPrice(String productId, String storeName, String productName, double price) {
+    final key = '${productId}_$storeName';
+    final currentFlags = state[key] ?? 0;
+    final newFlags = currentFlags + 1;
+    
+    state = {...state, key: newFlags};
+
+    if (newFlags >= 3) {
+      // Create a flagged submission for the admin queue
+      ref.read(adminSubmissionsProvider.notifier).addSubmission(
+            productName: productName,
+            brand: 'Community Flagged Report',
+            storeName: storeName,
+            price: price,
+            hasReceipt: false,
+            hasPhoto: false,
+            promoType: 'Flagged Report',
+            tokensReward: 0,
+          );
+    }
+  }
+
+  void resetFlags(String productId, String storeName) {
+    final key = '${productId}_$storeName';
+    state = {...state, key: 0};
+  }
+
+  bool isPriceHidden(String productId, String storeName) {
+    final key = '${productId}_$storeName';
+    return (state[key] ?? 0) >= 3;
+  }
+}
+
+final flaggedPricesProvider =
+    NotifierProvider<FlaggedPricesNotifier, Map<String, int>>(
+  FlaggedPricesNotifier.new,
+);
+

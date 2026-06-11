@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/state/state.dart';
 import '../../core/mock_data/mock_data.dart';
 import '../../core/models/models.dart';
 import '../../core/theme/theme.dart';
-import '../../core/widgets/souk_widgets.dart';
 
 class LeaderboardScreen extends ConsumerWidget {
   const LeaderboardScreen({super.key});
@@ -52,44 +53,54 @@ class LeaderboardScreen extends ConsumerWidget {
         .rank;
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          // ── Dark forest header with scallop trim ──
-          SliverToBoxAdapter(
-            child: Column(
-              children: [
-                Container(
-                  width: double.infinity,
-                  color: AppTheme.forestDeep,
-                  padding: EdgeInsets.fromLTRB(
-                    16,
-                    MediaQuery.of(context).padding.top + 14,
-                    16,
-                    16,
-                  ),
-                  child: const Text(
-                    'Rewards & Ranks',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                Stack(
+      backgroundColor: AppTheme.background,
+      body: SafeArea(
+        bottom: false,
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            // ── Clean Premium White/Light-Green Header ──
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+                child: Row(
                   children: [
-                    Container(height: 18, color: AppTheme.background),
-                    ClipPath(
-                      clipper: const ScallopClipper.down(scallopRadius: 9),
-                      child: Container(height: 18, color: AppTheme.forestDeep),
+                    GestureDetector(
+                      onTap: () => context.canPop() ? context.pop() : context.go('/'),
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: const Color(0xFFE8EEE4), width: 1.2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.02),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(Icons.arrow_back_ios_new_rounded, color: AppTheme.forestDeep, size: 18),
+                      ),
                     ),
+                    Expanded(
+                      child: Text(
+                        'Rewards & Leaderboard',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.fredoka(
+                          color: AppTheme.forestDeep,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 40), // Spacer to balance the back button
                   ],
                 ),
-                const SizedBox(height: 6),
-              ],
+              ),
             ),
-          ),
 
           // Top Profile Card Deck
           SliverToBoxAdapter(
@@ -841,6 +852,7 @@ class LeaderboardScreen extends ConsumerWidget {
           const SliverPadding(padding: EdgeInsets.only(bottom: 40)),
         ],
       ),
+     ),
     );
   }
 

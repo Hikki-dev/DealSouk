@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/state/state.dart';
 import '../../core/theme/theme.dart';
 import '../../core/models/models.dart';
@@ -13,10 +15,10 @@ class AdminScreen extends ConsumerStatefulWidget {
 
 class _AdminScreenState extends ConsumerState<AdminScreen> {
   String? _selectedSubId;
+  String _activeTab = 'moderation'; // 'moderation', 'analytics', 'settings'
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final pendingSubs = ref.watch(adminSubmissionsProvider);
     final int pendingCount = pendingSubs.length;
 
@@ -42,13 +44,13 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         : null;
 
     return Scaffold(
+      backgroundColor: AppTheme.background,
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final isDesktop = constraints.maxWidth > 768;
+          final isDesktop = constraints.maxWidth > 840;
           if (isDesktop) {
             return _buildDesktopLayout(
               context,
-              theme,
               pendingSubs,
               currentSub,
               pendingCount,
@@ -58,7 +60,6 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           } else {
             return _buildMobileLayout(
               context,
-              theme,
               pendingSubs,
               pendingCount,
               approvedCount,
@@ -70,10 +71,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     );
   }
 
-  // --- DESKTOP SPLIT SAAS LAYOUT ---
+  // --- DESKTOP SAAS SIDEBAR + MAIN AREA ---
   Widget _buildDesktopLayout(
     BuildContext context,
-    ThemeData theme,
     List<AdminSubmission> pendingSubs,
     AdminSubmission? currentSub,
     int pendingCount,
@@ -83,363 +83,632 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Left Column (Dashboard stats + Pending queue list)
-        Expanded(
-          flex: 5,
-          child: CustomScrollView(
-            slivers: [
-              // Header
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        // 1. LEFT SIDEBAR (Dark Slate)
+        Container(
+          width: 240,
+          color: const Color(0xFF0F172A), // Slate 900
+          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Logo area
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.limeAccent,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.storefront_outlined,
+                      color: Color(0xFF0F172A),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.red.shade50,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.red.shade100),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.security,
-                                  color: Colors.red.shade800,
-                                  size: 12,
+                      Text(
+                        'DealSouk',
+                        style: GoogleFonts.fredoka(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'Moderator Console',
+                        style: GoogleFonts.nunito(
+                          color: Colors.grey.shade500,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 36),
+
+              // Menu navigation
+              _sidebarMenuItem(
+                icon: Icons.gavel_rounded,
+                label: 'Price Moderation',
+                badgeCount: pendingCount,
+                isActive: _activeTab == 'moderation',
+                onTap: () => setState(() => _activeTab = 'moderation'),
+              ),
+              _sidebarMenuItem(
+                icon: Icons.bar_chart_rounded,
+                label: 'Analytics',
+                isActive: _activeTab == 'analytics',
+                onTap: () => setState(() => _activeTab = 'analytics'),
+              ),
+              _sidebarMenuItem(
+                icon: Icons.people_rounded,
+                label: 'Sourcers Index',
+                isActive: _activeTab == 'sourcers',
+                onTap: () => setState(() => _activeTab = 'sourcers'),
+              ),
+              _sidebarMenuItem(
+                icon: Icons.settings_rounded,
+                label: 'System Settings',
+                isActive: _activeTab == 'settings',
+                onTap: () => setState(() => _activeTab = 'settings'),
+              ),
+
+              const Spacer(),
+
+              // Bottom logout/back to app
+              const Divider(color: Colors.white12, height: 1),
+              const SizedBox(height: 16),
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                leading: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: const BoxDecoration(
+                    color: Colors.white10,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.arrow_back_rounded,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ),
+                title: Text(
+                  'Back to App',
+                  style: GoogleFonts.nunito(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                subtitle: Text(
+                  'Return to Profile',
+                  style: GoogleFonts.nunito(
+                    color: Colors.grey.shade500,
+                    fontSize: 10,
+                  ),
+                ),
+                onTap: () => context.go('/profile'),
+              ),
+            ],
+          ),
+        ),
+
+        // 2. MAIN CONSOLE PANEL
+        Expanded(
+          child: Column(
+            children: [
+              // Sticky Header
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      _activeTab == 'moderation'
+                          ? 'Audit & Verification'
+                          : _activeTab == 'analytics'
+                              ? 'Analytics & Performance'
+                              : 'System Settings',
+                      style: GoogleFonts.fredoka(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textDark,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFEBEE),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: const Color(0xFFFFCDD2)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.security, color: Colors.red, size: 12),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Role: Admin Auditor',
+                                style: GoogleFonts.nunito(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.red.shade900,
                                 ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'SaaS Moderator Console',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.red.shade900,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        OutlinedButton.icon(
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Syncing queue with server...')),
+                            );
+                          },
+                          icon: const Icon(Icons.sync_rounded, size: 15),
+                          label: const Text('Refresh'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            minimumSize: Size.zero,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Content Area
+              Expanded(
+                child: _activeTab == 'moderation'
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Left side: stats and list
+                          Expanded(
+                            flex: 5,
+                            child: CustomScrollView(
+                              physics: const BouncingScrollPhysics(),
+                              slivers: [
+                                // Stats Section
+                                SliverToBoxAdapter(
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: _statCard(
+                                            'PENDING REVIEWS',
+                                            '$pendingCount',
+                                            Icons.hourglass_empty_rounded,
+                                            Colors.orange,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 14),
+                                        Expanded(
+                                          child: _statCard(
+                                            'APPROVED TODAY',
+                                            '$approvedCount',
+                                            Icons.check_circle_outline_rounded,
+                                            Colors.green,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 14),
+                                        Expanded(
+                                          child: _statCard(
+                                            'TOKENS ISSUED',
+                                            '$tokensIssuedCount',
+                                            Icons.bolt_rounded,
+                                            Colors.amber,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
+
+                                // Header Row for queue
+                                SliverToBoxAdapter(
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
+                                    child: Text(
+                                      'Submissions Review Queue',
+                                      style: GoogleFonts.fredoka(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppTheme.textDark,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+
+                                // Submission items
+                                SliverPadding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                                  sliver: pendingSubs.isEmpty
+                                      ? SliverToBoxAdapter(child: _buildEmptyQueueCard())
+                                      : SliverList(
+                                          delegate: SliverChildBuilderDelegate(
+                                            (context, index) {
+                                              final sub = pendingSubs[index];
+                                              final isSelected = sub.id == _selectedSubId;
+                                              return _buildSubmissionCard(
+                                                context,
+                                                sub,
+                                                isSelected,
+                                                true,
+                                              );
+                                            },
+                                            childCount: pendingSubs.length,
+                                          ),
+                                        ),
+                                ),
+                                const SliverPadding(padding: EdgeInsets.only(bottom: 40)),
                               ],
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Audit Dashboard',
-                            style: theme.textTheme.headlineMedium?.copyWith(
-                              fontWeight: FontWeight.w900,
-                              color: AppTheme.textDark,
+
+                          // Right side: Sticky detailed audit panel
+                          VerticalDivider(width: 1, color: Colors.grey.shade200),
+                          Expanded(
+                            flex: 3,
+                            child: Container(
+                              color: Colors.white,
+                              padding: const EdgeInsets.all(24),
+                              child: currentSub == null
+                                  ? _buildSidebarIdleState()
+                                  : _buildSidebarAuditState(context, currentSub),
                             ),
                           ),
                         ],
-                      ),
-                      Row(
-                        children: [
-                          OutlinedButton.icon(
-                            onPressed: () {},
-                            icon: const Icon(Icons.refresh, size: 16),
-                            label: const Text('Sync Queue'),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 10,
-                              ),
-                              minimumSize: Size.zero,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                      )
+                    : _buildMockPanelContent(),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // --- MOBILE LAYOUT ---
+  Widget _buildMobileLayout(
+    BuildContext context,
+    List<AdminSubmission> pendingSubs,
+    int pendingCount,
+    int approvedCount,
+    int tokensIssuedCount,
+  ) {
+    return Column(
+      children: [
+        // App bar
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(bottom: BorderSide(color: Colors.grey.shade100)),
+          ),
+          padding: EdgeInsets.fromLTRB(
+            16,
+            MediaQuery.of(context).padding.top + 8,
+            16,
+            12,
+          ),
+          child: Row(
+            children: [
+              GestureDetector(
+                onTap: () => context.go('/profile'),
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFFE8EEE4), width: 1.2),
+                  ),
+                  child: const Icon(Icons.arrow_back_ios_new_rounded, color: AppTheme.forestDeep, size: 16),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  'Admin Review',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.fredoka(
+                    color: AppTheme.forestDeep,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
+              const SizedBox(width: 36),
+            ],
+          ),
+        ),
 
-              // Horizontal Grid for stats
+        // Scrollable list
+        Expanded(
+          child: CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              // Stats horizontally scrolling
               SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20.0,
-                    vertical: 8.0,
-                  ),
-                  child: Row(
+                child: Container(
+                  height: 94,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     children: [
-                      Expanded(
-                        child: _statCard(
-                          'PENDING REVIEWS',
-                          '$pendingCount',
-                          Icons.hourglass_empty,
-                          Colors.orange,
-                          theme,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _statCard(
-                          'APPROVED TODAY',
-                          '$approvedCount',
-                          Icons.check_circle_outline,
-                          Colors.green,
-                          theme,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _statCard(
-                          'ACTIVE SOURCE FLOW',
-                          '1,240',
-                          Icons.people_outline,
-                          Colors.blue,
-                          theme,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _statCard(
-                          'TOKENS ISSUED',
-                          '$tokensIssuedCount',
-                          Icons.bolt,
-                          Colors.amber,
-                          theme,
-                        ),
-                      ),
+                      _mobileStatCard('Pending reviews', '$pendingCount', Colors.orange),
+                      const SizedBox(width: 10),
+                      _mobileStatCard('Approved today', '$approvedCount', Colors.green),
+                      const SizedBox(width: 10),
+                      _mobileStatCard('Tokens issued', '$tokensIssuedCount', Colors.amber),
                     ],
                   ),
                 ),
               ),
 
-              // Pending Submissions Queue
+              // Title
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20.0, 24.0, 20.0, 8.0),
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                   child: Text(
-                    'Submissions Queue ($pendingCount)',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
+                    'Price Submissions (${pendingSubs.length})',
+                    style: GoogleFonts.fredoka(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                       color: AppTheme.textDark,
                     ),
                   ),
                 ),
               ),
 
+              // List items
               SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 sliver: pendingSubs.isEmpty
                     ? SliverToBoxAdapter(child: _buildEmptyQueueCard())
                     : SliverList(
-                        delegate: SliverChildBuilderDelegate((context, index) {
-                          final sub = pendingSubs[index];
-                          final isSelected = sub.id == _selectedSubId;
-                          return _buildSubmissionCard(
-                            context,
-                            sub,
-                            isSelected,
-                            true,
-                          );
-                        }, childCount: pendingSubs.length),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final sub = pendingSubs[index];
+                            return _buildSubmissionCard(context, sub, false, false);
+                          },
+                          childCount: pendingSubs.length,
+                        ),
                       ),
               ),
-              const SliverPadding(padding: EdgeInsets.only(bottom: 40)),
+              const SliverPadding(padding: EdgeInsets.only(bottom: 60)),
             ],
           ),
         ),
-
-        // Vertical Separator
-        VerticalDivider(width: 1, color: Colors.grey.shade200),
-
-        // Right Column (Sticky Quick Audit detail sidebar panel)
-        Expanded(
-          flex: 3,
-          child: Container(
-            color: Colors.grey.shade50,
-            padding: const EdgeInsets.all(20),
-            child: currentSub == null
-                ? _buildSidebarIdleState()
-                : _buildSidebarAuditState(context, currentSub),
-          ),
-        ),
       ],
     );
   }
 
-  // --- MOBILE SINGLE COLUMN LAYOUT ---
-  Widget _buildMobileLayout(
-    BuildContext context,
-    ThemeData theme,
-    List<AdminSubmission> pendingSubs,
-    int pendingCount,
-    int approvedCount,
-    int tokensIssuedCount,
-  ) {
-    return CustomScrollView(
-      slivers: [
-        // Header
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
+  // --- REUSABLE SAAS CARD COMPONENTS ---
+  Widget _sidebarMenuItem({
+    required IconData icon,
+    required String label,
+    int? badgeCount,
+    required bool isActive,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(10),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            decoration: BoxDecoration(
+              color: isActive ? Colors.white.withValues(alpha: 0.08) : Colors.transparent,
+              borderRadius: BorderRadius.circular(10),
+              border: isActive
+                  ? const Border(left: BorderSide(color: AppTheme.limeAccent, width: 3.5))
+                  : null,
+            ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade100,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.security,
-                            color: Colors.red.shade800,
-                            size: 12,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Admin Portal',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.red.shade900,
-                            ),
-                          ),
-                        ],
+                Icon(
+                  icon,
+                  color: isActive ? AppTheme.limeAccent : Colors.grey.shade400,
+                  size: 18,
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: GoogleFonts.nunito(
+                      color: isActive ? Colors.white : Colors.grey.shade400,
+                      fontSize: 13.5,
+                      fontWeight: isActive ? FontWeight.bold : FontWeight.w600,
+                    ),
+                  ),
+                ),
+                if (badgeCount != null && badgeCount > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '$badgeCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Moderation Deck',
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
-                ),
-                IconButton(
-                  icon: const Icon(Icons.settings_outlined),
-                  onPressed: () {},
-                ),
+                  ),
               ],
             ),
           ),
         ),
-
-        // Statistics Grid Deck
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 8.0,
-            ),
-            child: GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 1.7,
-              children: [
-                _statCard(
-                  'Pending Reviews',
-                  '$pendingCount',
-                  Icons.hourglass_top,
-                  Colors.orange,
-                  theme,
-                ),
-                _statCard(
-                  'Approved Today',
-                  '$approvedCount',
-                  Icons.check_circle_outline,
-                  Colors.green,
-                  theme,
-                ),
-                _statCard(
-                  'Active Users',
-                  '1,240',
-                  Icons.people_outline,
-                  Colors.blue,
-                  theme,
-                ),
-                _statCard(
-                  'Tokens Issued',
-                  '$tokensIssuedCount',
-                  Icons.bolt,
-                  Colors.amber,
-                  theme,
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        // Pending Submissions Header
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16.0, 20.0, 16.0, 8.0),
-            child: Text(
-              'Pending Price Reviews ($pendingCount)',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ),
-
-        // List
-        SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          sliver: pendingSubs.isEmpty
-              ? SliverToBoxAdapter(child: _buildEmptyQueueCard())
-              : SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final sub = pendingSubs[index];
-                    return _buildSubmissionCard(context, sub, false, false);
-                  }, childCount: pendingSubs.length),
-                ),
-        ),
-        const SliverPadding(padding: EdgeInsets.only(bottom: 40)),
-      ],
+      ),
     );
   }
 
-  // --- REUSABLE CARD WIDGETS ---
-  Widget _buildEmptyQueueCard() {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.shade200),
+  Widget _statCard(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE8EEE4), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.015),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 40.0, horizontal: 16.0),
-        child: Column(
-          children: [
-            Icon(Icons.verified, color: Colors.green.shade400, size: 54),
-            const SizedBox(height: 16),
-            const Text(
-              'All Clean!',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: AppTheme.textDark,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                label,
+                style: GoogleFonts.nunito(
+                  fontSize: 11,
+                  color: Colors.grey.shade500,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
               ),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 16),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: GoogleFonts.fredoka(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textDark,
+              height: 1.0,
             ),
-            const SizedBox(height: 6),
-            const Text(
-              'There are no pending price submissions left to moderate.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey, fontSize: 13),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _mobileStatCard(String label, String value, Color color) {
+    return Container(
+      width: 140,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE8EEE4), width: 1.1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            label.toUpperCase(),
+            style: GoogleFonts.nunito(
+              fontSize: 9,
+              color: Colors.grey.shade500,
+              fontWeight: FontWeight.w800,
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                value,
+                style: GoogleFonts.fredoka(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textDark,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyQueueCard() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE8EEE4), width: 1.2),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.green.shade50,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.done_all_rounded, color: Colors.green, size: 48),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            'Queue Cleared!',
+            style: GoogleFonts.fredoka(
+              fontWeight: FontWeight.bold,
+              fontSize: 17,
+              color: AppTheme.textDark,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'No pending grocery price reports require verification.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.nunito(
+              color: Colors.grey.shade500,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -450,179 +719,179 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     bool isSelected,
     bool isDesktop,
   ) {
-    final theme = Theme.of(context);
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: isSelected ? 4 : 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: isSelected ? theme.colorScheme.primary : Colors.grey.shade200,
-          width: isSelected ? 2.0 : 1.0,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isSelected ? AppTheme.forestDeep : const Color(0xFFE8EEE4),
+          width: isSelected ? 1.8 : 1.2,
         ),
+        boxShadow: isSelected
+            ? [
+                BoxShadow(
+                  color: AppTheme.forestDeep.withValues(alpha: 0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : [],
       ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: isDesktop
-            ? () {
-                setState(() {
-                  _selectedSubId = sub.id;
-                });
-              }
-            : null,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          sub.productName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                            color: AppTheme.textDark,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Brand: ${sub.brand} • Store: ${sub.storeName}',
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Text(
-                    'AED ${sub.price.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              const Divider(height: 1),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      _attachmentChip(
-                        icon: Icons.camera_alt,
-                        label: 'Price Photo',
-                        isAttached: sub.hasPhoto,
-                        onTap: sub.hasPhoto
-                            ? () => _showPricePhotoDialog(context, sub)
-                            : null,
-                      ),
-                      const SizedBox(width: 8),
-                      _attachmentChip(
-                        icon: Icons.receipt_long,
-                        label: 'Receipt',
-                        isAttached: sub.hasReceipt,
-                        onTap: sub.hasReceipt
-                            ? () => _showReceiptDialog(context, sub)
-                            : null,
-                      ),
-                    ],
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.amberLight,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      'Reward: +${sub.tokensReward}T',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 10,
-                        color: Color(0xFFC77C02),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              if (!isDesktop) ...[
-                const SizedBox(height: 16),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: isDesktop
+              ? () {
+                  setState(() {
+                    _selectedSubId = sub.id;
+                  });
+                }
+              : null,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => _reject(sub.id),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.red,
-                          side: const BorderSide(color: Colors.red),
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            sub.productName,
+                            style: GoogleFonts.fredoka(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: AppTheme.textDark,
+                            ),
                           ),
-                          textStyle: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
+                          const SizedBox(height: 2),
+                          Text(
+                            'Brand: ${sub.brand} • Store: ${sub.storeName}',
+                            style: GoogleFonts.nunito(
+                              color: Colors.grey.shade600,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                        child: const Text('Reject'),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () => _approve(sub.id, sub),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          textStyle: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        child: const Text('Approve'),
+                    Text(
+                      'AED ${sub.price.toStringAsFixed(2)}',
+                      style: GoogleFonts.fredoka(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.forestDeep,
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 12),
+                const Divider(height: 1),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        _attachmentChip(
+                          icon: Icons.camera_alt_outlined,
+                          label: 'Price Photo',
+                          isAttached: sub.hasPhoto,
+                          onTap: sub.hasPhoto ? () => _showPricePhotoDialog(context, sub) : null,
+                        ),
+                        const SizedBox(width: 8),
+                        _attachmentChip(
+                          icon: Icons.receipt_long_outlined,
+                          label: 'Receipt',
+                          isAttached: sub.hasReceipt,
+                          onTap: sub.hasReceipt ? () => _showReceiptDialog(context, sub) : null,
+                        ),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppTheme.amberAccent.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'Reward: +${sub.tokensReward}T',
+                        style: GoogleFonts.nunito(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 10,
+                          color: const Color(0xFFC77C02),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (!isDesktop) ...[
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => _reject(sub.id),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.red,
+                            side: const BorderSide(color: Colors.red),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            textStyle: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.bold),
+                          ),
+                          child: const Text('Reject'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => _approve(sub.id, sub),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            textStyle: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.bold),
+                          ),
+                          child: const Text('Approve'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  // --- RIGHT SIDEBAR DETAILS PANEL ---
+  // --- RIGHT DETAILS PANEL ---
   Widget _buildSidebarIdleState() {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.inventory, color: Colors.grey, size: 48),
-          SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(color: Colors.grey.shade100, shape: BoxShape.circle),
+            child: Icon(Icons.hourglass_empty_rounded, color: Colors.grey.shade400, size: 40),
+          ),
+          const SizedBox(height: 14),
           Text(
             'System Idle',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
+            style: GoogleFonts.fredoka(fontWeight: FontWeight.bold, color: Colors.grey.shade600),
           ),
+          const SizedBox(height: 4),
           Text(
-            'All submissions moderated.',
-            style: TextStyle(fontSize: 12, color: Colors.grey),
+            'Select a queue item to audit',
+            style: GoogleFonts.nunito(fontSize: 12, color: Colors.grey.shade500),
           ),
         ],
       ),
@@ -630,18 +899,20 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
   }
 
   Widget _buildSidebarAuditState(BuildContext context, AdminSubmission sub) {
-    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Submission Review',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: AppTheme.textDark,
+            Expanded(
+              child: Text(
+                'Submission Audit',
+                style: GoogleFonts.fredoka(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textDark,
+                ),
               ),
             ),
             Container(
@@ -653,9 +924,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               ),
               child: Text(
                 'PENDING',
-                style: TextStyle(
+                style: GoogleFonts.nunito(
                   fontSize: 9,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w900,
                   color: Colors.orange.shade800,
                   letterSpacing: 0.5,
                 ),
@@ -666,17 +937,17 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         const SizedBox(height: 4),
         Text(
           'ID: ${sub.id}  ·  Submitted ${sub.timestampLabel}',
-          style: const TextStyle(fontSize: 11, color: Colors.grey),
+          style: GoogleFonts.nunito(fontSize: 11, color: Colors.grey.shade500, fontWeight: FontWeight.w600),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
 
         // Visual Thumbnail previews of attachments
-        const Text(
-          'Evidence — tap to expand:',
-          style: TextStyle(
+        Text(
+          'ATTACHED EVIDENCE (TAP TO VIEW):',
+          style: GoogleFonts.nunito(
             fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey,
+            fontWeight: FontWeight.w800,
+            color: Colors.grey.shade500,
           ),
         ),
         const SizedBox(height: 8),
@@ -684,41 +955,31 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           children: [
             Expanded(
               child: GestureDetector(
-                onTap: sub.hasPhoto
-                    ? () => _showPricePhotoDialog(context, sub)
-                    : null,
+                onTap: sub.hasPhoto ? () => _showPricePhotoDialog(context, sub) : null,
                 child: Container(
-                  height: 90,
+                  height: 84,
                   decoration: BoxDecoration(
-                    color: sub.hasPhoto
-                        ? Colors.blue.shade50
-                        : Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(12),
+                    color: sub.hasPhoto ? const Color(0xFFE3F2FD) : Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: sub.hasPhoto
-                          ? Colors.blue.shade200
-                          : Colors.grey.shade200,
+                      color: sub.hasPhoto ? const Color(0xFF90CAF9) : const Color(0xFFE8EEE4),
                     ),
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
-                        Icons.camera_alt,
-                        color: sub.hasPhoto
-                            ? Colors.blue.shade700
-                            : Colors.grey.shade400,
-                        size: 24,
+                        Icons.camera_alt_rounded,
+                        color: sub.hasPhoto ? Colors.blue.shade700 : Colors.grey.shade400,
+                        size: 22,
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        sub.hasPhoto ? 'Price Tag Pic' : 'No Photo',
-                        style: TextStyle(
+                        sub.hasPhoto ? 'Price Label Pic' : 'No Photo',
+                        style: GoogleFonts.nunito(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
-                          color: sub.hasPhoto
-                              ? Colors.blue.shade800
-                              : Colors.grey.shade500,
+                          color: sub.hasPhoto ? Colors.blue.shade800 : Colors.grey.shade500,
                         ),
                       ),
                     ],
@@ -729,41 +990,31 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: GestureDetector(
-                onTap: sub.hasReceipt
-                    ? () => _showReceiptDialog(context, sub)
-                    : null,
+                onTap: sub.hasReceipt ? () => _showReceiptDialog(context, sub) : null,
                 child: Container(
-                  height: 90,
+                  height: 84,
                   decoration: BoxDecoration(
-                    color: sub.hasReceipt
-                        ? Colors.teal.shade50
-                        : Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(12),
+                    color: sub.hasReceipt ? const Color(0xFFE0F2F1) : Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: sub.hasReceipt
-                          ? Colors.teal.shade200
-                          : Colors.grey.shade200,
+                      color: sub.hasReceipt ? const Color(0xFF80CBC4) : const Color(0xFFE8EEE4),
                     ),
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
-                        Icons.receipt_long,
-                        color: sub.hasReceipt
-                            ? Colors.teal.shade700
-                            : Colors.grey.shade400,
-                        size: 24,
+                        Icons.receipt_long_rounded,
+                        color: sub.hasReceipt ? Colors.teal.shade700 : Colors.grey.shade400,
+                        size: 22,
                       ),
                       const SizedBox(height: 4),
                       Text(
                         sub.hasReceipt ? 'Receipt Scan' : 'No Receipt',
-                        style: TextStyle(
+                        style: GoogleFonts.nunito(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
-                          color: sub.hasReceipt
-                              ? Colors.teal.shade800
-                              : Colors.grey.shade500,
+                          color: sub.hasReceipt ? Colors.teal.shade800 : Colors.grey.shade500,
                         ),
                       ),
                     ],
@@ -773,54 +1024,45 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 24),
 
         // Guidelines Checklist
         const Divider(height: 1),
-        const SizedBox(height: 16),
-        const Text(
-          'Moderator Checklist',
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: Colors.grey,
+        const SizedBox(height: 20),
+        Text(
+          'CHECKLIST PROTOCOLS:',
+          style: GoogleFonts.nunito(
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
+            color: Colors.grey.shade500,
           ),
         ),
         const SizedBox(height: 8),
-        _auditCheckItem(
-          'Confirm receipt matches store: ${sub.storeName}',
-          true,
-        ),
+        _auditCheckItem('Confirm receipt matches store: ${sub.storeName}', true),
         _auditCheckItem('Validate price matches packaging size', true),
-        _auditCheckItem(
-          'Double-check for discount/promo tags',
-          sub.promoType != 'None',
-        ),
-        _auditCheckItem(
-          'Freshness: Check receipt timestamp matches',
-          sub.hasReceipt,
-        ),
+        _auditCheckItem('Double-check for discount/promo tags', sub.promoType != 'None'),
+        _auditCheckItem('Freshness: Check receipt timestamp matches', sub.hasReceipt),
         const Spacer(),
 
         // Audit health KPI
         Container(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.green.shade50,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.green.shade100),
+            color: const Color(0xFFE8F5E9),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFC8E6C9)),
           ),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.green.shade100,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFC8E6C9),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.health_and_safety_outlined,
-                  color: Colors.green.shade700,
+                  color: AppTheme.forestDeep,
                   size: 16,
                 ),
               ),
@@ -829,36 +1071,37 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Audit Health Score',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                    Text(
+                      'Auditing Accuracy Score',
+                      style: GoogleFonts.fredoka(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.forestDeep,
                       ),
                     ),
                     Text(
-                      'Historical match accuracy',
-                      style: TextStyle(
+                      'Sourcer trustworthiness KPI',
+                      style: GoogleFonts.nunito(
                         fontSize: 9,
                         color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
                 ),
               ),
-              const Text(
+              Text(
                 '98.4%',
-                style: TextStyle(
+                style: GoogleFonts.fredoka(
                   fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.green,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.forestDeep,
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 18),
 
         // Sidebar Actions (Reject / Approve)
         Row(
@@ -870,8 +1113,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                   foregroundColor: Colors.red,
                   side: const BorderSide(color: Colors.red, width: 1.5),
                   padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
-                child: const Text('Reject'),
+                child: Text('Reject', style: GoogleFonts.nunito(fontWeight: FontWeight.bold)),
               ),
             ),
             const SizedBox(width: 12),
@@ -882,8 +1126,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                   backgroundColor: Colors.green,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
-                child: const Text('Approve'),
+                child: Text('Approve', style: GoogleFonts.nunito(fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -898,18 +1143,18 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
       child: Row(
         children: [
           Icon(
-            initialVal ? Icons.check_circle_outline : Icons.help_outline,
-            color: initialVal ? Colors.green : Colors.grey,
+            initialVal ? Icons.check_circle_rounded : Icons.info_outline_rounded,
+            color: initialVal ? Colors.green : Colors.grey.shade400,
             size: 16,
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               label,
-              style: TextStyle(
-                fontSize: 11,
+              style: GoogleFonts.nunito(
+                fontSize: 12,
                 color: Colors.grey.shade700,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -925,7 +1170,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Submission approved! ${sub.tokensReward} tokens awarded to Hessa.',
+          'Submission approved! ${sub.tokensReward} tokens awarded to sourcer.',
         ),
         backgroundColor: Colors.green,
       ),
@@ -955,66 +1200,6 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     });
   }
 
-  // --- STAT CARD ---
-  Widget _statCard(
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-    ThemeData theme,
-  ) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.shade200),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey.shade600,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(icon, color: color, size: 16),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.w900,
-                color: theme.colorScheme.onSurface,
-                height: 1.0,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _attachmentChip({
     required IconData icon,
     required String label,
@@ -1023,41 +1208,61 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: isAttached ? Colors.green.shade50 : Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(6),
+          color: isAttached ? const Color(0xFFE8F5E9) : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isAttached ? Colors.green.shade200 : Colors.grey.shade300,
+            color: isAttached ? const Color(0xFFC8E6C9) : Colors.grey.shade300,
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              isAttached ? Icons.check : icon,
-              color: isAttached ? Colors.green.shade800 : Colors.grey.shade600,
+              isAttached ? Icons.check_circle_outline_rounded : icon,
+              color: isAttached ? AppTheme.forestDeep : Colors.grey.shade600,
               size: 12,
             ),
             const SizedBox(width: 4),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 9,
+              style: GoogleFonts.nunito(
+                fontSize: 9.5,
                 fontWeight: FontWeight.bold,
-                color: isAttached
-                    ? Colors.green.shade900
-                    : Colors.grey.shade600,
+                color: isAttached ? AppTheme.forestDeep : Colors.grey.shade600,
               ),
             ),
             if (isAttached && onTap != null) ...[
               const SizedBox(width: 4),
-              Icon(Icons.open_in_new, size: 8, color: Colors.green.shade700),
+              Icon(Icons.open_in_new_rounded, size: 8, color: AppTheme.forestDeep),
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  // Dialog / mock panels support
+  Widget _buildMockPanelContent() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.lock_outline_rounded, color: Colors.grey.shade400, size: 48),
+          const SizedBox(height: 14),
+          Text(
+            'Restricted View',
+            style: GoogleFonts.fredoka(fontWeight: FontWeight.bold, color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'This tab is mock-only in the DealSouk prototype.',
+            style: GoogleFonts.nunito(fontSize: 12.5, color: Colors.grey.shade500),
+          ),
+        ],
       ),
     );
   }

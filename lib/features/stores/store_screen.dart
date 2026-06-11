@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/mock_data/mock_data.dart';
 import '../../core/models/models.dart';
 import '../../core/theme/theme.dart';
@@ -13,85 +14,105 @@ class StoreScreen extends StatelessWidget {
     final stores = MockData.initialStores;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF5C1F66),
-      body: Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(
-              16,
-              MediaQuery.of(context).padding.top + 10,
-              16,
-              14,
-            ),
-            child: Row(
-              children: [
-                _CircleButton(
-                  icon: Icons.arrow_back_ios_new_rounded,
-                  onTap: () =>
-                      context.canPop() ? context.pop() : context.go('/'),
-                ),
-                const Expanded(
-                  child: Text(
-                    'Map',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
+      backgroundColor: AppTheme.background,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            // Header Row
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+              child: Row(
+                children: [
+                  _CircleButton(
+                    icon: Icons.arrow_back_ios_new_rounded,
+                    onTap: () =>
+                        context.canPop() ? context.pop() : context.go('/'),
+                  ),
+                  Expanded(
+                    child: Text(
+                      'Store Map',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.fredoka(
+                        color: AppTheme.forestDeep,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-                _CircleButton(icon: Icons.tune_rounded, onTap: () {}),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                color: AppTheme.background,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                  _CircleButton(
+                    icon: Icons.tune_rounded,
+                    onTap: () {},
+                  ),
+                ],
               ),
+            ),
+            Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 18, 16, 112),
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 112),
+                physics: const BouncingScrollPhysics(),
                 children: [
+                  // Search Bar
                   Container(
-                    height: 44,
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    height: 52,
+                    padding: const EdgeInsets.symmetric(horizontal: 18),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(22),
+                      borderRadius: BorderRadius.circular(26),
+                      border: Border.all(color: const Color(0xFFE8EEE4), width: 1.2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.02),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
                     child: Row(
                       children: [
                         Icon(
-                          Icons.search,
-                          color: Colors.grey.shade500,
-                          size: 18,
+                          Icons.search_rounded,
+                          color: Colors.grey.shade400,
+                          size: 20,
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Search nearby Dubai stores',
-                          style: TextStyle(
-                            color: Colors.grey.shade500,
-                            fontSize: 12.5,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Search nearby Dubai stores',
+                            style: TextStyle(
+                              color: Colors.grey.shade400,
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
-                        const Spacer(),
-                        const Icon(
+                        Icon(
                           Icons.filter_list_rounded,
                           color: AppTheme.forestDeep,
-                          size: 18,
+                          size: 20,
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 18),
+
+                  // Proximity Map Card
                   Container(
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppTheme.forestDeep,
-                      borderRadius: BorderRadius.circular(22),
+                      gradient: const LinearGradient(
+                        colors: [AppTheme.forestDeep, AppTheme.maroon],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.forestDeep.withValues(alpha: 0.15),
+                          blurRadius: 16,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -99,38 +120,38 @@ class StoreScreen extends StatelessWidget {
                         Row(
                           children: [
                             Container(
-                              width: 34,
-                              height: 34,
+                              width: 38,
+                              height: 38,
                               decoration: const BoxDecoration(
-                                color: AppTheme.limeAccent,
+                                color: Colors.white24,
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
                                 Icons.near_me_rounded,
-                                color: AppTheme.forestDeep,
-                                size: 17,
+                                color: Colors.white,
+                                size: 18,
                               ),
                             ),
-                            const SizedBox(width: 10),
-                            const Expanded(
+                            const SizedBox(width: 12),
+                            Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     'Dubai Marina proximity',
-                                    style: TextStyle(
+                                    style: GoogleFonts.fredoka(
                                       color: Colors.white,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w900,
+                                      fontSize: 14.5,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  SizedBox(height: 2),
+                                  const SizedBox(height: 2),
                                   Text(
-                                    'GPS demo active • network location fallback ready',
-                                    style: TextStyle(
+                                    'GPS demo active • showing nearby comparison',
+                                    style: GoogleFonts.nunito(
                                       color: Colors.white70,
                                       fontSize: 11,
-                                      fontWeight: FontWeight.w700,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ],
@@ -138,24 +159,38 @@ class StoreScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 16),
                         SizedBox(
-                          height: 145,
+                          height: 160,
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(18),
                             child: Stack(
                               children: [
+                                // Mock Map Grid
                                 Container(
                                   decoration: const BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Color(0xFFEAF5EF),
-                                        Color(0xFFDDE9F4),
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
+                                    color: Color(0xFFF1F6F2),
                                   ),
+                                  child: GridPaper(
+                                    color: Colors.green.withValues(alpha: 0.04),
+                                    divisions: 2,
+                                    interval: 80,
+                                    subdivisions: 1,
+                                    child: Container(),
+                                  ),
+                                ),
+                                // Mock road paths for visual realism
+                                Positioned(
+                                  top: 50,
+                                  left: 0,
+                                  right: 0,
+                                  child: Container(height: 12, color: Colors.white),
+                                ),
+                                Positioned(
+                                  left: 120,
+                                  top: 0,
+                                  bottom: 0,
+                                  child: Container(width: 12, color: Colors.white),
                                 ),
                                 Positioned(
                                   left: -20,
@@ -164,9 +199,7 @@ class StoreScreen extends StatelessWidget {
                                     width: 220,
                                     height: 58,
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.8,
-                                      ),
+                                      color: Colors.white.withValues(alpha: 0.8),
                                       borderRadius: BorderRadius.circular(999),
                                     ),
                                   ),
@@ -178,47 +211,59 @@ class StoreScreen extends StatelessWidget {
                                     width: 210,
                                     height: 54,
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.72,
-                                      ),
+                                      color: Colors.white.withValues(alpha: 0.72),
                                       borderRadius: BorderRadius.circular(999),
                                     ),
                                   ),
                                 ),
-                                ...stores
-                                    .take(5)
-                                    .map(
-                                      (store) => Positioned(
-                                        left:
-                                            20 +
-                                            (store.xOffset * 250).clamp(0, 260),
-                                        top:
-                                            18 +
-                                            (store.yOffset * 90).clamp(0, 95),
-                                        child: GestureDetector(
-                                          onTap: () => _StoreChoiceCard(
-                                            store: store,
-                                          )._showStorePrices(context, store),
-                                          child: Container(
-                                            width: 28,
-                                            height: 28,
+                                // Red map marker pins for stores
+                                ...stores.take(5).map(
+                                  (store) => Positioned(
+                                    left: 20 + (store.xOffset * 220).clamp(0, 240),
+                                    top: 18 + (store.yOffset * 100).clamp(0, 110),
+                                    child: GestureDetector(
+                                      onTap: () => _StoreChoiceCard(store: store)
+                                          ._showStorePrices(context, store),
+                                      child: Stack(
+                                        alignment: Alignment.center,
+                                        children: [
+                                          Container(
+                                            width: 34,
+                                            height: 34,
+                                            decoration: BoxDecoration(
+                                              color: AppTheme.redAccent.withValues(alpha: 0.2),
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                          Container(
+                                            width: 24,
+                                            height: 24,
                                             decoration: BoxDecoration(
                                               color: AppTheme.redAccent,
                                               shape: BoxShape.circle,
                                               border: Border.all(
                                                 color: Colors.white,
-                                                width: 3,
+                                                width: 2,
                                               ),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withValues(alpha: 0.2),
+                                                  blurRadius: 4,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ],
                                             ),
                                             child: const Icon(
                                               Icons.storefront_outlined,
                                               color: Colors.white,
-                                              size: 13,
+                                              size: 11,
                                             ),
                                           ),
-                                        ),
+                                        ],
                                       ),
                                     ),
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -226,13 +271,28 @@ class StoreScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 20),
+
+                  // Stores Section Title
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Text(
+                      'Nearby Supermarkets',
+                      style: GoogleFonts.fredoka(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textDark,
+                      ),
+                    ),
+                  ),
+
+                  // Store Cards List
                   ...stores.map((store) => _StoreChoiceCard(store: store)),
                 ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -251,9 +311,17 @@ class _CircleButton extends StatelessWidget {
       child: Container(
         width: 40,
         height: 40,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
+          border: Border.all(color: const Color(0xFFE8EEE4), width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Icon(icon, color: AppTheme.forestDeep, size: 18),
       ),
@@ -285,12 +353,12 @@ class _StoreChoiceCard extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Colors.grey.shade100),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFE8EEE4), width: 1.2),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.035),
-              blurRadius: 12,
+              color: Colors.black.withValues(alpha: 0.015),
+              blurRadius: 10,
               offset: const Offset(0, 4),
             ),
           ],
@@ -323,10 +391,10 @@ class _StoreChoiceCard extends StatelessWidget {
                     store.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: GoogleFonts.fredoka(
                       color: AppTheme.textDark,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 3),
@@ -334,10 +402,10 @@ class _StoreChoiceCard extends StatelessWidget {
                     '${store.branch} • ${store.distance} km • ${store.pricesCount} live prices',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
+                    style: GoogleFonts.nunito(
                       color: Colors.grey.shade500,
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
@@ -353,19 +421,19 @@ class _StoreChoiceCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
+                    horizontal: 8,
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.limeAccent.withValues(alpha: 0.45),
+                    color: AppTheme.limeAccent.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(999),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Compare',
-                    style: TextStyle(
+                    style: GoogleFonts.nunito(
                       color: AppTheme.forestDeep,
-                      fontSize: 9,
-                      fontWeight: FontWeight.w900,
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
@@ -421,16 +489,16 @@ class _StoreChoiceCard extends StatelessWidget {
               const SizedBox(height: 18),
               Text(
                 store.name,
-                style: const TextStyle(
+                style: GoogleFonts.fredoka(
                   fontSize: 20,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.bold,
                   color: AppTheme.forestDeep,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 '${store.branch} • Crowd-sourced prices',
-                style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                style: GoogleFonts.nunito(color: Colors.grey.shade500, fontSize: 12),
               ),
               const SizedBox(height: 16),
               SizedBox(
@@ -456,8 +524,15 @@ class _StoreChoiceCard extends StatelessWidget {
                         product.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.nunito(
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.textDark,
+                        ),
                       ),
-                      subtitle: Text(updated),
+                      subtitle: Text(
+                        updated,
+                        style: GoogleFonts.nunito(fontSize: 11),
+                      ),
                       trailing: SoukPrice(price, size: 14),
                     );
                   },

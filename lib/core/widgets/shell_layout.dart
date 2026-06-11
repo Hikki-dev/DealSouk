@@ -128,7 +128,7 @@ class _SoukNavItem extends StatelessWidget {
               width: selected ? 40 : 0,
               height: selected ? 40 : 0,
               decoration: const BoxDecoration(
-                color: Color(0xFFEDF1E4), // Soft green active pill background
+                color: Color(0xFFE8F5E9), // Soft green active pill background
                 shape: BoxShape.circle,
               ),
             ),

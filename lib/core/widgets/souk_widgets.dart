@@ -191,163 +191,160 @@ class ProductGridCard extends ConsumerWidget {
     // Split name like "Beetroot (Local shop)" into main and subtitle
     final parts = product.name.split('(');
     final coreName = parts[0].trim();
-    final subName = parts.length > 1 ? '(${parts[1]}' : '';
 
     return GestureDetector(
       onTap: () => context.push('/product/${product.id}'),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.grey.shade100, width: 1.2),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 12,
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 8,
               offset: const Offset(0, 4),
             ),
           ],
-          border: Border.all(color: Colors.grey.shade100, width: 1),
         ),
+        padding: const EdgeInsets.all(12),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image
+            // Image with light rounded background
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
-                child: SoukProductVisual(product: product, fit: BoxFit.contain),
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Name (centered split typography like reference)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    coreName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900,
-                      color: AppTheme.forestDeep,
-                      height: 1.1,
-                    ),
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF4F9F4),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: SoukProductVisual(product: product, fit: BoxFit.contain),
                   ),
-                  if (subName.isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      subName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade700,
-                        height: 1.1,
-                      ),
-                    ),
-                  ],
-                ],
+                ),
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 10),
 
-            // Pack size
+            // Product Name
             Text(
-              product.packSize,
-              style: TextStyle(
-                fontSize: 10,
-                color: Colors.grey.shade500,
-                fontWeight: FontWeight.w500,
+              coreName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w800,
+                color: Colors.black,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
 
-            // Price tag
-            SoukPrice(product.lowestPrice, size: 15, color: AppTheme.textDark),
-            const SizedBox(height: 3),
+            // Brand
             Text(
-              product.updatedAtLabel.replaceFirst('Updated ', ''),
+              product.brand,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 8.5,
-                color: Colors.grey.shade400,
-                fontWeight: FontWeight.w700,
+                fontSize: 10.5,
+                color: Colors.grey.shade500,
+                fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 5),
+            const SizedBox(height: 10),
 
-            // Bottom control: soft "+" pill, or lime stepper when in cart
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                height: 32,
-                decoration: BoxDecoration(
-                  color: inCartQty == 0
-                      ? const Color(0xFFEDF1E4)
-                      : AppTheme.limeAccent,
-                  borderRadius: BorderRadius.circular(16),
+            // Bottom Section: Price + Add Button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SoukPrice(
+                      product.lowestPrice,
+                      size: 14.5,
+                      color: AppTheme.forestDeep,
+                    ),
+                    Text(
+                      product.packSize,
+                      style: TextStyle(
+                        fontSize: 9.5,
+                        color: Colors.grey.shade500,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
-                child: inCartQty == 0
-                    ? InkWell(
-                        onTap: () =>
-                            ref.read(cartProvider.notifier).addToCart(product),
-                        borderRadius: BorderRadius.circular(16),
-                        child: const Center(
-                          child: Icon(
-                            Icons.add,
-                            size: 20,
-                            color: AppTheme.forestDeep,
-                          ),
-                        ),
-                      )
-                    : Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          GestureDetector(
-                            onTap: () => ref
-                                .read(cartProvider.notifier)
-                                .updateQuantity(product.id, inCartQty - 1),
-                            child: const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 4),
-                              child: Icon(
-                                Icons.remove,
-                                size: 14,
-                                color: AppTheme.forestDeep,
-                              ),
-                            ),
-                          ),
-                          Text(
-                            '$inCartQty',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
+                // Circular Plus Button or horizontal stepper
+                if (inCartQty == 0)
+                  GestureDetector(
+                    onTap: () =>
+                        ref.read(cartProvider.notifier).addToCart(product),
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: const BoxDecoration(
+                        color: AppTheme.forestDeep,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.add,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                    ),
+                  )
+                else
+                  Container(
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: AppTheme.cream,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        GestureDetector(
+                          onTap: () => ref
+                              .read(cartProvider.notifier)
+                              .updateQuantity(product.id, inCartQty - 1),
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 6),
+                            child: Icon(
+                              Icons.remove,
+                              size: 14,
                               color: AppTheme.forestDeep,
                             ),
                           ),
-                          GestureDetector(
-                            onTap: () => ref
-                                .read(cartProvider.notifier)
-                                .addToCart(product),
-                            child: const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 4),
-                              child: Icon(
-                                Icons.add,
-                                size: 14,
-                                color: AppTheme.forestDeep,
-                              ),
+                        ),
+                        Text(
+                          '$inCartQty',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.forestDeep,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => ref
+                              .read(cartProvider.notifier)
+                              .addToCart(product),
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 6),
+                            child: Icon(
+                              Icons.add,
+                              size: 14,
+                              color: AppTheme.forestDeep,
                             ),
                           ),
-                        ],
-                      ),
-              ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
             ),
           ],
         ),

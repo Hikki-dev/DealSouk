@@ -56,11 +56,47 @@ class MockData {
 
   static final List<Product> initialProducts = [
     Product(
+      id: 'spinach',
+      name: 'Organic Spinach',
+      brand: 'Fresh Farms',
+      packSize: '300 gm.',
+      category: 'Fresh',
+      lowestPrice: 2.50,
+      lowestPriceStore: 'Lulu Hypermarket',
+      updatedAtLabel: 'Updated 10m ago',
+      imageUrl:
+          'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=300&q=80&auto=format&fit=crop',
+    ),
+    Product(
+      id: 'apples',
+      name: 'Fresh Fuji Apples',
+      brand: 'Apple Farm',
+      packSize: '500 gm.',
+      category: 'Fruits',
+      lowestPrice: 2.29,
+      lowestPriceStore: 'Carrefour',
+      updatedAtLabel: 'Updated 5m ago',
+      imageUrl:
+          'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=300&q=80&auto=format&fit=crop',
+    ),
+    Product(
+      id: 'lettuce',
+      name: 'Organic Lettuce',
+      brand: 'Green Leaf',
+      packSize: '250 gm.',
+      category: 'Fresh',
+      lowestPrice: 1.50,
+      lowestPriceStore: 'Union Coop',
+      updatedAtLabel: 'Updated 15m ago',
+      imageUrl:
+          'https://images.unsplash.com/photo-1622484211148-716598e04141?w=300&q=80&auto=format&fit=crop',
+    ),
+    Product(
       id: 'beetroot',
       name: 'Beetroot (Local shop)',
       brand: 'Local Shop',
       packSize: '500 gm.',
-      category: 'Vegetable',
+      category: 'Fresh',
       lowestPrice: 17.29,
       lowestPriceStore: 'Lulu Hypermarket',
       updatedAtLabel: 'Updated 10m ago',
@@ -84,7 +120,7 @@ class MockData {
       name: 'Deshi Gajor (Local Carrot)',
       brand: 'Local Carrot',
       packSize: '1000 gm.',
-      category: 'Vegetable',
+      category: 'Fresh',
       lowestPrice: 27.29,
       lowestPriceStore: 'Union Coop',
       updatedAtLabel: 'Updated 1h ago',
@@ -96,7 +132,7 @@ class MockData {
       name: 'Beef Mixed Cut Bone (Cut Bone)',
       brand: 'Cut Bone',
       packSize: '1000 gm.',
-      category: 'Meat',
+      category: 'Fresh',
       lowestPrice: 23.46,
       lowestPriceStore: 'Lulu Hypermarket',
       updatedAtLabel: 'Updated 5m ago',
@@ -108,7 +144,7 @@ class MockData {
       name: 'Sliced Bread (Burnt Shop)',
       brand: 'Golden Bakes',
       packSize: '500 gm.',
-      category: 'Breads',
+      category: 'Bakery',
       lowestPrice: 4.50,
       lowestPriceStore: 'Carrefour',
       updatedAtLabel: 'Updated 30m ago',
@@ -156,7 +192,7 @@ class MockData {
       name: 'Fresh Chicken Breast 1kg',
       brand: 'Sadia',
       packSize: '1kg',
-      category: 'Chicken',
+      category: 'Fresh',
       lowestPrice: 24.90,
       lowestPriceStore: 'Nesto',
       updatedAtLabel: 'Updated 1h ago',
@@ -190,6 +226,66 @@ class MockData {
   ];
 
   static final Map<String, List<StoreProductPrice>> productPrices = {
+    'spinach': [
+      StoreProductPrice(
+        storeId: 'lulu_albarsha',
+        storeName: 'Lulu Hypermarket',
+        price: 2.50,
+        updatedAtLabel: 'Updated 10m ago',
+      ),
+      StoreProductPrice(
+        storeId: 'carrefour_moe',
+        storeName: 'Carrefour',
+        price: 2.80,
+        updatedAtLabel: 'Updated 1h ago',
+      ),
+      StoreProductPrice(
+        storeId: 'union_alwasl',
+        storeName: 'Union Coop',
+        price: 3.10,
+        updatedAtLabel: 'Updated 3h ago',
+      ),
+    ],
+    'apples': [
+      StoreProductPrice(
+        storeId: 'carrefour_moe',
+        storeName: 'Carrefour',
+        price: 2.29,
+        updatedAtLabel: 'Updated 5m ago',
+      ),
+      StoreProductPrice(
+        storeId: 'lulu_albarsha',
+        storeName: 'Lulu Hypermarket',
+        price: 2.50,
+        updatedAtLabel: 'Updated 30m ago',
+      ),
+      StoreProductPrice(
+        storeId: 'union_alwasl',
+        storeName: 'Union Coop',
+        price: 2.65,
+        updatedAtLabel: 'Updated 2h ago',
+      ),
+    ],
+    'lettuce': [
+      StoreProductPrice(
+        storeId: 'union_alwasl',
+        storeName: 'Union Coop',
+        price: 1.50,
+        updatedAtLabel: 'Updated 15m ago',
+      ),
+      StoreProductPrice(
+        storeId: 'lulu_albarsha',
+        storeName: 'Lulu Hypermarket',
+        price: 1.75,
+        updatedAtLabel: 'Updated 45m ago',
+      ),
+      StoreProductPrice(
+        storeId: 'carrefour_moe',
+        storeName: 'Carrefour',
+        price: 1.90,
+        updatedAtLabel: 'Updated 1h ago',
+      ),
+    ],
     'beetroot': [
       StoreProductPrice(
         storeId: 'lulu_albarsha',

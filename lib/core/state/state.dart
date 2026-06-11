@@ -72,16 +72,15 @@ final userTransactionsProvider =
 class CartNotifier extends Notifier<List<CartItem>> {
   @override
   List<CartItem> build() {
-    // Initialize cart with required items
-    final products = MockData.initialProducts;
-    final milk = products.firstWhere((p) => p.id == 'milk_1l');
-    final eggs = products.firstWhere((p) => p.id == 'eggs_12');
-    final rice = products.firstWhere((p) => p.id == 'rice_5kg');
+    // Initialize cart with mockup items
+    final spinach = MockData.initialProducts.firstWhere((p) => p.id == 'spinach');
+    final apples = MockData.initialProducts.firstWhere((p) => p.id == 'apples');
+    final lettuce = MockData.initialProducts.firstWhere((p) => p.id == 'lettuce');
 
     return [
-      CartItem(product: milk, quantity: 2),
-      CartItem(product: eggs, quantity: 1),
-      CartItem(product: rice, quantity: 1),
+      CartItem(product: spinach, quantity: 1),
+      CartItem(product: apples, quantity: 2),
+      CartItem(product: lettuce, quantity: 1),
     ];
   }
 

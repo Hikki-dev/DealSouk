@@ -4,8 +4,15 @@ import '../../core/theme/theme.dart';
 import '../../core/widgets/responsive_container.dart';
 import '../../core/widgets/souk_widgets.dart';
 
-class WelcomeScreen extends StatelessWidget {
+class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
+
+  @override
+  State<WelcomeScreen> createState() => _WelcomeScreenState();
+}
+
+class _WelcomeScreenState extends State<WelcomeScreen> {
+  bool _isAdminMode = false;
 
   @override
   Widget build(BuildContext context) {
@@ -80,10 +87,14 @@ class WelcomeScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-                        child: const Icon(
-                          Icons.insights_rounded,
-                          size: 44,
-                          color: AppTheme.forestDeep,
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 250),
+                          child: Icon(
+                            _isAdminMode ? Icons.gavel_rounded : Icons.insights_rounded,
+                            key: ValueKey<bool>(_isAdminMode),
+                            size: 44,
+                            color: AppTheme.forestDeep,
+                          ),
                         ),
                       ),
                     ),
@@ -101,13 +112,81 @@ class WelcomeScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
 
-                    Text(
-                      'Save money on groceries in Dubai',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.65),
-                        fontWeight: FontWeight.w500,
-                        fontSize: 15,
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 200),
+                      child: Text(
+                        _isAdminMode
+                            ? 'Review crowd-sourced grocery prices'
+                            : 'Save money on groceries in Dubai',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.65),
+                          fontWeight: FontWeight.w500,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Segmented Mode Toggle (User vs Admin Selector)
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.15),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _isAdminMode = false),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: !_isAdminMode ? Colors.white : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Customer Mode',
+                                    style: TextStyle(
+                                      color: !_isAdminMode ? AppTheme.forestDeep : Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _isAdminMode = true),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: _isAdminMode ? Colors.white : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Admin Moderator',
+                                    style: TextStyle(
+                                      color: _isAdminMode ? AppTheme.forestDeep : Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -115,19 +194,39 @@ class WelcomeScreen extends StatelessWidget {
                     // Three value pillars
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _ValuePillar(
-                          icon: Icons.compare_arrows_rounded,
-                          label: 'Compare\nPrices',
-                        ),
-                        SizedBox(width: 20),
-                        _ValuePillar(icon: Icons.bolt, label: 'Earn\nTokens'),
-                        SizedBox(width: 20),
-                        _ValuePillar(
-                          icon: Icons.savings_outlined,
-                          label: 'Save\nMoney',
-                        ),
-                      ],
+                      children: _isAdminMode
+                          ? [
+                              const _ValuePillar(
+                                icon: Icons.rate_review_rounded,
+                                label: 'Audit\nQueue',
+                              ),
+                              const SizedBox(width: 20),
+                              const _ValuePillar(
+                                icon: Icons.security_rounded,
+                                label: 'Fraud\nFilter',
+                              ),
+                              const SizedBox(width: 20),
+                              const _ValuePillar(
+                                icon: Icons.token_rounded,
+                                label: 'Issue\nTokens',
+                              ),
+                            ]
+                          : [
+                              const _ValuePillar(
+                                icon: Icons.compare_arrows_rounded,
+                                label: 'Compare\nPrices',
+                              ),
+                              const SizedBox(width: 20),
+                              const _ValuePillar(
+                                icon: Icons.bolt,
+                                label: 'Earn\nTokens',
+                              ),
+                              const SizedBox(width: 20),
+                              const _ValuePillar(
+                                icon: Icons.savings_outlined,
+                                label: 'Save\nMoney',
+                              ),
+                            ],
                     ),
 
                     const Spacer(flex: 2),
@@ -146,24 +245,29 @@ class WelcomeScreen extends StatelessWidget {
                           color: Colors.white.withValues(alpha: 0.15),
                         ),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.info_outline,
                             color: Colors.white,
                             size: 20,
                           ),
-                          SizedBox(width: 12),
+                          const SizedBox(width: 12),
                           Expanded(
-                            child: Text(
-                              'Live Dubai prices. Earn tokens.',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
+                            child: AnimatedSize(
+                              duration: const Duration(milliseconds: 200),
+                              child: Text(
+                                _isAdminMode
+                                    ? 'Moderator Panel: Verify receipts and shelf prices.'
+                                    : 'Live Dubai prices. Earn tokens.',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                           ),
@@ -173,7 +277,7 @@ class WelcomeScreen extends StatelessWidget {
 
                     // Primary CTA — high contrast white pill
                     GestureDetector(
-                      onTap: () => context.go('/'),
+                      onTap: () => context.go(_isAdminMode ? '/admin' : '/'),
                       child: Container(
                         height: 54,
                         decoration: BoxDecoration(
@@ -187,10 +291,10 @@ class WelcomeScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-                        child: const Center(
+                        child: Center(
                           child: Text(
-                            'Enter DealSouk Demo',
-                            style: TextStyle(
+                            _isAdminMode ? 'Enter Admin Dashboard' : 'Enter DealSouk Demo',
+                            style: const TextStyle(
                               color: AppTheme.forestDeep,
                               fontSize: 16.5,
                               fontWeight: FontWeight.w800,
@@ -204,27 +308,29 @@ class WelcomeScreen extends StatelessWidget {
                     _SignInButton(
                       icon: Icons.g_mobiledata_rounded,
                       iconSize: 28,
-                      label: 'Sign in with Google',
-                      onTap: () => context.go('/'),
+                      label: _isAdminMode ? 'Sign in as Admin with Google' : 'Sign in with Google',
+                      onTap: () => context.go(_isAdminMode ? '/admin' : '/'),
                     ),
                     const SizedBox(height: 10),
                     _SignInButton(
-                      icon: Icons.phone_iphone_rounded,
-                      label: 'Sign in with Phone',
-                      onTap: () => context.go('/'),
+                      icon: _isAdminMode ? Icons.key_rounded : Icons.phone_iphone_rounded,
+                      label: _isAdminMode ? 'Sign in with Keycard ID' : 'Sign in with Phone',
+                      onTap: () => context.go(_isAdminMode ? '/admin' : '/'),
                     ),
                     const SizedBox(height: 10),
                     _SignInButton(
                       icon: Icons.apple,
                       iconSize: 22,
-                      label: 'Sign in with Apple',
-                      onTap: () => context.go('/'),
+                      label: _isAdminMode ? 'Sign in as Admin with Apple' : 'Sign in with Apple',
+                      onTap: () => context.go(_isAdminMode ? '/admin' : '/'),
                     ),
 
                     const SizedBox(height: 20),
 
                     Text(
-                      'Crowd-sourced grocery data for Dubai.',
+                      _isAdminMode
+                          ? 'Moderator console permissions apply.'
+                          : 'Crowd-sourced grocery data for Dubai.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.4),

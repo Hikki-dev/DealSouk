@@ -161,6 +161,33 @@ class ProfileScreen extends ConsumerWidget {
                     title: 'Price drop alerts',
                     subtitle: 'Demo-only preview, no real push notifications',
                   ),
+                  const SizedBox(height: 24),
+                  GestureDetector(
+                    onTap: () => context.go('/welcome'),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.red.shade200),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.logout_rounded, color: Colors.red.shade700, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Log Out of Demo',
+                            style: TextStyle(
+                              color: Colors.red.shade700,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),

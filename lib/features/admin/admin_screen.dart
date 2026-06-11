@@ -196,6 +196,39 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 ),
                 onTap: () => context.go('/profile'),
               ),
+              const SizedBox(height: 8),
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                leading: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: Colors.red.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.logout_rounded,
+                    color: Colors.redAccent,
+                    size: 16,
+                  ),
+                ),
+                title: Text(
+                  'Log Out',
+                  style: GoogleFonts.nunito(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                subtitle: Text(
+                  'Exit console',
+                  style: GoogleFonts.nunito(
+                    color: Colors.grey.shade500,
+                    fontSize: 10,
+                  ),
+                ),
+                onTap: () => context.go('/welcome'),
+              ),
             ],
           ),
         ),

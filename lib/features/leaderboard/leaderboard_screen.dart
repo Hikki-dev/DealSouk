@@ -15,6 +15,7 @@ class LeaderboardScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final tokens = ref.watch(userTokensProvider);
     final transactions = ref.watch(userTransactionsProvider);
+    final profile = ref.watch(userProfileProvider);
 
     // Initial leaderboard list from mock data
     final baseLeaderboard = MockData.initialLeaderboard;
@@ -24,7 +25,7 @@ class LeaderboardScreen extends ConsumerWidget {
         // Find Hessa's rank dynamically. We can recalculate it or just display rank #7
         return LeaderboardUser(
           rank: user.rank,
-          name: user.name,
+          name: '${profile.name} (You)',
           tokens: tokens,
           isCurrentUser: true,
         );
@@ -145,16 +146,25 @@ class LeaderboardScreen extends ConsumerWidget {
                                 width: 2,
                               ),
                             ),
-                            child: CircleAvatar(
-                              radius: 30,
-                              backgroundColor: theme.colorScheme.primary
-                                  .withValues(alpha: 0.1),
-                              child: Text(
-                                'H',
-                                style: TextStyle(
-                                  color: theme.colorScheme.primary,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
+                            child: ClipOval(
+                              child: Image.network(
+                                profile.avatarUrl,
+                                width: 60,
+                                height: 60,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    CircleAvatar(
+                                  radius: 30,
+                                  backgroundColor: theme.colorScheme.primary
+                                      .withValues(alpha: 0.1),
+                                  child: Text(
+                                    profile.name.isNotEmpty ? profile.name[0] : 'H',
+                                    style: TextStyle(
+                                      color: theme.colorScheme.primary,
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -164,9 +174,9 @@ class LeaderboardScreen extends ConsumerWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  'Hessa Al Maktoum',
-                                  style: TextStyle(
+                                Text(
+                                  profile.name,
+                                  style: const TextStyle(
                                     fontSize: 17,
                                     fontWeight: FontWeight.w800,
                                     color: AppTheme.textDark,

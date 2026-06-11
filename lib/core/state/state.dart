@@ -245,3 +245,29 @@ class FilterNotifier extends Notifier<FilterState> {
 final filterProvider = NotifierProvider<FilterNotifier, FilterState>(
   FilterNotifier.new,
 );
+
+// --- Active User Profile State ---
+class UserProfile {
+  final String name;
+  final String location;
+  final String avatarUrl;
+
+  UserProfile({
+    required this.name,
+    required this.location,
+    required this.avatarUrl,
+  });
+}
+
+class UserProfileNotifier extends Notifier<UserProfile> {
+  @override
+  UserProfile build() => UserProfile(
+        name: 'Hessa Al Maktoum',
+        location: 'Dubai Marina sourcer',
+        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80',
+      );
+}
+
+final userProfileProvider = NotifierProvider<UserProfileNotifier, UserProfile>(
+  UserProfileNotifier.new,
+);

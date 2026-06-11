@@ -559,6 +559,9 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
   }
 
   void _showSuccessDialog(BuildContext context, int reward) {
+    final profile = ref.read(userProfileProvider);
+    final firstName = profile.name.split(' ').first;
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -606,7 +609,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Your price submission is pending review.\nTokens will be credited to Hessa after admin approval.',
+                'Your price submission is pending review.\nTokens will be credited to $firstName after admin approval.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 13, height: 1.4),
               ),

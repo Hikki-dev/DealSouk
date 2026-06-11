@@ -11,6 +11,7 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = ref.watch(userTokensProvider);
     final submissions = ref.watch(adminSubmissionsProvider);
+    final profile = ref.watch(userProfileProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.forestDeep,
@@ -55,17 +56,12 @@ class ProfileScreen extends ConsumerWidget {
                         Container(
                           width: 58,
                           height: 58,
-                          decoration: const BoxDecoration(
-                            color: AppTheme.limeAccent,
+                          decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                          ),
-                          alignment: Alignment.center,
-                          child: const Text(
-                            'H',
-                            style: TextStyle(
-                              color: AppTheme.forestDeep,
-                              fontSize: 24,
-                              fontWeight: FontWeight.w900,
+                            border: Border.all(color: const Color(0xFFE8EEE4), width: 1.5),
+                            image: DecorationImage(
+                              image: NetworkImage(profile.avatarUrl),
+                              fit: BoxFit.cover,
                             ),
                           ),
                         ),
@@ -74,9 +70,9 @@ class ProfileScreen extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'Hessa Al Maktoum',
-                                style: TextStyle(
+                              Text(
+                                profile.name,
+                                style: const TextStyle(
                                   color: AppTheme.textDark,
                                   fontSize: 17,
                                   fontWeight: FontWeight.w900,
@@ -84,7 +80,7 @@ class ProfileScreen extends ConsumerWidget {
                               ),
                               const SizedBox(height: 5),
                               Text(
-                                'Dubai Marina sourcer • $tokens tokens',
+                                '${profile.location} • $tokens tokens',
                                 style: TextStyle(
                                   color: Colors.grey.shade600,
                                   fontSize: 12,

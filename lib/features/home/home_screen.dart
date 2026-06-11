@@ -17,6 +17,9 @@ class HomeScreen extends ConsumerWidget {
     final filterState = ref.watch(filterProvider);
     final tokens = ref.watch(userTokensProvider);
     final cartItems = ref.watch(cartProvider);
+    final profile = ref.watch(userProfileProvider);
+    final firstName = profile.name.split(' ').first;
+
     final cartCount = cartItems.fold<int>(
       0,
       (sum, item) => sum + item.quantity,
@@ -28,238 +31,270 @@ class HomeScreen extends ConsumerWidget {
           ).compareTo(_freshnessMinutes(b.updatedAtLabel)),
         );
 
-    // Categories defined for Dribbble layout
+    // Categories defined for Dribbble layout with premium transparent 3D clay illustrations
     final List<_CategoryInfo> homeCategories = [
-      const _CategoryInfo(Icons.spa_outlined, 'Fresh', 'Fresh', Color(0xFF2E7D32)),
-      const _CategoryInfo(Icons.apple_outlined, 'Fruits', 'Fruits', Color(0xFFE65100)),
-      const _CategoryInfo(Icons.cookie_outlined, 'Snacks', 'Snacks', Color(0xFFD81B60)),
-      const _CategoryInfo(Icons.shopping_basket_outlined, 'Grocery', 'Dairy & Sweet', Color(0xFF1E88E5)),
-      const _CategoryInfo(Icons.opacity_outlined, 'Oils', 'Bakery', Color(0xFF8D6E63)),
+      const _CategoryInfo(
+        'https://raw.githubusercontent.com/Hikki-dev/DealSouk/main/web/assets/category_fresh.png',
+        'Fresh',
+        'Fresh',
+        Color(0xFFE8F5E9), // Pastel green background
+      ),
+      const _CategoryInfo(
+        'https://raw.githubusercontent.com/Hikki-dev/DealSouk/main/web/assets/category_fruits.png',
+        'Fruits',
+        'Fruits',
+        Color(0xFFFFEBEE), // Pastel pink background
+      ),
+      const _CategoryInfo(
+        'https://raw.githubusercontent.com/Hikki-dev/DealSouk/main/web/assets/category_snack.png',
+        'Snack',
+        'Snacks',
+        Color(0xFFFFF8E1), // Pastel yellow background
+      ),
+      const _CategoryInfo(
+        'https://raw.githubusercontent.com/Hikki-dev/DealSouk/main/web/assets/category_grocery.png',
+        'Grocery',
+        'Dairy & Sweet',
+        Color(0xFFE0F2F1), // Pastel teal background
+      ),
+      const _CategoryInfo(
+        'https://raw.githubusercontent.com/Hikki-dev/DealSouk/main/web/assets/category_oils.png',
+        'Oils',
+        'Bakery',
+        Color(0xFFF3E5F5), // Pastel purple background
+      ),
     ];
 
     return Scaffold(
       backgroundColor: AppTheme.background,
-      body: SafeArea(
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            // 1. Dribbble Screenshot Header: Green gradient, Avatar, Cart button, Special offer card, capsule search
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+            // 1. Dribbble Screenshot Header: Green gradient, Checker Grid, Avatar, Cart button, Special offer card, capsule search
             SliverToBoxAdapter(
-              child: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Color(0xFF2E7D32), // Deep fresh green
-                      Color(0xFF388E3C), // Medium green
-                      Color(0xFF81C784), // Light green
-                      AppTheme.background, // Fades to off-white background
-                    ],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    stops: [0.0, 0.35, 0.75, 1.0],
-                  ),
-                ),
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Top Greeting Row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            // Hannah Avatar
-                            Container(
-                              width: 48,
-                              height: 48,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white.withValues(alpha: 0.6), width: 1.5),
-                                image: const DecorationImage(
-                                  image: NetworkImage(
-                                    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80',
-                                  ),
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Morning, Hannah',
-                                  style: GoogleFonts.fredoka(
-                                    fontSize: 16.5,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'What would you buy today?',
-                                  style: GoogleFonts.nunito(
-                                    fontSize: 12.5,
-                                    color: Colors.white.withValues(alpha: 0.85),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
+              child: Stack(
+                children: [
+                  // Gradient + Grid Pattern Background
+                  Positioned.fill(
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Color(0xFF1B5E20), // Dark green
+                            Color(0xFF2E7D32), // Deep fresh green
+                            Color(0xFF4CAF50), // Medium green
+                            AppTheme.background, // Fades to off-white background
                           ],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          stops: [0.0, 0.45, 0.82, 1.0],
                         ),
-                        // Basket Button (Green outline in white circle)
-                        GestureDetector(
-                          onTap: () => context.go('/cart'),
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              Container(
-                                width: 44,
-                                height: 44,
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.shopping_basket_outlined,
-                                  color: AppTheme.forestDeep,
-                                  size: 20,
-                                ),
-                              ),
-                              if (cartCount > 0)
-                                Positioned(
-                                  right: -2,
-                                  top: -2,
-                                  child: Container(
-                                    width: 18,
-                                    height: 18,
-                                    decoration: const BoxDecoration(
-                                      color: AppTheme.redAccent,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        '$cartCount',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 9.5,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 22),
-
-                    // Special Offer Card
-                    Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.03),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
                       ),
-                      padding: const EdgeInsets.all(20),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            flex: 6,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                      child: CustomPaint(
+                        painter: GridPatternPainter(),
+                      ),
+                    ),
+                  ),
+                  // Header Content Column
+                  Container(
+                    padding: EdgeInsets.fromLTRB(
+                      20,
+                      MediaQuery.of(context).padding.top + 20,
+                      20,
+                      12,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Top Greeting Row
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
                               children: [
-                                Text(
-                                  'Enjoy The Special\nOffer Up To 30%',
-                                  style: GoogleFonts.fredoka(
-                                    fontSize: 19,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
-                                    height: 1.25,
+                                // Active User Avatar
+                                Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Colors.white.withValues(alpha: 0.6), width: 1.5),
+                                    image: DecorationImage(
+                                      image: NetworkImage(profile.avatarUrl),
+                                      fit: BoxFit.cover,
+                                    ),
                                   ),
                                 ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  'From 14th June, 2025',
-                                  style: GoogleFonts.nunito(
-                                    fontSize: 12,
-                                    color: Colors.grey.shade500,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                // Indicator Dots (one green pill, three grey circles)
-                                Row(
+                                const SizedBox(width: 12),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Container(
-                                      width: 16,
-                                      height: 5,
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.forestDeep,
-                                        borderRadius: BorderRadius.circular(3),
+                                    Text(
+                                      'Morning, $firstName',
+                                      style: GoogleFonts.fredoka(
+                                        fontSize: 16.5,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
                                       ),
                                     ),
-                                    const SizedBox(width: 4),
-                                    _buildIndicatorDot(),
-                                    const SizedBox(width: 4),
-                                    _buildIndicatorDot(),
-                                    const SizedBox(width: 4),
-                                    _buildIndicatorDot(),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'What would you buy today?',
+                                      style: GoogleFonts.nunito(
+                                        fontSize: 12.5,
+                                        color: Colors.white.withValues(alpha: 0.85),
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ],
                             ),
-                          ),
-                          // Vegetable Bundle Image on right
-                          Expanded(
-                            flex: 5,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: Image.network(
-                                'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&q=80&auto=format&fit=crop',
-                                height: 94,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    const SizedBox(height: 94),
+                            // Basket Button (Green outline in white circle)
+                            GestureDetector(
+                              onTap: () => context.go('/cart'),
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.shopping_basket_outlined,
+                                      color: AppTheme.forestDeep,
+                                      size: 20,
+                                    ),
+                                  ),
+                                  if (cartCount > 0)
+                                    Positioned(
+                                      right: -2,
+                                      top: -2,
+                                      child: Container(
+                                        width: 18,
+                                        height: 18,
+                                        decoration: const BoxDecoration(
+                                          color: AppTheme.redAccent,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            '$cartCount',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 9.5,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ],
                               ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Search Bar (Capsule shape)
-                    GestureDetector(
-                      onTap: () {
-                        ref.read(filterProvider.notifier).reset();
-                        context.push('/search');
-                      },
-                      child: Container(
-                        height: 52,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(26),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.02),
-                              blurRadius: 8,
-                              offset: const Offset(0, 3),
                             ),
                           ],
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 18),
+                        const SizedBox(height: 22),
+
+                        // Special Offer Card
+                        Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.white.withValues(alpha: 0.16),
+                                Colors.white.withValues(alpha: 0.05),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              width: 1,
+                            ),
+                          ),
+                          padding: const EdgeInsets.all(20),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: 6,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Enjoy The Special\nOffer Up To 30%',
+                                      style: GoogleFonts.fredoka(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                        height: 1.25,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'From 14th June, 2025',
+                                      style: GoogleFonts.nunito(
+                                        fontSize: 12,
+                                        color: Colors.white.withValues(alpha: 0.75),
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    // Indicator Dots
+                                    Row(
+                                      children: [
+                                        _buildIndicatorDot(active: true),
+                                        const SizedBox(width: 4),
+                                        _buildIndicatorDot(active: false),
+                                        const SizedBox(width: 4),
+                                        _buildIndicatorDot(active: false),
+                                        const SizedBox(width: 4),
+                                        _buildIndicatorDot(active: false),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Vegetable Bundle Image on right
+                              Expanded(
+                                flex: 5,
+                                child: Image.network(
+                                  'https://raw.githubusercontent.com/Hikki-dev/DealSouk/main/web/assets/promo_vegetables.png',
+                                  height: 94,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const SizedBox(height: 94),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Search Bar (Capsule shape)
+                        GestureDetector(
+                          onTap: () {
+                            ref.read(filterProvider.notifier).reset();
+                            context.push('/search');
+                          },
+                          child: Container(
+                            height: 52,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(26),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.02),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 18),
                         child: Row(
                           children: [
                             Icon(Icons.search_rounded, color: Colors.grey.shade400, size: 22),
@@ -281,7 +316,9 @@ class HomeScreen extends ConsumerWidget {
                   ],
                 ),
               ),
-            ),
+            ],
+          ),
+        ),
 
             // 2. Categories Row (Static 5 items)
             SliverToBoxAdapter(
@@ -339,7 +376,7 @@ class HomeScreen extends ConsumerWidget {
                                   width: 58,
                                   height: 58,
                                   decoration: BoxDecoration(
-                                    color: AppTheme.cream,
+                                    color: cat.color,
                                     shape: BoxShape.circle,
                                     boxShadow: [
                                       BoxShadow(
@@ -349,15 +386,21 @@ class HomeScreen extends ConsumerWidget {
                                       ),
                                     ],
                                   ),
-                                  child: Icon(cat.icon, color: cat.color, size: 26),
+                                  padding: const EdgeInsets.all(10),
+                                  child: Image.network(
+                                    cat.imageUrl,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) =>
+                                        Icon(Icons.fastfood_rounded, color: Colors.grey.shade400, size: 26),
+                                  ),
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
                                   cat.label,
                                   style: GoogleFonts.nunito(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.black87,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey.shade600,
                                   ),
                                 ),
                               ],
@@ -560,17 +603,16 @@ class HomeScreen extends ConsumerWidget {
             const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
           ],
         ),
-      ),
-    );
-  }
+      );
+    }
 
-  Widget _buildIndicatorDot() {
+  Widget _buildIndicatorDot({bool active = false}) {
     return Container(
-      width: 6,
+      width: active ? 16 : 6,
       height: 6,
-      decoration: const BoxDecoration(
-        color: Color(0xFFE0E0E0),
-        shape: BoxShape.circle,
+      decoration: BoxDecoration(
+        color: active ? Colors.white : Colors.white.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(3),
       ),
     );
   }
@@ -871,12 +913,12 @@ class _TrustPill extends StatelessWidget {
 }
 
 class _CategoryInfo {
-  final IconData icon;
+  final String imageUrl;
   final String label;
   final String category;
   final Color color;
 
-  const _CategoryInfo(this.icon, this.label, this.category, this.color);
+  const _CategoryInfo(this.imageUrl, this.label, this.category, this.color);
 }
 
 class _FeaturedStoreCard extends StatelessWidget {
@@ -990,3 +1032,26 @@ class _FeaturedStoreCard extends StatelessWidget {
     );
   }
 }
+
+class GridPatternPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.04)
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+
+    const double gridSize = 24.0;
+
+    for (double x = 0; x < size.width; x += gridSize) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+    for (double y = 0; y < size.height; y += gridSize) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+

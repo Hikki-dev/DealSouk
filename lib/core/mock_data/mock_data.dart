@@ -77,7 +77,7 @@ class MockData {
       lowestPriceStore: 'Carrefour',
       updatedAtLabel: 'Updated 5m ago',
       imageUrl:
-          'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=300&q=80&auto=format&fit=crop',
+          'https://raw.githubusercontent.com/Hikki-dev/DealSouk/main/web/assets/product_apples.png',
     ),
     Product(
       id: 'lettuce',

@@ -139,7 +139,7 @@ class HomeScreen extends ConsumerWidget {
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      'What would you buy today?',
+                                      'What deals are you finding today?',
                                       style: GoogleFonts.nunito(
                                         fontSize: 12.5,
                                         color: Colors.white.withValues(alpha: 0.85),
@@ -199,80 +199,8 @@ class HomeScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 22),
 
-                        // Special Offer Card
-                        Container(
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.white.withValues(alpha: 0.16),
-                                Colors.white.withValues(alpha: 0.05),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              width: 1,
-                            ),
-                          ),
-                          padding: const EdgeInsets.all(20),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                flex: 6,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Enjoy The Special\nOffer Up To 30%',
-                                      style: GoogleFonts.fredoka(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                        height: 1.25,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'From 14th June, 2025',
-                                      style: GoogleFonts.nunito(
-                                        fontSize: 12,
-                                        color: Colors.white.withValues(alpha: 0.75),
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    // Indicator Dots
-                                    Row(
-                                      children: [
-                                        _buildIndicatorDot(active: true),
-                                        const SizedBox(width: 4),
-                                        _buildIndicatorDot(active: false),
-                                        const SizedBox(width: 4),
-                                        _buildIndicatorDot(active: false),
-                                        const SizedBox(width: 4),
-                                        _buildIndicatorDot(active: false),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              // Vegetable Bundle Image on right
-                              Expanded(
-                                flex: 5,
-                                child: Image.network(
-                                  'https://raw.githubusercontent.com/Hikki-dev/DealSouk/main/web/assets/promo_vegetables.png',
-                                  height: 94,
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const SizedBox(height: 94),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                        // Special Offer Carousel
+                        const _OfferCarousel(),
                         const SizedBox(height: 20),
 
                         // Search Bar (Capsule shape)
@@ -605,17 +533,6 @@ class HomeScreen extends ConsumerWidget {
         ),
       );
     }
-
-  Widget _buildIndicatorDot({bool active = false}) {
-    return Container(
-      width: active ? 16 : 6,
-      height: 6,
-      decoration: BoxDecoration(
-        color: active ? Colors.white : Colors.white.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(3),
-      ),
-    );
-  }
 }
 
 List<Product> _filterByFreshness(List<Product> products, String freshness) {
@@ -1053,5 +970,158 @@ class GridPatternPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _OfferCarousel extends StatefulWidget {
+  const _OfferCarousel();
+
+  @override
+  State<_OfferCarousel> createState() => _OfferCarouselState();
+}
+
+class _OfferCarouselState extends State<_OfferCarousel> {
+  final PageController _pageController = PageController();
+  int _currentIndex = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final List<_OfferCardData> offers = [
+      const _OfferCardData(
+        title: 'Enjoy The Special\nOffer Up To 30%',
+        subtitle: 'From 14th June, 2025',
+        imageUrl: 'https://raw.githubusercontent.com/Hikki-dev/DealSouk/main/web/assets/promo_vegetables.png',
+      ),
+      const _OfferCardData(
+        title: 'Find Best Supermarket\nPrices Nearby',
+        subtitle: 'Compare local stores instantly',
+        imageUrl: 'https://raw.githubusercontent.com/Hikki-dev/DealSouk/main/web/assets/category_fresh.png',
+      ),
+      const _OfferCardData(
+        title: 'Contribute Shelf Photos\n& Earn Reward Tokens',
+        subtitle: 'Redeem value vouchers today',
+        imageUrl: 'https://raw.githubusercontent.com/Hikki-dev/DealSouk/main/web/assets/product_apples.png',
+      ),
+    ];
+
+    return Stack(
+      children: [
+        SizedBox(
+          height: 154,
+          child: PageView.builder(
+            controller: _pageController,
+            itemCount: offers.length,
+            onPageChanged: (index) {
+              setState(() {
+                _currentIndex = index;
+              });
+            },
+            itemBuilder: (context, index) {
+              final offer = offers[index];
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.white.withValues(alpha: 0.16),
+                      Colors.white.withValues(alpha: 0.05),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    width: 1,
+                  ),
+                ),
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 6,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            offer.title,
+                            style: GoogleFonts.fredoka(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              height: 1.25,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            offer.subtitle,
+                            style: GoogleFonts.nunito(
+                              fontSize: 12,
+                              color: Colors.white.withValues(alpha: 0.75),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      flex: 5,
+                      child: Image.network(
+                        offer.imageUrl,
+                        height: 94,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const SizedBox(height: 94),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+        Positioned(
+          left: 22,
+          bottom: 22,
+          child: Row(
+            children: List.generate(
+              offers.length,
+              (index) => Padding(
+                padding: const EdgeInsets.only(right: 5),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  width: _currentIndex == index ? 16 : 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: _currentIndex == index
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.35),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _OfferCardData {
+  final String title;
+  final String subtitle;
+  final String imageUrl;
+
+  const _OfferCardData({
+    required this.title,
+    required this.subtitle,
+    required this.imageUrl,
+  });
 }
 

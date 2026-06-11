@@ -389,3 +389,15 @@ final flaggedPricesProvider =
   FlaggedPricesNotifier.new,
 );
 
+// --- Navbar Visibility (hide when bottom sheets are open) ---
+class NavbarVisibleNotifier extends Notifier<bool> {
+  @override
+  bool build() => true;
+
+  void show() => state = true;
+  void hide() => state = false;
+}
+
+final navbarVisibleProvider = NotifierProvider<NavbarVisibleNotifier, bool>(
+  NavbarVisibleNotifier.new,
+);

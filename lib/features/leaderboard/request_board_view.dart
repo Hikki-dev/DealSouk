@@ -62,17 +62,16 @@ class RequestBoardView extends ConsumerWidget {
               ),
               ElevatedButton.icon(
                 onPressed: () => _showRequestFormSheet(context, ref, userTokens),
-                icon: const Icon(Icons.add_comment_rounded, size: 14),
+                icon: const Icon(Icons.add_comment_rounded, size: 16),
                 label: const Text('Request Price Check'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.forestDeep,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  minimumSize: Size.zero,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  textStyle: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
+                  textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -139,6 +138,9 @@ class RequestBoardView extends ConsumerWidget {
     ];
 
     final hasEnoughTokens = userTokens >= 10;
+
+    // Hide navbar when sheet opens
+    ref.read(navbarVisibleProvider.notifier).hide();
 
     showModalBottomSheet(
       context: context,
@@ -323,7 +325,10 @@ class RequestBoardView extends ConsumerWidget {
           ),
         );
       },
-    );
+    ).whenComplete(() {
+      // Restore navbar when sheet is dismissed by any means
+      ref.read(navbarVisibleProvider.notifier).show();
+    });
   }
 }
 

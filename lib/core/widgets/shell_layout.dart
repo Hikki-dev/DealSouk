@@ -47,6 +47,7 @@ class _ShellLayoutBody extends ConsumerWidget {
       0,
       (sum, item) => sum + item.quantity,
     );
+    final isNavbarVisible = ref.watch(navbarVisibleProvider);
 
     final String location = GoRouterState.of(context).uri.toString();
     int selectedIndex = -1;
@@ -68,56 +69,65 @@ class _ShellLayoutBody extends ConsumerWidget {
     return ResponsiveContainer(
       maxWidth: 600,
       extendBody: true,
-      bottomNavigationBar: Container(
-        margin: EdgeInsets.fromLTRB(24, 0, 24, bottomPad + 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(32),
-          border: Border.all(color: Colors.grey.shade100, width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
+      bottomNavigationBar: AnimatedSlide(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        offset: isNavbarVisible ? Offset.zero : const Offset(0, 1.5),
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 200),
+          opacity: isNavbarVisible ? 1.0 : 0.0,
+          child: Container(
+            margin: EdgeInsets.fromLTRB(24, 0, 24, bottomPad + 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(color: Colors.grey.shade100, width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _SoukNavItem(
-              icon: Icons.home_outlined,
-              selectedIcon: Icons.home_rounded,
-              selected: selectedIndex == 0,
-              onTap: () => context.go('/'),
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _SoukNavItem(
+                  icon: Icons.home_outlined,
+                  selectedIcon: Icons.home_rounded,
+                  selected: selectedIndex == 0,
+                  onTap: () => context.go('/'),
+                ),
+                _SoukNavItem(
+                  icon: Icons.map_outlined,
+                  selectedIcon: Icons.map_rounded,
+                  selected: selectedIndex == 1,
+                  onTap: () => context.go('/stores'),
+                ),
+                _SoukNavItem(
+                  icon: Icons.shopping_basket_outlined,
+                  selectedIcon: Icons.shopping_basket_rounded,
+                  selected: selectedIndex == 2,
+                  badge: cartCount,
+                  onTap: () => context.go('/cart'),
+                ),
+                _SoukNavItem(
+                  icon: Icons.emoji_events_outlined,
+                  selectedIcon: Icons.emoji_events_rounded,
+                  selected: selectedIndex == 3,
+                  onTap: () => context.go('/leaderboard'),
+                ),
+                _SoukNavItem(
+                  icon: Icons.person_outline_rounded,
+                  selectedIcon: Icons.person_rounded,
+                  selected: selectedIndex == 4,
+                  onTap: () => context.go('/profile'),
+                ),
+              ],
             ),
-            _SoukNavItem(
-              icon: Icons.map_outlined,
-              selectedIcon: Icons.map_rounded,
-              selected: selectedIndex == 1,
-              onTap: () => context.go('/stores'),
-            ),
-            _SoukNavItem(
-              icon: Icons.shopping_basket_outlined,
-              selectedIcon: Icons.shopping_basket_rounded,
-              selected: selectedIndex == 2,
-              badge: cartCount,
-              onTap: () => context.go('/cart'),
-            ),
-            _SoukNavItem(
-              icon: Icons.emoji_events_outlined,
-              selectedIcon: Icons.emoji_events_rounded,
-              selected: selectedIndex == 3,
-              onTap: () => context.go('/leaderboard'),
-            ),
-            _SoukNavItem(
-              icon: Icons.person_outline_rounded,
-              selectedIcon: Icons.person_rounded,
-              selected: selectedIndex == 4,
-              onTap: () => context.go('/profile'),
-            ),
-          ],
+          ),
         ),
       ),
       child: child,

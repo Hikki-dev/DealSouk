@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -80,14 +81,14 @@ class HomeScreen extends ConsumerWidget {
                       decoration: const BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            Color(0xFF1B5E20), // Dark green
-                            Color(0xFF2E7D32), // Deep fresh green
-                            Color(0xFF4CAF50), // Medium green
-                            AppTheme.background, // Fades to off-white background
+                            Color(0xFF1B5E20),
+                            Color(0xFF2E7D32),
+                            Color(0xFF66BB6A),
+                            Color(0xFFF9FBF7),
                           ],
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          stops: [0.0, 0.45, 0.82, 1.0],
+                          stops: [0.0, 0.4, 0.75, 1.0],
                         ),
                       ),
                       child: CustomPaint(
@@ -982,9 +983,26 @@ class _OfferCarousel extends StatefulWidget {
 class _OfferCarouselState extends State<_OfferCarousel> {
   final PageController _pageController = PageController();
   int _currentIndex = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (_pageController.hasClients) {
+        final nextPage = (_currentIndex + 1) % 3;
+        _pageController.animateToPage(
+          nextPage,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
 
   @override
   void dispose() {
+    _timer?.cancel();
     _pageController.dispose();
     super.dispose();
   }
@@ -1012,9 +1030,10 @@ class _OfferCarouselState extends State<_OfferCarousel> {
     return Stack(
       children: [
         SizedBox(
-          height: 154,
+          height: 168,
           child: PageView.builder(
             controller: _pageController,
+            clipBehavior: Clip.none,
             itemCount: offers.length,
             onPageChanged: (index) {
               setState(() {
@@ -1024,59 +1043,51 @@ class _OfferCarouselState extends State<_OfferCarousel> {
             itemBuilder: (context, index) {
               final offer = offers[index];
               return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 2),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.white.withValues(alpha: 0.16),
-                      Colors.white.withValues(alpha: 0.05),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    width: 1,
-                  ),
-                ),
-                padding: const EdgeInsets.all(20),
-                child: Row(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                child: Stack(
+                  clipBehavior: Clip.none,
                   children: [
-                    Expanded(
-                      flex: 6,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            offer.title,
-                            style: GoogleFonts.fredoka(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              height: 1.25,
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 16, 10, 10),
+                      child: FractionallySizedBox(
+                        widthFactor: 0.58,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              offer.title,
+                              style: GoogleFonts.fredoka(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF1F2937),
+                                height: 1.25,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            offer.subtitle,
-                            style: GoogleFonts.nunito(
-                              fontSize: 12,
-                              color: Colors.white.withValues(alpha: 0.75),
-                              fontWeight: FontWeight.bold,
+                            const SizedBox(height: 8),
+                            Text(
+                              offer.subtitle,
+                              style: GoogleFonts.nunito(
+                                fontSize: 13,
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                    Expanded(
-                      flex: 5,
-                      child: Image.network(
-                        offer.imageUrl,
-                        height: 94,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const SizedBox(height: 94),
+                    Positioned(
+                      right: 10,
+                      bottom: -15,
+                      child: SizedBox(
+                        height: 120,
+                        width: 130,
+                        child: Image.network(
+                          offer.imageUrl,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const SizedBox(height: 120),
+                        ),
                       ),
                     ),
                   ],
@@ -1086,7 +1097,7 @@ class _OfferCarouselState extends State<_OfferCarousel> {
           ),
         ),
         Positioned(
-          left: 22,
+          left: 14,
           bottom: 22,
           child: Row(
             children: List.generate(
@@ -1099,8 +1110,8 @@ class _OfferCarouselState extends State<_OfferCarousel> {
                   height: 6,
                   decoration: BoxDecoration(
                     color: _currentIndex == index
-                        ? Colors.white
-                        : Colors.white.withValues(alpha: 0.35),
+                        ? const Color(0xFF2E7D32)
+                        : const Color(0xFFE0E0E0),
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),

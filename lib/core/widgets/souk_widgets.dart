@@ -260,32 +260,37 @@ class ProductGridCard extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SoukPrice(
-                      product.lowestPrice,
-                      size: 14.5,
-                      color: AppTheme.forestDeep,
-                    ),
-                    Text(
-                      product.packSize,
-                      style: TextStyle(
-                        fontSize: 9.5,
-                        color: Colors.grey.shade500,
-                        fontWeight: FontWeight.w600,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SoukPrice(
+                        product.lowestPrice,
+                        size: 13.0,
+                        color: AppTheme.forestDeep,
                       ),
-                    ),
-                  ],
+                      Text(
+                        product.packSize,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 9.0,
+                          color: Colors.grey.shade500,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 4),
                 // Circular Plus Button or horizontal stepper
                 if (inCartQty == 0)
                   GestureDetector(
                     onTap: () =>
                         ref.read(cartProvider.notifier).addToCart(product),
                     child: Container(
-                      width: 32,
-                      height: 32,
+                      width: 30,
+                      height: 30,
                       decoration: const BoxDecoration(
                         color: AppTheme.forestDeep,
                         shape: BoxShape.circle,
@@ -293,16 +298,16 @@ class ProductGridCard extends ConsumerWidget {
                       child: const Icon(
                         Icons.add,
                         color: Colors.white,
-                        size: 18,
+                        size: 16,
                       ),
                     ),
                   )
                 else
                   Container(
-                    height: 32,
+                    height: 30,
                     decoration: BoxDecoration(
                       color: AppTheme.cream,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(15),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -312,10 +317,10 @@ class ProductGridCard extends ConsumerWidget {
                               .read(cartProvider.notifier)
                               .updateQuantity(product.id, inCartQty - 1),
                           child: const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 6),
+                            padding: EdgeInsets.symmetric(horizontal: 4),
                             child: Icon(
                               Icons.remove,
-                              size: 14,
+                              size: 13,
                               color: AppTheme.forestDeep,
                             ),
                           ),
@@ -323,7 +328,7 @@ class ProductGridCard extends ConsumerWidget {
                         Text(
                           '$inCartQty',
                           style: const TextStyle(
-                            fontSize: 11,
+                            fontSize: 10.5,
                             fontWeight: FontWeight.bold,
                             color: AppTheme.forestDeep,
                           ),
@@ -333,10 +338,10 @@ class ProductGridCard extends ConsumerWidget {
                               .read(cartProvider.notifier)
                               .addToCart(product),
                           child: const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 6),
+                            padding: EdgeInsets.symmetric(horizontal: 4),
                             child: Icon(
                               Icons.add,
-                              size: 14,
+                              size: 13,
                               color: AppTheme.forestDeep,
                             ),
                           ),

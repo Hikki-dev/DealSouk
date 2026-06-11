@@ -76,8 +76,7 @@ class MockData {
       lowestPrice: 2.29,
       lowestPriceStore: 'Carrefour',
       updatedAtLabel: 'Updated 5m ago',
-      imageUrl:
-          'https://raw.githubusercontent.com/Hikki-dev/DealSouk/main/web/assets/product_apples.png',
+      imageUrl: 'assets/product_apples.png',
     ),
     Product(
       id: 'lettuce',

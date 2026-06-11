@@ -35,31 +35,31 @@ class HomeScreen extends ConsumerWidget {
     // Categories defined for Dribbble layout with premium transparent 3D clay illustrations
     final List<_CategoryInfo> homeCategories = [
       const _CategoryInfo(
-        'https://raw.githubusercontent.com/Hikki-dev/DealSouk/main/web/assets/category_fresh.png',
+        'assets/category_fresh.png',
         'Fresh',
         'Fresh',
         Color(0xFFE8F5E9), // Pastel green background
       ),
       const _CategoryInfo(
-        'https://raw.githubusercontent.com/Hikki-dev/DealSouk/main/web/assets/category_fruits.png',
+        'assets/category_fruits.png',
         'Fruits',
         'Fruits',
         Color(0xFFFFEBEE), // Pastel pink background
       ),
       const _CategoryInfo(
-        'https://raw.githubusercontent.com/Hikki-dev/DealSouk/main/web/assets/category_snack.png',
+        'assets/category_snack.png',
         'Snack',
         'Snacks',
         Color(0xFFFFF8E1), // Pastel yellow background
       ),
       const _CategoryInfo(
-        'https://raw.githubusercontent.com/Hikki-dev/DealSouk/main/web/assets/category_grocery.png',
+        'assets/category_grocery.png',
         'Grocery',
         'Dairy & Sweet',
         Color(0xFFE0F2F1), // Pastel teal background
       ),
       const _CategoryInfo(
-        'https://raw.githubusercontent.com/Hikki-dev/DealSouk/main/web/assets/category_oils.png',
+        'assets/category_oils.png',
         'Oils',
         'Bakery',
         Color(0xFFF3E5F5), // Pastel purple background
@@ -83,12 +83,13 @@ class HomeScreen extends ConsumerWidget {
                           colors: [
                             Color(0xFF1B5E20),
                             Color(0xFF2E7D32),
-                            Color(0xFF66BB6A),
+                            Color(0xFFE8F5E9),
+                            Color(0xFFF9FBF7),
                             Color(0xFFF9FBF7),
                           ],
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          stops: [0.0, 0.4, 0.75, 1.0],
+                          stops: [0.0, 0.22, 0.45, 0.65, 1.0],
                         ),
                       ),
                       child: CustomPaint(
@@ -955,7 +956,7 @@ class GridPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.04)
+      ..color = Colors.white.withValues(alpha: 0.015)
       ..strokeWidth = 1.0
       ..style = PaintingStyle.stroke;
 
@@ -1013,17 +1014,17 @@ class _OfferCarouselState extends State<_OfferCarousel> {
       const _OfferCardData(
         title: 'Enjoy The Special\nOffer Up To 30%',
         subtitle: 'From 14th June, 2025',
-        imageUrl: 'https://raw.githubusercontent.com/Hikki-dev/DealSouk/main/web/assets/promo_vegetables.png',
+        imageUrl: 'assets/promo_vegetables.png',
       ),
       const _OfferCardData(
         title: 'Find Best Supermarket\nPrices Nearby',
         subtitle: 'Compare local stores instantly',
-        imageUrl: 'https://raw.githubusercontent.com/Hikki-dev/DealSouk/main/web/assets/category_fresh.png',
+        imageUrl: 'assets/category_fresh.png',
       ),
       const _OfferCardData(
         title: 'Contribute Shelf Photos\n& Earn Reward Tokens',
         subtitle: 'Redeem value vouchers today',
-        imageUrl: 'https://raw.githubusercontent.com/Hikki-dev/DealSouk/main/web/assets/product_apples.png',
+        imageUrl: 'assets/product_apples.png',
       ),
     ];
 

@@ -6,21 +6,141 @@ import '../../core/models/models.dart';
 import '../../core/mock_data/mock_data.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/responsive_container.dart';
+import '../../core/widgets/souk_widgets.dart';
 
-class ProductDetailScreen extends ConsumerWidget {
+const _storeColors = [
+  Color(0xFF4CAF50),
+  Color(0xFF2196F3),
+  Color(0xFFFF9800),
+  Color(0xFFE91E63),
+  Color(0xFF9C27B0),
+];
+
+class ProductDetailScreen extends ConsumerStatefulWidget {
   final String productId;
 
   const ProductDetailScreen({super.key, required this.productId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProductDetailScreen> createState() => _ProductDetailScreenState();
+}
+
+class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
+  int _quantity = 1;
+  int _selectedStoreIndex = 0;
+
+  void _showChooseStoreSheet(BuildContext context, List<StoreProductPrice> sortedPrices) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Choose store',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppTheme.textDark),
+                ),
+                const SizedBox(height: 16),
+                ...List.generate(sortedPrices.length, (i) {
+                  final sp = sortedPrices[i];
+                  final isSelected = i == _selectedStoreIndex;
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() => _selectedStoreIndex = i);
+                      Navigator.of(sheetContext).pop();
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppTheme.limeAccent.withOpacity(0.25) : Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isSelected ? AppTheme.forestDeep : Colors.grey.shade200,
+                          width: isSelected ? 1.5 : 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color: _storeColors[i % _storeColors.length].withOpacity(0.15),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.store, size: 16, color: _storeColors[i % _storeColors.length]),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  sp.storeName,
+                                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppTheme.textDark),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  sp.updatedAtLabel,
+                                  style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (i == 0)
+                            Container(
+                              margin: const EdgeInsets.only(right: 10),
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: AppTheme.limeAccent,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text(
+                                'Cheapest',
+                                style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: AppTheme.forestDeep),
+                              ),
+                            ),
+                          SoukPrice(sp.price, size: 15),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final products = ref.watch(productsProvider);
     final userTokens = ref.watch(userTokensProvider);
+    final cartItems = ref.watch(cartProvider);
+    final cartCount = cartItems.fold<int>(0, (sum, item) => sum + item.quantity);
 
-    // Find the product
     final product = products.firstWhere(
-      (p) => p.id == productId,
+      (p) => p.id == widget.productId,
       orElse: () => Product(
         id: 'unknown',
         name: 'Product Not Found',
@@ -33,423 +153,563 @@ class ProductDetailScreen extends ConsumerWidget {
       ),
     );
 
-    // Find the store prices for this product
-    final storePrices = MockData.productPrices[productId] ?? [];
-    // Sort store prices by price ascending
+    final storePrices = MockData.productPrices[widget.productId] ?? [];
     final sortedPrices = List<StoreProductPrice>.from(storePrices)
       ..sort((a, b) => a.price.compareTo(b.price));
 
+    final safeIndex = sortedPrices.isEmpty ? 0 : _selectedStoreIndex.clamp(0, sortedPrices.length - 1);
+    final selectedPrice = sortedPrices.isNotEmpty ? sortedPrices[safeIndex].price : product.lowestPrice;
+
+    final similarProducts =
+        products.where((p) => p.id != product.id && p.category == product.category).toList();
+    final similar = (similarProducts.isEmpty
+            ? products.where((p) => p.id != product.id).toList()
+            : similarProducts)
+        .take(3)
+        .toList();
+
     return ResponsiveContainer(
-      appBar: AppBar(
-        title: const Text('Product Details'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-      ),
-      child: SingleChildScrollView(
+      child: Container(
+        color: AppTheme.forestDeep,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Top Product Card Hero
-            Container(
-              color: Colors.white,
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            // ── Dark green header ──
+            Padding(
+              padding: EdgeInsets.fromLTRB(16, MediaQuery.of(context).padding.top + 10, 16, 14),
+              child: Row(
                 children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Large Icon
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primaryContainer.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Icon(
-                          _getCategoryIcon(product.category),
-                          size: 40,
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      
-                      // Title Info
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.primaryContainer.withOpacity(0.5),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                product.category,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: theme.colorScheme.primary,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              product.name,
-                              style: theme.textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${product.brand} • Pack Size: ${product.packSize}',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                      child: const Icon(Icons.arrow_back_ios_new_rounded, color: AppTheme.forestDeep, size: 17),
+                    ),
                   ),
-                  const SizedBox(height: 20),
-                  const Divider(),
-                  const SizedBox(height: 12),
-                  
-                  // Best Price Badge Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Best Price in Dubai',
-                            style: TextStyle(color: Colors.grey, fontSize: 12),
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.baseline,
-                            textBaseline: TextBaseline.alphabetic,
-                            children: [
-                              Text(
-                                'AED ${product.lowestPrice.toStringAsFixed(2)}',
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w900,
-                                  color: theme.colorScheme.primary,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'at ${product.lowestPriceStore}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade700,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: AppTheme.emeraldPrimary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
+                  const Expanded(
+                    child: Text(
+                      'Product Details',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => context.go('/cart'),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          width: 38,
+                          height: 38,
+                          decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                          child: const Icon(Icons.shopping_cart_outlined, color: AppTheme.forestDeep, size: 17),
                         ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.check_circle, color: AppTheme.emeraldPrimary, size: 16),
-                            const SizedBox(width: 6),
-                            Text(
-                              product.updatedAtLabel,
-                              style: const TextStyle(
-                                color: AppTheme.emeraldPrimary,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
+                        if (cartCount > 0)
+                          Positioned(
+                            right: -2,
+                            top: -2,
+                            child: Container(
+                              width: 17,
+                              height: 17,
+                              decoration: BoxDecoration(
+                                color: AppTheme.redAccent,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: AppTheme.forestDeep, width: 1.5),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  '$cartCount',
+                                  style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                                ),
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                    ],
+                          ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
 
-            // Price Comparison List Card
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: Colors.grey.shade200),
+            // ── White rounded sheet ──
+            Expanded(
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Compare Supermarkets',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 10),
+                    // Grab handle
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
                       ),
-                      const SizedBox(height: 16),
-                      
-                      // List items
-                      ...sortedPrices.map((sp) {
-                        final isCheapest = sp.price == product.lowestPrice;
-                        return Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 12.0),
-                              child: Row(
-                                children: [
-                                  // Store Brand Bullet
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: isCheapest ? AppTheme.emeraldLight : Colors.grey.shade100,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      Icons.store,
-                                      size: 16,
-                                      color: isCheapest ? AppTheme.emeraldPrimary : Colors.grey.shade600,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
+                    ),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 12),
+                              // Large product image
+                              Center(
+                                child: SizedBox(
+                                  height: 190,
+                                  child: product.imageUrl.isNotEmpty
+                                      ? ClipRRect(
+                                          borderRadius: BorderRadius.circular(20),
+                                          child: Image.network(
+                                            product.imageUrl,
+                                            fit: BoxFit.contain,
+                                            errorBuilder: (_, __, ___) => Icon(
+                                              categoryIcon(product.category),
+                                              size: 80,
+                                              color: Colors.grey.shade300,
+                                            ),
+                                          ),
+                                        )
+                                      : Icon(categoryIcon(product.category), size: 80, color: Colors.grey.shade300),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
 
-                                  // Store Name & Updated Date
+                              // Name + heart
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Row(
-                                          children: [
-                                            Text(
-                                              sp.storeName,
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 14,
-                                              ),
-                                            ),
-                                            if (isCheapest) ...[
-                                              const SizedBox(width: 8),
-                                              Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.amber.shade100,
-                                                  borderRadius: BorderRadius.circular(4),
-                                                ),
-                                                child: const Text(
-                                                  'Cheapest',
-                                                  style: TextStyle(
-                                                    fontSize: 9,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Color(0xFFC77C02),
-                                                  ),
-                                                ),
-                                              ),
-                                            ]
-                                          ],
-                                        ),
                                         Text(
-                                          sp.updatedAtLabel,
-                                          style: TextStyle(
-                                            color: Colors.grey.shade500,
-                                            fontSize: 11,
+                                          '${product.name}\nIn ${product.packSize}',
+                                          style: const TextStyle(
+                                            fontSize: 19,
+                                            fontWeight: FontWeight.w800,
+                                            color: AppTheme.forestDeep,
+                                            height: 1.25,
                                           ),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          product.brand,
+                                          style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
                                         ),
                                       ],
                                     ),
                                   ),
+                                  Container(
+                                    width: 38,
+                                    height: 38,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.grey.shade200),
+                                    ),
+                                    child: Icon(Icons.favorite_border_rounded, size: 19, color: Colors.grey.shade400),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
 
-                                  // Price
-                                  Text(
-                                    'AED ${sp.price.toStringAsFixed(2)}',
+                              // Price + crowd-sourced badge
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  SoukPrice(selectedPrice, size: 26),
+                                  const Spacer(),
+                                  Row(
+                                    children: [
+                                      Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFF9C27B0),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      const Text(
+                                        'Crowd-sourced price',
+                                        style: TextStyle(
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF9C27B0),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 14),
+
+                              // Store dots + rating
+                              if (sortedPrices.isNotEmpty)
+                                Row(
+                                  children: [
+                                    ...List.generate(sortedPrices.length.clamp(0, 5), (i) {
+                                      final isSelected = i == safeIndex;
+                                      return GestureDetector(
+                                        onTap: () => setState(() => _selectedStoreIndex = i),
+                                        child: AnimatedContainer(
+                                          duration: const Duration(milliseconds: 180),
+                                          width: isSelected ? 30 : 22,
+                                          height: isSelected ? 30 : 22,
+                                          margin: const EdgeInsets.only(right: 8),
+                                          decoration: BoxDecoration(
+                                            color: _storeColors[i % _storeColors.length],
+                                            shape: BoxShape.circle,
+                                            border: isSelected
+                                                ? Border.all(color: AppTheme.forestDeep, width: 2.5)
+                                                : null,
+                                          ),
+                                        ),
+                                      );
+                                    }),
+                                    GestureDetector(
+                                      onTap: () => _showChooseStoreSheet(context, sortedPrices),
+                                      child: Text(
+                                        sortedPrices[safeIndex].storeName,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppTheme.forestDeep,
+                                          decoration: TextDecoration.underline,
+                                        ),
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    const Icon(Icons.star_rounded, color: Color(0xFFFFC107), size: 18),
+                                    const SizedBox(width: 3),
+                                    const Text(
+                                      '4.5 Rating',
+                                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF78909C)),
+                                    ),
+                                  ],
+                                ),
+                              const SizedBox(height: 16),
+
+                              // Description
+                              Text(
+                                '100% crowd-sourced price data. Prices are submitted by Dubai shoppers and verified by moderators. Spotted a different price? Submit it and earn tokens, or request an update below... ',
+                                style: TextStyle(fontSize: 12.5, color: Colors.grey.shade500, height: 1.5),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  if (userTokens >= 10) {
+                                    ref.read(userTokensProvider.notifier).deductTokens(10);
+                                    ref.read(userTransactionsProvider.notifier).addTransaction(
+                                          -10,
+                                          'Requested update for ${product.name}',
+                                        );
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Update requested. 10 tokens spent. Balance: ${userTokens - 10} tokens.'),
+                                        backgroundColor: theme.colorScheme.primary,
+                                      ),
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Requires 10 tokens. Earn tokens by submitting grocery prices!'),
+                                        backgroundColor: Colors.redAccent,
+                                      ),
+                                    );
+                                  }
+                                },
+                                child: const Padding(
+                                  padding: EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    'Request price update (−10 tokens)',
                                     style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                      color: isCheapest ? AppTheme.emeraldPrimary : Colors.black87,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppTheme.forestDeep,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Divider(color: Colors.grey.shade100),
+
+                              // ── Compare Supermarkets (PRD core) ──
+                              Theme(
+                                data: theme.copyWith(dividerColor: Colors.transparent),
+                                child: ExpansionTile(
+                                  tilePadding: EdgeInsets.zero,
+                                  initiallyExpanded: true,
+                                  title: const Text(
+                                    'Compare supermarkets',
+                                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.textDark),
+                                  ),
+                                  children: List.generate(sortedPrices.length, (i) {
+                                    final sp = sortedPrices[i];
+                                    final isCheapest = i == 0;
+                                    return Padding(
+                                      padding: const EdgeInsets.only(bottom: 12),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            width: 10,
+                                            height: 10,
+                                            decoration: BoxDecoration(
+                                              color: _storeColors[i % _storeColors.length],
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  sp.storeName,
+                                                  style: TextStyle(
+                                                    fontSize: 13,
+                                                    fontWeight: isCheapest ? FontWeight.w700 : FontWeight.w500,
+                                                    color: AppTheme.textDark,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  sp.updatedAtLabel,
+                                                  style: TextStyle(fontSize: 10, color: Colors.grey.shade400),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          if (isCheapest)
+                                            Container(
+                                              margin: const EdgeInsets.only(right: 8),
+                                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                              decoration: BoxDecoration(
+                                                color: AppTheme.limeAccent,
+                                                borderRadius: BorderRadius.circular(6),
+                                              ),
+                                              child: const Text(
+                                                'Cheapest',
+                                                style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: AppTheme.forestDeep),
+                                              ),
+                                            ),
+                                          SoukPrice(sp.price, size: 14, color: isCheapest ? AppTheme.forestDeep : const Color(0xFF78909C)),
+                                        ],
+                                      ),
+                                    );
+                                  }),
+                                ),
+                              ),
+                              Divider(color: Colors.grey.shade100),
+
+                              // ── Price trend (collapsible like reference) ──
+                              Theme(
+                                data: theme.copyWith(dividerColor: Colors.transparent),
+                                child: ExpansionTile(
+                                  tilePadding: EdgeInsets.zero,
+                                  title: const Text(
+                                    'Price trend (30 days)',
+                                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.textDark),
+                                  ),
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 16),
+                                      child: Column(
+                                        children: [
+                                          Align(
+                                            alignment: Alignment.centerRight,
+                                            child: Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                              decoration: BoxDecoration(
+                                                color: AppTheme.limeAccent.withOpacity(0.4),
+                                                borderRadius: BorderRadius.circular(6),
+                                              ),
+                                              child: const Text(
+                                                '-4.2% overall',
+                                                style: TextStyle(color: AppTheme.forestDeep, fontSize: 11, fontWeight: FontWeight.bold),
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 14),
+                                          SizedBox(
+                                            height: 100,
+                                            child: CustomPaint(
+                                              size: const Size(double.infinity, 100),
+                                              painter: PriceTrendPainter(AppTheme.forestDeep),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 10),
+                                          const Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text('1 Month Ago', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                                              Text('15 Days Ago', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                                              Text('Today', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Divider(color: Colors.grey.shade100),
+                              const SizedBox(height: 8),
+
+                              // ── Similar products ──
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'Similar products',
+                                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.textDark),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () => context.push('/search'),
+                                    child: const Text(
+                                      'See more',
+                                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.redAccent),
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
-                            if (sp != sortedPrices.last) const Divider(height: 1),
-                          ],
-                        );
-                      }),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Mock Price History Trend Chart
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: Colors.grey.shade200),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Price Trend (30 Days)',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                              const SizedBox(height: 12),
+                              GridView.count(
+                                crossAxisCount: 3,
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                childAspectRatio: 0.62,
+                                crossAxisSpacing: 10,
+                                mainAxisSpacing: 10,
+                                children: similar.map((p) => ProductGridCard(product: p)).toList(),
+                              ),
+                              const SizedBox(height: 20),
+                            ],
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.green.shade50,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: const Text(
-                              '-4.2% overall',
-                              style: TextStyle(color: Colors.green, fontSize: 10, fontWeight: FontWeight.bold),
-                            ),
-                          )
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      
-                      // Mini Chart Painter
-                      SizedBox(
-                        height: 120,
-                        child: CustomPaint(
-                          size: const Size(double.infinity, 120),
-                          painter: PriceTrendPainter(theme.colorScheme.primary),
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      
-                      // Chart Legend Axis
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: const [
-                          Text('1 Month Ago', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                          Text('15 Days Ago', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                          Text('Today', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                    ),
+
+                    // ── Bottom bar: stepper + lime Add to cart ──
+                    Container(
+                      padding: EdgeInsets.fromLTRB(20, 12, 20, MediaQuery.of(context).padding.bottom + 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.07),
+                            blurRadius: 16,
+                            offset: const Offset(0, -4),
+                          ),
                         ],
-                      )
-                    ],
-                  ),
+                      ),
+                      child: Row(
+                        children: [
+                          // Quantity stepper (outline pill)
+                          Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey.shade200, width: 1.5),
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: Row(
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    if (_quantity > 1) setState(() => _quantity--);
+                                  },
+                                  child: const SizedBox(
+                                    width: 40,
+                                    height: 46,
+                                    child: Icon(Icons.remove, size: 17, color: AppTheme.forestDeep),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 26,
+                                  child: Text(
+                                    '$_quantity',
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.textDark),
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () => setState(() => _quantity++),
+                                  child: const SizedBox(
+                                    width: 40,
+                                    height: 46,
+                                    child: Icon(Icons.add, size: 17, color: AppTheme.forestDeep),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+
+                          // Lime "Add to cart"
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                for (int i = 0; i < _quantity; i++) {
+                                  ref.read(cartProvider.notifier).addToCart(product);
+                                }
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('$_quantity × ${product.name} added to cart'),
+                                    action: SnackBarAction(
+                                      label: 'VIEW CART',
+                                      textColor: AppTheme.limeAccent,
+                                      onPressed: () => context.go('/cart'),
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  color: AppTheme.limeAccent,
+                                  borderRadius: BorderRadius.circular(24),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppTheme.limeAccent.withOpacity(0.5),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.shopping_cart_rounded, color: AppTheme.forestDeep, size: 19),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Add to cart',
+                                      style: TextStyle(
+                                        color: AppTheme.forestDeep,
+                                        fontSize: 15.5,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 24),
-
-            // Action Buttons
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        // Request price update - deducts 10 tokens
-                        if (userTokens >= 10) {
-                          ref.read(userTokensProvider.notifier).deductTokens(10);
-                          ref.read(userTransactionsProvider.notifier).addTransaction(
-                            -10,
-                            'Requested update for ${product.name}',
-                          );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Update requested. 10 tokens spent. Hessa balance: ${userTokens - 10} tokens.'),
-                              backgroundColor: theme.colorScheme.primary,
-                            ),
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Requires 10 tokens. Earn tokens by submitting grocery prices!'),
-                              backgroundColor: Colors.redAccent,
-                            ),
-                          );
-                        }
-                      },
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      icon: const Icon(Icons.refresh_rounded, size: 20),
-                      label: const Text('Request Update (-10T)'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        ref.read(cartProvider.notifier).addToCart(product);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('${product.name} added to cart'),
-                            action: SnackBarAction(
-                              label: 'VIEW CART',
-                              textColor: theme.colorScheme.secondary,
-                              onPressed: () => context.go('/cart'),
-                            ),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      icon: const Icon(Icons.add_shopping_cart, size: 20),
-                      label: const Text('Add to Basket'),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 40),
           ],
         ),
       ),
     );
-  }
-
-  IconData _getCategoryIcon(String category) {
-    switch (category.toLowerCase()) {
-      case 'dairy & eggs':
-        return Icons.egg_alt_outlined;
-      case 'pantry':
-        return Icons.breakfast_dining_outlined;
-      case 'meat & seafood':
-        return Icons.kebab_dining_outlined;
-      case 'beverages':
-        return Icons.local_drink_outlined;
-      case 'household':
-        return Icons.clean_hands_outlined;
-      default:
-        return Icons.shopping_basket_outlined;
-    }
   }
 }
 
@@ -464,7 +724,6 @@ class PriceTrendPainter extends CustomPainter {
       ..color = Colors.grey.shade200
       ..strokeWidth = 0.5;
 
-    // Draw grid horizontal lines
     for (double i = 0; i <= size.height; i += size.height / 3) {
       canvas.drawLine(Offset(0, i), Offset(size.width, i), gridPaint);
     }
@@ -489,7 +748,7 @@ class PriceTrendPainter extends CustomPainter {
       ..lineTo(size.width * 0.25, size.height * 0.3)
       ..lineTo(size.width * 0.5, size.height * 0.55)
       ..lineTo(size.width * 0.75, size.height * 0.4)
-      ..lineTo(size.width, size.height * 0.75); // Shows downward price (cheaper)
+      ..lineTo(size.width, size.height * 0.75);
 
     final fillPath = Path.from(path)
       ..lineTo(size.width, size.height)
@@ -499,7 +758,6 @@ class PriceTrendPainter extends CustomPainter {
     canvas.drawPath(fillPath, fillPaint);
     canvas.drawPath(path, linePaint);
 
-    // Draw little points
     final dotPaint = Paint()..color = primaryColor;
     canvas.drawCircle(Offset(0, size.height * 0.2), 4, dotPaint);
     canvas.drawCircle(Offset(size.width * 0.25, size.height * 0.3), 4, dotPaint);

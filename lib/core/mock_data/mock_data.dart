@@ -56,6 +56,39 @@ class MockData {
 
   static final List<Product> initialProducts = [
     Product(
+      id: 'beetroot',
+      name: 'Beetroot (Local shop)',
+      brand: 'Local Shop',
+      packSize: '500 gm.',
+      category: 'Veggies',
+      lowestPrice: 17.29,
+      lowestPriceStore: 'Lulu Hypermarket',
+      updatedAtLabel: 'Updated 10m ago',
+      imageUrl: 'https://images.unsplash.com/photo-1582515073490-39981397c445?w=300&q=80&auto=format&fit=crop',
+    ),
+    Product(
+      id: 'avocado',
+      name: 'Italian Avocado (Local shop)',
+      brand: 'Local Shop',
+      packSize: '450 gm.',
+      category: 'Veggies',
+      lowestPrice: 14.29,
+      lowestPriceStore: 'Carrefour',
+      updatedAtLabel: 'Updated 25m ago',
+      imageUrl: 'https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?w=300&q=80&auto=format&fit=crop',
+    ),
+    Product(
+      id: 'carrot',
+      name: 'Deshi Gajor (Local Carrot)',
+      brand: 'Local Carrot',
+      packSize: '1000 gm.',
+      category: 'Veggies',
+      lowestPrice: 27.29,
+      lowestPriceStore: 'Union Coop',
+      updatedAtLabel: 'Updated 1h ago',
+      imageUrl: 'https://images.unsplash.com/photo-1598170845058-32b996a7024e?w=300&q=80&auto=format&fit=crop',
+    ),
+    Product(
       id: 'milk_1l',
       name: 'Full Cream Milk 1L',
       brand: 'Al Rawabi',
@@ -64,6 +97,7 @@ class MockData {
       lowestPrice: 8.95,
       lowestPriceStore: 'Lulu Hypermarket',
       updatedAtLabel: 'Updated 2h ago',
+      imageUrl: 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=200&q=80&auto=format&fit=crop',
     ),
     Product(
       id: 'eggs_12',
@@ -74,6 +108,7 @@ class MockData {
       lowestPrice: 11.50,
       lowestPriceStore: 'Carrefour',
       updatedAtLabel: 'Updated 4h ago',
+      imageUrl: 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=200&q=80&auto=format&fit=crop',
     ),
     Product(
       id: 'rice_5kg',
@@ -84,6 +119,7 @@ class MockData {
       lowestPrice: 32.75,
       lowestPriceStore: 'Union Coop',
       updatedAtLabel: 'Updated 6h ago',
+      imageUrl: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=200&q=80&auto=format&fit=crop',
     ),
     Product(
       id: 'chicken_1kg',
@@ -94,6 +130,7 @@ class MockData {
       lowestPrice: 24.90,
       lowestPriceStore: 'Nesto',
       updatedAtLabel: 'Updated 1h ago',
+      imageUrl: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=200&q=80&auto=format&fit=crop',
     ),
     Product(
       id: 'cola_6pack',
@@ -104,6 +141,7 @@ class MockData {
       lowestPrice: 14.50,
       lowestPriceStore: 'Carrefour',
       updatedAtLabel: 'Updated 10h ago',
+      imageUrl: 'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=200&q=80&auto=format&fit=crop',
     ),
     Product(
       id: 'washing_liquid',
@@ -114,10 +152,26 @@ class MockData {
       lowestPrice: 38.00,
       lowestPriceStore: 'Lulu Hypermarket',
       updatedAtLabel: 'Updated 1d ago',
+      imageUrl: 'https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=200&q=80&auto=format&fit=crop',
     ),
   ];
 
   static final Map<String, List<StoreProductPrice>> productPrices = {
+    'beetroot': [
+      StoreProductPrice(storeId: 'lulu_albarsha', storeName: 'Lulu Hypermarket', price: 17.29, updatedAtLabel: 'Updated 10m ago'),
+      StoreProductPrice(storeId: 'carrefour_moe', storeName: 'Carrefour', price: 18.50, updatedAtLabel: 'Updated 2h ago'),
+      StoreProductPrice(storeId: 'union_alwasl', storeName: 'Union Coop', price: 19.00, updatedAtLabel: 'Updated 5h ago'),
+    ],
+    'avocado': [
+      StoreProductPrice(storeId: 'carrefour_moe', storeName: 'Carrefour', price: 14.29, updatedAtLabel: 'Updated 25m ago'),
+      StoreProductPrice(storeId: 'lulu_albarsha', storeName: 'Lulu Hypermarket', price: 15.00, updatedAtLabel: 'Updated 4h ago'),
+      StoreProductPrice(storeId: 'nesto_deira', storeName: 'Nesto', price: 15.50, updatedAtLabel: 'Updated 6h ago'),
+    ],
+    'carrot': [
+      StoreProductPrice(storeId: 'union_alwasl', storeName: 'Union Coop', price: 27.29, updatedAtLabel: 'Updated 1h ago'),
+      StoreProductPrice(storeId: 'nesto_deira', storeName: 'Nesto', price: 28.50, updatedAtLabel: 'Updated 3h ago'),
+      StoreProductPrice(storeId: 'lulu_albarsha', storeName: 'Lulu Hypermarket', price: 29.00, updatedAtLabel: 'Updated 5h ago'),
+    ],
     'milk_1l': [
       StoreProductPrice(storeId: 'lulu_albarsha', storeName: 'Lulu Hypermarket', price: 8.95, updatedAtLabel: 'Updated 2h ago'),
       StoreProductPrice(storeId: 'union_alwasl', storeName: 'Union Coop', price: 9.25, updatedAtLabel: 'Updated 12h ago'),

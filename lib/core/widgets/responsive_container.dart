@@ -7,6 +7,7 @@ class ResponsiveContainer extends StatelessWidget {
   final PreferredSizeWidget? appBar;
   final Widget? floatingActionButton;
   final Widget? bottomNavigationBar;
+  final bool extendBody;
 
   const ResponsiveContainer({
     super.key,
@@ -16,6 +17,7 @@ class ResponsiveContainer extends StatelessWidget {
     this.appBar,
     this.floatingActionButton,
     this.bottomNavigationBar,
+    this.extendBody = false,
   });
 
   @override
@@ -28,6 +30,7 @@ class ResponsiveContainer extends StatelessWidget {
         appBar: appBar,
         floatingActionButton: floatingActionButton,
         bottomNavigationBar: bottomNavigationBar,
+        extendBody: extendBody,
         body: child,
       );
     }

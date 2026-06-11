@@ -260,9 +260,9 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
               ),
               const SizedBox(height: 32),
 
-              // Submit Button
-              ElevatedButton(
-                onPressed: () {
+              // Submit — lime pill CTA
+              GestureDetector(
+                onTap: () {
                   if (_formKey.currentState!.validate()) {
                     final store = stores.firstWhere((s) => s.id == selectedStoreId);
                     final product = products.firstWhere((p) => p.id == selectedProductId);
@@ -283,10 +283,30 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                     _showSuccessDialog(context, totalReward);
                   }
                 },
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 18),
+                child: Container(
+                  height: 54,
+                  decoration: BoxDecoration(
+                    color: AppTheme.limeAccent,
+                    borderRadius: BorderRadius.circular(27),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.limeAccent.withOpacity(0.45),
+                        blurRadius: 14,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'Submit Price for Review',
+                      style: TextStyle(
+                        color: AppTheme.forestDeep,
+                        fontSize: 15.5,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
                 ),
-                child: const Text('Submit Price for Review'),
               ),
             ],
           ),

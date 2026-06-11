@@ -4,6 +4,7 @@ import '../../core/state/state.dart';
 import '../../core/mock_data/mock_data.dart';
 import '../../core/models/models.dart';
 import '../../core/theme/theme.dart';
+import '../../core/widgets/souk_widgets.dart';
 
 class LeaderboardScreen extends ConsumerWidget {
   const LeaderboardScreen({super.key});
@@ -43,16 +44,31 @@ class LeaderboardScreen extends ConsumerWidget {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // Header
+          // ── Dark forest header with scallop trim ──
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Rewards & Ranks',
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
+            child: Column(
+              children: [
+                Container(
+                  width: double.infinity,
+                  color: AppTheme.forestDeep,
+                  padding: EdgeInsets.fromLTRB(16, MediaQuery.of(context).padding.top + 14, 16, 16),
+                  child: const Text(
+                    'Rewards & Ranks',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w700),
+                  ),
                 ),
-              ),
+                Stack(
+                  children: [
+                    Container(height: 18, color: AppTheme.background),
+                    ClipPath(
+                      clipper: const ScallopClipper.down(scallopRadius: 9),
+                      child: Container(height: 18, color: AppTheme.forestDeep),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+              ],
             ),
           ),
 
@@ -536,7 +552,7 @@ class LeaderboardScreen extends ConsumerWidget {
 
           // Token transactions list
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 110),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, index) {

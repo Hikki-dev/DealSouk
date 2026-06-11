@@ -18,36 +18,54 @@ class _StoreScreenState extends State<StoreScreen> {
     final theme = Theme.of(context);
     final stores = MockData.initialStores;
 
+    // Purple header variant — matches the reference's "Store profile" screen.
+    const purpleDeep = Color(0xFF5C1F66);
+
     return Scaffold(
+      backgroundColor: purpleDeep,
       body: Column(
         children: [
-          // Header with Demo Warning
+          // ── Purple header ──
           Padding(
-            padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 4.0),
+            padding: EdgeInsets.fromLTRB(16, MediaQuery.of(context).padding.top + 10, 16, 14),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Dubai Supermarkets',
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
+                const SizedBox(width: 70),
+                const Expanded(
+                  child: Text(
+                    'Dubai Supermarkets',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w700),
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  width: 70,
+                  padding: const EdgeInsets.symmetric(vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
+                    color: Colors.white.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Text(
                     'Mock GPS',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white70),
                   ),
                 ),
               ],
             ),
           ),
 
+          // ── White rounded sheet ──
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: AppTheme.background,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                children: [
           // Custom Mock Map Screen
           Container(
             height: 220,
@@ -234,7 +252,7 @@ class _StoreScreenState extends State<StoreScreen> {
           // Scrollable List under the map
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 110),
               itemCount: stores.length,
               itemBuilder: (context, index) {
                 final store = stores[index];
@@ -363,6 +381,10 @@ class _StoreScreenState extends State<StoreScreen> {
               },
             ),
           )
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );

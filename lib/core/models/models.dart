@@ -7,6 +7,7 @@ class Product {
   final double lowestPrice;
   final String lowestPriceStore;
   final String updatedAtLabel;
+  final String imageUrl;
 
   Product({
     required this.id,
@@ -17,6 +18,7 @@ class Product {
     required this.lowestPrice,
     required this.lowestPriceStore,
     required this.updatedAtLabel,
+    this.imageUrl = '',
   });
 
   Product copyWith({
@@ -33,6 +35,7 @@ class Product {
       lowestPrice: lowestPrice ?? this.lowestPrice,
       lowestPriceStore: lowestPriceStore ?? this.lowestPriceStore,
       updatedAtLabel: updatedAtLabel ?? this.updatedAtLabel,
+      imageUrl: imageUrl,
     );
   }
 }

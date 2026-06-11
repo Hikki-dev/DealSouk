@@ -50,38 +50,47 @@ class CartScreen extends ConsumerWidget {
     final double cheapestStorePrice = sortedBaskets.isNotEmpty ? sortedBaskets.first.value : 0.0;
 
     return Scaffold(
+      backgroundColor: AppTheme.forestDeep,
       body: Column(
         children: [
-          // Header
+          // ── Dark forest header ──
           Padding(
-            padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
+            padding: EdgeInsets.fromLTRB(16, MediaQuery.of(context).padding.top + 10, 16, 14),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'My Souk Basket',
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
+                const SizedBox(width: 38),
+                const Expanded(
+                  child: Text(
+                    'My Souk Basket',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w700),
                   ),
                 ),
-                if (cartItems.isNotEmpty)
-                  TextButton.icon(
-                    onPressed: () {
-                      ref.read(cartProvider.notifier).clearCart();
-                    },
-                    icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
-                    label: const Text(
-                      'Clear',
-                      style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-                    ),
-                  )
+                cartItems.isNotEmpty
+                    ? GestureDetector(
+                        onTap: () => ref.read(cartProvider.notifier).clearCart(),
+                        child: Container(
+                          width: 38,
+                          height: 38,
+                          decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                          child: const Icon(Icons.delete_outline, color: AppTheme.redAccent, size: 18),
+                        ),
+                      )
+                    : const SizedBox(width: 38),
               ],
             ),
           ),
 
-          // Main cart content
+          // ── White rounded sheet ──
           Expanded(
-            child: cartItems.isEmpty
+            child: Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: AppTheme.background,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: cartItems.isEmpty
                 ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -121,7 +130,7 @@ class CartScreen extends ConsumerWidget {
                     ),
                   )
                 : ListView(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 120),
                     children: [
                       // Cart Items list
                       ...cartItems.map((item) {
@@ -136,17 +145,34 @@ class CartScreen extends ConsumerWidget {
                             padding: const EdgeInsets.all(16.0),
                             child: Row(
                               children: [
-                                // Category Icon
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.primaryContainer.withOpacity(0.3),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(
-                                    _getCategoryIcon(item.product.category),
-                                    color: theme.colorScheme.primary,
-                                  ),
+                                // Product image
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: item.product.imageUrl.isNotEmpty
+                                      ? Image.network(
+                                          item.product.imageUrl,
+                                          width: 48,
+                                          height: 48,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) => Container(
+                                            width: 48,
+                                            height: 48,
+                                            decoration: BoxDecoration(
+                                              color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: Icon(_getCategoryIcon(item.product.category), color: theme.colorScheme.primary),
+                                          ),
+                                        )
+                                      : Container(
+                                          width: 48,
+                                          height: 48,
+                                          decoration: BoxDecoration(
+                                            color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Icon(_getCategoryIcon(item.product.category), color: theme.colorScheme.primary),
+                                        ),
                                 ),
                                 const SizedBox(width: 16),
 
@@ -398,19 +424,40 @@ class CartScreen extends ConsumerWidget {
                       
                       const SizedBox(height: 24),
                       
-                      // Continue / Checkout Buttons
-                      ElevatedButton(
-                        onPressed: () {
+                      // Continue / Checkout — lime pill CTA
+                      GestureDetector(
+                        onTap: () {
                           _showCheckoutDialog(context, cheapestStoreName, cheapestStorePrice);
                         },
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 18),
+                        child: Container(
+                          height: 54,
+                          decoration: BoxDecoration(
+                            color: AppTheme.limeAccent,
+                            borderRadius: BorderRadius.circular(27),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.limeAccent.withOpacity(0.45),
+                                blurRadius: 14,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Save Basket & Continue to $cheapestStoreName',
+                              style: const TextStyle(
+                                color: AppTheme.forestDeep,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
                         ),
-                        child: Text('Save Basket & Continue to $cheapestStoreName'),
                       ),
                       const SizedBox(height: 12),
                     ],
                   ),
+            ),
           ),
         ],
       ),

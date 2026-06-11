@@ -11,9 +11,24 @@ class WelcomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return ResponsiveContainer(
       child: Container(
-        color: AppTheme.forestDeep,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFF0A2616), // Extra deep forest green
+              Color(0xFF0F3820), // Deep premium green
+              Color(0xFF144D2B), // Rich dark green
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
         child: Stack(
           children: [
+            Positioned.fill(
+              child: CustomPaint(
+                painter: WelcomeGridPatternPainter(),
+              ),
+            ),
             // Faint Dubai skyline at the bottom
             Positioned(
               bottom: 0,
@@ -55,11 +70,11 @@ class WelcomeScreen extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
-                          color: AppTheme.limeAccent,
+                          color: Colors.white,
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: AppTheme.limeAccent.withValues(alpha: 0.3),
+                              color: Colors.black.withValues(alpha: 0.08),
                               blurRadius: 24,
                               offset: const Offset(0, 10),
                             ),
@@ -125,10 +140,10 @@ class WelcomeScreen extends StatelessWidget {
                         vertical: 12,
                       ),
                       decoration: BoxDecoration(
-                        color: AppTheme.limeAccent.withValues(alpha: 0.12),
+                        color: Colors.white.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: AppTheme.limeAccent.withValues(alpha: 0.3),
+                          color: Colors.white.withValues(alpha: 0.15),
                         ),
                       ),
                       child: const Row(
@@ -136,7 +151,7 @@ class WelcomeScreen extends StatelessWidget {
                         children: [
                           Icon(
                             Icons.info_outline,
-                            color: AppTheme.limeAccent,
+                            color: Colors.white,
                             size: 20,
                           ),
                           SizedBox(width: 12),
@@ -148,7 +163,7 @@ class WelcomeScreen extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.w600,
-                                color: AppTheme.limeAccent,
+                                color: Colors.white,
                               ),
                             ),
                           ),
@@ -156,19 +171,17 @@ class WelcomeScreen extends StatelessWidget {
                       ),
                     ),
 
-                    // Primary CTA — lime pill
+                    // Primary CTA — high contrast white pill
                     GestureDetector(
                       onTap: () => context.go('/'),
                       child: Container(
                         height: 54,
                         decoration: BoxDecoration(
-                          color: AppTheme.limeAccent,
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(27),
                           boxShadow: [
                             BoxShadow(
-                              color: AppTheme.limeAccent.withValues(
-                                alpha: 0.35,
-                              ),
+                              color: Colors.black.withValues(alpha: 0.08),
                               blurRadius: 16,
                               offset: const Offset(0, 6),
                             ),
@@ -179,7 +192,7 @@ class WelcomeScreen extends StatelessWidget {
                             'Enter DealSouk Demo',
                             style: TextStyle(
                               color: AppTheme.forestDeep,
-                              fontSize: 16,
+                              fontSize: 16.5,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
@@ -247,7 +260,7 @@ class _ValuePillar extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
           ),
-          child: Icon(icon, color: AppTheme.limeAccent, size: 22),
+          child: Icon(icon, color: Colors.white, size: 22),
         ),
         const SizedBox(height: 6),
         Text(
@@ -256,7 +269,7 @@ class _ValuePillar extends StatelessWidget {
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w600,
-            color: Colors.white.withValues(alpha: 0.75),
+            color: Colors.white.withValues(alpha: 0.85),
             height: 1.3,
           ),
         ),
@@ -309,4 +322,26 @@ class _SignInButton extends StatelessWidget {
       ),
     );
   }
+}
+
+class WelcomeGridPatternPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.03)
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+
+    const double gridSize = 32.0;
+
+    for (double x = 0; x < size.width; x += gridSize) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+    for (double y = 0; y < size.height; y += gridSize) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

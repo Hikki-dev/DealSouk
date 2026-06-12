@@ -96,7 +96,6 @@ GoRouter buildRouter(WidgetRef ref) {
             requestId: extra?['requestId'] as String?,
             prefilledProductName: extra?['productName'] as String?,
             prefilledStoreName: extra?['storeName'] as String?,
-            bounty: extra?['bounty'] as int?,
           );
         },
       ),
@@ -178,7 +177,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             requestId: extra?['requestId'] as String?,
             prefilledProductName: extra?['productName'] as String?,
             prefilledStoreName: extra?['storeName'] as String?,
-            bounty: extra?['bounty'] as int?,
           );
         },
       ),
@@ -237,7 +235,6 @@ final GoRouter appRouter = GoRouter(
           requestId: extra?['requestId'] as String?,
           prefilledProductName: extra?['productName'] as String?,
           prefilledStoreName: extra?['storeName'] as String?,
-          bounty: extra?['bounty'] as int?,
         );
       },
     ),

@@ -9,11 +9,7 @@ class FcmService {
     required void Function(RemoteMessage) onForegroundMessage,
   }) async {
     // Request permission (iOS + Android 13+)
-    await _messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+    await _messaging.requestPermission(alert: true, badge: true, sound: true);
 
     // Register FCM token with backend
     await _registerToken();
@@ -29,7 +25,10 @@ class FcmService {
     try {
       final token = await _messaging.getToken();
       if (token != null) {
-        await apiClient.post('/profile/me/fcm-token', data: {'fcmToken': token});
+        await apiClient.post(
+          '/profile/me/fcm-token',
+          data: {'fcmToken': token},
+        );
       }
     } catch (_) {
       // Not critical — silently skip if backend unreachable

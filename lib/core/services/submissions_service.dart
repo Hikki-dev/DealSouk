@@ -15,7 +15,10 @@ class SubmissionResult {
 
 class SubmissionsService {
   Future<List<AdminSubmission>> getFeed({int page = 0}) async {
-    final res = await apiClient.get('/submissions/feed', params: {'page': page});
+    final res = await apiClient.get(
+      '/submissions/feed',
+      params: {'page': page},
+    );
     final list = res.data as List<dynamic>;
     return list
         .map((e) => AdminSubmission.fromJson(e as Map<String, dynamic>))
@@ -29,13 +32,16 @@ class SubmissionsService {
     bool hasReceipt = false,
     String? receiptUrl,
   }) async {
-    final res = await apiClient.post('/submissions', data: {
-      'productId': productId,
-      'storeId': storeId,
-      'priceAed': priceAed,
-      'hasReceipt': hasReceipt,
-      'receiptUrl': ?receiptUrl,
-    });
+    final res = await apiClient.post(
+      '/submissions',
+      data: {
+        'productId': productId,
+        'storeId': storeId,
+        'priceAed': priceAed,
+        'hasReceipt': hasReceipt,
+        'receiptUrl': ?receiptUrl,
+      },
+    );
     final data = res.data as Map<String, dynamic>;
     return SubmissionResult(
       id: data['id'] as String,
@@ -49,17 +55,23 @@ class SubmissionsService {
     required String storeId,
     bool hasReceipt = false,
   }) async {
-    final res = await apiClient.get('/submissions/estimate', params: {
-      'productId': productId,
-      'storeId': storeId,
-      'hasReceipt': hasReceipt.toString(),
-    });
+    final res = await apiClient.get(
+      '/submissions/estimate',
+      params: {
+        'productId': productId,
+        'storeId': storeId,
+        'hasReceipt': hasReceipt.toString(),
+      },
+    );
     final data = res.data as Map<String, dynamic>;
     return data['estimatedTokens'] as int? ?? 0;
   }
 
   Future<void> flag(String submissionId, String reason) async {
-    await apiClient.post('/submissions/$submissionId/flag', data: {'reason': reason});
+    await apiClient.post(
+      '/submissions/$submissionId/flag',
+      data: {'reason': reason},
+    );
   }
 }
 

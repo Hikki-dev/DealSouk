@@ -23,17 +23,17 @@ class AdminApp extends ConsumerWidget {
       theme: AppTheme.lightTheme,
       home: switch (auth.status) {
         AuthStatus.unknown => const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          ),
+          body: Center(child: CircularProgressIndicator()),
+        ),
         AuthStatus.authenticated when auth.isAdmin => const AdminScreen(),
         AuthStatus.authenticated => const Scaffold(
-            body: Center(
-              child: Text(
-                'Access denied — admin account required.',
-                style: TextStyle(fontSize: 16),
-              ),
+          body: Center(
+            child: Text(
+              'Access denied — admin account required.',
+              style: TextStyle(fontSize: 16),
             ),
           ),
+        ),
         _ => const WelcomeScreen(),
       },
     );

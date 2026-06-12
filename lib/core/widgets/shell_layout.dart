@@ -1,3 +1,5 @@
+import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -43,10 +45,7 @@ class _ShellLayoutBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cartItems = ref.watch(cartProvider);
-    final cartCount = cartItems.fold<int>(
-      0,
-      (sum, item) => sum + item.quantity,
-    );
+    final savedCount = cartItems.length;
     final isNavbarVisible = ref.watch(navbarVisibleProvider);
 
     final String location = GoRouterState.of(context).uri.toString();
@@ -76,22 +75,11 @@ class _ShellLayoutBody extends ConsumerWidget {
         child: AnimatedOpacity(
           duration: const Duration(milliseconds: 200),
           opacity: isNavbarVisible ? 1.0 : 0.0,
-          child: Container(
-            margin: EdgeInsets.fromLTRB(24, 0, 24, bottomPad + 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(32),
-              border: Border.all(color: Colors.grey.shade100, width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-            child: Row(
+          child: (() {
+            final isIos = defaultTargetPlatform == TargetPlatform.iOS ||
+                defaultTargetPlatform == TargetPlatform.macOS;
+
+            final navItems = Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _SoukNavItem(
@@ -107,10 +95,10 @@ class _ShellLayoutBody extends ConsumerWidget {
                   onTap: () => context.go('/stores'),
                 ),
                 _SoukNavItem(
-                  icon: Icons.shopping_basket_outlined,
-                  selectedIcon: Icons.shopping_basket_rounded,
+                  icon: Icons.bookmark_border_rounded,
+                  selectedIcon: Icons.bookmark_rounded,
                   selected: selectedIndex == 2,
-                  badge: cartCount,
+                  badge: savedCount,
                   onTap: () => context.go('/cart'),
                 ),
                 _SoukNavItem(
@@ -126,8 +114,63 @@ class _ShellLayoutBody extends ConsumerWidget {
                   onTap: () => context.go('/profile'),
                 ),
               ],
-            ),
-          ),
+            );
+
+            if (isIos) {
+              return Container(
+                margin: EdgeInsets.fromLTRB(24, 0, 24, bottomPad + 16),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(32),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 16.0, sigmaY: 16.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.65),
+                        borderRadius: BorderRadius.circular(32),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.3),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 6,
+                        horizontal: 16,
+                      ),
+                      child: navItems,
+                    ),
+                  ),
+                ),
+              );
+            } else {
+              return Container(
+                margin: EdgeInsets.fromLTRB(24, 0, 24, bottomPad + 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(32),
+                  border: Border.all(color: Colors.grey.shade100, width: 1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.06),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 6,
+                  horizontal: 16,
+                ),
+                child: navItems,
+              );
+            }
+          })(),
         ),
       ),
       child: child,
@@ -168,7 +211,7 @@ class _SoukNavItem extends StatelessWidget {
               width: selected ? 40 : 0,
               height: selected ? 40 : 0,
               decoration: const BoxDecoration(
-                color: Color(0xFFE8F5E9), // Soft green active pill background
+                color: AppTheme.cream,
                 shape: BoxShape.circle,
               ),
             ),

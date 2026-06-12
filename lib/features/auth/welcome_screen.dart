@@ -85,7 +85,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       child: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF0A2616), Color(0xFF0F3820), Color(0xFF144D2B)],
+            colors: [Color(0xFF5D2E12), Color(0xFF9A5524), Color(0xFFE99A4A)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -180,7 +180,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                         child: Text(
                           _isAdminMode
                               ? 'Review crowd-sourced grocery prices'
-                              : 'Save money on groceries in Dubai',
+                              : 'Find nearby grocery prices in Dubai',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.65),
@@ -253,13 +253,13 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                 ),
                                 SizedBox(width: 20),
                                 _ValuePillar(
-                                  icon: Icons.bolt,
-                                  label: 'Earn\nTokens',
+                                  icon: Icons.place_rounded,
+                                  label: 'Nearby\nStores',
                                 ),
                                 SizedBox(width: 20),
                                 _ValuePillar(
-                                  icon: Icons.savings_outlined,
-                                  label: 'Save\nMoney',
+                                  icon: Icons.help_outline_rounded,
+                                  label: 'Ask\nPrices',
                                 ),
                               ],
                       ),
@@ -297,7 +297,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                 child: Text(
                                   _isAdminMode
                                       ? 'Moderator Panel: Verify receipts and shelf prices.'
-                                      : 'Live Dubai prices. Earn tokens • Tap to learn how!',
+                                      : 'No ordering here. Just check prices before you go.',
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
@@ -393,7 +393,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                       Text(
                         _isAdminMode
                             ? 'Moderator console permissions apply.'
-                            : 'Crowd-sourced grocery data for Dubai.',
+                            : 'Crowd-sourced grocery prices for Dubai.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.4),

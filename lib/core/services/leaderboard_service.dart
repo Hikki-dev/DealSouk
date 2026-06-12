@@ -10,7 +10,9 @@ class LeaderboardService {
         .toList();
     final currentUser = data['currentUser'] as Map<String, dynamic>?;
     if (currentUser != null) {
-      final alreadyIn = top10.any((u) => u.rank == (currentUser['rank'] as int?));
+      final alreadyIn = top10.any(
+        (u) => u.rank == (currentUser['rank'] as int?),
+      );
       if (!alreadyIn) {
         top10.add(LeaderboardUser.fromJson(currentUser, isCurrentUser: true));
       } else {

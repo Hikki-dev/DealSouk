@@ -241,9 +241,14 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+                  border: Border(
+                    bottom: BorderSide(color: Colors.grey.shade200),
+                  ),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -251,10 +256,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                       _activeTab == 'moderation'
                           ? 'Audit & Verification'
                           : _activeTab == 'analytics'
-                              ? 'Analytics & Performance'
-                              : _activeTab == 'settings'
-                                  ? 'System Settings'
-                                  : 'Sourcers Index',
+                          ? 'Analytics & Performance'
+                          : _activeTab == 'settings'
+                          ? 'System Settings'
+                          : 'Sourcers Index',
                       style: GoogleFonts.fredoka(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -264,7 +269,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFFFEBEE),
                             borderRadius: BorderRadius.circular(20),
@@ -272,7 +280,11 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.security, color: Colors.red, size: 12),
+                              const Icon(
+                                Icons.security,
+                                color: Colors.red,
+                                size: 12,
+                              ),
                               const SizedBox(width: 6),
                               Text(
                                 'Role: Admin Auditor',
@@ -289,13 +301,18 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                         OutlinedButton.icon(
                           onPressed: () {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Syncing queue with server...')),
+                              const SnackBar(
+                                content: Text('Syncing queue with server...'),
+                              ),
                             );
                           },
                           icon: const Icon(Icons.sync_rounded, size: 15),
                           label: const Text('Refresh'),
                           style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                             minimumSize: Size.zero,
                           ),
                         ),
@@ -320,7 +337,12 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                 // Stats Section
                                 SliverToBoxAdapter(
                                   child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+                                    padding: const EdgeInsets.fromLTRB(
+                                      24,
+                                      20,
+                                      24,
+                                      8,
+                                    ),
                                     child: Row(
                                       children: [
                                         Expanded(
@@ -357,7 +379,12 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                 // Header Row for queue
                                 SliverToBoxAdapter(
                                   child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
+                                    padding: const EdgeInsets.fromLTRB(
+                                      24,
+                                      20,
+                                      24,
+                                      12,
+                                    ),
                                     child: Text(
                                       'Submissions Review Queue',
                                       style: GoogleFonts.fredoka(
@@ -371,32 +398,42 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
 
                                 // Submission items
                                 SliverPadding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                  ),
                                   sliver: pendingSubs.isEmpty
-                                      ? SliverToBoxAdapter(child: _buildEmptyQueueCard())
+                                      ? SliverToBoxAdapter(
+                                          child: _buildEmptyQueueCard(),
+                                        )
                                       : SliverList(
-                                          delegate: SliverChildBuilderDelegate(
-                                            (context, index) {
-                                              final sub = pendingSubs[index];
-                                              final isSelected = sub.id == _selectedSubId;
-                                              return _buildSubmissionCard(
-                                                context,
-                                                sub,
-                                                isSelected,
-                                                true,
-                                              );
-                                            },
-                                            childCount: pendingSubs.length,
-                                          ),
+                                          delegate: SliverChildBuilderDelegate((
+                                            context,
+                                            index,
+                                          ) {
+                                            final sub = pendingSubs[index];
+                                            final isSelected =
+                                                sub.id == _selectedSubId;
+                                            return _buildSubmissionCard(
+                                              context,
+                                              sub,
+                                              isSelected,
+                                              true,
+                                            );
+                                          }, childCount: pendingSubs.length),
                                         ),
                                 ),
-                                const SliverPadding(padding: EdgeInsets.only(bottom: 40)),
+                                const SliverPadding(
+                                  padding: EdgeInsets.only(bottom: 40),
+                                ),
                               ],
                             ),
                           ),
 
                           // Right side: Sticky detailed audit panel
-                          VerticalDivider(width: 1, color: Colors.grey.shade200),
+                          VerticalDivider(
+                            width: 1,
+                            color: Colors.grey.shade200,
+                          ),
                           Expanded(
                             flex: 3,
                             child: Container(
@@ -404,7 +441,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                               padding: const EdgeInsets.all(24),
                               child: currentSub == null
                                   ? _buildSidebarIdleState()
-                                  : _buildSidebarAuditState(context, currentSub),
+                                  : _buildSidebarAuditState(
+                                      context,
+                                      currentSub,
+                                    ),
                             ),
                           ),
                         ],
@@ -450,9 +490,16 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFE8EEE4), width: 1.2),
+                    border: Border.all(
+                      color: const Color(0xFFE8EEE4),
+                      width: 1.2,
+                    ),
                   ),
-                  child: const Icon(Icons.arrow_back_ios_new_rounded, color: AppTheme.forestDeep, size: 16),
+                  child: const Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    color: AppTheme.forestDeep,
+                    size: 16,
+                  ),
                 ),
               ),
               Expanded(
@@ -485,11 +532,23 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     children: [
-                      _mobileStatCard('Pending reviews', '$pendingCount', Colors.orange),
+                      _mobileStatCard(
+                        'Pending reviews',
+                        '$pendingCount',
+                        Colors.orange,
+                      ),
                       const SizedBox(width: 10),
-                      _mobileStatCard('Approved today', '$approvedCount', Colors.green),
+                      _mobileStatCard(
+                        'Approved today',
+                        '$approvedCount',
+                        Colors.green,
+                      ),
                       const SizedBox(width: 10),
-                      _mobileStatCard('Tokens issued', '$tokensIssuedCount', Colors.amber),
+                      _mobileStatCard(
+                        'Tokens issued',
+                        '$tokensIssuedCount',
+                        Colors.amber,
+                      ),
                     ],
                   ),
                 ),
@@ -516,13 +575,15 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 sliver: pendingSubs.isEmpty
                     ? SliverToBoxAdapter(child: _buildEmptyQueueCard())
                     : SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final sub = pendingSubs[index];
-                            return _buildSubmissionCard(context, sub, false, false);
-                          },
-                          childCount: pendingSubs.length,
-                        ),
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final sub = pendingSubs[index];
+                          return _buildSubmissionCard(
+                            context,
+                            sub,
+                            false,
+                            false,
+                          );
+                        }, childCount: pendingSubs.length),
                       ),
               ),
               const SliverPadding(padding: EdgeInsets.only(bottom: 60)),
@@ -552,10 +613,14 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             duration: const Duration(milliseconds: 150),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
-              color: isActive ? Colors.white.withValues(alpha: 0.08) : Colors.transparent,
+              color: isActive
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.transparent,
               borderRadius: BorderRadius.circular(10),
               border: isActive
-                  ? const Border(left: BorderSide(color: AppTheme.limeAccent, width: 3.5))
+                  ? const Border(
+                      left: BorderSide(color: AppTheme.limeAccent, width: 3.5),
+                    )
                   : null,
             ),
             child: Row(
@@ -578,7 +643,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 ),
                 if (badgeCount != null && badgeCount > 0)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.red,
                       borderRadius: BorderRadius.circular(10),
@@ -600,12 +668,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     );
   }
 
-  Widget _statCard(
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
+  Widget _statCard(String label, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -722,7 +785,11 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               color: Colors.green.shade50,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.done_all_rounded, color: Colors.green, size: 48),
+            child: const Icon(
+              Icons.done_all_rounded,
+              color: Colors.green,
+              size: 48,
+            ),
           ),
           const SizedBox(height: 18),
           Text(
@@ -759,15 +826,17 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: isFlaggedReport
-            ? const Color(0xFFFFF8F8) // Subtle red background for flagged reports
+            ? const Color(
+                0xFFFFF8F8,
+              ) // Subtle red background for flagged reports
             : Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isSelected
               ? AppTheme.forestDeep
               : (isFlaggedReport
-                  ? Colors.red.shade300
-                  : const Color(0xFFE8EEE4)),
+                    ? Colors.red.shade300
+                    : const Color(0xFFE8EEE4)),
           width: isSelected ? 1.8 : 1.2,
         ),
         boxShadow: isSelected
@@ -806,7 +875,11 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                           Row(
                             children: [
                               if (isFlaggedReport) ...[
-                                Icon(Icons.report_problem_rounded, color: Colors.red.shade700, size: 16),
+                                Icon(
+                                  Icons.report_problem_rounded,
+                                  color: Colors.red.shade700,
+                                  size: 16,
+                                ),
                                 const SizedBox(width: 6),
                               ],
                               Expanded(
@@ -838,8 +911,12 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                       style: GoogleFonts.fredoka(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: isFlaggedReport ? Colors.red : AppTheme.forestDeep,
-                        decoration: isFlaggedReport ? TextDecoration.lineThrough : null,
+                        color: isFlaggedReport
+                            ? Colors.red
+                            : AppTheme.forestDeep,
+                        decoration: isFlaggedReport
+                            ? TextDecoration.lineThrough
+                            : null,
                       ),
                     ),
                   ],
@@ -856,20 +933,27 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                           icon: Icons.camera_alt_outlined,
                           label: 'Price Photo',
                           isAttached: sub.hasPhoto,
-                          onTap: sub.hasPhoto ? () => _showPricePhotoDialog(context, sub) : null,
+                          onTap: sub.hasPhoto
+                              ? () => _showPricePhotoDialog(context, sub)
+                              : null,
                         ),
                         const SizedBox(width: 8),
                         _attachmentChip(
                           icon: Icons.receipt_long_outlined,
                           label: 'Receipt',
                           isAttached: sub.hasReceipt,
-                          onTap: sub.hasReceipt ? () => _showReceiptDialog(context, sub) : null,
+                          onTap: sub.hasReceipt
+                              ? () => _showReceiptDialog(context, sub)
+                              : null,
                         ),
                       ],
                     ),
                     if (isFlaggedReport)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.red.shade50,
                           borderRadius: BorderRadius.circular(8),
@@ -885,7 +969,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                       )
                     else
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: AppTheme.amberAccent.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
@@ -912,10 +999,17 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                             foregroundColor: Colors.red,
                             side: const BorderSide(color: Colors.red),
                             padding: const EdgeInsets.symmetric(vertical: 10),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            textStyle: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.bold),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            textStyle: GoogleFonts.nunito(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                          child: Text(isFlaggedReport ? 'Confirm Deletion' : 'Reject'),
+                          child: Text(
+                            isFlaggedReport ? 'Confirm Deletion' : 'Reject',
+                          ),
                         ),
                       ),
                       if (!isFlaggedReport) ...[
@@ -925,9 +1019,17 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppTheme.forestDeep,
                             side: const BorderSide(color: AppTheme.forestDeep),
-                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            textStyle: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.bold),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 10,
+                              horizontal: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            textStyle: GoogleFonts.nunito(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           child: const Text('Edit'),
                         ),
@@ -939,10 +1041,17 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green,
                             padding: const EdgeInsets.symmetric(vertical: 10),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            textStyle: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.bold),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            textStyle: GoogleFonts.nunito(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                          child: Text(isFlaggedReport ? 'Reinstate Price' : 'Approve'),
+                          child: Text(
+                            isFlaggedReport ? 'Reinstate Price' : 'Approve',
+                          ),
                         ),
                       ),
                     ],
@@ -964,18 +1073,31 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: Colors.grey.shade100, shape: BoxShape.circle),
-            child: Icon(Icons.hourglass_empty_rounded, color: Colors.grey.shade400, size: 40),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.hourglass_empty_rounded,
+              color: Colors.grey.shade400,
+              size: 40,
+            ),
           ),
           const SizedBox(height: 14),
           Text(
             'System Idle',
-            style: GoogleFonts.fredoka(fontWeight: FontWeight.bold, color: Colors.grey.shade600),
+            style: GoogleFonts.fredoka(
+              fontWeight: FontWeight.bold,
+              color: Colors.grey.shade600,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             'Select a queue item to audit',
-            style: GoogleFonts.nunito(fontSize: 12, color: Colors.grey.shade500),
+            style: GoogleFonts.nunito(
+              fontSize: 12,
+              color: Colors.grey.shade500,
+            ),
           ),
         ],
       ),
@@ -1003,16 +1125,24 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: isFlaggedReport ? Colors.red.shade50 : Colors.orange.shade50,
+                color: isFlaggedReport
+                    ? Colors.red.shade50
+                    : Colors.orange.shade50,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: isFlaggedReport ? Colors.red.shade200 : Colors.orange.shade200),
+                border: Border.all(
+                  color: isFlaggedReport
+                      ? Colors.red.shade200
+                      : Colors.orange.shade200,
+                ),
               ),
               child: Text(
                 isFlaggedReport ? 'FLAGGED' : 'PENDING',
                 style: GoogleFonts.nunito(
                   fontSize: 9,
                   fontWeight: FontWeight.w900,
-                  color: isFlaggedReport ? Colors.red.shade800 : Colors.orange.shade800,
+                  color: isFlaggedReport
+                      ? Colors.red.shade800
+                      : Colors.orange.shade800,
                   letterSpacing: 0.5,
                 ),
               ),
@@ -1022,7 +1152,11 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         const SizedBox(height: 4),
         Text(
           'ID: ${sub.id}  ·  Submitted ${sub.timestampLabel}',
-          style: GoogleFonts.nunito(fontSize: 11, color: Colors.grey.shade500, fontWeight: FontWeight.w600),
+          style: GoogleFonts.nunito(
+            fontSize: 11,
+            color: Colors.grey.shade500,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         const SizedBox(height: 20),
 
@@ -1039,7 +1173,11 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.report_problem_rounded, color: Colors.red.shade700, size: 20),
+                    Icon(
+                      Icons.report_problem_rounded,
+                      color: Colors.red.shade700,
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Accuracy Verification Alert',
@@ -1080,14 +1218,20 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             children: [
               Expanded(
                 child: GestureDetector(
-                  onTap: sub.hasPhoto ? () => _showPricePhotoDialog(context, sub) : null,
+                  onTap: sub.hasPhoto
+                      ? () => _showPricePhotoDialog(context, sub)
+                      : null,
                   child: Container(
                     height: 84,
                     decoration: BoxDecoration(
-                      color: sub.hasPhoto ? const Color(0xFFE3F2FD) : Colors.grey.shade50,
+                      color: sub.hasPhoto
+                          ? const Color(0xFFE3F2FD)
+                          : Colors.grey.shade50,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: sub.hasPhoto ? const Color(0xFF90CAF9) : const Color(0xFFE8EEE4),
+                        color: sub.hasPhoto
+                            ? const Color(0xFF90CAF9)
+                            : const Color(0xFFE8EEE4),
                       ),
                     ),
                     child: Column(
@@ -1095,7 +1239,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                       children: [
                         Icon(
                           Icons.camera_alt_rounded,
-                          color: sub.hasPhoto ? Colors.blue.shade700 : Colors.grey.shade400,
+                          color: sub.hasPhoto
+                              ? Colors.blue.shade700
+                              : Colors.grey.shade400,
                           size: 22,
                         ),
                         const SizedBox(height: 4),
@@ -1104,7 +1250,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                           style: GoogleFonts.nunito(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
-                            color: sub.hasPhoto ? Colors.blue.shade800 : Colors.grey.shade500,
+                            color: sub.hasPhoto
+                                ? Colors.blue.shade800
+                                : Colors.grey.shade500,
                           ),
                         ),
                       ],
@@ -1115,14 +1263,20 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: GestureDetector(
-                  onTap: sub.hasReceipt ? () => _showReceiptDialog(context, sub) : null,
+                  onTap: sub.hasReceipt
+                      ? () => _showReceiptDialog(context, sub)
+                      : null,
                   child: Container(
                     height: 84,
                     decoration: BoxDecoration(
-                      color: sub.hasReceipt ? const Color(0xFFE0F2F1) : Colors.grey.shade50,
+                      color: sub.hasReceipt
+                          ? const Color(0xFFE0F2F1)
+                          : Colors.grey.shade50,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: sub.hasReceipt ? const Color(0xFF80CBC4) : const Color(0xFFE8EEE4),
+                        color: sub.hasReceipt
+                            ? const Color(0xFF80CBC4)
+                            : const Color(0xFFE8EEE4),
                       ),
                     ),
                     child: Column(
@@ -1130,7 +1284,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                       children: [
                         Icon(
                           Icons.receipt_long_rounded,
-                          color: sub.hasReceipt ? Colors.teal.shade700 : Colors.grey.shade400,
+                          color: sub.hasReceipt
+                              ? Colors.teal.shade700
+                              : Colors.grey.shade400,
                           size: 22,
                         ),
                         const SizedBox(height: 4),
@@ -1139,7 +1295,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                           style: GoogleFonts.nunito(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
-                            color: sub.hasReceipt ? Colors.teal.shade800 : Colors.grey.shade500,
+                            color: sub.hasReceipt
+                                ? Colors.teal.shade800
+                                : Colors.grey.shade500,
                           ),
                         ),
                       ],
@@ -1165,15 +1323,36 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         ),
         const SizedBox(height: 8),
         if (isFlaggedReport) ...[
-          _auditCheckItem('Cross-check price with latest online store catalog', true),
-          _auditCheckItem('Verify if the item has a regional distributor price change', true),
-          _auditCheckItem('Verify if this price entry was submitted by a trusted user', false),
-          _auditCheckItem('Flag reason: Shopper claims price is outdated/wrong', true),
+          _auditCheckItem(
+            'Cross-check price with latest online store catalog',
+            true,
+          ),
+          _auditCheckItem(
+            'Verify if the item has a regional distributor price change',
+            true,
+          ),
+          _auditCheckItem(
+            'Verify if this price entry was submitted by a trusted user',
+            false,
+          ),
+          _auditCheckItem(
+            'Flag reason: Shopper claims price is outdated/wrong',
+            true,
+          ),
         ] else ...[
-          _auditCheckItem('Confirm receipt matches store: ${sub.storeName}', true),
+          _auditCheckItem(
+            'Confirm receipt matches store: ${sub.storeName}',
+            true,
+          ),
           _auditCheckItem('Validate price matches packaging size', true),
-          _auditCheckItem('Double-check for discount/promo tags', sub.promoType != 'None'),
-          _auditCheckItem('Freshness: Check receipt timestamp matches', sub.hasReceipt),
+          _auditCheckItem(
+            'Double-check for discount/promo tags',
+            sub.promoType != 'None',
+          ),
+          _auditCheckItem(
+            'Freshness: Check receipt timestamp matches',
+            sub.hasReceipt,
+          ),
         ],
         const Spacer(),
 
@@ -1181,21 +1360,33 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: isFlaggedReport ? const Color(0xFFFFF3E0) : const Color(0xFFE8F5E9),
+            color: isFlaggedReport
+                ? const Color(0xFFFFF3E0)
+                : const Color(0xFFE8F5E9),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: isFlaggedReport ? const Color(0xFFFFE0B2) : const Color(0xFFC8E6C9)),
+            border: Border.all(
+              color: isFlaggedReport
+                  ? const Color(0xFFFFE0B2)
+                  : const Color(0xFFC8E6C9),
+            ),
           ),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: isFlaggedReport ? const Color(0xFFFFE0B2) : const Color(0xFFC8E6C9),
+                  color: isFlaggedReport
+                      ? const Color(0xFFFFE0B2)
+                      : const Color(0xFFC8E6C9),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  isFlaggedReport ? Icons.warning_amber_rounded : Icons.health_and_safety_outlined,
-                  color: isFlaggedReport ? Colors.orange.shade800 : AppTheme.forestDeep,
+                  isFlaggedReport
+                      ? Icons.warning_amber_rounded
+                      : Icons.health_and_safety_outlined,
+                  color: isFlaggedReport
+                      ? Colors.orange.shade800
+                      : AppTheme.forestDeep,
                   size: 16,
                 ),
               ),
@@ -1205,15 +1396,21 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isFlaggedReport ? 'Community Trust Level' : 'Auditing Accuracy Score',
+                      isFlaggedReport
+                          ? 'Community Trust Level'
+                          : 'Auditing Accuracy Score',
                       style: GoogleFonts.fredoka(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: isFlaggedReport ? Colors.orange.shade900 : AppTheme.forestDeep,
+                        color: isFlaggedReport
+                            ? Colors.orange.shade900
+                            : AppTheme.forestDeep,
                       ),
                     ),
                     Text(
-                      isFlaggedReport ? 'Based on reporter history' : 'Sourcer trustworthiness KPI',
+                      isFlaggedReport
+                          ? 'Based on reporter history'
+                          : 'Sourcer trustworthiness KPI',
                       style: GoogleFonts.nunito(
                         fontSize: 9,
                         color: Colors.grey.shade600,
@@ -1228,7 +1425,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 style: GoogleFonts.fredoka(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: isFlaggedReport ? Colors.orange.shade900 : AppTheme.forestDeep,
+                  color: isFlaggedReport
+                      ? Colors.orange.shade900
+                      : AppTheme.forestDeep,
                 ),
               ),
             ],
@@ -1243,12 +1442,17 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             child: OutlinedButton.icon(
               onPressed: () => _showEditDialog(context, sub),
               icon: const Icon(Icons.edit_outlined, size: 16),
-              label: Text('Edit Submission', style: GoogleFonts.nunito(fontWeight: FontWeight.bold)),
+              label: Text(
+                'Edit Submission',
+                style: GoogleFonts.nunito(fontWeight: FontWeight.bold),
+              ),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.forestDeep,
                 side: const BorderSide(color: AppTheme.forestDeep),
                 minimumSize: const Size.fromHeight(40),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ),
@@ -1261,7 +1465,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                   foregroundColor: Colors.red,
                   side: const BorderSide(color: Colors.red, width: 1.5),
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
                 child: Text(
                   isFlaggedReport ? 'Confirm Deletion' : 'Reject',
@@ -1277,7 +1483,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                   backgroundColor: Colors.green,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
                 child: Text(
                   isFlaggedReport ? 'Reinstate Price' : 'Approve',
@@ -1297,7 +1505,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
       child: Row(
         children: [
           Icon(
-            initialVal ? Icons.check_circle_rounded : Icons.info_outline_rounded,
+            initialVal
+                ? Icons.check_circle_rounded
+                : Icons.info_outline_rounded,
             color: initialVal ? Colors.green : Colors.grey.shade400,
             size: 16,
           ),
@@ -1335,7 +1545,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
 
   void _reject(String id) {
     final pendingSubs = ref.read(adminSubmissionsProvider);
-    final sub = pendingSubs.firstWhere((s) => s.id == id, orElse: () => pendingSubs.first);
+    final sub = pendingSubs.firstWhere(
+      (s) => s.id == id,
+      orElse: () => pendingSubs.first,
+    );
     ref.read(adminSubmissionsProvider.notifier).rejectSubmission(id);
     _selectNextAfterRemoval(id);
     ScaffoldMessenger.of(context).showSnackBar(
@@ -1399,7 +1612,11 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             ),
             if (isAttached && onTap != null) ...[
               const SizedBox(width: 4),
-              Icon(Icons.open_in_new_rounded, size: 8, color: AppTheme.forestDeep),
+              Icon(
+                Icons.open_in_new_rounded,
+                size: 8,
+                color: AppTheme.forestDeep,
+              ),
             ],
           ],
         ),
@@ -1411,8 +1628,16 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
   void _showEditDialog(BuildContext context, AdminSubmission sub) {
     final priceCtrl = TextEditingController(text: sub.price.toStringAsFixed(2));
     String selectedStore = sub.storeName;
-    final storeNames = ['Carrefour JLT', 'Lulu Al Barsha', 'Spinneys JLT', 'Union Coop Al Wasl', 'Nesto Al Qusais'];
-    if (!storeNames.contains(selectedStore)) storeNames.insert(0, selectedStore);
+    final storeNames = [
+      'Carrefour JLT',
+      'Lulu Al Barsha',
+      'Spinneys JLT',
+      'Union Coop Al Wasl',
+      'Nesto Al Qusais',
+    ];
+    if (!storeNames.contains(selectedStore)) {
+      storeNames.insert(0, selectedStore);
+    }
 
     showDialog(
       context: context,
@@ -1420,19 +1645,30 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              title: Text('Edit Submission', style: GoogleFonts.fredoka(fontWeight: FontWeight.bold)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: Text(
+                'Edit Submission',
+                style: GoogleFonts.fredoka(fontWeight: FontWeight.bold),
+              ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     sub.productName,
-                    style: GoogleFonts.nunito(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textDark),
+                    style: GoogleFonts.nunito(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: AppTheme.textDark,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: priceCtrl,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     decoration: const InputDecoration(
                       labelText: 'Corrected Price (AED)',
                       prefixIcon: Icon(Icons.payments_outlined),
@@ -1446,24 +1682,41 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                       labelText: 'Store',
                       prefixIcon: Icon(Icons.store_outlined),
                     ),
-                    items: storeNames.map((s) => DropdownMenuItem(value: s, child: Text(s, style: const TextStyle(fontSize: 13)))).toList(),
-                    onChanged: (val) => setDialogState(() => selectedStore = val ?? selectedStore),
+                    items: storeNames
+                        .map(
+                          (s) => DropdownMenuItem(
+                            value: s,
+                            child: Text(
+                              s,
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (val) => setDialogState(
+                      () => selectedStore = val ?? selectedStore,
+                    ),
                   ),
                 ],
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text('Cancel', style: TextStyle(color: Colors.grey.shade600)),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.grey.shade600),
+                  ),
                 ),
                 ElevatedButton(
                   onPressed: () {
                     final newPrice = double.tryParse(priceCtrl.text);
-                    ref.read(adminSubmissionsProvider.notifier).editSubmission(
-                      sub.id,
-                      storeName: selectedStore,
-                      price: newPrice,
-                    );
+                    ref
+                        .read(adminSubmissionsProvider.notifier)
+                        .editSubmission(
+                          sub.id,
+                          storeName: selectedStore,
+                          price: newPrice,
+                        );
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -1472,7 +1725,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                       ),
                     );
                   },
-                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.forestDeep, foregroundColor: Colors.white),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.forestDeep,
+                    foregroundColor: Colors.white,
+                  ),
                   child: const Text('Save'),
                 ),
               ],
@@ -1492,16 +1748,26 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.lock_outline_rounded, color: Colors.grey.shade400, size: 48),
+          Icon(
+            Icons.lock_outline_rounded,
+            color: Colors.grey.shade400,
+            size: 48,
+          ),
           const SizedBox(height: 14),
           Text(
             'Restricted View',
-            style: GoogleFonts.fredoka(fontWeight: FontWeight.bold, color: Colors.grey.shade600),
+            style: GoogleFonts.fredoka(
+              fontWeight: FontWeight.bold,
+              color: Colors.grey.shade600,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             'This tab is mock-only in the DealSouk prototype.',
-            style: GoogleFonts.nunito(fontSize: 12.5, color: Colors.grey.shade500),
+            style: GoogleFonts.nunito(
+              fontSize: 12.5,
+              color: Colors.grey.shade500,
+            ),
           ),
         ],
       ),
@@ -1519,7 +1785,11 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         children: [
           Text(
             'Token Economy Settings',
-            style: GoogleFonts.fredoka(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textDark),
+            style: GoogleFonts.fredoka(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textDark,
+            ),
           ),
           const SizedBox(height: 20),
           _settingsSlider(
@@ -1561,12 +1831,20 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.info_outline_rounded, color: AppTheme.forestDeep, size: 18),
+                const Icon(
+                  Icons.info_outline_rounded,
+                  color: AppTheme.forestDeep,
+                  size: 18,
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'Changes take effect immediately across the live demo session.',
-                    style: GoogleFonts.nunito(fontSize: 12, color: AppTheme.forestDeep, fontWeight: FontWeight.w600),
+                    style: GoogleFonts.nunito(
+                      fontSize: 12,
+                      color: AppTheme.forestDeep,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
@@ -1592,7 +1870,14 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: GoogleFonts.nunito(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textDark)),
+            Text(
+              label,
+              style: GoogleFonts.nunito(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: AppTheme.textDark,
+              ),
+            ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
@@ -1601,7 +1886,11 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               ),
               child: Text(
                 displayValue,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppTheme.forestDeep),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  color: AppTheme.forestDeep,
+                ),
               ),
             ),
           ],

@@ -326,7 +326,7 @@ class PriceRequest {
   final String id;
   final String productName;
   final String storeName;
-  final int tokensBounty;
+  final int requestRewardTokens;
   final String requesterName;
   final String status; // 'pending', 'fulfilled'
   final String timestampLabel;
@@ -336,7 +336,7 @@ class PriceRequest {
     required this.id,
     required this.productName,
     required this.storeName,
-    required this.tokensBounty,
+    required this.requestRewardTokens,
     required this.requesterName,
     this.status = 'pending',
     required this.timestampLabel,
@@ -360,7 +360,7 @@ class PriceRequest {
       id: json['id'] as String,
       productName: json['productName'] as String,
       storeName: json['storeName'] as String,
-      tokensBounty: json['bountyTokens'] as int? ?? 0,
+      requestRewardTokens: json['bountyTokens'] as int? ?? 0,
       requesterName: json['requesterName'] as String? ?? 'Sourcer',
       status: json['status'] as String? ?? 'open',
       timestampLabel: label,
@@ -373,7 +373,7 @@ class PriceRequest {
       id: id,
       productName: productName,
       storeName: storeName,
-      tokensBounty: tokensBounty,
+      requestRewardTokens: requestRewardTokens,
       requesterName: requesterName,
       status: status ?? this.status,
       timestampLabel: timestampLabel ?? this.timestampLabel,

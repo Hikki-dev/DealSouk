@@ -11,14 +11,12 @@ class SubmitPriceScreen extends ConsumerStatefulWidget {
   final String? requestId;
   final String? prefilledProductName;
   final String? prefilledStoreName;
-  final int? bounty;
 
   const SubmitPriceScreen({
     super.key,
     this.requestId,
     this.prefilledProductName,
     this.prefilledStoreName,
-    this.bounty,
   });
 
   @override
@@ -54,7 +52,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
             .fetchNearby(lat: 25.0771, lng: 55.1328, radiusKm: 15);
       }
 
-      // Prefill fields if fulfilling a Request Board bounty
+      // Prefill fields when a user is helping with a requested price check.
       if (widget.prefilledStoreName != null) {
         final stores = ref.read(storesProvider);
         final match = stores.where(
@@ -105,11 +103,6 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
     final priceEntered = double.tryParse(_priceController.text.trim()) != null;
     final int baseReward = _tokenEstimateBeforeReceipt(priceEntered);
     var totalReward = uploadedReceipt ? (baseReward * 1.5).round() : baseReward;
-
-    // Add active request bounty if fulfilling a request
-    if (widget.bounty != null) {
-      totalReward += widget.bounty!;
-    }
 
     final int remainingToday =
         settings.dailySubmissionCap - profile.submissionsToday;

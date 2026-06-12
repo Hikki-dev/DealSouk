@@ -15,21 +15,26 @@ class AdminService {
   }
 
   Future<void> rejectSubmission(String id, {String? reason}) async {
-    await apiClient.post('/admin/submissions/$id/reject', data: {
-      'reason': ?reason,
-    });
+    await apiClient.post(
+      '/admin/submissions/$id/reject',
+      data: {'reason': ?reason},
+    );
   }
 
-  Future<void> editSubmission(String id, {
+  Future<void> editSubmission(
+    String id, {
     String? productName,
     String? storeName,
     double? price,
   }) async {
-    await apiClient.patch('/admin/submissions/$id', data: {
-      'productName': ?productName,
-      'storeName': ?storeName,
-      'priceAed': ?price,
-    });
+    await apiClient.patch(
+      '/admin/submissions/$id',
+      data: {
+        'productName': ?productName,
+        'storeName': ?storeName,
+        'priceAed': ?price,
+      },
+    );
   }
 
   Future<AdminSettings> getSettings() async {
@@ -43,11 +48,14 @@ class AdminService {
   }
 
   Future<void> updateSettings(AdminSettings settings) async {
-    await apiClient.patch('/admin/settings', data: {
-      'tokenEarnRate': settings.tokenEarnRate,
-      'voucherThreshold': settings.voucherThreshold,
-      'dailySubmissionCap': settings.dailySubmissionCap,
-    });
+    await apiClient.patch(
+      '/admin/settings',
+      data: {
+        'tokenEarnRate': settings.tokenEarnRate,
+        'voucherThreshold': settings.voucherThreshold,
+        'dailySubmissionCap': settings.dailySubmissionCap,
+      },
+    );
   }
 }
 

@@ -2,678 +2,479 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../core/state/state.dart';
 import '../../core/models/models.dart';
+import '../../core/state/state.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/responsive_container.dart';
 import '../../core/widgets/souk_widgets.dart';
 
-class CartScreen extends ConsumerStatefulWidget {
+class CartScreen extends ConsumerWidget {
   const CartScreen({super.key});
 
   @override
-  ConsumerState<CartScreen> createState() => _CartScreenState();
-}
-
-class _CartScreenState extends ConsumerState<CartScreen> {
-  bool _couponApplied = false;
-  final TextEditingController _couponController = TextEditingController();
-
-  @override
-  void dispose() {
-    _couponController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cartItems = ref.watch(cartProvider);
-
-    // Cart uses lowest known prices per product for comparison
-    final Map<String, double> storeTotals = {};
-
-    // Use the lowestPrice from each product as the best available price
-    for (var cartItem in cartItems) {
-      if (cartItem.product.lowestPrice > 0 && cartItem.product.lowestPriceStore.isNotEmpty) {
-        final storeName = cartItem.product.lowestPriceStore;
-        storeTotals[storeName] = (storeTotals[storeName] ?? 0) +
-            cartItem.product.lowestPrice * cartItem.quantity;
-      }
-    }
-
-    final sortedBaskets = storeTotals.entries.toList()
+  Widget build(BuildContext context, WidgetRef ref) {
+    final savedItems = ref.watch(cartProvider);
+    final storeTotals = _buildStoreTotals(savedItems);
+    final sortedStores = storeTotals.entries.toList()
       ..sort((a, b) => a.value.compareTo(b.value));
-
-    final String cheapestStoreName = sortedBaskets.isNotEmpty
-        ? sortedBaskets.first.key
-        : 'N/A';
-    final double cheapestStorePrice = sortedBaskets.isNotEmpty
-        ? sortedBaskets.first.value
-        : 0.0;
-
-    // Calculate second cheapest store for savings comparison
-    final double nextCheapestPrice = sortedBaskets.length > 1 ? sortedBaskets[1].value : cheapestStorePrice;
-    final double optimizerSavings = nextCheapestPrice - cheapestStorePrice;
-
-    // Billing Summary Calculations
-    final double subtotal = cheapestStorePrice;
-    const double deliveryFee = 5.00;
-    final double couponDiscount = _couponApplied ? (subtotal * 0.10) : 0.0;
-    final double grandTotal = (subtotal + deliveryFee - couponDiscount).clamp(0.0, 9999.0);
+    final bestStoreName = sortedStores.isNotEmpty
+        ? sortedStores.first.key
+        : 'No store yet';
+    final bestTotal = sortedStores.isNotEmpty ? sortedStores.first.value : 0.0;
+    final nextBest = sortedStores.length > 1
+        ? sortedStores[1].value
+        : bestTotal;
+    final savings = (nextBest - bestTotal).clamp(0.0, 9999.0);
 
     return ResponsiveContainer(
       child: Scaffold(
         backgroundColor: AppTheme.background,
         appBar: AppBar(
           backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
+          foregroundColor: AppTheme.textDark,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded),
             onPressed: () => context.go('/'),
           ),
           title: Text(
-            'Best Basket',
+            'Saved Prices',
             style: GoogleFonts.fredoka(
-              color: Colors.black,
+              color: AppTheme.textDark,
               fontWeight: FontWeight.bold,
               fontSize: 18,
             ),
           ),
           actions: [
-            if (cartItems.isNotEmpty)
+            if (savedItems.isNotEmpty)
               IconButton(
-                icon: const Icon(Icons.delete_sweep_rounded, color: AppTheme.redAccent, size: 24),
+                tooltip: 'Clear saved prices',
+                icon: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: AppTheme.redAccent,
+                ),
                 onPressed: () {
                   ref.read(cartProvider.notifier).clearCart();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Basket cleared')),
+                    const SnackBar(content: Text('Saved prices cleared')),
                   );
                 },
               ),
           ],
         ),
-        body: cartItems.isEmpty
-            ? Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF4F9F4),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.shopping_basket_outlined,
-                          size: 64,
-                          color: AppTheme.forestDeep,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        'Your basket is empty',
-                        style: GoogleFonts.fredoka(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Search and add fresh groceries to compare\nprices across major Dubai stores.',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.nunito(
-                          color: Colors.grey.shade500,
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w600,
-                          height: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton.icon(
-                        onPressed: () => context.push('/search'),
-                        icon: const Icon(Icons.search_rounded),
-                        label: const Text('Browse Products'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.forestDeep,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            : Column(
+        body: savedItems.isEmpty
+            ? _EmptySavedPrices(onBrowse: () => context.push('/search'))
+            : ListView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 110),
                 children: [
-                  // Better Price Banner
-                  ..._buildBetterPriceBanners(context, cartItems),
-                  Expanded(
-                    child: ListView(
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
-                      children: [
-                        // Dynamic Optimization Banner (DealSouk Core)
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [AppTheme.forestDeep, AppTheme.forestMid],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.forestDeep.withValues(alpha: 0.15),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.verified_user_rounded, color: Colors.white, size: 28),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Optimized at $cheapestStoreName',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14.5,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      'You are saving AED ${optimizerSavings.toStringAsFixed(2)} compared to Spinneys',
-                                      style: const TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 11.5,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              SoukPrice(cheapestStorePrice, size: 18, color: Colors.white),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-
-                        // List Title
-                        Text(
-                          'Your Items',
-                          style: GoogleFonts.fredoka(
-                            fontSize: 16.5,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-
-                        // Cart Items
-                        ...cartItems.map((item) {
-                          // Split name
-                          final parts = item.product.name.split('(');
-                          final coreName = parts[0].trim();
-
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.grey.shade100, width: 1.2),
-                            ),
-                            padding: const EdgeInsets.all(12),
-                            child: Row(
-                              children: [
-                                SizedBox(
-                                  width: 50,
-                                  height: 50,
-                                  child: SoukProductVisual(
-                                    product: item.product,
-                                    fit: BoxFit.contain,
-                                    borderRadius: 12,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        coreName,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 13.5,
-                                          color: Colors.black,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        'Best at ${item.product.lowestPriceStore}',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: Colors.grey.shade500,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    SoukPrice(
-                                      item.product.lowestPrice * item.quantity,
-                                      size: 14,
-                                      color: Colors.black,
-                                    ),
-                                    const SizedBox(height: 6),
-                                    // Stepper container
-                                    Container(
-                                      height: 32,
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.cream,
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          GestureDetector(
-                                            onTap: () => ref
-                                                .read(cartProvider.notifier)
-                                                .updateQuantity(item.product.id, item.quantity - 1),
-                                            child: const Padding(
-                                              padding: EdgeInsets.symmetric(horizontal: 6),
-                                              child: Icon(
-                                                Icons.remove,
-                                                size: 14,
-                                                color: AppTheme.forestDeep,
-                                              ),
-                                            ),
-                                          ),
-                                          Text(
-                                            '${item.quantity}',
-                                            style: const TextStyle(
-                                              fontSize: 11.5,
-                                              fontWeight: FontWeight.bold,
-                                              color: AppTheme.forestDeep,
-                                            ),
-                                          ),
-                                          GestureDetector(
-                                            onTap: () => ref
-                                                .read(cartProvider.notifier)
-                                                .updateQuantity(item.product.id, item.quantity + 1),
-                                            child: const Padding(
-                                              padding: EdgeInsets.symmetric(horizontal: 6),
-                                              child: Icon(
-                                                Icons.add,
-                                                size: 14,
-                                                color: AppTheme.forestDeep,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          );
-                        }),
-                        const SizedBox(height: 18),
-
-                        // Coupon input banner
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.grey.shade100, width: 1.2),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.confirmation_num_outlined, color: AppTheme.forestDeep),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: TextField(
-                                  controller: _couponController,
-                                  decoration: InputDecoration(
-                                    hintText: 'Enter coupon: SOUK10',
-                                    hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
-                                    border: InputBorder.none,
-                                    enabledBorder: InputBorder.none,
-                                    focusedBorder: InputBorder.none,
-                                    contentPadding: EdgeInsets.zero,
-                                    filled: false,
-                                  ),
-                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: () {
-                                  if (_couponController.text.trim().toUpperCase() == 'SOUK10') {
-                                    setState(() {
-                                      _couponApplied = true;
-                                    });
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        backgroundColor: AppTheme.forestDeep,
-                                        content: Text('Coupon SOUK10 applied! 10% Discount added.', style: TextStyle(fontWeight: FontWeight.bold)),
-                                      ),
-                                    );
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        backgroundColor: AppTheme.redAccent,
-                                        content: Text('Invalid coupon. Try SOUK10'),
-                                      ),
-                                    );
-                                  }
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: _couponApplied ? Colors.grey.shade200 : AppTheme.forestDeep,
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Text(
-                                    _couponApplied ? 'Applied' : 'Apply',
-                                    style: TextStyle(
-                                      color: _couponApplied ? Colors.black54 : Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-
-                        // Supermarket Cost Optimizer comparisons list
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.grey.shade100, width: 1.2),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Compare Store Totals',
-                                style: GoogleFonts.fredoka(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              ...sortedBaskets.map((basket) {
-                                final isCheapest = basket.key == cheapestStoreName;
-                                final extra = basket.value - cheapestStorePrice;
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 6),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        isCheapest ? Icons.check_circle_rounded : Icons.store_rounded,
-                                        color: isCheapest ? AppTheme.forestDeep : Colors.grey,
-                                        size: 18,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          basket.key,
-                                          style: TextStyle(
-                                            fontWeight: isCheapest ? FontWeight.bold : FontWeight.normal,
-                                            fontSize: 12.5,
-                                            color: isCheapest ? Colors.black : Colors.grey.shade700,
-                                          ),
-                                        ),
-                                      ),
-                                      if (extra > 0)
-                                        Text(
-                                          '+AED ${extra.toStringAsFixed(2)}',
-                                          style: TextStyle(fontSize: 11, color: Colors.red.shade400, fontWeight: FontWeight.bold),
-                                        )
-                                      else
-                                        const Text(
-                                          'Best option',
-                                          style: TextStyle(fontSize: 11, color: AppTheme.forestDeep, fontWeight: FontWeight.bold),
-                                        ),
-                                      const SizedBox(width: 14),
-                                      SoukPrice(basket.value, size: 13, color: isCheapest ? AppTheme.forestDeep : Colors.black87),
-                                    ],
-                                  ),
-                                );
-                              }),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-
-                        // Summary Cost Table
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.grey.shade100, width: 1.2),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Order Summary',
-                                style: GoogleFonts.fredoka(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              _buildSummaryRow('Basket Subtotal', subtotal),
-                              _buildSummaryRow('Estimated Delivery', deliveryFee),
-                              if (_couponApplied)
-                                _buildSummaryRow('Promo Discount (10%)', -couponDiscount, isDiscount: true),
-                              _buildSummaryRow('Optimizer Savings', -optimizerSavings, isDiscount: true),
-                              const Divider(height: 24),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Total Cost',
-                                    style: GoogleFonts.fredoka(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15.5,
-                                    ),
-                                  ),
-                                  SoukPrice(grandTotal, size: 17.5, color: Colors.black),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                  _BestStoreBanner(
+                    storeName: bestStoreName,
+                    total: bestTotal,
+                    savings: savings,
+                  ),
+                  const SizedBox(height: 18),
+                  _SectionTitle(
+                    title: 'Items you are checking',
+                    actionLabel: 'Add more',
+                    onAction: () => context.push('/search'),
+                  ),
+                  const SizedBox(height: 10),
+                  ...savedItems.map(
+                    (item) => _SavedPriceCard(
+                      item: item,
+                      onRemove: () => ref
+                          .read(cartProvider.notifier)
+                          .removeFromCart(item.product.id),
                     ),
                   ),
-
-                  // Sticky Bottom checkout container
-                  Container(
-                    padding: EdgeInsets.fromLTRB(
-                      20,
-                      12,
-                      20,
-                      MediaQuery.of(context).padding.bottom + 16,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, -4),
-                        ),
-                      ],
-                      border: Border(top: BorderSide(color: Colors.grey.shade100)),
-                    ),
-                    child: GestureDetector(
-                      onTap: () {
-                        _showCheckoutDialog(context, cheapestStoreName, grandTotal);
-                      },
-                      child: Container(
-                        height: 52,
-                        decoration: BoxDecoration(
-                          color: AppTheme.forestDeep,
-                          borderRadius: BorderRadius.circular(26),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppTheme.forestDeep.withValues(alpha: 0.2),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Center(
-                          child: Text(
-                            'Checkout Now (AED ${grandTotal.toStringAsFixed(2)})',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 15.5,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                  const SizedBox(height: 18),
+                  _StoreComparison(stores: sortedStores),
+                  const SizedBox(height: 18),
+                  _PlainLanguageNote(storeName: bestStoreName),
                 ],
               ),
       ),
     );
   }
 
-  List<Widget> _buildBetterPriceBanners(BuildContext context, List<CartItem> cartItems) {
-    final banners = <Widget>[];
-    for (final item in cartItems) {
-      if ((item.priceAtAdd ?? 0) > item.product.lowestPrice + 0.01) {
-        final saving = (item.priceAtAdd ?? item.product.lowestPrice) - item.product.lowestPrice;
-        banners.add(
-          Container(
-            margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF8E1),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFFFCA28)),
+  Map<String, double> _buildStoreTotals(List<CartItem> items) {
+    final totals = <String, double>{};
+    for (final item in items) {
+      final product = item.product;
+      if (product.lowestPrice <= 0 || product.lowestPriceStore.isEmpty) {
+        continue;
+      }
+      totals.update(
+        product.lowestPriceStore,
+        (value) => value + product.lowestPrice,
+        ifAbsent: () => product.lowestPrice,
+      );
+    }
+    return totals;
+  }
+}
+
+class _EmptySavedPrices extends StatelessWidget {
+  final VoidCallback onBrowse;
+
+  const _EmptySavedPrices({required this.onBrowse});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: const BoxDecoration(
+                color: AppTheme.cream,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.bookmark_border_rounded,
+                size: 62,
+                color: AppTheme.forestDeep,
+              ),
             ),
-            child: Row(
+            const SizedBox(height: 20),
+            Text(
+              'No saved prices yet',
+              style: GoogleFonts.fredoka(
+                fontSize: 21,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textDark,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Search an item and save it here to see which nearby store is worth visiting.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.nunito(
+                color: AppTheme.textLight,
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                height: 1.45,
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: onBrowse,
+              icon: const Icon(Icons.search_rounded),
+              label: const Text('Find prices nearby'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.forestDeep,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 14,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BestStoreBanner extends StatelessWidget {
+  final String storeName;
+  final double total;
+  final double savings;
+
+  const _BestStoreBanner({
+    required this.storeName,
+    required this.total,
+    required this.savings,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [AppTheme.forestDeep, AppTheme.forestMid],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.forestDeep.withValues(alpha: 0.16),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.place_rounded, color: Colors.white, size: 28),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.trending_down_rounded, color: Color(0xFFF9A825), size: 20),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Better price for ${item.product.name.split('(').first.trim()}! Now AED ${item.product.lowestPrice.toStringAsFixed(2)} at ${item.product.lowestPriceStore} — save AED ${saving.toStringAsFixed(2)}.',
-                    style: const TextStyle(
-                      fontSize: 11.5,
+                Text(
+                  'Best nearby option',
+                  style: GoogleFonts.nunito(
+                    color: Colors.white70,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  storeName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.fredoka(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+                if (savings > 0) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'About AED ${savings.toStringAsFixed(2)} less than the next option',
+                    style: GoogleFonts.nunito(
+                      color: Colors.white.withValues(alpha: 0.86),
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF5D4037),
+                      fontSize: 12,
                     ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          SoukPrice(total, size: 18, color: Colors.white),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  final String title;
+  final String actionLabel;
+  final VoidCallback onAction;
+
+  const _SectionTitle({
+    required this.title,
+    required this.actionLabel,
+    required this.onAction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: GoogleFonts.fredoka(
+            fontSize: 17,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textDark,
+          ),
+        ),
+        TextButton(onPressed: onAction, child: Text(actionLabel)),
+      ],
+    );
+  }
+}
+
+class _SavedPriceCard extends StatelessWidget {
+  final CartItem item;
+  final VoidCallback onRemove;
+
+  const _SavedPriceCard({required this.item, required this.onRemove});
+
+  @override
+  Widget build(BuildContext context) {
+    final product = item.product;
+    final coreName = product.name.split('(').first.trim();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFFFE2BF), width: 1.1),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 52,
+            height: 52,
+            child: SoukProductVisual(
+              product: product,
+              fit: BoxFit.contain,
+              borderRadius: 14,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  coreName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: AppTheme.textDark,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'Best seen at ${product.lowestPriceStore}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ],
             ),
           ),
-        );
-      }
-    }
-    return banners;
-  }
-
-  Widget _buildSummaryRow(String label, double val, {bool isDiscount = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12.5,
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          Text(
-            isDiscount
-                ? '-AED ${val.abs().toStringAsFixed(2)}'
-                : 'AED ${val.toStringAsFixed(2)}',
-            style: TextStyle(
-              fontSize: 12.5,
-              fontWeight: FontWeight.bold,
-              color: isDiscount ? AppTheme.forestDeep : Colors.black,
-            ),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              SoukPrice(product.lowestPrice, size: 14.5),
+              IconButton(
+                tooltip: 'Remove',
+                visualDensity: VisualDensity.compact,
+                icon: const Icon(Icons.close_rounded, size: 18),
+                color: Colors.grey.shade500,
+                onPressed: onRemove,
+              ),
+            ],
           ),
         ],
       ),
     );
   }
+}
 
-  void _showCheckoutDialog(BuildContext context, String store, double price) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          title: Row(
-            children: const [
-              Icon(Icons.check_circle_rounded, color: AppTheme.forestDeep, size: 28),
-              SizedBox(width: 10),
-              Text('Optimized Checkout'),
-            ],
-          ),
-          content: Text(
-            'Your basket order has been optimized at $store for a final price of AED ${price.toStringAsFixed(2)}!\n\nThis completes the checkout flow for the DealSouk prototype. You can now submit shelf prices to earn rewards.',
-            style: GoogleFonts.nunito(fontSize: 13.5, height: 1.4, fontWeight: FontWeight.w600),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Close', style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.bold)),
+class _StoreComparison extends StatelessWidget {
+  final List<MapEntry<String, double>> stores;
+
+  const _StoreComparison({required this.stores});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFFFE2BF), width: 1.1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Nearby store comparison',
+            style: GoogleFonts.fredoka(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textDark,
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                context.push('/submit-price');
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.forestDeep, foregroundColor: Colors.white),
-              child: const Text('Earn Tokens Now'),
+          ),
+          const SizedBox(height: 12),
+          ...stores.map((store) {
+            final isBest = store == stores.first;
+            final extra = store.value - stores.first.value;
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 7),
+              child: Row(
+                children: [
+                  Icon(
+                    isBest ? Icons.check_circle_rounded : Icons.store_rounded,
+                    color: isBest ? AppTheme.forestDeep : Colors.grey,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      store.key,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontWeight: isBest ? FontWeight.bold : FontWeight.w700,
+                        fontSize: 13,
+                        color: isBest
+                            ? AppTheme.textDark
+                            : Colors.grey.shade700,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    isBest ? 'Best' : '+AED ${extra.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: isBest ? AppTheme.forestDeep : AppTheme.redAccent,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  SoukPrice(store.value, size: 13),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+class _PlainLanguageNote extends StatelessWidget {
+  final String storeName;
+
+  const _PlainLanguageNote({required this.storeName});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.cream,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppTheme.creamCircle),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline_rounded, color: AppTheme.forestDeep),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'DealSouk does not sell groceries. This list only helps you decide where to check prices nearby.',
+              style: GoogleFonts.nunito(
+                fontSize: 12.5,
+                color: AppTheme.maroon,
+                fontWeight: FontWeight.w800,
+                height: 1.35,
+              ),
             ),
-          ],
-        );
-      },
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +9,8 @@ import '../../core/state/state.dart';
 import '../../core/models/models.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/souk_widgets.dart';
+import '../../core/widgets/platform_card.dart';
+import '../leaderboard/request_board_view.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -23,9 +27,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ref.read(productsProvider.notifier).fetch();
       ref
           .read(storesProvider.notifier)
-          .fetchNearby(lat: 25.0771, lng: 55.1328, radiusKm: 15);
+          .fetchNearby(lat: 25.0771, lng: 55.1328, radiusKm: 5);
       ref.read(cartProvider.notifier).loadPersistedCart();
       ref.read(dailyChallengeProvider.notifier).fetchToday();
+      ref.read(priceRequestsProvider.notifier).fetchBoard();
     });
   }
 
@@ -40,10 +45,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final dailyChallenge = ref.watch(dailyChallengeProvider);
     final settings = ref.watch(adminSettingsProvider);
 
-    final cartCount = cartItems.fold<int>(
-      0,
-      (sum, item) => sum + item.quantity,
-    );
+    final savedCount = cartItems.length;
     final feedProducts =
         _filterByFreshness(products, filterState.freshnessFilter)..sort(
           (a, b) => _freshnessMinutes(
@@ -90,7 +92,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          // 1. Dribbble Screenshot Header: Green gradient, Checker Grid, Avatar, Cart button, Special offer card, capsule search
+          // 1. Warm local-price discovery header.
           SliverToBoxAdapter(
             child: Stack(
               children: [
@@ -100,11 +102,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          Color(0xFF1B5E20),
-                          Color(0xFF2E7D32),
-                          Color(0xFFE8F5E9),
-                          Color(0xFFF9FBF7),
-                          Color(0xFFF9FBF7),
+                          Color(0xFF7A4A1D),
+                          Color(0xFFC46A2D),
+                          Color(0xFFFFD8A8),
+                          Color(0xFFFFFAF2),
+                          Color(0xFFFFFAF2),
                         ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
@@ -174,7 +176,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    'What deals are you finding today?',
+                                    'Find nearby prices before you go',
                                     style: GoogleFonts.nunito(
                                       fontSize: 12.5,
                                       color: Colors.white.withValues(
@@ -187,7 +189,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ),
                             ],
                           ),
-                          // Basket Button (Green outline in white circle)
+                          // Saved price list shortcut
                           GestureDetector(
                             onTap: () => context.go('/cart'),
                             child: Stack(
@@ -201,12 +203,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     shape: BoxShape.circle,
                                   ),
                                   child: const Icon(
-                                    Icons.shopping_basket_outlined,
+                                    Icons.bookmark_border_rounded,
                                     color: AppTheme.forestDeep,
                                     size: 20,
                                   ),
                                 ),
-                                if (cartCount > 0)
+                                if (savedCount > 0)
                                   Positioned(
                                     right: -2,
                                     top: -2,
@@ -219,7 +221,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       ),
                                       child: Center(
                                         child: Text(
-                                          '$cartCount',
+                                          '$savedCount',
                                           style: const TextStyle(
                                             color: Colors.white,
                                             fontSize: 9.5,
@@ -236,7 +238,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                       const SizedBox(height: 22),
 
-                      // Special Offer Carousel
+                      // Local price discovery carousel
                       const _OfferCarousel(),
                       const SizedBox(height: 20),
 
@@ -269,7 +271,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ),
                               const SizedBox(width: 12),
                               Text(
-                                'Search vegetables, fruits and more',
+                                'Search an item to compare prices nearby',
                                 style: TextStyle(
                                   color: Colors.grey.shade400,
                                   fontSize: 13.5,
@@ -395,7 +397,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
 
-          // 3. DealSouk Token Balance Wallet Card (Clickable to Leaderboard)
+          // 3. Request section should be visible from the home page.
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(4, 12, 4, 4),
+              child: RequestBoardView(),
+            ),
+          ),
+
+          // 4. Community points card.
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 10),
@@ -407,7 +417,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
 
-          // 3b. Daily Challenge Card
+          // 4b. Daily Challenge Card
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
@@ -415,7 +425,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
 
-          // 4. Quick-Tip concept banner: How it works
+          // 5. Quick-Tip concept banner: How it works
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -439,7 +449,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'How it works: Compare local supermarket prices, upload shelf labels to earn tokens, and redeem vouchers!',
+                        'Simple: search an item, check nearby stores, then decide where it is worth going.',
                         style: GoogleFonts.nunito(
                           fontSize: 12,
                           color: AppTheme.forestDeep,
@@ -454,7 +464,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
 
-          // 5. Freshness chip filters
+          // 6. Freshness chip filters
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.only(top: 8, bottom: 4),
@@ -462,7 +472,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
 
-          // 6. Verified prices feed (Fresh Price Feed) moved ABOVE the Fresh Products grid
+          // 7. Verified prices feed
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
@@ -470,7 +480,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Fresh Price Feed',
+                    'Best prices near you',
                     style: GoogleFonts.fredoka(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -490,7 +500,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
                     child: Text(
-                      '${feedProducts.length} fresh prices',
+                      '${feedProducts.length} prices',
                       key: ValueKey<int>(feedProducts.length),
                       style: const TextStyle(
                         fontSize: 12,
@@ -552,7 +562,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
 
-          // 7. Fresh Products Feed
+          // 8. Fresh Products Feed
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
@@ -560,7 +570,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Fresh Products',
+                    'Browse items',
                     style: GoogleFonts.fredoka(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -708,26 +718,23 @@ class _HomeTokenBalance extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return PlatformCard(
       onTap: () => context.go('/leaderboard'),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppTheme.forestDeep, AppTheme.forestMid],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: AppTheme.forestDeep.withValues(alpha: 0.15),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
-            ),
-          ],
+      padding: const EdgeInsets.all(16),
+      borderRadius: 24,
+      gradient: const LinearGradient(
+        colors: [AppTheme.forestDeep, AppTheme.forestMid],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: AppTheme.forestDeep.withValues(alpha: 0.15),
+          blurRadius: 16,
+          offset: const Offset(0, 8),
         ),
-        child: Row(
+      ],
+      child: Row(
           children: [
             Container(
               width: 44,
@@ -744,7 +751,7 @@ class _HomeTokenBalance extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Token Balance',
+                    'Community points',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 14,
@@ -753,7 +760,7 @@ class _HomeTokenBalance extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${dailyCap - submissionsToday} submissions left today • Tap to claim',
+                    '${dailyCap - submissionsToday} price checks left today',
                     style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 11.5,
@@ -779,117 +786,493 @@ class _HomeTokenBalance extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 }
 
-class _DailyChallengeCard extends StatelessWidget {
+class _DailyChallengeCard extends ConsumerWidget {
   final DailyChallenge challenge;
 
   const _DailyChallengeCard({required this.challenge});
 
   @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.push('/submit-price'),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: challenge.completed ? const Color(0xFFE8F5E9) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: challenge.completed
-                ? AppTheme.forestDeep
-                : const Color(0xFFE8EEE4),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    return PlatformCard(
+      onTap: () => _showChallengeDetailsSheet(context, ref, challenge),
+      padding: const EdgeInsets.all(14),
+      borderRadius: 20,
+      color: challenge.completed ? const Color(0xFFE8F5E9) : Colors.white,
+      border: Border.all(
+        color: challenge.completed
+            ? AppTheme.forestDeep
+            : const Color(0xFFE8EEE4),
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.02),
+          blurRadius: 8,
+          offset: const Offset(0, 3),
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: challenge.completed
-                    ? AppTheme.forestDeep
-                    : AppTheme.limeAccent,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                challenge.completed ? Icons.check_rounded : Icons.flag_outlined,
-                color: challenge.completed ? Colors.white : AppTheme.forestDeep,
-                size: 18,
-              ),
+      ],
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: challenge.completed
+                  ? AppTheme.forestDeep
+                  : AppTheme.limeAccent,
+              shape: BoxShape.circle,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Daily Challenge',
-                    style: TextStyle(
-                      color: Colors.grey.shade500,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                    ),
+            child: Icon(
+              challenge.completed ? Icons.check_rounded : Icons.flag_outlined,
+              color: challenge.completed ? Colors.white : AppTheme.forestDeep,
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Daily Challenge',
+                  style: TextStyle(
+                    color: Colors.grey.shade500,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    challenge.description,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w900,
-                      color: AppTheme.textDark,
-                    ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  challenge.description,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w900,
+                    color: AppTheme.textDark,
                   ),
-                  if (!challenge.completed) ...[
-                    const SizedBox(height: 5),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(3),
-                      child: LinearProgressIndicator(
-                        value: (challenge.progressCount / challenge.targetCount)
-                            .clamp(0.0, 1.0),
-                        backgroundColor: Colors.grey.shade100,
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                          AppTheme.forestDeep,
-                        ),
-                        minHeight: 4,
+                ),
+                if (!challenge.completed) ...[
+                  const SizedBox(height: 5),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(3),
+                    child: LinearProgressIndicator(
+                      value: (challenge.progressCount / challenge.targetCount)
+                          .clamp(0.0, 1.0),
+                      backgroundColor: Colors.grey.shade100,
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        AppTheme.forestDeep,
                       ),
+                      minHeight: 4,
                     ),
-                  ],
+                  ),
                 ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppTheme.amberAccent.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              challenge.completed
+                  ? 'Done! +${challenge.bonusTokens}T'
+                  : '${challenge.progressCount}/${challenge.targetCount}',
+              style: const TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFFC77C02),
               ),
             ),
-            const SizedBox(width: 10),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppTheme.amberAccent.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                challenge.completed
-                    ? 'Done! +${challenge.bonusTokens}T'
-                    : '${challenge.progressCount}/${challenge.targetCount}',
-                style: const TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFFC77C02),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showChallengeDetailsSheet(
+      BuildContext context, WidgetRef ref, DailyChallenge challenge) {
+    // Hide navbar when sheet opens
+    ref.read(navbarVisibleProvider.notifier).hide();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final progressPercent =
+            (challenge.progressCount / challenge.targetCount).clamp(0.0, 1.0);
+        final isIos = defaultTargetPlatform == TargetPlatform.iOS ||
+            defaultTargetPlatform == TargetPlatform.macOS;
+
+        final sheetContent = Padding(
+          padding: EdgeInsets.fromLTRB(
+            24,
+            24,
+            24,
+            MediaQuery.of(context).viewInsets.bottom + 32,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2.5),
+                  ),
                 ),
               ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: challenge.completed
+                          ? AppTheme.forestDeep.withValues(alpha: 0.1)
+                          : AppTheme.limeAccent.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      challenge.completed
+                          ? Icons.check_circle_rounded
+                          : Icons.flag_rounded,
+                      color: challenge.completed
+                          ? AppTheme.forestDeep
+                          : AppTheme.limeAccent,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Daily Challenge Details',
+                          style: GoogleFonts.fredoka(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.forestDeep,
+                          ),
+                        ),
+                        Text(
+                          challenge.completed
+                              ? 'You have finished this challenge!'
+                              : 'Earn bonus tokens by participating today',
+                          style: GoogleFonts.nunito(
+                            color: Colors.grey.shade500,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // Description Box
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.cream,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: AppTheme.limeAccent.withValues(alpha: 0.3),
+                    width: 1.2,
+                  ),
+                ),
+                child: Text(
+                  challenge.description,
+                  style: GoogleFonts.fredoka(
+                    fontSize: 15,
+                    color: AppTheme.forestDeep,
+                    fontWeight: FontWeight.w600,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Target Store details
+              _detailRow(
+                icon: Icons.store_rounded,
+                iconColor: Colors.blue.shade600,
+                title: 'Target Supermarket',
+                value: challenge.targetStore == 'Any'
+                    ? 'Any Supermarket Chain'
+                    : challenge.targetStore,
+              ),
+              const Divider(height: 24, color: Color(0xFFE8EEE4)),
+
+              // Progress details
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.query_stats_rounded,
+                              size: 18, color: Colors.orange.shade600),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Your Progress',
+                            style: GoogleFonts.nunito(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.textDark,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Text(
+                        '${challenge.progressCount} / ${challenge.targetCount} prices',
+                        style: GoogleFonts.nunito(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w900,
+                          color: AppTheme.forestDeep,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: progressPercent,
+                      backgroundColor: Colors.grey.shade100,
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        AppTheme.forestDeep,
+                      ),
+                      minHeight: 8,
+                    ),
+                  ),
+                ],
+              ),
+              const Divider(height: 24, color: Color(0xFFE8EEE4)),
+
+              // Bonus details
+              _detailRow(
+                icon: Icons.token_rounded,
+                iconColor: AppTheme.amberAccent,
+                title: 'Reward Bonus',
+                value: '+${challenge.bonusTokens} Tokens',
+                valueColor: const Color(0xFFC77C02),
+              ),
+              const Divider(height: 24, color: Color(0xFFE8EEE4)),
+
+              // How to complete section
+              Text(
+                'How to complete:',
+                style: GoogleFonts.fredoka(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textDark,
+                ),
+              ),
+              const SizedBox(height: 10),
+              _stepItem(
+                number: '1',
+                text: 'Visit any branch of ${challenge.targetStore == 'Any' ? 'a supermarket' : challenge.targetStore}.',
+              ),
+              _stepItem(
+                number: '2',
+                text: 'Find grocery products and verify their shelf prices.',
+              ),
+              _stepItem(
+                number: '3',
+                text: 'Tap "Submit Price" in the app, fill in the price details, and submit.',
+              ),
+              _stepItem(
+                number: '4',
+                text: 'Once approved, your progress will update and you\'ll receive the token bonus!',
+              ),
+              const SizedBox(height: 28),
+
+              // Button
+              challenge.completed
+                  ? Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8F5E9),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: AppTheme.forestDeep.withValues(alpha: 0.3),
+                          width: 1.2,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.check_circle_rounded,
+                            color: AppTheme.forestDeep,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Completed! Reward Claimed',
+                            style: GoogleFonts.fredoka(
+                              color: AppTheme.forestDeep,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        context.push('/submit-price');
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.forestDeep,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(double.infinity, 52),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: Text(
+                        'Start Challenge Now',
+                        style: GoogleFonts.fredoka(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+            ],
+          ),
+        );
+
+        return isIos
+            ? ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.65),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(28),
+                      ),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.3),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: sheetContent,
+                  ),
+                ),
+              )
+            : Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(28),
+                  ),
+                ),
+                child: sheetContent,
+              );
+      },
+    ).whenComplete(() {
+      // Restore navbar when sheet is dismissed by any means
+      ref.read(navbarVisibleProvider.notifier).show();
+    });
+  }
+
+  Widget _detailRow({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String value,
+    Color? valueColor,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 18, color: iconColor),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: GoogleFonts.nunito(
+                fontSize: 13.5,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textDark,
+              ),
             ),
           ],
         ),
+        Text(
+          value,
+          style: GoogleFonts.nunito(
+            fontSize: 13.5,
+            fontWeight: FontWeight.w900,
+            color: valueColor ?? AppTheme.textDark,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _stepItem({required String number, required String text}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 18,
+            height: 18,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              color: AppTheme.creamCircle,
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              number,
+              style: GoogleFonts.fredoka(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.forestDeep,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: GoogleFonts.nunito(
+                fontSize: 12.5,
+                color: AppTheme.textLight,
+                fontWeight: FontWeight.w600,
+                height: 1.3,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1257,18 +1640,18 @@ class _OfferCarouselState extends State<_OfferCarousel> {
   Widget build(BuildContext context) {
     final List<_OfferCardData> offers = [
       const _OfferCardData(
-        title: 'Enjoy The Special\nOffer Up To 30%',
-        subtitle: 'From 14th June, 2025',
+        title: 'Know The Best Price\nBefore You Leave',
+        subtitle: 'Nearby grocery prices in simple words',
         imageUrl: 'assets/promo_vegetables.png',
       ),
       const _OfferCardData(
-        title: 'Find Best Supermarket\nPrices Nearby',
-        subtitle: 'Compare local stores instantly',
+        title: 'Stay Close To Home\nAnd Save The Trip',
+        subtitle: 'Compare stores around your area',
         imageUrl: 'assets/category_fresh.png',
       ),
       const _OfferCardData(
-        title: 'Contribute Shelf Photos\n& Earn Reward Tokens',
-        subtitle: 'Redeem value vouchers today',
+        title: 'Need A Price Checked?\nAsk The Community',
+        subtitle: 'No ordering, just helpful local prices',
         imageUrl: 'assets/product_apples.png',
       ),
     ];

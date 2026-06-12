@@ -12,8 +12,6 @@ class RequestBoardView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final requests = ref.watch(priceRequestsProvider);
-    final userTokens = ref.watch(userTokensProvider);
-
     final activeRequests = requests
         .where((r) => r.status == 'open' || r.status == 'pending')
         .toList();
@@ -41,7 +39,7 @@ class RequestBoardView extends ConsumerWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Shoppers have posted bounties to verify prices at these stores. Visit a store, submit the price with a photo, and claim the tokens!',
+                    'Need a price checked? Ask nearby shoppers. If someone is already at that store, they can send back the shelf price.',
                     style: GoogleFonts.nunito(
                       fontSize: 12,
                       color: const Color(0xFF5D4037),
@@ -58,19 +56,21 @@ class RequestBoardView extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Open Price Requests (${activeRequests.length})',
-                style: GoogleFonts.fredoka(
-                  fontSize: 16.5,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textDark,
+              Expanded(
+                child: Text(
+                  'Price checks people need (${activeRequests.length})',
+                  style: GoogleFonts.fredoka(
+                    fontSize: 16.5,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textDark,
+                  ),
                 ),
               ),
+              const SizedBox(width: 12),
               ElevatedButton.icon(
-                onPressed: () =>
-                    _showRequestFormSheet(context, ref, userTokens),
+                onPressed: () => _showRequestFormSheet(context, ref),
                 icon: const Icon(Icons.add_comment_rounded, size: 16),
-                label: const Text('Request Price Check'),
+                label: const Text('Ask for a price'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.forestDeep,
                   foregroundColor: Colors.white,
@@ -109,7 +109,7 @@ class RequestBoardView extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'All requests fulfilled!',
+                    'All price checks are done!',
                     style: GoogleFonts.fredoka(
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
@@ -142,11 +142,7 @@ class RequestBoardView extends ConsumerWidget {
     );
   }
 
-  void _showRequestFormSheet(
-    BuildContext context,
-    WidgetRef ref,
-    int userTokens,
-  ) {
+  void _showRequestFormSheet(BuildContext context, WidgetRef ref) {
     final formKey = GlobalKey<FormState>();
     String productName = '';
     String selectedStore = 'Carrefour';
@@ -163,8 +159,6 @@ class RequestBoardView extends ConsumerWidget {
       'Al Maya',
       'Geant',
     ];
-
-    final hasEnoughTokens = userTokens >= 10;
 
     // Hide navbar when sheet opens
     ref.read(navbarVisibleProvider.notifier).hide();
@@ -202,7 +196,7 @@ class RequestBoardView extends ConsumerWidget {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'Request a Price Check',
+                  'Ask for a price check',
                   style: GoogleFonts.fredoka(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -211,7 +205,7 @@ class RequestBoardView extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Bounty cost: 10 Tokens. Verified reports will deduct tokens from your balance.',
+                  'Tell us the item and store. Nearby shoppers can help check the shelf price.',
                   style: GoogleFonts.nunito(
                     color: Colors.grey.shade500,
                     fontSize: 12.5,
@@ -222,8 +216,8 @@ class RequestBoardView extends ConsumerWidget {
                 // Product Name Field
                 TextFormField(
                   decoration: InputDecoration(
-                    labelText: 'Product Name',
-                    hintText: 'e.g. Al Rawabi Double Cream Cheese 500g',
+                    labelText: 'Item name',
+                    hintText: 'e.g. milk, rice, apples',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
@@ -234,7 +228,7 @@ class RequestBoardView extends ConsumerWidget {
                   ),
                   validator: (val) {
                     if (val == null || val.trim().isEmpty) {
-                      return 'Please enter product name';
+                      return 'Please enter the item name';
                     }
                     return null;
                   },
@@ -258,90 +252,56 @@ class RequestBoardView extends ConsumerWidget {
                 ),
                 const SizedBox(height: 24),
 
-                if (!hasEnoughTokens)
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 20),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.red.shade200),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.error_outline_rounded,
-                          color: Colors.red,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Insufficient balance! You need 10 tokens to post a request. (Current balance: $userTokens)',
-                            style: const TextStyle(
-                              color: Colors.red,
-                              fontSize: 12.5,
+                ElevatedButton(
+                  onPressed: () {
+                    if (formKey.currentState!.validate()) {
+                      formKey.currentState!.save();
+
+                      ref
+                          .read(priceRequestsProvider.notifier)
+                          .addPriceRequest(
+                            productName: productName,
+                            storeName: selectedStore,
+                            requestCostTokens: 0,
+                            requesterName: 'Hessa Al Maktoum',
+                          );
+
+                      Navigator.pop(context);
+
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          title: const Row(
+                            children: [
+                              Icon(
+                                Icons.check_circle_rounded,
+                                color: Colors.green,
+                              ),
+                              SizedBox(width: 8),
+                              Text('Request Sent'),
+                            ],
+                          ),
+                          content: Text(
+                            'We will ask nearby shoppers to check $productName at $selectedStore. You will be notified when someone sends the price.',
+                            style: GoogleFonts.nunito(
+                              fontSize: 13,
+                              height: 1.4,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Great'),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
-
-                ElevatedButton(
-                  onPressed: hasEnoughTokens
-                      ? () {
-                          if (formKey.currentState!.validate()) {
-                            formKey.currentState!.save();
-
-                            // Call provider method to request
-                            ref
-                                .read(priceRequestsProvider.notifier)
-                                .addPriceRequest(
-                                  productName: productName,
-                                  storeName: selectedStore,
-                                  bounty: 10,
-                                  requesterName: 'Hessa Al Maktoum',
-                                );
-
-                            Navigator.pop(context);
-
-                            // Success Dialog
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(24),
-                                ),
-                                title: const Row(
-                                  children: [
-                                    Icon(
-                                      Icons.check_circle_rounded,
-                                      color: Colors.green,
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text('Request Placed!'),
-                                  ],
-                                ),
-                                content: Text(
-                                  'Requested price verification of $productName at $selectedStore. 10 tokens have been deducted from your balance. Community members will notify you with the details shortly!',
-                                  style: GoogleFonts.nunito(
-                                    fontSize: 13,
-                                    height: 1.4,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text('Great'),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }
-                        }
-                      : null,
+                      );
+                    }
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.forestDeep,
                     foregroundColor: Colors.white,
@@ -350,7 +310,7 @@ class RequestBoardView extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  child: const Text('Post Request (10 Tokens)'),
+                  child: const Text('Ask for this price'),
                 ),
               ],
             ),
@@ -431,71 +391,33 @@ class _RequestItemCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: AppTheme.amberLight,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.bolt,
-                      color: AppTheme.amberAccent,
-                      size: 14,
-                    ),
-                    const SizedBox(width: 2),
-                    Text(
-                      '+${request.tokensBounty}',
-                      style: const TextStyle(
-                        color: Color(0xFFC77C02),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 6),
-              GestureDetector(
-                onTap: () {
-                  // Navigate to submit price prefilled
-                  context.push(
-                    '/submit-price',
-                    extra: {
-                      'requestId': request.id,
-                      'productName': request.productName,
-                      'storeName': request.storeName,
-                      'bounty': request.tokensBounty,
-                    },
-                  );
+          GestureDetector(
+            onTap: () {
+              // Navigate to submit price prefilled
+              context.push(
+                '/submit-price',
+                extra: {
+                  'requestId': request.id,
+                  'productName': request.productName,
+                  'storeName': request.storeName,
                 },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.forestDeep,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Text(
-                    'Fulfill',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppTheme.forestDeep,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Text(
+                'I can check',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ],
+            ),
           ),
         ],
       ),

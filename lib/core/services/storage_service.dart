@@ -37,10 +37,7 @@ class StorageService {
       final ref = _storage.ref('$folder/$uid/$ts.$ext');
 
       final bytes = await file.readAsBytes();
-      await ref.putData(
-        bytes,
-        SettableMetadata(contentType: 'image/$ext'),
-      );
+      await ref.putData(bytes, SettableMetadata(contentType: 'image/$ext'));
       return await ref.getDownloadURL();
     } catch (_) {
       return null;

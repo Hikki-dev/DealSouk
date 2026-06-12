@@ -105,8 +105,9 @@ class AuthNotifier extends Notifier<AuthState> {
       final result = await authService.signInWithGoogle();
       await _syncWithBackend(result.user!);
     } catch (e) {
-      state = const AuthState(status: AuthStatus.unauthenticated)
-          .copyWith(error: e.toString());
+      state = const AuthState(
+        status: AuthStatus.unauthenticated,
+      ).copyWith(error: e.toString());
     }
   }
 
@@ -116,8 +117,9 @@ class AuthNotifier extends Notifier<AuthState> {
       final result = await authService.signInWithApple();
       await _syncWithBackend(result.user!);
     } catch (e) {
-      state = const AuthState(status: AuthStatus.unauthenticated)
-          .copyWith(error: e.toString());
+      state = const AuthState(
+        status: AuthStatus.unauthenticated,
+      ).copyWith(error: e.toString());
     }
   }
 
@@ -163,4 +165,6 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 }
 
-final authProvider = NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);
+final authProvider = NotifierProvider<AuthNotifier, AuthState>(
+  AuthNotifier.new,
+);

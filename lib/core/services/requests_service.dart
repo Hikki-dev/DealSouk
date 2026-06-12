@@ -13,13 +13,16 @@ class RequestsService {
   Future<PriceRequest> create({
     required String productName,
     required String storeName,
-    required int bountyTokens,
+    required int requestCostTokens,
   }) async {
-    final res = await apiClient.post('/requests', data: {
-      'productName': productName,
-      'storeName': storeName,
-      'bountyTokens': bountyTokens,
-    });
+    final res = await apiClient.post(
+      '/requests',
+      data: {
+        'productName': productName,
+        'storeName': storeName,
+        'bountyTokens': requestCostTokens,
+      },
+    );
     return PriceRequest.fromJson(res.data as Map<String, dynamic>);
   }
 

@@ -20,10 +20,8 @@ class ProductDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
-  int _quantity = 1;
   bool _isFavorite = false;
   bool _compareExpanded = true;
-  bool _trendExpanded = false;
   List<StoreProductPrice> _storePrices = [];
 
   @override
@@ -77,7 +75,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           foregroundColor: Colors.black,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black),
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: Colors.black,
+            ),
             onPressed: () => context.pop(),
           ),
           title: Text(
@@ -91,7 +92,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           actions: [
             IconButton(
               icon: Icon(
-                _isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                _isFavorite
+                    ? Icons.favorite_rounded
+                    : Icons.favorite_border_rounded,
                 color: _isFavorite ? AppTheme.redAccent : Colors.black,
               ),
               onPressed: () {
@@ -114,7 +117,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     Container(
                       width: double.infinity,
                       height: 230,
-                      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF4F9F4),
                         borderRadius: BorderRadius.circular(24),
@@ -122,12 +128,18 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                       padding: const EdgeInsets.all(20),
                       child: Hero(
                         tag: 'product_img_${product.id}',
-                        child: SoukProductVisual(product: product, fit: BoxFit.contain),
+                        child: SoukProductVisual(
+                          product: product,
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
 
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -164,62 +176,22 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           ),
                           const SizedBox(height: 18),
 
-                          // 3. Price & Stepper aligned side-by-side
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          // 3. Price and store clarity.
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  SoukPrice(
-                                    selectedPrice,
-                                    size: 26,
-                                    color: AppTheme.forestDeep,
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    'Best price at ${product.lowestPriceStore}',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.grey.shade500,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
+                              SoukPrice(
+                                selectedPrice,
+                                size: 26,
+                                color: AppTheme.forestDeep,
                               ),
-                              // Custom Stepper
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: AppTheme.cream,
-                                  borderRadius: BorderRadius.circular(24),
-                                ),
-                                height: 42,
-                                padding: const EdgeInsets.symmetric(horizontal: 6),
-                                child: Row(
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.remove, size: 16, color: AppTheme.forestDeep),
-                                      onPressed: () {
-                                        if (_quantity > 1) {
-                                          setState(() => _quantity--);
-                                        }
-                                      },
-                                    ),
-                                    Text(
-                                      '$_quantity',
-                                      style: const TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppTheme.forestDeep,
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.add, size: 16, color: AppTheme.forestDeep),
-                                      onPressed: () {
-                                        setState(() => _quantity++);
-                                      },
-                                    ),
-                                  ],
+                              const SizedBox(height: 4),
+                              Text(
+                                'Best price seen at ${product.lowestPriceStore}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ],
@@ -231,31 +203,49 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                             title: 'Compare Store Prices',
                             icon: Icons.storefront_rounded,
                             isExpanded: _compareExpanded,
-                            onToggle: () => setState(() => _compareExpanded = !_compareExpanded),
+                            onToggle: () => setState(
+                              () => _compareExpanded = !_compareExpanded,
+                            ),
                             child: sortedPrices.isEmpty
                                 ? const Padding(
                                     padding: EdgeInsets.all(12),
-                                    child: Text('No price comparison data available.'),
+                                    child: Text(
+                                      'No price comparison data available.',
+                                    ),
                                   )
                                 : Column(
                                     children: sortedPrices.map((sp) {
-                                      final key = '${product.id}_${sp.storeName}';
-                                      final flaggedState = ref.watch(flaggedPricesProvider);
+                                      final key =
+                                          '${product.id}_${sp.storeName}';
+                                      final flaggedState = ref.watch(
+                                        flaggedPricesProvider,
+                                      );
                                       final flagCount = flaggedState[key] ?? 0;
                                       final isHidden = flagCount >= 3;
 
                                       if (isHidden) {
                                         return Container(
-                                          margin: const EdgeInsets.symmetric(vertical: 6),
+                                          margin: const EdgeInsets.symmetric(
+                                            vertical: 6,
+                                          ),
                                           padding: const EdgeInsets.all(12),
                                           decoration: BoxDecoration(
                                             color: Colors.grey.shade100,
-                                            borderRadius: BorderRadius.circular(12),
-                                            border: Border.all(color: Colors.grey.shade300, width: 1.2),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            border: Border.all(
+                                              color: Colors.grey.shade300,
+                                              width: 1.2,
+                                            ),
                                           ),
                                           child: Row(
                                             children: [
-                                              Icon(Icons.report_problem_rounded, color: Colors.orange.shade700, size: 20),
+                                              Icon(
+                                                Icons.report_problem_rounded,
+                                                color: Colors.orange.shade700,
+                                                size: 20,
+                                              ),
                                               const SizedBox(width: 12),
                                               const Expanded(
                                                 child: Text(
@@ -273,15 +263,20 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                         );
                                       }
 
-                                      final isCheapest = sp.price == selectedPrice;
+                                      final isCheapest =
+                                          sp.price == selectedPrice;
                                       return Container(
-                                        margin: const EdgeInsets.symmetric(vertical: 6),
+                                        margin: const EdgeInsets.symmetric(
+                                          vertical: 6,
+                                        ),
                                         padding: const EdgeInsets.all(12),
                                         decoration: BoxDecoration(
                                           color: isCheapest
                                               ? const Color(0xFFF1F8E9)
                                               : Colors.white,
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                           border: Border.all(
                                             color: isCheapest
                                                 ? const Color(0xFFC8E6C9)
@@ -299,7 +294,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                               child: Text(
                                                 sp.storeName.substring(0, 1),
                                                 style: TextStyle(
-                                                  color: isCheapest ? Colors.white : Colors.black,
+                                                  color: isCheapest
+                                                      ? Colors.white
+                                                      : Colors.black,
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 12,
                                                 ),
@@ -308,19 +305,22 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                             const SizedBox(width: 12),
                                             Expanded(
                                               child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
                                                 children: [
                                                   Text(
                                                     sp.storeName,
                                                     style: const TextStyle(
-                                                      fontWeight: FontWeight.bold,
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                       fontSize: 13,
                                                     ),
                                                   ),
                                                   Text(
                                                     sp.updatedAtLabel,
                                                     style: TextStyle(
-                                                      color: Colors.grey.shade500,
+                                                      color:
+                                                          Colors.grey.shade500,
                                                       fontSize: 10.5,
                                                     ),
                                                   ),
@@ -329,14 +329,18 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                             ),
                                             if (isCheapest)
                                               Container(
-                                                padding: const EdgeInsets.symmetric(
-                                                  horizontal: 8,
-                                                  vertical: 4,
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 4,
+                                                    ),
+                                                margin: const EdgeInsets.only(
+                                                  right: 10,
                                                 ),
-                                                margin: const EdgeInsets.only(right: 10),
                                                 decoration: BoxDecoration(
                                                   color: AppTheme.forestDeep,
-                                                  borderRadius: BorderRadius.circular(8),
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
                                                 ),
                                                 child: const Text(
                                                   'BEST PRICE',
@@ -350,26 +354,37 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                             IconButton(
                                               icon: Icon(
                                                 Icons.outlined_flag_rounded,
-                                                color: flagCount > 0 ? Colors.redAccent : Colors.grey.shade400,
+                                                color: flagCount > 0
+                                                    ? Colors.redAccent
+                                                    : Colors.grey.shade400,
                                                 size: 20,
                                               ),
                                               tooltip: 'Flag incorrect price',
                                               onPressed: () {
-                                                ref.read(flaggedPricesProvider.notifier).flagPrice(
+                                                ref
+                                                    .read(
+                                                      flaggedPricesProvider
+                                                          .notifier,
+                                                    )
+                                                    .flagPrice(
                                                       product.id,
                                                       sp.storeName,
                                                       product.name,
                                                       sp.price,
                                                     );
                                                 final newCount = flagCount + 1;
-                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
                                                   SnackBar(
                                                     content: Text(
                                                       newCount >= 3
                                                           ? 'Price report flagged 3 times! Hidden and sent to Admin Queue.'
                                                           : 'Price report flagged ($newCount/3). Auto-hides at 3.',
                                                     ),
-                                                    duration: const Duration(seconds: 2),
+                                                    duration: const Duration(
+                                                      seconds: 2,
+                                                    ),
                                                   ),
                                                 );
                                               },
@@ -381,51 +396,6 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                       );
                                     }).toList(),
                                   ),
-                          ),
-                          const SizedBox(height: 14),
-
-                          // 5. Price Trend Chart (Collapsible, Custom Painter)
-                          _buildCollapsibleCard(
-                            title: '4-Week Price Trend',
-                            icon: Icons.trending_down_rounded,
-                            isExpanded: _trendExpanded,
-                            onToggle: () => setState(() => _trendExpanded = !_trendExpanded),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Price variation trend in Dubai (AED)',
-                                  style: TextStyle(
-                                    fontSize: 11.5,
-                                    color: Colors.grey,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                SizedBox(
-                                  height: 120,
-                                  width: double.infinity,
-                                  child: CustomPaint(
-                                    painter: PriceTrendPainter([
-                                      selectedPrice + 0.50,
-                                      selectedPrice + 0.35,
-                                      selectedPrice + 0.20,
-                                      selectedPrice
-                                    ]),
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: const [
-                                    Text('3w ago', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                                    Text('2w ago', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                                    Text('1w ago', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                                    Text('Current', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                                  ],
-                                ),
-                              ],
-                            ),
                           ),
                           const SizedBox(height: 24),
 
@@ -464,7 +434,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
               ),
             ),
 
-            // 7. Sticky Bottom Price & Buy Bar
+            // 7. Sticky bottom save bar. DealSouk does not sell groceries.
             Container(
               padding: EdgeInsets.fromLTRB(
                 20,
@@ -490,7 +460,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text(
-                        'Price Total',
+                        'Best seen price',
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.grey,
@@ -498,36 +468,27 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      SoukPrice(
-                        selectedPrice * _quantity,
-                        size: 20,
-                        color: Colors.black,
-                      ),
+                      SoukPrice(selectedPrice, size: 20, color: Colors.black),
                     ],
                   ),
                   const Spacer(),
                   GestureDetector(
                     onTap: () {
-                      for (int i = 0; i < _quantity; i++) {
-                        ref.read(cartProvider.notifier).addToCart(product);
-                      }
+                      ref.read(cartProvider.notifier).addToCart(product);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           backgroundColor: AppTheme.forestDeep,
                           content: Text(
-                            '$_quantity × $coreName added to cart',
+                            '$coreName saved for price comparison',
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           action: SnackBarAction(
-                            label: 'VIEW CART',
+                            label: 'VIEW',
                             textColor: Colors.white,
                             onPressed: () => context.go('/cart'),
                           ),
                         ),
                       );
-                      setState(() {
-                        _quantity = 1;
-                      });
                     },
                     child: Container(
                       height: 48,
@@ -546,10 +507,14 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 18),
+                          Icon(
+                            Icons.bookmark_border_rounded,
+                            color: Colors.white,
+                            size: 18,
+                          ),
                           SizedBox(width: 8),
                           Text(
-                            'Add to Cart',
+                            'Save Price',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 15,
@@ -604,7 +569,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     ),
                   ),
                   Icon(
-                    isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                    isExpanded
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
                     color: Colors.grey,
                   ),
                 ],
@@ -620,101 +587,4 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       ),
     );
   }
-}
-
-class PriceTrendPainter extends CustomPainter {
-  final List<double> prices;
-
-  PriceTrendPainter(this.prices);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (prices.isEmpty) return;
-
-    final paint = Paint()
-      ..color = AppTheme.forestDeep
-      ..strokeWidth = 3
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final fillPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          AppTheme.forestDeep.withValues(alpha: 0.15),
-          AppTheme.forestDeep.withValues(alpha: 0.0),
-        ],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
-      ..style = PaintingStyle.fill;
-
-    final path = Path();
-    final fillPath = Path();
-
-    final minVal = prices.reduce((a, b) => a < b ? a : b);
-    final maxVal = prices.reduce((a, b) => a > b ? a : b);
-    final delta = (maxVal - minVal) == 0 ? 1.0 : (maxVal - minVal);
-
-    final dx = size.width / (prices.length - 1);
-
-    for (int i = 0; i < prices.length; i++) {
-      final x = i * dx;
-      final normalizedY = (prices[i] - minVal) / delta;
-      final y = size.height - (normalizedY * (size.height - 30) + 15);
-
-      if (i == 0) {
-        path.moveTo(x, y);
-        fillPath.moveTo(x, size.height);
-        fillPath.lineTo(x, y);
-      } else {
-        path.lineTo(x, y);
-        fillPath.lineTo(x, y);
-      }
-
-      if (i == prices.length - 1) {
-        fillPath.lineTo(x, size.height);
-      }
-    }
-
-    canvas.drawPath(fillPath, fillPaint);
-    canvas.drawPath(path, paint);
-
-    // Draw points & labels
-    final pointPaint = Paint()
-      ..color = AppTheme.forestDeep
-      ..style = PaintingStyle.fill;
-    final borderPaint = Paint()
-      ..color = Colors.white
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-
-    final textPainter = TextPainter(
-      textDirection: TextDirection.ltr,
-    );
-
-    for (int i = 0; i < prices.length; i++) {
-      final x = i * dx;
-      final normalizedY = (prices[i] - minVal) / delta;
-      final y = size.height - (normalizedY * (size.height - 30) + 15);
-
-      canvas.drawCircle(Offset(x, y), 5.5, pointPaint);
-      canvas.drawCircle(Offset(x, y), 5.5, borderPaint);
-
-      // Draw price text above node
-      textPainter.text = TextSpan(
-        text: prices[i].toStringAsFixed(2),
-        style: GoogleFonts.nunito(
-          fontSize: 9.5,
-          fontWeight: FontWeight.bold,
-          color: AppTheme.forestDeep,
-        ),
-      );
-      textPainter.layout();
-      textPainter.paint(canvas, Offset(x - textPainter.width / 2, y - 20));
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant PriceTrendPainter oldDelegate) =>
-      oldDelegate.prices != prices;
 }

@@ -13,14 +13,29 @@ class _CatalogCategory {
   final IconData icon;
   final Color color;
 
-  const _CatalogCategory(this.title, this.filterCategory, this.icon, this.color);
+  const _CatalogCategory(
+    this.title,
+    this.filterCategory,
+    this.icon,
+    this.color,
+  );
 }
 
 const _catalogCategories = [
   _CatalogCategory('Fresh', 'Fresh', Icons.spa_outlined, Color(0xFF2E7D32)),
   _CatalogCategory('Fruits', 'Fruits', Icons.apple_outlined, Color(0xFFE65100)),
-  _CatalogCategory('Snacks', 'Snacks', Icons.cookie_outlined, Color(0xFFD81B60)),
-  _CatalogCategory('Grocery', 'Dairy & Sweet', Icons.shopping_basket_outlined, Color(0xFF1E88E5)),
+  _CatalogCategory(
+    'Snacks',
+    'Snacks',
+    Icons.cookie_outlined,
+    Color(0xFFD81B60),
+  ),
+  _CatalogCategory(
+    'Grocery',
+    'Dairy & Sweet',
+    Icons.local_grocery_store_outlined,
+    Color(0xFF1E88E5),
+  ),
   _CatalogCategory('Oils', 'Bakery', Icons.opacity_outlined, Color(0xFF8D6E63)),
 ];
 
@@ -32,10 +47,7 @@ class SearchScreen extends ConsumerWidget {
     final products = ref.watch(productsProvider);
     final filterState = ref.watch(filterProvider);
     final cartItems = ref.watch(cartProvider);
-    final cartCount = cartItems.fold<int>(
-      0,
-      (sum, item) => sum + item.quantity,
-    );
+    final savedCount = cartItems.length;
 
     final selectedCategory = filterState.selectedCategory == 'All'
         ? 'Fresh'
@@ -43,14 +55,15 @@ class SearchScreen extends ConsumerWidget {
 
     // Apply text search & category filters reactively
     final displayedProducts = products.where((product) {
-      final matchesCategory = product.category.toLowerCase() == selectedCategory.toLowerCase();
+      final matchesCategory =
+          product.category.toLowerCase() == selectedCategory.toLowerCase();
       final matchesSearch =
           product.name.toLowerCase().contains(
-                filterState.searchQuery.toLowerCase(),
-              ) ||
+            filterState.searchQuery.toLowerCase(),
+          ) ||
           product.brand.toLowerCase().contains(
-                filterState.searchQuery.toLowerCase(),
-              );
+            filterState.searchQuery.toLowerCase(),
+          );
       return matchesCategory && matchesSearch;
     }).toList();
 
@@ -62,7 +75,10 @@ class SearchScreen extends ConsumerWidget {
           foregroundColor: Colors.black,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black),
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: Colors.black,
+            ),
             onPressed: () => context.go('/'),
           ),
           title: Text(
@@ -88,15 +104,18 @@ class SearchScreen extends ConsumerWidget {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.grey.shade200, width: 1.2),
+                        border: Border.all(
+                          color: Colors.grey.shade200,
+                          width: 1.2,
+                        ),
                       ),
                       child: const Icon(
-                        Icons.shopping_basket_outlined,
+                        Icons.bookmark_border_rounded,
                         color: AppTheme.forestDeep,
                         size: 20,
                       ),
                     ),
-                    if (cartCount > 0)
+                    if (savedCount > 0)
                       Positioned(
                         right: -2,
                         top: -2,
@@ -109,7 +128,7 @@ class SearchScreen extends ConsumerWidget {
                           ),
                           child: Center(
                             child: Text(
-                              '$cartCount',
+                              '$savedCount',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 9,
@@ -138,10 +157,14 @@ class SearchScreen extends ConsumerWidget {
                 itemCount: _catalogCategories.length,
                 itemBuilder: (context, index) {
                   final cat = _catalogCategories[index];
-                  final isSelected = selectedCategory.toLowerCase() == cat.filterCategory.toLowerCase();
+                  final isSelected =
+                      selectedCategory.toLowerCase() ==
+                      cat.filterCategory.toLowerCase();
                   return GestureDetector(
                     onTap: () {
-                      ref.read(filterProvider.notifier).setCategory(cat.filterCategory);
+                      ref
+                          .read(filterProvider.notifier)
+                          .setCategory(cat.filterCategory);
                     },
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -151,8 +174,12 @@ class SearchScreen extends ConsumerWidget {
                           Text(
                             cat.title,
                             style: TextStyle(
-                              color: isSelected ? AppTheme.forestDeep : Colors.grey.shade500,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                              color: isSelected
+                                  ? AppTheme.forestDeep
+                                  : Colors.grey.shade500,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.w600,
                               fontSize: 14,
                             ),
                           ),
@@ -184,7 +211,10 @@ class SearchScreen extends ConsumerWidget {
                 },
                 decoration: InputDecoration(
                   hintText: 'Search vegetables, fruits and more',
-                  hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13.5),
+                  hintStyle: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 13.5,
+                  ),
                   prefixIcon: Icon(
                     Icons.search_rounded,
                     color: Colors.grey.shade400,
@@ -194,7 +224,9 @@ class SearchScreen extends ConsumerWidget {
                       ? IconButton(
                           icon: const Icon(Icons.clear, size: 18),
                           onPressed: () {
-                            ref.read(filterProvider.notifier).setSearchQuery('');
+                            ref
+                                .read(filterProvider.notifier)
+                                .setSearchQuery('');
                           },
                         )
                       : Icon(
@@ -209,7 +241,10 @@ class SearchScreen extends ConsumerWidget {
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide(color: Colors.grey.shade200, width: 1.2),
+                    borderSide: BorderSide(
+                      color: Colors.grey.shade200,
+                      width: 1.2,
+                    ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
@@ -249,15 +284,18 @@ class SearchScreen extends ConsumerWidget {
                   : GridView.builder(
                       padding: const EdgeInsets.fromLTRB(20, 8, 20, 110),
                       physics: const BouncingScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 0.75,
-                        crossAxisSpacing: 14,
-                        mainAxisSpacing: 14,
-                      ),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 0.75,
+                            crossAxisSpacing: 14,
+                            mainAxisSpacing: 14,
+                          ),
                       itemCount: displayedProducts.length,
                       itemBuilder: (context, index) {
-                        return ProductGridCard(product: displayedProducts[index]);
+                        return ProductGridCard(
+                          product: displayedProducts[index],
+                        );
                       },
                     ),
             ),

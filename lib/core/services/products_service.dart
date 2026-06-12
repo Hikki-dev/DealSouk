@@ -5,10 +5,7 @@ class ProductsService {
   Future<List<Product>> search({String query = '', String? category}) async {
     final res = await apiClient.get(
       '/products/search',
-      params: {
-        if (query.isNotEmpty) 'q': query,
-        'category': ?category,
-      },
+      params: {if (query.isNotEmpty) 'q': query, 'category': ?category},
     );
     final list = res.data as List<dynamic>;
     return list

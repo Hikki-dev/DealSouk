@@ -25,15 +25,18 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
   final List<_TutorialSlide> _slides = [
     const _TutorialSlide(
       title: "Compare Grocery Prices",
-      description: "Find the lowest prices for fruits, vegetables, dairy, and snacks in Dubai's leading supermarkets. Compare prices in real-time to save on your basket.",
+      description:
+          "Find nearby prices for fruits, vegetables, dairy, and snacks in Dubai supermarkets before you leave home.",
     ),
     const _TutorialSlide(
-      title: "Submit Prices & Earn Tokens",
-      description: "Spotted a lower price or want to fulfill shopper requests? Scan barcodes, capture shelf price tags, or upload receipts to earn points and claim rewards.",
+      title: "Ask For Price Checks",
+      description:
+          "Need a price you cannot see? Ask the community to check it, or help others by sharing a shelf price.",
     ),
     const _TutorialSlide(
-      title: "Claim Cash Vouchers",
-      description: "Earn 500 tokens to redeem for AED 50 gift vouchers. Vouchers are redeemable directly at checkout counters of Carrefour, Union Coop, Lulu, and more!",
+      title: "Save Useful Prices",
+      description:
+          "Save items to a simple price list and see which nearby store looks worth visiting.",
     ),
   ];
 
@@ -95,11 +98,19 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                 children: [
                   const Text(
                     'Fuji Apples',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: AppTheme.textDark),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12.5,
+                      color: AppTheme.textDark,
+                    ),
                   ),
                   Text(
                     'Pack size: 1 kg',
-                    style: TextStyle(fontSize: 9.5, color: Colors.grey.shade600, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      fontSize: 9.5,
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
@@ -119,16 +130,24 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
     );
   }
 
-  Widget _buildMiniPriceRow(String store, String price, {bool isCheapest = false}) {
+  Widget _buildMiniPriceRow(
+    String store,
+    String price, {
+    bool isCheapest = false,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Row(
           children: [
             Icon(
-              isCheapest ? Icons.check_circle_rounded : Icons.storefront_outlined,
+              isCheapest
+                  ? Icons.check_circle_rounded
+                  : Icons.storefront_outlined,
               size: 14,
-              color: isCheapest ? AppTheme.emeraldPrimary : Colors.grey.shade400,
+              color: isCheapest
+                  ? AppTheme.emeraldPrimary
+                  : Colors.grey.shade400,
             ),
             const SizedBox(width: 6),
             Text(
@@ -154,14 +173,21 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
             if (isCheapest) ...[
               const SizedBox(width: 6),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 4,
+                  vertical: 1.5,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFE8F5E9),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: const Text(
                   'CHEAPEST',
-                  style: TextStyle(color: AppTheme.forestDeep, fontSize: 7, fontWeight: FontWeight.w900),
+                  style: TextStyle(
+                    color: AppTheme.forestDeep,
+                    fontSize: 7,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
             ],
@@ -196,7 +222,11 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
             children: [
               const Text(
                 'Price Submission',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: AppTheme.textDark),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12.5,
+                  color: AppTheme.textDark,
+                ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -210,7 +240,11 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                     SizedBox(width: 2),
                     Text(
                       '+15 Tokens',
-                      style: TextStyle(color: Color(0xFFC77C02), fontSize: 8.5, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: Color(0xFFC77C02),
+                        fontSize: 8.5,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -223,7 +257,11 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
           // Store Name
           Text(
             'Union Coop - Al Barsha',
-            style: TextStyle(fontSize: 9.5, color: Colors.grey.shade600, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 9.5,
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 6),
           // Price field mock
@@ -237,8 +275,18 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Price per item', style: TextStyle(fontSize: 9.5, color: Colors.black54)),
-                Text('AED 3.90', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: AppTheme.forestDeep)),
+                Text(
+                  'Price per item',
+                  style: TextStyle(fontSize: 9.5, color: Colors.black54),
+                ),
+                Text(
+                  'AED 3.90',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.forestDeep,
+                  ),
+                ),
               ],
             ),
           ),
@@ -270,7 +318,11 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
           const SizedBox(width: 4),
           Text(
             label,
-            style: const TextStyle(color: AppTheme.forestDeep, fontSize: 8.5, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: AppTheme.forestDeep,
+              fontSize: 8.5,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
@@ -305,7 +357,11 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                   color: AppTheme.amberLight,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.confirmation_num_rounded, color: AppTheme.amberAccent, size: 16),
+                child: const Icon(
+                  Icons.confirmation_num_rounded,
+                  color: AppTheme.amberAccent,
+                  size: 16,
+                ),
               ),
               const SizedBox(width: 8),
               const Expanded(
@@ -315,11 +371,19 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                   children: [
                     Text(
                       'Union Coop Voucher',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppTheme.textDark),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        color: AppTheme.textDark,
+                      ),
                     ),
                     Text(
                       'Value: AED 50.00',
-                      style: TextStyle(fontSize: 9, color: AppTheme.forestDeep, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 9,
+                        color: AppTheme.forestDeep,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -341,7 +405,11 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(20, (index) {
-                    final double width = (index % 3 == 0) ? 2.5 : (index % 2 == 0) ? 1.5 : 0.8;
+                    final double width = (index % 3 == 0)
+                        ? 2.5
+                        : (index % 2 == 0)
+                        ? 1.5
+                        : 0.8;
                     return Container(
                       width: width,
                       height: 20,
@@ -471,7 +539,9 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                         height: 7,
                         width: isSelected ? 20 : 7,
                         decoration: BoxDecoration(
-                          color: isSelected ? AppTheme.forestDeep : Colors.grey.shade300,
+                          color: isSelected
+                              ? AppTheme.forestDeep
+                              : Colors.grey.shade300,
                           borderRadius: BorderRadius.circular(4),
                         ),
                       );
@@ -496,7 +566,10 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
                     ),
                     child: Text(
                       _currentPage == _slides.length - 1 ? 'Start' : 'Next',
@@ -517,8 +590,5 @@ class _TutorialSlide {
   final String title;
   final String description;
 
-  const _TutorialSlide({
-    required this.title,
-    required this.description,
-  });
+  const _TutorialSlide({required this.title, required this.description});
 }

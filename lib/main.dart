@@ -26,8 +26,6 @@ void main() async {
   }
 
   runApp(
-    ProviderScope(
-      child: _adminMode ? const AdminApp() : const DealSoukApp(),
-    ),
+    ProviderScope(child: _adminMode ? const AdminApp() : const DealSoukApp()),
   );
 }

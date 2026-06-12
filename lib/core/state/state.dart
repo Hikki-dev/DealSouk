@@ -434,23 +434,25 @@ class PriceRequestsNotifier extends Notifier<List<PriceRequest>> {
   Future<void> addPriceRequest({
     required String productName,
     required String storeName,
-    required int bounty,
+    required int requestCostTokens,
     required String requesterName,
   }) async {
     try {
       final created = await requestsService.create(
         productName: productName,
         storeName: storeName,
-        bountyTokens: bounty,
+        requestCostTokens: requestCostTokens,
       );
-      // Optimistic balance deduction — backend already deducted
-      ref.read(userTokensProvider.notifier).deductTokens(bounty);
-      ref
-          .read(userTransactionsProvider.notifier)
-          .addTransaction(
-            -bounty,
-            'Requested price check: $productName at $storeName',
-          );
+      if (requestCostTokens > 0) {
+        // Optimistic balance deduction — backend already deducted
+        ref.read(userTokensProvider.notifier).deductTokens(requestCostTokens);
+        ref
+            .read(userTransactionsProvider.notifier)
+            .addTransaction(
+              -requestCostTokens,
+              'Requested price check: $productName at $storeName',
+            );
+      }
       state = [created, ...state];
     } catch (_) {}
   }
@@ -458,10 +460,12 @@ class PriceRequestsNotifier extends Notifier<List<PriceRequest>> {
   Future<void> fulfillPriceRequest(String requestId) async {
     try {
       final earned = await requestsService.fulfill(requestId);
-      ref.read(userTokensProvider.notifier).addTokens(earned);
-      ref
-          .read(userTransactionsProvider.notifier)
-          .addTransaction(earned, 'Fulfilled a price request');
+      if (earned > 0) {
+        ref.read(userTokensProvider.notifier).addTokens(earned);
+        ref
+            .read(userTransactionsProvider.notifier)
+            .addTransaction(earned, 'Fulfilled a price request');
+      }
       state = state.map((req) {
         if (req.id == requestId) {
           return req.copyWith(
@@ -478,13 +482,17 @@ class PriceRequestsNotifier extends Notifier<List<PriceRequest>> {
     final reqIndex = state.indexWhere((r) => r.id == requestId);
     if (reqIndex >= 0) {
       final req = state[reqIndex];
-      ref.read(userTokensProvider.notifier).addTokens(req.tokensBounty);
-      ref
-          .read(userTransactionsProvider.notifier)
-          .addTransaction(
-            req.tokensBounty,
-            'Refunded request: ${req.productName} check',
-          );
+      if (req.requestRewardTokens > 0) {
+        ref
+            .read(userTokensProvider.notifier)
+            .addTokens(req.requestRewardTokens);
+        ref
+            .read(userTransactionsProvider.notifier)
+            .addTransaction(
+              req.requestRewardTokens,
+              'Refunded request: ${req.productName} check',
+            );
+      }
       state = state.where((r) => r.id != requestId).toList();
     }
   }

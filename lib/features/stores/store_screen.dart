@@ -231,7 +231,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Dubai Marina proximity',
+                                    'Stores near you',
                                     style: GoogleFonts.fredoka(
                                       color: Colors.white,
                                       fontSize: 14.5,
@@ -240,7 +240,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    'GPS demo active • showing nearby comparison',
+                                    'Showing closer options first',
                                     style: GoogleFonts.nunito(
                                       color: Colors.white70,
                                       fontSize: 11,

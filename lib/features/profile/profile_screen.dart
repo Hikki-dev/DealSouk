@@ -14,14 +14,26 @@ class ProfileScreen extends ConsumerStatefulWidget {
   ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTickerProviderStateMixin {
+class _ProfileScreenState extends ConsumerState<ProfileScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   late TextEditingController _nameController;
 
   static const List<String> _dubaiAreas = [
-    'Dubai Marina', 'Downtown Dubai', 'JLT', 'Deira', 'Business Bay',
-    'Al Barsha', 'Jumeirah', 'Mirdif', 'Al Quoz', 'Silicon Oasis',
-    'International City', 'Dubai Silicon Oasis', 'Al Nahda', 'Oud Metha',
+    'Dubai Marina',
+    'Downtown Dubai',
+    'JLT',
+    'Deira',
+    'Business Bay',
+    'Al Barsha',
+    'Jumeirah',
+    'Mirdif',
+    'Al Quoz',
+    'Silicon Oasis',
+    'International City',
+    'Dubai Silicon Oasis',
+    'Al Nahda',
+    'Oud Metha',
   ];
 
   @override
@@ -50,11 +62,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
     final locale = ref.watch(localeProvider);
     final streak = ref.watch(streakProvider);
 
-    final mySubmissions = submissions.where((s) => s.sourcerName == profile.name).toList();
-    final myRequests = requests.where((r) => r.requesterName == profile.name).toList();
+    final mySubmissions = submissions
+        .where((s) => s.sourcerName == profile.name)
+        .toList();
+    final myRequests = requests
+        .where((r) => r.requesterName == profile.name)
+        .toList();
     final level = tokensToLevel(tokens);
-    final approvedCount = mySubmissions.where((s) => s.status == 'approved').length;
-    final accuracyPct = mySubmissions.isEmpty ? 0 : ((approvedCount / mySubmissions.length) * 100).round();
+    final approvedCount = mySubmissions
+        .where((s) => s.status == 'approved')
+        .length;
+    final accuracyPct = mySubmissions.isEmpty
+        ? 0
+        : ((approvedCount / mySubmissions.length) * 100).round();
 
     return Scaffold(
       backgroundColor: AppTheme.forestDeep,
@@ -62,7 +82,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
         children: [
           // Header
           Padding(
-            padding: EdgeInsets.fromLTRB(16, MediaQuery.of(context).padding.top + 14, 16, 0),
+            padding: EdgeInsets.fromLTRB(
+              16,
+              MediaQuery.of(context).padding.top + 14,
+              16,
+              0,
+            ),
             child: Column(
               children: [
                 Row(
@@ -72,7 +97,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                       height: 56,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 2),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.4),
+                          width: 2,
+                        ),
                         image: profile.avatarUrl.isNotEmpty
                             ? DecorationImage(
                                 image: NetworkImage(profile.avatarUrl),
@@ -107,9 +135,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                           Row(
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.limeAccent.withValues(alpha: 0.25),
+                                  color: AppTheme.limeAccent.withValues(
+                                    alpha: 0.25,
+                                  ),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
@@ -122,7 +155,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              const Icon(Icons.local_fire_department, color: Colors.orange, size: 13),
+                              const Icon(
+                                Icons.local_fire_department,
+                                color: Colors.orange,
+                                size: 13,
+                              ),
                               Text(
                                 '${streak.currentStreak} day streak',
                                 style: const TextStyle(
@@ -145,7 +182,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                       ),
                     ),
                     const SizedBox(width: 4),
-                    const Icon(Icons.bolt, color: AppTheme.limeAccent, size: 20),
+                    const Icon(
+                      Icons.bolt,
+                      color: AppTheme.limeAccent,
+                      size: 20,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 14),
@@ -154,7 +195,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                   indicatorColor: AppTheme.limeAccent,
                   labelColor: AppTheme.limeAccent,
                   unselectedLabelColor: Colors.white54,
-                  labelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                  labelStyle: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
                   tabs: const [
                     Tab(text: 'Submissions'),
                     Tab(text: 'Tokens'),
@@ -218,7 +262,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                   color: AppTheme.limeAccent,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.verified_outlined, color: AppTheme.forestDeep, size: 20),
+                child: const Icon(
+                  Icons.verified_outlined,
+                  color: AppTheme.forestDeep,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -235,7 +283,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                     ),
                     Text(
                       '$accuracyPct% of your submissions approved',
-                      style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey.shade600,
+                      ),
                     ),
                   ],
                 ),
@@ -259,7 +310,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
               child: Text(
                 'No submissions yet.\nSubmit a price to get started!',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey.shade500, fontSize: 13.5, height: 1.5),
+                style: TextStyle(
+                  color: Colors.grey.shade500,
+                  fontSize: 13.5,
+                  height: 1.5,
+                ),
               ),
             ),
           )
@@ -273,8 +328,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
     final statusColor = sub.status == 'approved'
         ? Colors.green
         : sub.status == 'rejected'
-            ? Colors.red
-            : Colors.orange;
+        ? Colors.red
+        : Colors.orange;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
@@ -292,7 +347,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
               color: statusColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.receipt_long_outlined, color: statusColor, size: 18),
+            child: Icon(
+              Icons.receipt_long_outlined,
+              color: statusColor,
+              size: 18,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -301,7 +360,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
               children: [
                 Text(
                   sub.productName,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -323,13 +385,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                 ),
                 child: Text(
                   sub.status.toUpperCase(),
-                  style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: statusColor),
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                    color: statusColor,
+                  ),
                 ),
               ),
               const SizedBox(height: 3),
               Text(
                 '+${sub.tokensReward}T',
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.forestDeep),
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.forestDeep,
+                ),
               ),
             ],
           ),
@@ -365,17 +435,33 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
               const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Current Balance', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                  Text('Tap Leaderboard to redeem', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                  Text(
+                    'Current Balance',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  Text(
+                    'Tap Leaderboard to redeem',
+                    style: TextStyle(fontSize: 11, color: Colors.grey),
+                  ),
                 ],
               ),
               const Spacer(),
               Text(
                 '$tokens',
-                style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: AppTheme.forestDeep),
+                style: const TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w900,
+                  color: AppTheme.forestDeep,
+                ),
               ),
               const SizedBox(width: 4),
-              const Text('T', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.forestDeep)),
+              const Text(
+                'T',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.forestDeep,
+                ),
+              ),
             ],
           ),
         ),
@@ -396,7 +482,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                   width: 34,
                   height: 34,
                   decoration: BoxDecoration(
-                    color: (isPos ? Colors.green : Colors.red).withValues(alpha: 0.1),
+                    color: (isPos ? Colors.green : Colors.red).withValues(
+                      alpha: 0.1,
+                    ),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -409,7 +497,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                 Expanded(
                   child: Text(
                     tx.title,
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -451,8 +542,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
             final statusColor = req.status == 'fulfilled'
                 ? Colors.green
                 : req.status == 'refunded'
-                    ? Colors.blue
-                    : Colors.orange;
+                ? Colors.blue
+                : Colors.orange;
             return Container(
               margin: const EdgeInsets.only(bottom: 10),
               padding: const EdgeInsets.all(14),
@@ -470,7 +561,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                       color: statusColor.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.search_rounded, color: statusColor, size: 18),
+                    child: Icon(
+                      Icons.search_rounded,
+                      color: statusColor,
+                      size: 18,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -479,13 +574,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                       children: [
                         Text(
                           req.productName,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
                           '${req.storeName} • ${req.timestampLabel}',
-                          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey.shade600,
+                          ),
                         ),
                       ],
                     ),
@@ -494,20 +595,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: statusColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           req.status.toUpperCase(),
-                          style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: statusColor),
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: statusColor,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        '${req.tokensBounty}T',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.forestDeep),
                       ),
                     ],
                   ),
@@ -520,7 +623,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
   }
 
   // ── TAB 4: Settings ──
-  Widget _buildSettingsTab(BuildContext context, dynamic profile, AdminSettings settings, Locale locale, int tokens) {
+  Widget _buildSettingsTab(
+    BuildContext context,
+    dynamic profile,
+    AdminSettings settings,
+    Locale locale,
+    int tokens,
+  ) {
     final remaining = settings.voucherThreshold - tokens;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 18, 16, 100),
@@ -545,7 +654,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                   children: [
                     const Row(
                       children: [
-                        Icon(Icons.confirmation_num_rounded, color: AppTheme.forestDeep, size: 22),
+                        Icon(
+                          Icons.confirmation_num_rounded,
+                          color: AppTheme.forestDeep,
+                          size: 22,
+                        ),
                         SizedBox(width: 8),
                         Text(
                           'Voucher Ready!',
@@ -560,7 +673,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                     const SizedBox(height: 8),
                     const Text(
                       'Head to the Leaderboard tab to claim your AED 50 Union Coop voucher.',
-                      style: TextStyle(fontSize: 12, color: AppTheme.textDark, height: 1.4),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.textDark,
+                        height: 1.4,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     ElevatedButton(
@@ -568,7 +685,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.forestDeep,
                         minimumSize: const Size.fromHeight(42),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       child: const Text('Claim Voucher Now'),
                     ),
@@ -582,7 +701,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                       children: [
                         const Text(
                           'AED 50 Union Coop Voucher',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
                         ),
                         Text(
                           '$tokens / ${settings.voucherThreshold} T',
@@ -598,16 +720,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                     ClipRRect(
                       borderRadius: BorderRadius.circular(5),
                       child: LinearProgressIndicator(
-                        value: (tokens / settings.voucherThreshold).clamp(0.0, 1.0),
+                        value: (tokens / settings.voucherThreshold).clamp(
+                          0.0,
+                          1.0,
+                        ),
                         backgroundColor: Colors.grey.shade100,
-                        valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.forestDeep),
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          AppTheme.forestDeep,
+                        ),
                         minHeight: 7,
                       ),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       'Earn ${remaining > 0 ? remaining : 0} more tokens to unlock your voucher.',
-                      style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey.shade600,
+                      ),
                     ),
                   ],
                 ),
@@ -620,7 +750,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
           title: 'Display Name',
           subtitle: profile.name,
           trailing: IconButton(
-            icon: const Icon(Icons.edit_outlined, size: 18, color: AppTheme.forestDeep),
+            icon: const Icon(
+              Icons.edit_outlined,
+              size: 18,
+              color: AppTheme.forestDeep,
+            ),
             onPressed: () {
               _nameController.text = profile.name;
               showDialog(
@@ -632,10 +766,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                     decoration: const InputDecoration(labelText: 'Name'),
                   ),
                   actions: [
-                    TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
                     ElevatedButton(
                       onPressed: () {
-                        ref.read(userProfileProvider.notifier).updateName(_nameController.text.trim());
+                        ref
+                            .read(userProfileProvider.notifier)
+                            .updateName(_nameController.text.trim());
                         Navigator.pop(context);
                       },
                       child: const Text('Save'),
@@ -654,12 +793,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
           title: 'Home Area',
           subtitle: profile.homeArea,
           trailing: DropdownButton<String>(
-            value: _dubaiAreas.contains(profile.homeArea) ? profile.homeArea : _dubaiAreas.first,
+            value: _dubaiAreas.contains(profile.homeArea)
+                ? profile.homeArea
+                : _dubaiAreas.first,
             underline: const SizedBox(),
-            icon: const Icon(Icons.expand_more, size: 18, color: AppTheme.forestDeep),
-            items: _dubaiAreas.map((area) => DropdownMenuItem(value: area, child: Text(area, style: const TextStyle(fontSize: 12)))).toList(),
+            icon: const Icon(
+              Icons.expand_more,
+              size: 18,
+              color: AppTheme.forestDeep,
+            ),
+            items: _dubaiAreas
+                .map(
+                  (area) => DropdownMenuItem(
+                    value: area,
+                    child: Text(area, style: const TextStyle(fontSize: 12)),
+                  ),
+                )
+                .toList(),
             onChanged: (val) {
-              if (val != null) ref.read(userProfileProvider.notifier).updateHomeArea(val);
+              if (val != null) {
+                ref.read(userProfileProvider.notifier).updateHomeArea(val);
+              }
             },
           ),
         ),
@@ -675,22 +829,34 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
           ),
           child: Row(
             children: [
-              const Icon(Icons.language_rounded, color: AppTheme.forestDeep, size: 21),
+              const Icon(
+                Icons.language_rounded,
+                color: AppTheme.forestDeep,
+                size: 21,
+              ),
               const SizedBox(width: 12),
               const Expanded(
                 child: Text(
                   'Language',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: AppTheme.textDark),
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    color: AppTheme.textDark,
+                  ),
                 ),
               ),
               Row(
                 children: [
                   _langButton('EN', locale.languageCode == 'en', () {
-                    ref.read(localeProvider.notifier).setLocale(const Locale('en'));
+                    ref
+                        .read(localeProvider.notifier)
+                        .setLocale(const Locale('en'));
                   }),
                   const SizedBox(width: 8),
                   _langButton('عر', locale.languageCode == 'ar', () {
-                    ref.read(localeProvider.notifier).setLocale(const Locale('ar'));
+                    ref
+                        .read(localeProvider.notifier)
+                        .setLocale(const Locale('ar'));
                   }),
                 ],
               ),
@@ -734,7 +900,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.logout_rounded, color: Colors.red.shade700, size: 20),
+                Icon(
+                  Icons.logout_rounded,
+                  color: Colors.red.shade700,
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Log Out of Demo',
@@ -795,13 +965,34 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: AppTheme.textDark)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    color: AppTheme.textDark,
+                  ),
+                ),
                 const SizedBox(height: 3),
-                Text(subtitle, style: TextStyle(fontSize: 11, color: Colors.grey.shade600, height: 1.3)),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey.shade600,
+                    height: 1.3,
+                  ),
+                ),
               ],
             ),
           ),
-          if (trailing != null) trailing else const Icon(Icons.chevron_right_rounded, color: Colors.grey, size: 20),
+          if (trailing != null)
+            trailing
+          else
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: Colors.grey,
+              size: 20,
+            ),
         ],
       ),
     );

@@ -8,16 +8,12 @@ class StoresService {
     double radiusKm = 5,
     String? chain,
   }) async {
-    final res = await apiClient.get('/stores/nearby', params: {
-      'lat': lat,
-      'lng': lng,
-      'radius': radiusKm,
-      'chain': ?chain,
-    });
+    final res = await apiClient.get(
+      '/stores/nearby',
+      params: {'lat': lat, 'lng': lng, 'radius': radiusKm, 'chain': ?chain},
+    );
     final list = res.data as List<dynamic>;
-    return list
-        .map((e) => Store.fromJson(e as Map<String, dynamic>))
-        .toList();
+    return list.map((e) => Store.fromJson(e as Map<String, dynamic>)).toList();
   }
 }
 

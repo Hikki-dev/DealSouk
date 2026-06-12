@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/state/state.dart';
 import '../../core/services/submissions_service.dart';
+import '../../core/services/storage_service.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/responsive_container.dart';
 
@@ -33,6 +34,8 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
 
   bool uploadedPriceLabel = false;
   bool uploadedReceipt = false;
+  String? _receiptUrl;
+  bool _uploadingReceipt = false;
   String selectedPromo = 'None';
 
   @override
@@ -309,13 +312,23 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: _photoUploadButton(
-                      title: 'Receipt Photo',
+                      title: _uploadingReceipt ? 'Uploading…' : 'Receipt Photo',
                       isUploaded: uploadedReceipt,
-                      onTap: () {
-                        setState(() {
-                          uploadedReceipt = !uploadedReceipt;
-                        });
-                      },
+                      onTap: _uploadingReceipt
+                          ? null
+                          : () async {
+                              setState(() => _uploadingReceipt = true);
+                              final url = await storageService.captureAndUploadReceipt();
+                              if (mounted) {
+                                setState(() {
+                                  _uploadingReceipt = false;
+                                  if (url != null) {
+                                    _receiptUrl = url;
+                                    uploadedReceipt = true;
+                                  }
+                                });
+                              }
+                            },
                     ),
                   ),
                 ],
@@ -466,6 +479,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                         storeId: selectedStoreId!,
                         priceAed: price,
                         hasReceipt: uploadedReceipt,
+                        receiptUrl: _receiptUrl,
                       );
                       awarded = result.tokensAwarded;
                     } catch (_) {
@@ -558,7 +572,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
   Widget _photoUploadButton({
     required String title,
     required bool isUploaded,
-    required VoidCallback onTap,
+    VoidCallback? onTap,
   }) {
     return InkWell(
       onTap: onTap,

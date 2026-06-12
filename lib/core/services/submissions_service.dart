@@ -27,12 +27,14 @@ class SubmissionsService {
     required String storeId,
     required double priceAed,
     bool hasReceipt = false,
+    String? receiptUrl,
   }) async {
     final res = await apiClient.post('/submissions', data: {
       'productId': productId,
       'storeId': storeId,
       'priceAed': priceAed,
       'hasReceipt': hasReceipt,
+      if (receiptUrl != null) 'receiptUrl': receiptUrl,
     });
     final data = res.data as Map<String, dynamic>;
     return SubmissionResult(

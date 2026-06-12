@@ -19,6 +19,7 @@ model User {
   isSuspended     Boolean   @default(false)
   suspendedUntil  DateTime?
   isAdmin         Boolean   @default(false)
+  fcmToken        String?
   createdAt       DateTime  @default(now())
 
   submissions  PriceSubmission[]

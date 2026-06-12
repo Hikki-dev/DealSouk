@@ -110,6 +110,20 @@ router.get('/me/requests', requireAuth, async (req: AuthRequest, res) => {
   res.json(requests);
 });
 
+// POST /profile/me/fcm-token — register FCM token for push notifications
+router.post('/me/fcm-token', requireAuth, async (req: AuthRequest, res) => {
+  const { fcmToken } = req.body as { fcmToken: string };
+  if (!fcmToken) {
+    res.status(400).json({ error: 'fcmToken is required' });
+    return;
+  }
+  await prisma.user.update({
+    where: { id: req.userId! },
+    data: { fcmToken },
+  });
+  res.json({ registered: true });
+});
+
 // DELETE /profile/me — account deletion (PDPL compliance: PII removed within 30 days)
 router.delete('/me', requireAuth, async (req: AuthRequest, res) => {
   // Anonymise rather than hard-delete to preserve token ledger for analytics

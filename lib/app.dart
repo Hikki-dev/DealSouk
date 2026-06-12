@@ -6,12 +6,34 @@ import 'l10n/app_localizations.dart';
 import 'core/router/router.dart';
 import 'core/state/state.dart';
 import 'core/theme/theme.dart';
+import 'core/services/fcm_service.dart';
 
-class DealSoukApp extends ConsumerWidget {
+class DealSoukApp extends ConsumerStatefulWidget {
   const DealSoukApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DealSoukApp> createState() => _DealSoukAppState();
+}
+
+class _DealSoukAppState extends ConsumerState<DealSoukApp> {
+  final _navigatorKey = GlobalKey<NavigatorState>();
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize FCM after the first frame so context is available
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      fcmService.initialize(
+        onForegroundMessage: (msg) {
+          final ctx = _navigatorKey.currentContext;
+          if (ctx != null) showFcmBanner(ctx, msg);
+        },
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final locale = ref.watch(localeProvider);
 
     return MaterialApp.router(

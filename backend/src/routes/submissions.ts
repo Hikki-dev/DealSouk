@@ -42,11 +42,12 @@ router.get('/feed', async (req, res) => {
 
 // POST /submissions
 router.post('/', requireAuth, submitLimiter, async (req: AuthRequest, res) => {
-  const { productId, storeId, priceAed, hasReceipt = false } = req.body as {
+  const { productId, storeId, priceAed, hasReceipt = false, receiptUrl } = req.body as {
     productId: string;
     storeId: string;
     priceAed: number;
     hasReceipt: boolean;
+    receiptUrl?: string;
   };
 
   if (!productId || !storeId || priceAed == null || priceAed <= 0) {
@@ -83,6 +84,7 @@ router.post('/', requireAuth, submitLimiter, async (req: AuthRequest, res) => {
       sourcerId: req.userId!,
       priceAed,
       hasReceipt,
+      receiptUrl: receiptUrl ?? null,
       status: 'pending',
       tokensAwarded,
       expiresAt,

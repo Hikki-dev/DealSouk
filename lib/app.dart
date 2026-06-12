@@ -19,7 +19,7 @@ class DealSoukApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       scrollBehavior: const DealSoukScrollBehavior(),
-      routerConfig: appRouter,
+      routerConfig: ref.watch(routerProvider),
       locale: locale,
       localizationsDelegates: const [
         AppLocalizations.delegate,

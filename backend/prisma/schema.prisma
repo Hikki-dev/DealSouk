@@ -1,0 +1,151 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(cuid())
+  firebaseUid     String    @unique
+  displayName     String
+  phoneNumber     String?   @unique
+  homeArea        String?
+  preferredLocale String    @default("en")
+  tokenBalance    Int       @default(0)
+  accuracyRating  Float     @default(100.0)
+  isSuspended     Boolean   @default(false)
+  suspendedUntil  DateTime?
+  isAdmin         Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+
+  submissions  PriceSubmission[]
+  tokenLedger  TokenTransaction[]
+  requests     PriceRequest[]
+  badges       UserBadge[]
+  flags        SubmissionFlag[]
+}
+
+model Store {
+  id          String  @id @default(cuid())
+  chain       String
+  branchName  String
+  area        String
+  lat         Float
+  lng         Float
+
+  submissions PriceSubmission[]
+
+  @@index([chain])
+  @@index([lat, lng])
+}
+
+model Product {
+  id          String  @id @default(cuid())
+  name        String
+  brand       String?
+  packSize    String?
+  category    String
+  imageUrl    String?
+
+  submissions PriceSubmission[]
+
+  @@index([name])
+  @@index([category])
+}
+
+model PriceSubmission {
+  id            String   @id @default(cuid())
+  productId     String
+  storeId       String
+  sourcerId     String
+  priceAed      Decimal  @db.Decimal(10, 2)
+  hasReceipt    Boolean  @default(false)
+  receiptUrl    String?
+  status        String   @default("pending") // pending | approved | rejected | hidden
+  flagCount     Int      @default(0)
+  tokensAwarded Int      @default(0)
+  submittedAt   DateTime @default(now())
+  expiresAt     DateTime
+
+  product  Product @relation(fields: [productId], references: [id])
+  store    Store   @relation(fields: [storeId], references: [id])
+  sourcer  User    @relation(fields: [sourcerId], references: [id])
+  flags    SubmissionFlag[]
+
+  @@index([productId, storeId, submittedAt])
+  @@index([status, submittedAt])
+  @@index([sourcerId])
+}
+
+model SubmissionFlag {
+  id           String   @id @default(cuid())
+  submissionId String
+  flaggerId    String
+  reason       String   // "price_wrong" | "product_mismatch" | "store_wrong" | "duplicate"
+  createdAt    DateTime @default(now())
+
+  submission PriceSubmission @relation(fields: [submissionId], references: [id])
+  flagger    User            @relation(fields: [flaggerId], references: [id])
+
+  @@unique([submissionId, flaggerId])
+}
+
+model TokenTransaction {
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Int      // positive = earn, negative = spend
+  reason    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+}
+
+model PriceRequest {
+  id           String   @id @default(cuid())
+  requesterId  String
+  productName  String
+  storeName    String
+  bountyTokens Int
+  status       String   @default("open") // open | fulfilled | expired | refunded
+  fulfilledBy  String?
+  createdAt    DateTime @default(now())
+  expiresAt    DateTime
+
+  requester User @relation(fields: [requesterId], references: [id])
+
+  @@index([status, bountyTokens])
+}
+
+model Badge {
+  id          String @id
+  name        String
+  emoji       String
+  description String
+
+  userBadges UserBadge[]
+}
+
+model UserBadge {
+  userId     String
+  badgeId    String
+  unlockedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id])
+  badge Badge @relation(fields: [badgeId], references: [id])
+
+  @@id([userId, badgeId])
+}
+
+model AdminSettings {
+  id                 Int @id @default(1) // singleton row
+  tokenEarnRate      Int @default(50)
+  voucherThreshold   Int @default(500)
+  dailySubmissionCap Int @default(30)
+  requestCostTokens  Int @default(10)
+  decayFactor        Float @default(0.7) // multiplier when duplicate nearby submission exists
+}

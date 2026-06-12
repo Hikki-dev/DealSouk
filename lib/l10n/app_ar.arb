@@ -1,0 +1,197 @@
+{
+  "@@locale": "ar",
+
+  "appTitle": "ديل سوق",
+  "home": "الرئيسية",
+  "map": "الخريطة",
+  "cart": "السلة",
+  "leaderboard": "المتصدرون",
+  "profile": "الملف الشخصي",
+
+  "greeting": "صباح الخير",
+  "greetingAfternoon": "مساء الخير",
+  "greetingEvening": "مساء الخير",
+
+  "freshPrices": "أسعار حديثة",
+  "freshPricesSubtitle": "أسعار مجتمعية مباشرة بالقرب منك",
+  "searchProducts": "ابحث عن المنتجات…",
+  "searchNearbyStores": "ابحث عن المتاجر القريبة في دبي",
+  "nearbyStores": "السوبرماركت القريبة",
+  "storeMap": "خريطة المتاجر",
+
+  "tokens": "رموز",
+  "tokenBalance": "رصيد الرموز",
+  "earnTokens": "اكسب رموزاً",
+  "spendTokens": "أنفق رموزاً",
+  "tokenHistory": "سجل الرموز",
+  "voucherReady": "القسيمة جاهزة!",
+  "voucherProgress": "اكسب {remaining} رمزاً إضافياً لاستبدال قسيمتك.",
+  "@voucherProgress": {
+    "placeholders": {
+      "remaining": { "type": "int" }
+    }
+  },
+  "claimVoucher": "استرداد القسيمة الآن",
+  "voucherClaimed": "تم استرداد القسيمة!",
+  "voucherDescription": "أظهر الرمز الشريطي أو الكود أدناه لأمين الصندوق في أي فرع لـ Union Coop في دبي.",
+  "backToRewards": "العودة إلى المكافآت",
+
+  "leaderboardTitle": "المكافآت والمتصدرون",
+  "dubaiLeaderboard": "متصدرو دبي",
+  "lastMonthChampions": "أبطال الشهر الماضي",
+  "sourcerBadges": "شارات المورّد",
+  "todaysChallenges": "تحديات اليوم",
+  "activeRequestBoard": "لوحة الطلبات النشطة",
+  "leaderboardStreaks": "المتصدرون والسلاسل",
+  "yourRank": "المرتبة #{rank}",
+  "@yourRank": {
+    "placeholders": {
+      "rank": { "type": "int" }
+    }
+  },
+  "dayStreak": "سلسلة {days} يوم",
+  "@dayStreak": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+
+  "submitPrice": "رفع سعر",
+  "submitForReview": "إرسال للمراجعة",
+  "priceSubmitted": "تم إرسال السعر!",
+  "priceSubmittedDesc": "طلب السعر قيد المراجعة.\nسيتم إضافة الرموز بعد موافقة المشرف.",
+  "openAdminReview": "فتح لوحة المراجعة",
+  "viewTokenBalance": "عرض رصيد الرموز",
+  "tokenRewardEstimate": "تقدير مكافأة الرموز",
+  "totalRewardEstimate": "إجمالي المكافأة المتوقعة",
+  "selectSupermarket": "اختر السوبرماركت",
+  "selectProduct": "اختر المنتج",
+  "enterPriceAed": "أدخل السعر (درهم)",
+  "promotionType": "نوع العرض",
+  "priceLabelPhoto": "صورة بطاقة السعر",
+  "receiptPhoto": "صورة الإيصال",
+  "photoUploaded": "تم رفع الصورة",
+  "tapToUpload": "اضغط للرفع",
+  "dailyCapRemaining": "تبقّى {remaining} من {cap} تقديمات اليوم",
+  "@dailyCapRemaining": {
+    "placeholders": {
+      "remaining": { "type": "int" },
+      "cap": { "type": "int" }
+    }
+  },
+
+  "dailyChallenge": "تحدي اليوم",
+  "challengeBonus": "+{tokens} رمز إضافي",
+  "@challengeBonus": {
+    "placeholders": {
+      "tokens": { "type": "int" }
+    }
+  },
+  "challengeCompleted": "تم! +{tokens} رمز مكتسب",
+  "@challengeCompleted": {
+    "placeholders": {
+      "tokens": { "type": "int" }
+    }
+  },
+  "challengeProgress": "{done}/{total} مكتمل",
+  "@challengeProgress": {
+    "placeholders": {
+      "done": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "tapToComplete": "اضغط لبدء التقديم",
+
+  "profileSettings": "الملف الشخصي والإعدادات",
+  "mySubmissions": "تقديماتي",
+  "myTokenHistory": "سجل الرموز",
+  "myRequests": "طلباتي",
+  "settings": "الإعدادات",
+  "displayName": "الاسم المعروض",
+  "homeArea": "المنطقة السكنية",
+  "language": "اللغة",
+  "english": "English",
+  "arabic": "العربية",
+  "logOut": "تسجيل الخروج",
+  "accuracyRating": "تقييم الدقة",
+  "accuracyRatingDesc": "{percent}٪ من تقديماتك تمت الموافقة عليها",
+  "@accuracyRatingDesc": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
+  "noSubmissionsYet": "لا توجد تقديمات بعد.\nقدّم سعراً للبدء!",
+  "noRequestsYet": "لا توجد طلبات أسعار بعد.",
+  "pending": "قيد الانتظار",
+  "approved": "معتمد",
+  "rejected": "مرفوض",
+  "fulfilled": "مكتمل",
+  "open": "مفتوح",
+  "refunded": "مسترجع",
+
+  "adminConsole": "لوحة الإشراف",
+  "priceModeration": "مراجعة الأسعار",
+  "analytics": "التحليلات",
+  "sourcersIndex": "دليل الموردين",
+  "systemSettings": "إعدادات النظام",
+  "approve": "اعتماد",
+  "reject": "رفض",
+  "edit": "تعديل",
+  "save": "حفظ",
+  "cancel": "إلغاء",
+  "editSubmission": "تعديل التقديم",
+  "tokenEarnRate": "معدل كسب الرموز (أساسي)",
+  "voucherThreshold": "حد استرداد القسيمة (رموز)",
+  "dailySubmissionCap": "الحد اليومي للتقديمات",
+
+  "freshLabel": "حديث",
+  "updatedAgoLabel": "محدّث منذ {hours} ساعة",
+  "@updatedAgoLabel": {
+    "placeholders": {
+      "hours": { "type": "int" }
+    }
+  },
+  "unverifiedOutdated": "غير موثّق — قد يكون قديماً",
+  "stalePriceWarning": "بيانات السعر قد تكون قديمة (+72 ساعة)",
+  "staleStore": "قديم",
+  "filterByChain": "تصفية حسب السلسلة",
+  "allChains": "الكل",
+  "submitPriceHere": "قدّم سعراً هنا",
+
+  "betterPriceFound": "سعر أفضل لـ {item}! الآن {price} درهم في {store}.",
+  "@betterPriceFound": {
+    "placeholders": {
+      "item": { "type": "String" },
+      "price": { "type": "String" },
+      "store": { "type": "String" }
+    }
+  },
+  "dismiss": "إغلاق",
+  "requestFulfilled": "تم استيفاء الطلب! تحويل الرموز إلى مقدم الطلب.",
+
+  "noResultsFound": "لا توجد نتائج",
+  "cartEmpty": "سلة التسوق فارغة",
+  "addItemsToCart": "تصفح المنتجات وأضف العناصر لمقارنة الأسعار.",
+  "bestBasket": "أفضل سلة",
+  "bestStore": "أفضل متجر",
+  "checkout": "إتمام الشراء",
+  "applyCoupon": "تطبيق كوبون",
+
+  "guestMode": "تصفح كضيف",
+  "signInWithGoogle": "التسجيل عبر Google",
+  "signInWithApple": "التسجيل عبر Apple",
+  "signInWithPhone": "التسجيل برقم الهاتف",
+
+  "level": "المستوى {level}",
+  "@level": {
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
+  "earnMultiplier": "+{percent}٪ معدل كسب",
+  "@earnMultiplier": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  }
+}

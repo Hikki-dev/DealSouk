@@ -20,6 +20,8 @@ class HomeScreen extends ConsumerWidget {
     final cartItems = ref.watch(cartProvider);
     final profile = ref.watch(userProfileProvider);
     final firstName = profile.name.split(' ').first;
+    final dailyChallenge = ref.watch(dailyChallengeProvider);
+    final settings = ref.watch(adminSettingsProvider);
 
     final cartCount = cartItems.fold<int>(
       0,
@@ -348,7 +350,19 @@ class HomeScreen extends ConsumerWidget {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 10),
-                child: _HomeTokenBalance(tokens: tokens),
+                child: _HomeTokenBalance(
+                  tokens: tokens,
+                  submissionsToday: profile.submissionsToday,
+                  dailyCap: settings.dailySubmissionCap,
+                ),
+              ),
+            ),
+
+            // 3b. Daily Challenge Card
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                child: _DailyChallengeCard(challenge: dailyChallenge),
               ),
             ),
 
@@ -617,8 +631,10 @@ String _expiryLabel(String updatedLabel) {
 
 class _HomeTokenBalance extends StatelessWidget {
   final int tokens;
+  final int submissionsToday;
+  final int dailyCap;
 
-  const _HomeTokenBalance({required this.tokens});
+  const _HomeTokenBalance({required this.tokens, required this.submissionsToday, required this.dailyCap});
 
   @override
   Widget build(BuildContext context) {
@@ -653,11 +669,11 @@ class _HomeTokenBalance extends StatelessWidget {
               child: const Icon(Icons.bolt, color: Colors.white, size: 24),
             ),
             const SizedBox(width: 14),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Token Balance',
                     style: TextStyle(
                       color: Colors.white,
@@ -665,10 +681,10 @@ class _HomeTokenBalance extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Text(
-                    'Earn tokens by validating prices • Tap to claim',
-                    style: TextStyle(color: Colors.white70, fontSize: 11.5),
+                    '${dailyCap - submissionsToday} submissions left today • Tap to claim',
+                    style: const TextStyle(color: Colors.white70, fontSize: 11.5),
                   ),
                 ],
               ),
@@ -687,6 +703,110 @@ class _HomeTokenBalance extends StatelessWidget {
                   ),
                 );
               },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DailyChallengeCard extends StatelessWidget {
+  final DailyChallenge challenge;
+
+  const _DailyChallengeCard({required this.challenge});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push('/submit-price'),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: challenge.completed ? const Color(0xFFE8F5E9) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: challenge.completed ? AppTheme.forestDeep : const Color(0xFFE8EEE4),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: challenge.completed ? AppTheme.forestDeep : AppTheme.limeAccent,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                challenge.completed ? Icons.check_rounded : Icons.flag_outlined,
+                color: challenge.completed ? Colors.white : AppTheme.forestDeep,
+                size: 18,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Daily Challenge',
+                    style: TextStyle(
+                      color: Colors.grey.shade500,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    challenge.description,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w900,
+                      color: AppTheme.textDark,
+                    ),
+                  ),
+                  if (!challenge.completed) ...[
+                    const SizedBox(height: 5),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(3),
+                      child: LinearProgressIndicator(
+                        value: (challenge.progressCount / challenge.targetCount).clamp(0.0, 1.0),
+                        backgroundColor: Colors.grey.shade100,
+                        valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.forestDeep),
+                        minHeight: 4,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppTheme.amberAccent.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                challenge.completed
+                    ? 'Done! +${challenge.bonusTokens}T'
+                    : '${challenge.progressCount}/${challenge.targetCount}',
+                style: const TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFC77C02),
+                ),
+              ),
             ),
           ],
         ),

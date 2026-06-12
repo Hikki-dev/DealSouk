@@ -173,6 +173,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               )
             : Column(
                 children: [
+                  // Better Price Banner
+                  ..._buildBetterPriceBanners(context, cartItems),
                   Expanded(
                     child: ListView(
                       physics: const BouncingScrollPhysics(),
@@ -590,6 +592,43 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               ),
       ),
     );
+  }
+
+  List<Widget> _buildBetterPriceBanners(BuildContext context, List<CartItem> cartItems) {
+    final banners = <Widget>[];
+    for (final item in cartItems) {
+      if ((item.priceAtAdd ?? 0) > item.product.lowestPrice + 0.01) {
+        final saving = (item.priceAtAdd ?? item.product.lowestPrice) - item.product.lowestPrice;
+        banners.add(
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF8E1),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFFFFCA28)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.trending_down_rounded, color: Color(0xFFF9A825), size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Better price for ${item.product.name.split('(').first.trim()}! Now AED ${item.product.lowestPrice.toStringAsFixed(2)} at ${item.product.lowestPriceStore} — save AED ${saving.toStringAsFixed(2)}.',
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF5D4037),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    }
+    return banners;
   }
 
   Widget _buildSummaryRow(String label, double val, {bool isDiscount = false}) {

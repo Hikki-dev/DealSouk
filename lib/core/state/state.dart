@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/models.dart';
 import '../mock_data/mock_data.dart';
@@ -72,15 +73,14 @@ final userTransactionsProvider =
 class CartNotifier extends Notifier<List<CartItem>> {
   @override
   List<CartItem> build() {
-    // Initialize cart with mockup items
     final spinach = MockData.initialProducts.firstWhere((p) => p.id == 'spinach');
     final apples = MockData.initialProducts.firstWhere((p) => p.id == 'apples');
     final lettuce = MockData.initialProducts.firstWhere((p) => p.id == 'lettuce');
 
     return [
-      CartItem(product: spinach, quantity: 1),
-      CartItem(product: apples, quantity: 2),
-      CartItem(product: lettuce, quantity: 1),
+      CartItem(product: spinach, quantity: 1, priceAtAdd: spinach.lowestPrice + 0.30),
+      CartItem(product: apples, quantity: 2, priceAtAdd: apples.lowestPrice + 0.20),
+      CartItem(product: lettuce, quantity: 1, priceAtAdd: lettuce.lowestPrice),
     ];
   }
 
@@ -96,7 +96,7 @@ class CartNotifier extends Notifier<List<CartItem>> {
         ...state.sublist(existingIndex + 1),
       ];
     } else {
-      state = [...state, CartItem(product: product, quantity: 1)];
+      state = [...state, CartItem(product: product, quantity: 1, priceAtAdd: product.lowestPrice)];
     }
   }
 
@@ -140,6 +140,7 @@ class AdminSubmissionsNotifier extends Notifier<List<AdminSubmission>> {
     required bool hasPhoto,
     required String promoType,
     required int tokensReward,
+    String sourcerName = 'Hessa Al Maktoum',
   }) {
     final newSub = AdminSubmission(
       id: 'sub_${DateTime.now().millisecondsSinceEpoch}',
@@ -152,19 +153,26 @@ class AdminSubmissionsNotifier extends Notifier<List<AdminSubmission>> {
       promoType: promoType,
       tokensReward: tokensReward,
       timestampLabel: 'Just now',
+      sourcerName: sourcerName,
+      status: 'pending',
     );
     state = [newSub, ...state];
+  }
+
+  void editSubmission(String id, {String? productName, String? storeName, double? price}) {
+    state = state.map((s) {
+      if (s.id == id) return s.copyWith(productName: productName, storeName: storeName, price: price);
+      return s;
+    }).toList();
   }
 
   void approveSubmission(String id, WidgetRef ref) {
     final submissionIndex = state.indexWhere((sub) => sub.id == id);
     if (submissionIndex >= 0) {
       final sub = state[submissionIndex];
-      // Remove from submissions
       state = state.where((s) => s.id != id).toList();
 
       if (sub.promoType == 'Flagged Report') {
-        // Find matching product id
         final products = ref.read(productsProvider);
         final product = products.firstWhere(
           (p) => p.name.toLowerCase().contains(sub.productName.toLowerCase()) ||
@@ -175,7 +183,6 @@ class AdminSubmissionsNotifier extends Notifier<List<AdminSubmission>> {
         return;
       }
 
-      // Award tokens to Hessa
       ref.read(userTokensProvider.notifier).addTokens(sub.tokensReward);
       ref
           .read(userTransactionsProvider.notifier)
@@ -184,7 +191,6 @@ class AdminSubmissionsNotifier extends Notifier<List<AdminSubmission>> {
             '+${sub.tokensReward} tokens - Approved ${sub.productName} price',
           );
 
-      // Find the product and update its lowest price if applicable
       final products = ref.read(productsProvider);
       final product = products.firstWhere(
         (p) =>
@@ -195,6 +201,8 @@ class AdminSubmissionsNotifier extends Notifier<List<AdminSubmission>> {
       ref
           .read(productsProvider.notifier)
           .updateProductPrice(product.id, sub.price, sub.storeName);
+
+      ref.read(badgesProvider.notifier).checkAndUnlock('submission_approved');
     }
   }
 
@@ -212,7 +220,7 @@ final adminSubmissionsProvider =
 class FilterState {
   final String searchQuery;
   final String selectedCategory;
-  final String freshnessFilter; // 'All', 'Under 6h', 'Under 24h', 'Under 72h'
+  final String freshnessFilter;
 
   FilterState({
     this.searchQuery = '',
@@ -263,12 +271,31 @@ class UserProfile {
   final String name;
   final String location;
   final String avatarUrl;
+  final int submissionsToday;
+  final String homeArea;
 
   UserProfile({
     required this.name,
     required this.location,
     required this.avatarUrl,
+    this.submissionsToday = 3,
+    this.homeArea = 'Dubai Marina',
   });
+
+  UserProfile copyWith({
+    String? name,
+    String? location,
+    int? submissionsToday,
+    String? homeArea,
+  }) {
+    return UserProfile(
+      name: name ?? this.name,
+      location: location ?? this.location,
+      avatarUrl: avatarUrl,
+      submissionsToday: submissionsToday ?? this.submissionsToday,
+      homeArea: homeArea ?? this.homeArea,
+    );
+  }
 }
 
 class UserProfileNotifier extends Notifier<UserProfile> {
@@ -277,7 +304,19 @@ class UserProfileNotifier extends Notifier<UserProfile> {
         name: 'Hessa Al Maktoum',
         location: 'Dubai Marina sourcer',
         avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80',
+        submissionsToday: 3,
+        homeArea: 'Dubai Marina',
       );
+
+  void incrementSubmissions() {
+    final settings = ref.read(adminSettingsProvider);
+    if (state.submissionsToday < settings.dailySubmissionCap) {
+      state = state.copyWith(submissionsToday: state.submissionsToday + 1);
+    }
+  }
+
+  void updateName(String name) => state = state.copyWith(name: name);
+  void updateHomeArea(String area) => state = state.copyWith(homeArea: area);
 }
 
 final userProfileProvider = NotifierProvider<UserProfileNotifier, UserProfile>(
@@ -306,7 +345,6 @@ class PriceRequestsNotifier extends Notifier<List<PriceRequest>> {
       distance: 1.0 + (DateTime.now().millisecondsSinceEpoch % 500) / 100.0,
     );
 
-    // Deduct tokens from userTokensProvider
     ref.read(userTokensProvider.notifier).deductTokens(bounty);
     ref.read(userTransactionsProvider.notifier).addTransaction(
           -bounty,
@@ -329,7 +367,6 @@ class PriceRequestsNotifier extends Notifier<List<PriceRequest>> {
     final reqIndex = state.indexWhere((r) => r.id == requestId);
     if (reqIndex >= 0) {
       final req = state[reqIndex];
-      // Refund tokens to user
       ref.read(userTokensProvider.notifier).addTokens(req.tokensBounty);
       ref.read(userTransactionsProvider.notifier).addTransaction(
             req.tokensBounty,
@@ -347,7 +384,6 @@ final priceRequestsProvider =
 
 // --- Flagged Prices State ---
 class FlaggedPricesNotifier extends Notifier<Map<String, int>> {
-  // Maps "productId_storeName" to flag count
   @override
   Map<String, int> build() => {};
 
@@ -355,11 +391,10 @@ class FlaggedPricesNotifier extends Notifier<Map<String, int>> {
     final key = '${productId}_$storeName';
     final currentFlags = state[key] ?? 0;
     final newFlags = currentFlags + 1;
-    
+
     state = {...state, key: newFlags};
 
     if (newFlags >= 3) {
-      // Create a flagged submission for the admin queue
       ref.read(adminSubmissionsProvider.notifier).addSubmission(
             productName: productName,
             brand: 'Community Flagged Report',
@@ -389,7 +424,7 @@ final flaggedPricesProvider =
   FlaggedPricesNotifier.new,
 );
 
-// --- Navbar Visibility (hide when bottom sheets are open) ---
+// --- Navbar Visibility ---
 class NavbarVisibleNotifier extends Notifier<bool> {
   @override
   bool build() => true;
@@ -400,4 +435,123 @@ class NavbarVisibleNotifier extends Notifier<bool> {
 
 final navbarVisibleProvider = NotifierProvider<NavbarVisibleNotifier, bool>(
   NavbarVisibleNotifier.new,
+);
+
+// --- Streak State ---
+class StreakNotifier extends Notifier<StreakData> {
+  @override
+  StreakData build() => MockData.initialStreak;
+
+  void recordActivity() {
+    final current = state;
+    final newStreak = current.currentStreak + 1;
+    final longest = newStreak > current.longestStreak ? newStreak : current.longestStreak;
+    state = current.copyWith(
+      currentStreak: newStreak,
+      longestStreak: longest,
+      lastActivityLabel: 'Just now',
+    );
+
+    ref.read(badgesProvider.notifier).checkAndUnlock('streak_$newStreak');
+  }
+}
+
+final streakProvider = NotifierProvider<StreakNotifier, StreakData>(
+  StreakNotifier.new,
+);
+
+// --- Badges State ---
+class BadgesNotifier extends Notifier<List<UserBadge>> {
+  @override
+  List<UserBadge> build() => MockData.initialBadges;
+
+  void checkAndUnlock(String event) {
+    final updated = state.map((badge) {
+      if (badge.unlocked) return badge;
+      if (event == 'submission_approved' && badge.id == 'first_submission') {
+        return badge.copyWith(unlocked: true);
+      }
+      if (event.startsWith('streak_')) {
+        final streakCount = int.tryParse(event.split('_').last) ?? 0;
+        if (badge.id == 'streak_7' && streakCount >= 7) return badge.copyWith(unlocked: true);
+        if (badge.id == 'streak_30' && streakCount >= 30) return badge.copyWith(unlocked: true);
+      }
+      if (event == 'request_fulfilled' && badge.id == 'first_request') {
+        return badge.copyWith(unlocked: true);
+      }
+      return badge;
+    }).toList();
+    state = updated;
+  }
+}
+
+final badgesProvider = NotifierProvider<BadgesNotifier, List<UserBadge>>(
+  BadgesNotifier.new,
+);
+
+// --- Daily Challenge State ---
+class DailyChallengeNotifier extends Notifier<DailyChallenge> {
+  @override
+  DailyChallenge build() => MockData.initialDailyChallenge;
+
+  void recordProgress() {
+    if (state.completed) return;
+    final newCount = state.progressCount + 1;
+    final completed = newCount >= state.targetCount;
+    state = state.copyWith(progressCount: newCount, completed: completed);
+
+    if (completed) {
+      ref.read(userTokensProvider.notifier).addTokens(state.bonusTokens);
+      ref.read(userTransactionsProvider.notifier).addTransaction(
+            state.bonusTokens,
+            'Daily challenge bonus: ${state.description}',
+          );
+    }
+  }
+}
+
+final dailyChallengeProvider =
+    NotifierProvider<DailyChallengeNotifier, DailyChallenge>(
+  DailyChallengeNotifier.new,
+);
+
+// --- User Level (derived from total tokens) ---
+int tokensToLevel(int tokens) => (tokens ~/ 500).clamp(1, 20);
+double levelMultiplier(int level) => 1.0 + (level - 1) * 0.05;
+String levelTitle(int level) {
+  if (level >= 15) return 'Souk Master';
+  if (level >= 10) return 'Senior Sourcer';
+  if (level >= 5) return 'Active Sourcer';
+  if (level >= 3) return 'Regular Sourcer';
+  return 'New Sourcer';
+}
+
+// --- Admin Settings State ---
+class AdminSettingsNotifier extends Notifier<AdminSettings> {
+  @override
+  AdminSettings build() => const AdminSettings();
+
+  void setTokenEarnRate(int rate) =>
+      state = state.copyWith(tokenEarnRate: rate);
+  void setVoucherThreshold(int threshold) =>
+      state = state.copyWith(voucherThreshold: threshold);
+  void setDailySubmissionCap(int cap) =>
+      state = state.copyWith(dailySubmissionCap: cap);
+}
+
+final adminSettingsProvider =
+    NotifierProvider<AdminSettingsNotifier, AdminSettings>(
+  AdminSettingsNotifier.new,
+);
+
+// --- Locale State ---
+class LocaleNotifier extends Notifier<Locale> {
+  @override
+  Locale build() => const Locale('en');
+
+  void setLocale(Locale locale) => state = locale;
+}
+
+final localeProvider = NotifierProvider<LocaleNotifier, Locale>(
+  LocaleNotifier.new,
 );

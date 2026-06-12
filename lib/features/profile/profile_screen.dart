@@ -2,212 +2,180 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/models/models.dart';
 import '../../core/state/state.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/tutorial_overlay.dart';
 
-
-
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  late TextEditingController _nameController;
+
+  static const List<String> _dubaiAreas = [
+    'Dubai Marina', 'Downtown Dubai', 'JLT', 'Deira', 'Business Bay',
+    'Al Barsha', 'Jumeirah', 'Mirdif', 'Al Quoz', 'Silicon Oasis',
+    'International City', 'Dubai Silicon Oasis', 'Al Nahda', 'Oud Metha',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this);
+    final profile = ref.read(userProfileProvider);
+    _nameController = TextEditingController(text: profile.name);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final tokens = ref.watch(userTokensProvider);
-    final submissions = ref.watch(adminSubmissionsProvider);
     final profile = ref.watch(userProfileProvider);
+    final submissions = ref.watch(adminSubmissionsProvider);
+    final transactions = ref.watch(userTransactionsProvider);
+    final requests = ref.watch(priceRequestsProvider);
+    final settings = ref.watch(adminSettingsProvider);
+    final locale = ref.watch(localeProvider);
+    final streak = ref.watch(streakProvider);
+
+    final mySubmissions = submissions.where((s) => s.sourcerName == profile.name).toList();
+    final myRequests = requests.where((r) => r.requesterName == profile.name).toList();
+    final level = tokensToLevel(tokens);
+    final approvedCount = mySubmissions.where((s) => s.status == 'approved').length;
+    final accuracyPct = mySubmissions.isEmpty ? 0 : ((approvedCount / mySubmissions.length) * 100).round();
 
     return Scaffold(
       backgroundColor: AppTheme.forestDeep,
       body: Column(
         children: [
+          // Header
           Padding(
-            padding: EdgeInsets.fromLTRB(
-              16,
-              MediaQuery.of(context).padding.top + 14,
-              16,
-              18,
-            ),
-            child: const Text(
-              'Profile & Settings',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                color: AppTheme.background,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-              ),
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 18, 16, 120),
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(22),
-                      border: Border.all(color: const Color(0xFFE8EEE4)),
+            padding: EdgeInsets.fromLTRB(16, MediaQuery.of(context).padding.top + 14, 16, 0),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 2),
+                        image: DecorationImage(
+                          image: NetworkImage(profile.avatarUrl),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
                     ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 58,
-                          height: 58,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: const Color(0xFFE8EEE4), width: 1.5),
-                            image: DecorationImage(
-                              image: NetworkImage(profile.avatarUrl),
-                              fit: BoxFit.cover,
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            profile.name,
+                            style: GoogleFonts.fredoka(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          const SizedBox(height: 2),
+                          Row(
                             children: [
-                              Text(
-                                profile.name,
-                                style: const TextStyle(
-                                  color: AppTheme.textDark,
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w900,
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.limeAccent.withValues(alpha: 0.25),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  'Lv.$level ${levelTitle(level)}',
+                                  style: const TextStyle(
+                                    color: AppTheme.limeAccent,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                  ),
                                 ),
                               ),
-                              const SizedBox(height: 5),
+                              const SizedBox(width: 8),
+                              const Icon(Icons.local_fire_department, color: Colors.orange, size: 13),
                               Text(
-                                '${profile.location} • $tokens tokens',
-                                style: TextStyle(
-                                  color: Colors.grey.shade600,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
+                                '${streak.currentStreak} day streak',
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _ShortcutCard(
-                          icon: Icons.add_a_photo_outlined,
-                          title: 'Submit price',
-                          subtitle: 'Earn tokens',
-                          onTap: () => context.push('/submit-price'),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _ShortcutCard(
-                          icon: Icons.admin_panel_settings_outlined,
-                          title: 'Admin review',
-                          subtitle: '${submissions.length} pending',
-                          onTap: () => context.push('/admin'),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Demo readiness',
-                    style: TextStyle(
-                      color: AppTheme.textDark,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  const Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _RequirementChip('iOS 16+', Icons.phone_iphone_rounded),
-                      _RequirementChip('Android 13+', Icons.android_rounded),
-                      _RequirementChip(
-                        'Camera ready',
-                        Icons.camera_alt_outlined,
-                      ),
-                      _RequirementChip('GPS demo', Icons.location_on_outlined),
-                      _RequirementChip('English now', Icons.language_rounded),
-                      _RequirementChip(
-                        'Arabic ready',
-                        Icons.format_textdirection_r_to_l_rounded,
-                      ),
-                      _RequirementChip('Tablet safe', Icons.tablet_mac_rounded),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  _SettingsRow(
-                    icon: Icons.verified_user_outlined,
-                    title: 'Verification preference',
-                    subtitle:
-                        'Manual admin review for receipts and shelf labels',
-                  ),
-                  _SettingsRow(
-                    icon: Icons.wifi_tethering_outlined,
-                    title: 'Connectivity mode',
-                    subtitle: '4G/LTE live prices with cached demo fallback',
-                  ),
-                  _SettingsRow(
-                    icon: Icons.notifications_active_outlined,
-                    title: 'Price drop alerts',
-                    subtitle: 'Demo-only preview, no real push notifications',
-                  ),
-                  GestureDetector(
-                    onTap: () => _showMyRequestsSheet(context, ref),
-                    child: const _SettingsRow(
-                      icon: Icons.assignment_outlined,
-                      title: 'My Price Requests',
-                      subtitle: 'Track your open and completed price check bounties',
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => TutorialOverlay.show(context),
-                    child: const _SettingsRow(
-                      icon: Icons.help_outline_rounded,
-                      title: 'View App Tutorial',
-                      subtitle: 'Re-run the 3-screen DealSouk intro guide',
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  GestureDetector(
-                    onTap: () => context.go('/welcome'),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade50,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.red.shade200),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.logout_rounded, color: Colors.red.shade700, size: 20),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Log Out of Demo',
-                            style: TextStyle(
-                              color: Colors.red.shade700,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14.5,
-                            ),
-                          ),
                         ],
                       ),
                     ),
-                  ),
+                    Text(
+                      '$tokens',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.bolt, color: AppTheme.limeAccent, size: 20),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                TabBar(
+                  controller: _tabController,
+                  indicatorColor: AppTheme.limeAccent,
+                  labelColor: AppTheme.limeAccent,
+                  unselectedLabelColor: Colors.white54,
+                  labelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                  tabs: const [
+                    Tab(text: 'Submissions'),
+                    Tab(text: 'Tokens'),
+                    Tab(text: 'Requests'),
+                    Tab(text: 'Settings'),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Body tabs
+          Expanded(
+            child: Container(
+              decoration: const BoxDecoration(
+                color: AppTheme.background,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+              ),
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  // TAB 1 — Submissions
+                  _buildSubmissionsTab(mySubmissions, accuracyPct),
+
+                  // TAB 2 — Token History
+                  _buildTokenHistoryTab(transactions, tokens),
+
+                  // TAB 3 — Requests
+                  _buildRequestsTab(myRequests),
+
+                  // TAB 4 — Settings
+                  _buildSettingsTab(context, profile, settings, locale, tokens),
                 ],
               ),
             ),
@@ -217,215 +185,591 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  void _showMyRequestsSheet(BuildContext context, WidgetRef ref) {
-    final requests = ref.read(priceRequestsProvider);
-    final myRequests = requests.where((r) => r.requesterName == 'Hessa Al Maktoum').toList();
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+  // ── TAB 1: Submissions ──
+  Widget _buildSubmissionsTab(List<dynamic> mySubmissions, int accuracyPct) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 100),
+      children: [
+        // Accuracy chip
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFFE8EEE4)),
+          ),
+          child: Row(
             children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2.5),
-                  ),
+              Container(
+                width: 42,
+                height: 42,
+                decoration: const BoxDecoration(
+                  color: AppTheme.limeAccent,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.verified_outlined, color: AppTheme.forestDeep, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Accuracy Rating',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 13,
+                        color: AppTheme.textDark,
+                      ),
+                    ),
+                    Text(
+                      '$accuracyPct% of your submissions approved',
+                      style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 18),
               Text(
-                'My Price Requests',
-                style: GoogleFonts.fredoka(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                '$accuracyPct%',
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
                   color: AppTheme.forestDeep,
                 ),
               ),
-              const SizedBox(height: 12),
-              if (myRequests.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 40),
-                  child: Center(
-                    child: Text(
-                      'You haven\'t posted any price requests yet.',
-                      style: TextStyle(color: Colors.grey, fontSize: 13.5),
-                    ),
-                  ),
-                )
-              else
-                SizedBox(
-                  height: 300,
-                  child: ListView.builder(
-                    itemCount: myRequests.length,
-                    itemBuilder: (context, index) {
-                      final req = myRequests[index];
-                      final isFulfilled = req.status == 'fulfilled';
-                      return ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: CircleAvatar(
-                          backgroundColor: isFulfilled ? Colors.green.shade50 : Colors.amber.shade50,
-                          child: Icon(
-                            isFulfilled ? Icons.check_circle_rounded : Icons.pending_rounded,
-                            color: isFulfilled ? Colors.green : Colors.amber.shade800,
-                            size: 20,
-                          ),
-                        ),
-                        title: Text(
-                          req.productName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                        ),
-                        subtitle: Text(
-                          '${req.storeName} • ${req.timestampLabel}',
-                          style: const TextStyle(fontSize: 11),
-                        ),
-                        trailing: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            '${req.tokensBounty} T',
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
             ],
           ),
-        );
-      },
+        ),
+        const SizedBox(height: 14),
+        if (mySubmissions.isEmpty)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              child: Text(
+                'No submissions yet.\nSubmit a price to get started!',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey.shade500, fontSize: 13.5, height: 1.5),
+              ),
+            ),
+          )
+        else
+          ...mySubmissions.map((sub) => _submissionCard(sub)),
+      ],
     );
   }
-}
 
-
-class _ShortcutCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  const _ShortcutCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFE8EEE4)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: const BoxDecoration(
-                color: AppTheme.limeAccent,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: AppTheme.forestDeep, size: 18),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: const TextStyle(
-                color: AppTheme.forestDeep,
-                fontSize: 13,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              subtitle,
-              style: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _RequirementChip extends StatelessWidget {
-  final String label;
-  final IconData icon;
-
-  const _RequirementChip(this.label, this.icon);
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _submissionCard(dynamic sub) {
+    final statusColor = sub.status == 'approved'
+        ? Colors.green
+        : sub.status == 'rejected'
+            ? Colors.red
+            : Colors.orange;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppTheme.limeAccent.withValues(alpha: 0.26),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppTheme.limeAccent.withValues(alpha: 0.6)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE8EEE4)),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: AppTheme.forestDeep, size: 14),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppTheme.forestDeep,
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: statusColor.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
             ),
+            child: Icon(Icons.receipt_long_outlined, color: statusColor, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  sub.productName,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  '${sub.storeName} • AED ${sub.price.toStringAsFixed(2)}',
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  sub.status.toUpperCase(),
+                  style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: statusColor),
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                '+${sub.tokensReward}T',
+                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.forestDeep),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
-}
 
-class _SettingsRow extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
+  // ── TAB 2: Token History ──
+  Widget _buildTokenHistoryTab(List<dynamic> transactions, int tokens) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 100),
+      children: [
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFFE8EEE4)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: const BoxDecoration(
+                  color: AppTheme.forestDeep,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.bolt, color: Colors.white, size: 22),
+              ),
+              const SizedBox(width: 12),
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Current Balance', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  Text('Tap Leaderboard to redeem', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                ],
+              ),
+              const Spacer(),
+              Text(
+                '$tokens',
+                style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: AppTheme.forestDeep),
+              ),
+              const SizedBox(width: 4),
+              const Text('T', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.forestDeep)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+        ...transactions.map((tx) {
+          final isPos = tx.amount > 0;
+          return Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFFE8EEE4)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: (isPos ? Colors.green : Colors.red).withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isPos ? Icons.add_rounded : Icons.remove_rounded,
+                    color: isPos ? Colors.green : Colors.red,
+                    size: 16,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    tx.title,
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  isPos ? '+${tx.amount}' : '${tx.amount}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 13,
+                    color: isPos ? Colors.green : Colors.red,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
 
-  const _SettingsRow({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-  });
+  // ── TAB 3: Requests ──
+  Widget _buildRequestsTab(List<dynamic> myRequests) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 100),
+      children: [
+        if (myRequests.isEmpty)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              child: Text(
+                'No price requests yet.',
+                style: TextStyle(color: Colors.grey.shade500, fontSize: 13.5),
+              ),
+            ),
+          )
+        else
+          ...myRequests.map((req) {
+            final statusColor = req.status == 'fulfilled'
+                ? Colors.green
+                : req.status == 'refunded'
+                    ? Colors.blue
+                    : Colors.orange;
+            return Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFE8EEE4)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.search_rounded, color: statusColor, size: 18),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          req.productName,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          '${req.storeName} • ${req.timestampLabel}',
+                          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: statusColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          req.status.toUpperCase(),
+                          style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: statusColor),
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        '${req.tokensBounty}T',
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.forestDeep),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }),
+      ],
+    );
+  }
 
-  @override
-  Widget build(BuildContext context) {
+  // ── TAB 4: Settings ──
+  Widget _buildSettingsTab(BuildContext context, dynamic profile, AdminSettings settings, Locale locale, int tokens) {
+    final remaining = settings.voucherThreshold - tokens;
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 100),
+      children: [
+        // Voucher section
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: tokens >= settings.voucherThreshold
+                ? const Color(0xFFE8F5E9)
+                : Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: tokens >= settings.voucherThreshold
+                  ? AppTheme.forestDeep
+                  : const Color(0xFFE8EEE4),
+            ),
+          ),
+          child: tokens >= settings.voucherThreshold
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.confirmation_num_rounded, color: AppTheme.forestDeep, size: 22),
+                        SizedBox(width: 8),
+                        Text(
+                          'Voucher Ready!',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 15,
+                            color: AppTheme.forestDeep,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Head to the Leaderboard tab to claim your AED 50 Union Coop voucher.',
+                      style: TextStyle(fontSize: 12, color: AppTheme.textDark, height: 1.4),
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: () => context.go('/leaderboard'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.forestDeep,
+                        minimumSize: const Size.fromHeight(42),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('Claim Voucher Now'),
+                    ),
+                  ],
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'AED 50 Union Coop Voucher',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                        Text(
+                          '$tokens / ${settings.voucherThreshold} T',
+                          style: const TextStyle(
+                            color: AppTheme.forestDeep,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(5),
+                      child: LinearProgressIndicator(
+                        value: (tokens / settings.voucherThreshold).clamp(0.0, 1.0),
+                        backgroundColor: Colors.grey.shade100,
+                        valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.forestDeep),
+                        minHeight: 7,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Earn ${remaining > 0 ? remaining : 0} more tokens to unlock your voucher.',
+                      style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                    ),
+                  ],
+                ),
+        ),
+        const SizedBox(height: 16),
+
+        // Display name
+        _settingsTile(
+          icon: Icons.person_outline_rounded,
+          title: 'Display Name',
+          subtitle: profile.name,
+          trailing: IconButton(
+            icon: const Icon(Icons.edit_outlined, size: 18, color: AppTheme.forestDeep),
+            onPressed: () {
+              _nameController.text = profile.name;
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Display Name'),
+                  content: TextField(
+                    controller: _nameController,
+                    decoration: const InputDecoration(labelText: 'Name'),
+                  ),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+                    ElevatedButton(
+                      onPressed: () {
+                        ref.read(userProfileProvider.notifier).updateName(_nameController.text.trim());
+                        Navigator.pop(context);
+                      },
+                      child: const Text('Save'),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 10),
+
+        // Home area
+        _settingsTile(
+          icon: Icons.home_outlined,
+          title: 'Home Area',
+          subtitle: profile.homeArea,
+          trailing: DropdownButton<String>(
+            value: _dubaiAreas.contains(profile.homeArea) ? profile.homeArea : _dubaiAreas.first,
+            underline: const SizedBox(),
+            icon: const Icon(Icons.expand_more, size: 18, color: AppTheme.forestDeep),
+            items: _dubaiAreas.map((area) => DropdownMenuItem(value: area, child: Text(area, style: const TextStyle(fontSize: 12)))).toList(),
+            onChanged: (val) {
+              if (val != null) ref.read(userProfileProvider.notifier).updateHomeArea(val);
+            },
+          ),
+        ),
+        const SizedBox(height: 10),
+
+        // Language toggle
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE8EEE4)),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.language_rounded, color: AppTheme.forestDeep, size: 21),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Language',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: AppTheme.textDark),
+                ),
+              ),
+              Row(
+                children: [
+                  _langButton('EN', locale.languageCode == 'en', () {
+                    ref.read(localeProvider.notifier).setLocale(const Locale('en'));
+                  }),
+                  const SizedBox(width: 8),
+                  _langButton('عر', locale.languageCode == 'ar', () {
+                    ref.read(localeProvider.notifier).setLocale(const Locale('ar'));
+                  }),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+
+        // Tutorial
+        GestureDetector(
+          onTap: () => TutorialOverlay.show(context),
+          child: _settingsTile(
+            icon: Icons.help_outline_rounded,
+            title: 'View App Tutorial',
+            subtitle: 'Re-run the DealSouk intro guide',
+          ),
+        ),
+        const SizedBox(height: 10),
+
+        // Admin console shortcut
+        GestureDetector(
+          onTap: () => context.push('/admin'),
+          child: _settingsTile(
+            icon: Icons.admin_panel_settings_outlined,
+            title: 'Admin Review Console',
+            subtitle: 'Moderate price submissions',
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        // Log out
+        GestureDetector(
+          onTap: () => context.go('/welcome'),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            decoration: BoxDecoration(
+              color: Colors.red.shade50,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.red.shade200),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.logout_rounded, color: Colors.red.shade700, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Log Out of Demo',
+                  style: TextStyle(
+                    color: Colors.red.shade700,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _langButton(String label, bool selected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected ? AppTheme.forestDeep : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? Colors.white : Colors.grey.shade700,
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _settingsTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    Widget? trailing,
+  }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -440,26 +784,13 @@ class _SettingsRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: AppTheme.textDark,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
+                Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: AppTheme.textDark)),
                 const SizedBox(height: 3),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 11,
-                    height: 1.3,
-                  ),
-                ),
+                Text(subtitle, style: TextStyle(fontSize: 11, color: Colors.grey.shade600, height: 1.3)),
               ],
             ),
           ),
+          if (trailing != null) trailing else const Icon(Icons.chevron_right_rounded, color: Colors.grey, size: 20),
         ],
       ),
     );

@@ -11,6 +11,7 @@ class MockData {
       freshness: 'Fresh',
       xOffset: 0.45,
       yOffset: 0.55,
+      lastUpdatedHoursAgo: 2,
     ),
     Store(
       id: 'carrefour_moe',
@@ -21,6 +22,7 @@ class MockData {
       freshness: 'Fresh',
       xOffset: 0.55,
       yOffset: 0.48,
+      lastUpdatedHoursAgo: 5,
     ),
     Store(
       id: 'spinneys_jlt',
@@ -31,6 +33,7 @@ class MockData {
       freshness: 'Updated 25h ago',
       xOffset: 0.25,
       yOffset: 0.75,
+      lastUpdatedHoursAgo: 52,
     ),
     Store(
       id: 'union_alwasl',
@@ -41,6 +44,7 @@ class MockData {
       freshness: 'Fresh',
       xOffset: 0.70,
       yOffset: 0.30,
+      lastUpdatedHoursAgo: 8,
     ),
     Store(
       id: 'nesto_deira',
@@ -51,6 +55,7 @@ class MockData {
       freshness: 'Fresh',
       xOffset: 0.85,
       yOffset: 0.15,
+      lastUpdatedHoursAgo: 1,
     ),
   ];
 
@@ -226,399 +231,104 @@ class MockData {
 
   static final Map<String, List<StoreProductPrice>> productPrices = {
     'spinach': [
-      StoreProductPrice(
-        storeId: 'lulu_albarsha',
-        storeName: 'Lulu Hypermarket',
-        price: 2.50,
-        updatedAtLabel: 'Updated 10m ago',
-      ),
-      StoreProductPrice(
-        storeId: 'carrefour_moe',
-        storeName: 'Carrefour',
-        price: 2.80,
-        updatedAtLabel: 'Updated 1h ago',
-      ),
-      StoreProductPrice(
-        storeId: 'union_alwasl',
-        storeName: 'Union Coop',
-        price: 3.10,
-        updatedAtLabel: 'Updated 3h ago',
-      ),
+      StoreProductPrice(storeId: 'lulu_albarsha', storeName: 'Lulu Hypermarket', price: 2.50, updatedAtLabel: 'Updated 10m ago', submittedHoursAgo: 0),
+      StoreProductPrice(storeId: 'carrefour_moe', storeName: 'Carrefour', price: 2.80, updatedAtLabel: 'Updated 1h ago', submittedHoursAgo: 1),
+      StoreProductPrice(storeId: 'union_alwasl', storeName: 'Union Coop', price: 3.10, updatedAtLabel: 'Updated 3h ago', submittedHoursAgo: 3),
     ],
     'apples': [
-      StoreProductPrice(
-        storeId: 'carrefour_moe',
-        storeName: 'Carrefour',
-        price: 2.29,
-        updatedAtLabel: 'Updated 5m ago',
-      ),
-      StoreProductPrice(
-        storeId: 'lulu_albarsha',
-        storeName: 'Lulu Hypermarket',
-        price: 2.50,
-        updatedAtLabel: 'Updated 30m ago',
-      ),
-      StoreProductPrice(
-        storeId: 'union_alwasl',
-        storeName: 'Union Coop',
-        price: 2.65,
-        updatedAtLabel: 'Updated 2h ago',
-      ),
+      StoreProductPrice(storeId: 'carrefour_moe', storeName: 'Carrefour', price: 2.29, updatedAtLabel: 'Updated 5m ago', submittedHoursAgo: 0),
+      StoreProductPrice(storeId: 'lulu_albarsha', storeName: 'Lulu Hypermarket', price: 2.50, updatedAtLabel: 'Updated 30m ago', submittedHoursAgo: 0),
+      StoreProductPrice(storeId: 'union_alwasl', storeName: 'Union Coop', price: 2.65, updatedAtLabel: 'Updated 2h ago', submittedHoursAgo: 2),
     ],
     'lettuce': [
-      StoreProductPrice(
-        storeId: 'union_alwasl',
-        storeName: 'Union Coop',
-        price: 1.50,
-        updatedAtLabel: 'Updated 15m ago',
-      ),
-      StoreProductPrice(
-        storeId: 'lulu_albarsha',
-        storeName: 'Lulu Hypermarket',
-        price: 1.75,
-        updatedAtLabel: 'Updated 45m ago',
-      ),
-      StoreProductPrice(
-        storeId: 'carrefour_moe',
-        storeName: 'Carrefour',
-        price: 1.90,
-        updatedAtLabel: 'Updated 1h ago',
-      ),
+      StoreProductPrice(storeId: 'union_alwasl', storeName: 'Union Coop', price: 1.50, updatedAtLabel: 'Updated 15m ago', submittedHoursAgo: 0),
+      StoreProductPrice(storeId: 'lulu_albarsha', storeName: 'Lulu Hypermarket', price: 1.75, updatedAtLabel: 'Updated 45m ago', submittedHoursAgo: 0),
+      StoreProductPrice(storeId: 'carrefour_moe', storeName: 'Carrefour', price: 1.90, updatedAtLabel: 'Updated 1h ago', submittedHoursAgo: 1),
     ],
     'beetroot': [
-      StoreProductPrice(
-        storeId: 'lulu_albarsha',
-        storeName: 'Lulu Hypermarket',
-        price: 17.29,
-        updatedAtLabel: 'Updated 10m ago',
-      ),
-      StoreProductPrice(
-        storeId: 'carrefour_moe',
-        storeName: 'Carrefour',
-        price: 18.50,
-        updatedAtLabel: 'Updated 2h ago',
-      ),
-      StoreProductPrice(
-        storeId: 'union_alwasl',
-        storeName: 'Union Coop',
-        price: 19.00,
-        updatedAtLabel: 'Updated 5h ago',
-      ),
+      StoreProductPrice(storeId: 'lulu_albarsha', storeName: 'Lulu Hypermarket', price: 17.29, updatedAtLabel: 'Updated 10m ago', submittedHoursAgo: 0),
+      StoreProductPrice(storeId: 'carrefour_moe', storeName: 'Carrefour', price: 18.50, updatedAtLabel: 'Updated 2h ago', submittedHoursAgo: 2),
+      StoreProductPrice(storeId: 'union_alwasl', storeName: 'Union Coop', price: 19.00, updatedAtLabel: 'Updated 5h ago', submittedHoursAgo: 5),
     ],
     'avocado': [
-      StoreProductPrice(
-        storeId: 'carrefour_moe',
-        storeName: 'Carrefour',
-        price: 14.29,
-        updatedAtLabel: 'Updated 25m ago',
-      ),
-      StoreProductPrice(
-        storeId: 'lulu_albarsha',
-        storeName: 'Lulu Hypermarket',
-        price: 15.00,
-        updatedAtLabel: 'Updated 4h ago',
-      ),
-      StoreProductPrice(
-        storeId: 'nesto_deira',
-        storeName: 'Nesto',
-        price: 15.50,
-        updatedAtLabel: 'Updated 6h ago',
-      ),
+      StoreProductPrice(storeId: 'carrefour_moe', storeName: 'Carrefour', price: 14.29, updatedAtLabel: 'Updated 25m ago', submittedHoursAgo: 0),
+      StoreProductPrice(storeId: 'lulu_albarsha', storeName: 'Lulu Hypermarket', price: 15.00, updatedAtLabel: 'Updated 4h ago', submittedHoursAgo: 4),
+      StoreProductPrice(storeId: 'nesto_deira', storeName: 'Nesto', price: 15.50, updatedAtLabel: 'Updated 6h ago', submittedHoursAgo: 6),
     ],
     'carrot': [
-      StoreProductPrice(
-        storeId: 'union_alwasl',
-        storeName: 'Union Coop',
-        price: 27.29,
-        updatedAtLabel: 'Updated 1h ago',
-      ),
-      StoreProductPrice(
-        storeId: 'nesto_deira',
-        storeName: 'Nesto',
-        price: 28.50,
-        updatedAtLabel: 'Updated 3h ago',
-      ),
-      StoreProductPrice(
-        storeId: 'lulu_albarsha',
-        storeName: 'Lulu Hypermarket',
-        price: 29.00,
-        updatedAtLabel: 'Updated 5h ago',
-      ),
+      StoreProductPrice(storeId: 'union_alwasl', storeName: 'Union Coop', price: 27.29, updatedAtLabel: 'Updated 1h ago', submittedHoursAgo: 1),
+      StoreProductPrice(storeId: 'nesto_deira', storeName: 'Nesto', price: 28.50, updatedAtLabel: 'Updated 3h ago', submittedHoursAgo: 3),
+      StoreProductPrice(storeId: 'lulu_albarsha', storeName: 'Lulu Hypermarket', price: 29.00, updatedAtLabel: 'Updated 5h ago', submittedHoursAgo: 5),
     ],
     'beef_bone': [
-      StoreProductPrice(
-        storeId: 'lulu_albarsha',
-        storeName: 'Lulu Hypermarket',
-        price: 23.46,
-        updatedAtLabel: 'Updated 5m ago',
-      ),
-      StoreProductPrice(
-        storeId: 'carrefour_moe',
-        storeName: 'Carrefour',
-        price: 24.50,
-        updatedAtLabel: 'Updated 1h ago',
-      ),
-      StoreProductPrice(
-        storeId: 'union_alwasl',
-        storeName: 'Union Coop',
-        price: 25.00,
-        updatedAtLabel: 'Updated 3h ago',
-      ),
+      StoreProductPrice(storeId: 'lulu_albarsha', storeName: 'Lulu Hypermarket', price: 23.46, updatedAtLabel: 'Updated 5m ago', submittedHoursAgo: 0),
+      StoreProductPrice(storeId: 'carrefour_moe', storeName: 'Carrefour', price: 24.50, updatedAtLabel: 'Updated 1h ago', submittedHoursAgo: 1),
+      StoreProductPrice(storeId: 'union_alwasl', storeName: 'Union Coop', price: 25.00, updatedAtLabel: 'Updated 3h ago', submittedHoursAgo: 3),
     ],
     'bread_loaf': [
-      StoreProductPrice(
-        storeId: 'carrefour_moe',
-        storeName: 'Carrefour',
-        price: 4.50,
-        updatedAtLabel: 'Updated 30m ago',
-      ),
-      StoreProductPrice(
-        storeId: 'lulu_albarsha',
-        storeName: 'Lulu Hypermarket',
-        price: 4.75,
-        updatedAtLabel: 'Updated 2h ago',
-      ),
+      StoreProductPrice(storeId: 'carrefour_moe', storeName: 'Carrefour', price: 4.50, updatedAtLabel: 'Updated 30m ago', submittedHoursAgo: 0),
+      StoreProductPrice(storeId: 'lulu_albarsha', storeName: 'Lulu Hypermarket', price: 4.75, updatedAtLabel: 'Updated 2h ago', submittedHoursAgo: 55),
     ],
     'milk_1l': [
-      StoreProductPrice(
-        storeId: 'lulu_albarsha',
-        storeName: 'Lulu Hypermarket',
-        price: 8.95,
-        updatedAtLabel: 'Updated 2h ago',
-      ),
-      StoreProductPrice(
-        storeId: 'union_alwasl',
-        storeName: 'Union Coop',
-        price: 9.25,
-        updatedAtLabel: 'Updated 12h ago',
-      ),
-      StoreProductPrice(
-        storeId: 'carrefour_moe',
-        storeName: 'Carrefour',
-        price: 9.50,
-        updatedAtLabel: 'Updated 3h ago',
-      ),
-      StoreProductPrice(
-        storeId: 'spinneys_jlt',
-        storeName: 'Spinneys',
-        price: 10.75,
-        updatedAtLabel: 'Updated 7h ago',
-      ),
-      StoreProductPrice(
-        storeId: 'nesto_deira',
-        storeName: 'Nesto',
-        price: 9.10,
-        updatedAtLabel: 'Updated 5h ago',
-      ),
+      StoreProductPrice(storeId: 'lulu_albarsha', storeName: 'Lulu Hypermarket', price: 8.95, updatedAtLabel: 'Updated 2h ago', submittedHoursAgo: 2),
+      StoreProductPrice(storeId: 'union_alwasl', storeName: 'Union Coop', price: 9.25, updatedAtLabel: 'Updated 12h ago', submittedHoursAgo: 12),
+      StoreProductPrice(storeId: 'carrefour_moe', storeName: 'Carrefour', price: 9.50, updatedAtLabel: 'Updated 3h ago', submittedHoursAgo: 3),
+      StoreProductPrice(storeId: 'spinneys_jlt', storeName: 'Spinneys', price: 10.75, updatedAtLabel: 'Updated 7h ago', submittedHoursAgo: 80),
+      StoreProductPrice(storeId: 'nesto_deira', storeName: 'Nesto', price: 9.10, updatedAtLabel: 'Updated 5h ago', submittedHoursAgo: 5),
     ],
     'eggs_12': [
-      StoreProductPrice(
-        storeId: 'carrefour_moe',
-        storeName: 'Carrefour',
-        price: 11.50,
-        updatedAtLabel: 'Updated 4h ago',
-      ),
-      StoreProductPrice(
-        storeId: 'lulu_albarsha',
-        storeName: 'Lulu Hypermarket',
-        price: 11.95,
-        updatedAtLabel: 'Updated 8h ago',
-      ),
-      StoreProductPrice(
-        storeId: 'nesto_deira',
-        storeName: 'Nesto',
-        price: 11.75,
-        updatedAtLabel: 'Updated 1h ago',
-      ),
-      StoreProductPrice(
-        storeId: 'union_alwasl',
-        storeName: 'Union Coop',
-        price: 12.25,
-        updatedAtLabel: 'Updated 20h ago',
-      ),
-      StoreProductPrice(
-        storeId: 'spinneys_jlt',
-        storeName: 'Spinneys',
-        price: 13.50,
-        updatedAtLabel: 'Updated 1d ago',
-      ),
+      StoreProductPrice(storeId: 'carrefour_moe', storeName: 'Carrefour', price: 11.50, updatedAtLabel: 'Updated 4h ago', submittedHoursAgo: 4),
+      StoreProductPrice(storeId: 'lulu_albarsha', storeName: 'Lulu Hypermarket', price: 11.95, updatedAtLabel: 'Updated 8h ago', submittedHoursAgo: 8),
+      StoreProductPrice(storeId: 'nesto_deira', storeName: 'Nesto', price: 11.75, updatedAtLabel: 'Updated 1h ago', submittedHoursAgo: 1),
+      StoreProductPrice(storeId: 'union_alwasl', storeName: 'Union Coop', price: 12.25, updatedAtLabel: 'Updated 20h ago', submittedHoursAgo: 20),
+      StoreProductPrice(storeId: 'spinneys_jlt', storeName: 'Spinneys', price: 13.50, updatedAtLabel: 'Updated 1d ago', submittedHoursAgo: 74),
     ],
     'rice_5kg': [
-      StoreProductPrice(
-        storeId: 'union_alwasl',
-        storeName: 'Union Coop',
-        price: 32.75,
-        updatedAtLabel: 'Updated 6h ago',
-      ),
-      StoreProductPrice(
-        storeId: 'lulu_albarsha',
-        storeName: 'Lulu Hypermarket',
-        price: 33.25,
-        updatedAtLabel: 'Updated 10h ago',
-      ),
-      StoreProductPrice(
-        storeId: 'carrefour_moe',
-        storeName: 'Carrefour',
-        price: 33.90,
-        updatedAtLabel: 'Updated 2h ago',
-      ),
-      StoreProductPrice(
-        storeId: 'nesto_deira',
-        storeName: 'Nesto',
-        price: 34.50,
-        updatedAtLabel: 'Updated 4h ago',
-      ),
-      StoreProductPrice(
-        storeId: 'spinneys_jlt',
-        storeName: 'Spinneys',
-        price: 37.95,
-        updatedAtLabel: 'Updated 2d ago',
-      ),
+      StoreProductPrice(storeId: 'union_alwasl', storeName: 'Union Coop', price: 32.75, updatedAtLabel: 'Updated 6h ago', submittedHoursAgo: 6),
+      StoreProductPrice(storeId: 'lulu_albarsha', storeName: 'Lulu Hypermarket', price: 33.25, updatedAtLabel: 'Updated 10h ago', submittedHoursAgo: 10),
+      StoreProductPrice(storeId: 'carrefour_moe', storeName: 'Carrefour', price: 33.90, updatedAtLabel: 'Updated 2h ago', submittedHoursAgo: 2),
+      StoreProductPrice(storeId: 'nesto_deira', storeName: 'Nesto', price: 34.50, updatedAtLabel: 'Updated 4h ago', submittedHoursAgo: 4),
+      StoreProductPrice(storeId: 'spinneys_jlt', storeName: 'Spinneys', price: 37.95, updatedAtLabel: 'Updated 2d ago', submittedHoursAgo: 96),
     ],
     'chicken_1kg': [
-      StoreProductPrice(
-        storeId: 'nesto_deira',
-        storeName: 'Nesto',
-        price: 24.90,
-        updatedAtLabel: 'Updated 1h ago',
-      ),
-      StoreProductPrice(
-        storeId: 'lulu_albarsha',
-        storeName: 'Lulu Hypermarket',
-        price: 25.50,
-        updatedAtLabel: 'Updated 3h ago',
-      ),
-      StoreProductPrice(
-        storeId: 'carrefour_moe',
-        storeName: 'Carrefour',
-        price: 25.90,
-        updatedAtLabel: 'Updated 5h ago',
-      ),
-      StoreProductPrice(
-        storeId: 'union_alwasl',
-        storeName: 'Union Coop',
-        price: 26.25,
-        updatedAtLabel: 'Updated 18h ago',
-      ),
-      StoreProductPrice(
-        storeId: 'spinneys_jlt',
-        storeName: 'Spinneys',
-        price: 28.50,
-        updatedAtLabel: 'Updated 1d ago',
-      ),
+      StoreProductPrice(storeId: 'nesto_deira', storeName: 'Nesto', price: 24.90, updatedAtLabel: 'Updated 1h ago', submittedHoursAgo: 1),
+      StoreProductPrice(storeId: 'lulu_albarsha', storeName: 'Lulu Hypermarket', price: 25.50, updatedAtLabel: 'Updated 3h ago', submittedHoursAgo: 3),
+      StoreProductPrice(storeId: 'carrefour_moe', storeName: 'Carrefour', price: 25.90, updatedAtLabel: 'Updated 5h ago', submittedHoursAgo: 5),
+      StoreProductPrice(storeId: 'union_alwasl', storeName: 'Union Coop', price: 26.25, updatedAtLabel: 'Updated 18h ago', submittedHoursAgo: 18),
+      StoreProductPrice(storeId: 'spinneys_jlt', storeName: 'Spinneys', price: 28.50, updatedAtLabel: 'Updated 1d ago', submittedHoursAgo: 76),
     ],
     'cola_6pack': [
-      StoreProductPrice(
-        storeId: 'carrefour_moe',
-        storeName: 'Carrefour',
-        price: 14.50,
-        updatedAtLabel: 'Updated 10h ago',
-      ),
-      StoreProductPrice(
-        storeId: 'lulu_albarsha',
-        storeName: 'Lulu Hypermarket',
-        price: 14.90,
-        updatedAtLabel: 'Updated 2h ago',
-      ),
-      StoreProductPrice(
-        storeId: 'nesto_deira',
-        storeName: 'Nesto',
-        price: 14.75,
-        updatedAtLabel: 'Updated 1d ago',
-      ),
-      StoreProductPrice(
-        storeId: 'union_alwasl',
-        storeName: 'Union Coop',
-        price: 15.00,
-        updatedAtLabel: 'Updated 12h ago',
-      ),
-      StoreProductPrice(
-        storeId: 'spinneys_jlt',
-        storeName: 'Spinneys',
-        price: 15.50,
-        updatedAtLabel: 'Updated 20h ago',
-      ),
+      StoreProductPrice(storeId: 'carrefour_moe', storeName: 'Carrefour', price: 14.50, updatedAtLabel: 'Updated 10h ago', submittedHoursAgo: 10),
+      StoreProductPrice(storeId: 'lulu_albarsha', storeName: 'Lulu Hypermarket', price: 14.90, updatedAtLabel: 'Updated 2h ago', submittedHoursAgo: 2),
+      StoreProductPrice(storeId: 'nesto_deira', storeName: 'Nesto', price: 14.75, updatedAtLabel: 'Updated 1d ago', submittedHoursAgo: 78),
+      StoreProductPrice(storeId: 'union_alwasl', storeName: 'Union Coop', price: 15.00, updatedAtLabel: 'Updated 12h ago', submittedHoursAgo: 12),
+      StoreProductPrice(storeId: 'spinneys_jlt', storeName: 'Spinneys', price: 15.50, updatedAtLabel: 'Updated 20h ago', submittedHoursAgo: 20),
     ],
     'washing_liquid': [
-      StoreProductPrice(
-        storeId: 'lulu_albarsha',
-        storeName: 'Lulu Hypermarket',
-        price: 38.00,
-        updatedAtLabel: 'Updated 1d ago',
-      ),
-      StoreProductPrice(
-        storeId: 'carrefour_moe',
-        storeName: 'Carrefour',
-        price: 39.95,
-        updatedAtLabel: 'Updated 2h ago',
-      ),
-      StoreProductPrice(
-        storeId: 'union_alwasl',
-        storeName: 'Union Coop',
-        price: 39.50,
-        updatedAtLabel: 'Updated 3d ago',
-      ),
-      StoreProductPrice(
-        storeId: 'nesto_deira',
-        storeName: 'Nesto',
-        price: 38.50,
-        updatedAtLabel: 'Updated 1d ago',
-      ),
-      StoreProductPrice(
-        storeId: 'spinneys_jlt',
-        storeName: 'Spinneys',
-        price: 42.00,
-        updatedAtLabel: 'Updated 5h ago',
-      ),
+      StoreProductPrice(storeId: 'lulu_albarsha', storeName: 'Lulu Hypermarket', price: 38.00, updatedAtLabel: 'Updated 1d ago', submittedHoursAgo: 25),
+      StoreProductPrice(storeId: 'carrefour_moe', storeName: 'Carrefour', price: 39.95, updatedAtLabel: 'Updated 2h ago', submittedHoursAgo: 2),
+      StoreProductPrice(storeId: 'union_alwasl', storeName: 'Union Coop', price: 39.50, updatedAtLabel: 'Updated 3d ago', submittedHoursAgo: 85),
+      StoreProductPrice(storeId: 'nesto_deira', storeName: 'Nesto', price: 38.50, updatedAtLabel: 'Updated 1d ago', submittedHoursAgo: 26),
+      StoreProductPrice(storeId: 'spinneys_jlt', storeName: 'Spinneys', price: 42.00, updatedAtLabel: 'Updated 5h ago', submittedHoursAgo: 5),
     ],
   };
 
   static final List<LeaderboardUser> initialLeaderboard = [
-    LeaderboardUser(
-      rank: 1,
-      name: 'Khalid',
-      tokens: 1240,
-      isCurrentUser: false,
-    ),
-    LeaderboardUser(rank: 2, name: 'Meera', tokens: 980, isCurrentUser: false),
-    LeaderboardUser(rank: 3, name: 'Ahmed', tokens: 750, isCurrentUser: false),
-    LeaderboardUser(rank: 4, name: 'Fatima', tokens: 620, isCurrentUser: false),
-    LeaderboardUser(rank: 5, name: 'Yusuf', tokens: 490, isCurrentUser: false),
-    LeaderboardUser(rank: 6, name: 'Zayed', tokens: 390, isCurrentUser: false),
-    LeaderboardUser(
-      rank: 7,
-      name: 'Hessa (You)',
-      tokens: 340,
-      isCurrentUser: true,
-    ),
-    LeaderboardUser(rank: 8, name: 'Mariam', tokens: 280, isCurrentUser: false),
+    LeaderboardUser(rank: 1, name: 'Khalid', tokens: 1240, isCurrentUser: false, streak: 15),
+    LeaderboardUser(rank: 2, name: 'Meera', tokens: 980, isCurrentUser: false, streak: 22),
+    LeaderboardUser(rank: 3, name: 'Ahmed', tokens: 750, isCurrentUser: false, streak: 8),
+    LeaderboardUser(rank: 4, name: 'Fatima', tokens: 620, isCurrentUser: false, streak: 3),
+    LeaderboardUser(rank: 5, name: 'Yusuf', tokens: 490, isCurrentUser: false, streak: 11),
+    LeaderboardUser(rank: 6, name: 'Zayed', tokens: 390, isCurrentUser: false, streak: 1),
+    LeaderboardUser(rank: 7, name: 'Hessa (You)', tokens: 340, isCurrentUser: true, streak: 5),
+    LeaderboardUser(rank: 8, name: 'Mariam', tokens: 280, isCurrentUser: false, streak: 0),
   ];
 
   static final List<TokenTransaction> initialTokenTransactions = [
-    TokenTransaction(
-      id: 't1',
-      amount: 15,
-      title: 'Milk price submission',
-      timestampLabel: '2 hours ago',
-    ),
-    TokenTransaction(
-      id: 't2',
-      amount: 10,
-      title: 'Eggs price submission',
-      timestampLabel: '5 hours ago',
-    ),
-    TokenTransaction(
-      id: 't3',
-      amount: -10,
-      title: 'Requested rice price update',
-      timestampLabel: 'Yesterday',
-    ),
-    TokenTransaction(
-      id: 't4',
-      amount: 25,
-      title: 'Weekly streak bonus',
-      timestampLabel: '3 days ago',
-    ),
+    TokenTransaction(id: 't1', amount: 15, title: 'Milk price submission', timestampLabel: '2 hours ago'),
+    TokenTransaction(id: 't2', amount: 10, title: 'Eggs price submission', timestampLabel: '5 hours ago'),
+    TokenTransaction(id: 't3', amount: -10, title: 'Requested rice price update', timestampLabel: 'Yesterday'),
+    TokenTransaction(id: 't4', amount: 25, title: 'Weekly streak bonus', timestampLabel: '3 days ago'),
   ];
 
   static final List<AdminSubmission> initialAdminSubmissions = [
@@ -633,6 +343,8 @@ class MockData {
       promoType: 'Discount',
       tokensReward: 15,
       timestampLabel: '10m ago',
+      sourcerName: 'Hessa Al Maktoum',
+      status: 'pending',
     ),
     AdminSubmission(
       id: 'sub2',
@@ -645,6 +357,8 @@ class MockData {
       promoType: 'None',
       tokensReward: 15,
       timestampLabel: '25m ago',
+      sourcerName: 'Hessa Al Maktoum',
+      status: 'pending',
     ),
     AdminSubmission(
       id: 'sub3',
@@ -657,40 +371,41 @@ class MockData {
       promoType: 'None',
       tokensReward: 10,
       timestampLabel: '1h ago',
+      sourcerName: 'Khalid Al Ameri',
+      status: 'pending',
     ),
   ];
 
   static final List<PriceRequest> initialPriceRequests = [
-    PriceRequest(
-      id: 'req1',
-      productName: 'Fresh Organic Avocados 1kg',
-      storeName: 'Lulu Hypermarket',
-      tokensBounty: 20,
-      requesterName: 'Adil-ur Rahman',
-      status: 'pending',
-      timestampLabel: '1h ago',
-      distance: 1.4,
-    ),
-    PriceRequest(
-      id: 'req2',
-      productName: 'Al Baker Basmati Rice 5kg',
-      storeName: 'Carrefour',
-      tokensBounty: 15,
-      requesterName: 'Meera Al Maktoum',
-      status: 'pending',
-      timestampLabel: '3h ago',
-      distance: 2.1,
-    ),
-    PriceRequest(
-      id: 'req3',
-      productName: 'Al Rawabi Full Cream Milk 1L',
-      storeName: 'Spinneys',
-      tokensBounty: 10,
-      requesterName: 'Khalid Al Ameri',
-      status: 'pending',
-      timestampLabel: '5h ago',
-      distance: 3.2,
-    ),
+    PriceRequest(id: 'req1', productName: 'Fresh Organic Avocados 1kg', storeName: 'Lulu Hypermarket', tokensBounty: 20, requesterName: 'Adil-ur Rahman', status: 'pending', timestampLabel: '1h ago', distance: 1.4),
+    PriceRequest(id: 'req2', productName: 'Al Baker Basmati Rice 5kg', storeName: 'Carrefour', tokensBounty: 15, requesterName: 'Meera Al Maktoum', status: 'pending', timestampLabel: '3h ago', distance: 2.1),
+    PriceRequest(id: 'req3', productName: 'Al Rawabi Full Cream Milk 1L', storeName: 'Spinneys', tokensBounty: 10, requesterName: 'Khalid Al Ameri', status: 'pending', timestampLabel: '5h ago', distance: 3.2),
   ];
-}
 
+  static final StreakData initialStreak = const StreakData(
+    currentStreak: 5,
+    longestStreak: 12,
+    lastActivityLabel: '2 hours ago',
+  );
+
+  static final List<UserBadge> initialBadges = const [
+    UserBadge(id: 'first_submission', name: 'First Submission', emoji: '🏆', description: 'Awarded on your first approved price upload', unlocked: true),
+    UserBadge(id: 'streak_7', name: '7 Day Streak', emoji: '🔥', description: 'Submit prices for 7 consecutive days', unlocked: true),
+    UserBadge(id: 'streak_30', name: '30 Day Streak', emoji: '⚡', description: 'Submit prices for 30 consecutive days', unlocked: false),
+    UserBadge(id: 'first_request', name: 'First Request', emoji: '🎯', description: 'Fulfilled your first community price request', unlocked: true),
+    UserBadge(id: 'verified_sourcer', name: 'Verified Sourcer', emoji: '✅', description: 'Achieve over 95% accuracy rating', unlocked: false),
+    UserBadge(id: 'top_10', name: 'Top 10', emoji: '🥇', description: 'Reach the top 10 on the leaderboard', unlocked: false),
+    UserBadge(id: 'century', name: 'Century', emoji: '💯', description: 'Submit 100 approved prices', unlocked: false),
+    UserBadge(id: 'voucher_claimed', name: 'Voucher Claimed', emoji: '🎫', description: 'Redeem your first supermarket voucher', unlocked: false),
+  ];
+
+  static final DailyChallenge initialDailyChallenge = const DailyChallenge(
+    id: 'challenge_today',
+    description: 'Submit 3 prices from Carrefour today',
+    targetStore: 'Carrefour',
+    targetCount: 3,
+    bonusTokens: 50,
+    progressCount: 1,
+    completed: false,
+  );
+}

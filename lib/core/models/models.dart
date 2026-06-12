@@ -47,8 +47,9 @@ class Store {
   final double distance;
   final int pricesCount;
   final String freshness;
-  final double xOffset; // Relative X coordinate (0.0 to 1.0) on our mock map
-  final double yOffset; // Relative Y coordinate (0.0 to 1.0) on our mock map
+  final double xOffset;
+  final double yOffset;
+  final int lastUpdatedHoursAgo;
 
   Store({
     required this.id,
@@ -59,6 +60,7 @@ class Store {
     required this.freshness,
     required this.xOffset,
     required this.yOffset,
+    this.lastUpdatedHoursAgo = 2,
   });
 }
 
@@ -67,25 +69,29 @@ class StoreProductPrice {
   final String storeName;
   final double price;
   final String updatedAtLabel;
+  final int submittedHoursAgo;
 
   StoreProductPrice({
     required this.storeId,
     required this.storeName,
     required this.price,
     required this.updatedAtLabel,
+    this.submittedHoursAgo = 2,
   });
 }
 
 class CartItem {
   final Product product;
   final int quantity;
+  final double? priceAtAdd;
 
-  CartItem({required this.product, required this.quantity});
+  CartItem({required this.product, required this.quantity, this.priceAtAdd});
 
-  CartItem copyWith({Product? product, int? quantity}) {
+  CartItem copyWith({Product? product, int? quantity, double? priceAtAdd}) {
     return CartItem(
       product: product ?? this.product,
       quantity: quantity ?? this.quantity,
+      priceAtAdd: priceAtAdd ?? this.priceAtAdd,
     );
   }
 }
@@ -95,12 +101,14 @@ class LeaderboardUser {
   final String name;
   final int tokens;
   final bool isCurrentUser;
+  final int streak;
 
   LeaderboardUser({
     required this.rank,
     required this.name,
     required this.tokens,
     required this.isCurrentUser,
+    this.streak = 0,
   });
 }
 
@@ -129,6 +137,8 @@ class AdminSubmission {
   final String promoType;
   final int tokensReward;
   final String timestampLabel;
+  final String sourcerName;
+  final String status; // 'pending', 'approved', 'rejected'
 
   AdminSubmission({
     required this.id,
@@ -141,7 +151,31 @@ class AdminSubmission {
     required this.promoType,
     required this.tokensReward,
     required this.timestampLabel,
+    this.sourcerName = 'Hessa Al Maktoum',
+    this.status = 'pending',
   });
+
+  AdminSubmission copyWith({
+    String? productName,
+    String? storeName,
+    double? price,
+    String? status,
+  }) {
+    return AdminSubmission(
+      id: id,
+      productName: productName ?? this.productName,
+      brand: brand,
+      storeName: storeName ?? this.storeName,
+      price: price ?? this.price,
+      hasReceipt: hasReceipt,
+      hasPhoto: hasPhoto,
+      promoType: promoType,
+      tokensReward: tokensReward,
+      timestampLabel: timestampLabel,
+      sourcerName: sourcerName,
+      status: status ?? this.status,
+    );
+  }
 }
 
 class PriceRequest {
@@ -182,3 +216,100 @@ class PriceRequest {
   }
 }
 
+class StreakData {
+  final int currentStreak;
+  final int longestStreak;
+  final String lastActivityLabel;
+
+  const StreakData({
+    required this.currentStreak,
+    required this.longestStreak,
+    required this.lastActivityLabel,
+  });
+
+  StreakData copyWith({int? currentStreak, int? longestStreak, String? lastActivityLabel}) {
+    return StreakData(
+      currentStreak: currentStreak ?? this.currentStreak,
+      longestStreak: longestStreak ?? this.longestStreak,
+      lastActivityLabel: lastActivityLabel ?? this.lastActivityLabel,
+    );
+  }
+}
+
+class UserBadge {
+  final String id;
+  final String name;
+  final String emoji;
+  final String description;
+  final bool unlocked;
+
+  const UserBadge({
+    required this.id,
+    required this.name,
+    required this.emoji,
+    required this.description,
+    required this.unlocked,
+  });
+
+  UserBadge copyWith({bool? unlocked}) {
+    return UserBadge(
+      id: id,
+      name: name,
+      emoji: emoji,
+      description: description,
+      unlocked: unlocked ?? this.unlocked,
+    );
+  }
+}
+
+class DailyChallenge {
+  final String id;
+  final String description;
+  final String targetStore;
+  final int targetCount;
+  final int bonusTokens;
+  final int progressCount;
+  final bool completed;
+
+  const DailyChallenge({
+    required this.id,
+    required this.description,
+    required this.targetStore,
+    required this.targetCount,
+    required this.bonusTokens,
+    this.progressCount = 0,
+    this.completed = false,
+  });
+
+  DailyChallenge copyWith({int? progressCount, bool? completed}) {
+    return DailyChallenge(
+      id: id,
+      description: description,
+      targetStore: targetStore,
+      targetCount: targetCount,
+      bonusTokens: bonusTokens,
+      progressCount: progressCount ?? this.progressCount,
+      completed: completed ?? this.completed,
+    );
+  }
+}
+
+class AdminSettings {
+  final int tokenEarnRate;
+  final int voucherThreshold;
+  final int dailySubmissionCap;
+
+  const AdminSettings({
+    this.tokenEarnRate = 10,
+    this.voucherThreshold = 500,
+    this.dailySubmissionCap = 30,
+  });
+
+  AdminSettings copyWith({int? tokenEarnRate, int? voucherThreshold, int? dailySubmissionCap}) {
+    return AdminSettings(
+      tokenEarnRate: tokenEarnRate ?? this.tokenEarnRate,
+      voucherThreshold: voucherThreshold ?? this.voucherThreshold,
+      dailySubmissionCap: dailySubmissionCap ?? this.dailySubmissionCap,
+    );
+  }
+}

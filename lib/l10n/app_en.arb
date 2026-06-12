@@ -1,0 +1,197 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "DealSouk",
+  "home": "Home",
+  "map": "Map",
+  "cart": "Cart",
+  "leaderboard": "Leaderboard",
+  "profile": "Profile",
+
+  "greeting": "Good morning",
+  "greetingAfternoon": "Good afternoon",
+  "greetingEvening": "Good evening",
+
+  "freshPrices": "Fresh Prices",
+  "freshPricesSubtitle": "Live crowd-sourced prices near you",
+  "searchProducts": "Search products…",
+  "searchNearbyStores": "Search nearby Dubai stores",
+  "nearbyStores": "Nearby Supermarkets",
+  "storeMap": "Store Map",
+
+  "tokens": "Tokens",
+  "tokenBalance": "Token Balance",
+  "earnTokens": "Earn tokens",
+  "spendTokens": "Spend tokens",
+  "tokenHistory": "Token History",
+  "voucherReady": "Voucher Ready!",
+  "voucherProgress": "Earn {remaining} more tokens to redeem your voucher.",
+  "@voucherProgress": {
+    "placeholders": {
+      "remaining": { "type": "int" }
+    }
+  },
+  "claimVoucher": "Claim Voucher Now",
+  "voucherClaimed": "Voucher Claimed!",
+  "voucherDescription": "Show the barcode or code below to the cashier at any Union Coop checkout in Dubai.",
+  "backToRewards": "Back to Rewards",
+
+  "leaderboardTitle": "Rewards & Leaderboard",
+  "dubaiLeaderboard": "Dubai Leaderboard",
+  "lastMonthChampions": "Last Month's Champions",
+  "sourcerBadges": "Sourcer Badges",
+  "todaysChallenges": "Today's Challenges",
+  "activeRequestBoard": "Active Request Board",
+  "leaderboardStreaks": "Leaderboard & Streaks",
+  "yourRank": "Rank #{rank}",
+  "@yourRank": {
+    "placeholders": {
+      "rank": { "type": "int" }
+    }
+  },
+  "dayStreak": "{days} Day Streak",
+  "@dayStreak": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+
+  "submitPrice": "Upload Price",
+  "submitForReview": "Send for review",
+  "priceSubmitted": "Price Submitted!",
+  "priceSubmittedDesc": "Your price submission is pending review.\nTokens will be credited after admin approval.",
+  "openAdminReview": "Open Admin Review",
+  "viewTokenBalance": "View Token Balance",
+  "tokenRewardEstimate": "Token reward estimate",
+  "totalRewardEstimate": "Total Reward Estimate",
+  "selectSupermarket": "Select Supermarket",
+  "selectProduct": "Select Product",
+  "enterPriceAed": "Enter Price (AED)",
+  "promotionType": "Promotion Type",
+  "priceLabelPhoto": "Price Label Photo",
+  "receiptPhoto": "Receipt Photo",
+  "photoUploaded": "Photo Uploaded",
+  "tapToUpload": "Tap to Upload",
+  "dailyCapRemaining": "{remaining} of {cap} submissions left today",
+  "@dailyCapRemaining": {
+    "placeholders": {
+      "remaining": { "type": "int" },
+      "cap": { "type": "int" }
+    }
+  },
+
+  "dailyChallenge": "Daily Challenge",
+  "challengeBonus": "+{tokens} bonus tokens",
+  "@challengeBonus": {
+    "placeholders": {
+      "tokens": { "type": "int" }
+    }
+  },
+  "challengeCompleted": "Done! +{tokens} tokens earned",
+  "@challengeCompleted": {
+    "placeholders": {
+      "tokens": { "type": "int" }
+    }
+  },
+  "challengeProgress": "{done}/{total} done",
+  "@challengeProgress": {
+    "placeholders": {
+      "done": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "tapToComplete": "Tap to start submitting",
+
+  "profileSettings": "Profile & Settings",
+  "mySubmissions": "My Submissions",
+  "myTokenHistory": "Token History",
+  "myRequests": "My Requests",
+  "settings": "Settings",
+  "displayName": "Display Name",
+  "homeArea": "Home Area",
+  "language": "Language",
+  "english": "English",
+  "arabic": "العربية",
+  "logOut": "Log Out of Demo",
+  "accuracyRating": "Accuracy Rating",
+  "accuracyRatingDesc": "{percent}% of your submissions approved",
+  "@accuracyRatingDesc": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
+  "noSubmissionsYet": "No submissions yet.\nSubmit a price to get started!",
+  "noRequestsYet": "No price requests yet.",
+  "pending": "Pending",
+  "approved": "Approved",
+  "rejected": "Rejected",
+  "fulfilled": "Fulfilled",
+  "open": "Open",
+  "refunded": "Refunded",
+
+  "adminConsole": "Moderator Console",
+  "priceModeration": "Price Moderation",
+  "analytics": "Analytics",
+  "sourcersIndex": "Sourcers Index",
+  "systemSettings": "System Settings",
+  "approve": "Approve",
+  "reject": "Reject",
+  "edit": "Edit",
+  "save": "Save",
+  "cancel": "Cancel",
+  "editSubmission": "Edit Submission",
+  "tokenEarnRate": "Token Earn Rate (base)",
+  "voucherThreshold": "Voucher Threshold (tokens)",
+  "dailySubmissionCap": "Daily Submission Cap",
+
+  "freshLabel": "Fresh",
+  "updatedAgoLabel": "Updated {hours}h ago",
+  "@updatedAgoLabel": {
+    "placeholders": {
+      "hours": { "type": "int" }
+    }
+  },
+  "unverifiedOutdated": "Unverified — may be outdated",
+  "stalePriceWarning": "Price data may be outdated (>72h)",
+  "staleStore": "Stale",
+  "filterByChain": "Filter by chain",
+  "allChains": "All",
+  "submitPriceHere": "Submit Price Here",
+
+  "betterPriceFound": "Better price found for {item}! Now AED {price} at {store}.",
+  "@betterPriceFound": {
+    "placeholders": {
+      "item": { "type": "String" },
+      "price": { "type": "String" },
+      "store": { "type": "String" }
+    }
+  },
+  "dismiss": "Dismiss",
+  "requestFulfilled": "Request fulfilled! Tokens transferred to requester.",
+
+  "noResultsFound": "No results found",
+  "cartEmpty": "Your cart is empty",
+  "addItemsToCart": "Browse products and add items to compare prices.",
+  "bestBasket": "Best Basket",
+  "bestStore": "Best Store",
+  "checkout": "Checkout",
+  "applyCoupon": "Apply Coupon",
+
+  "guestMode": "Continue as Guest",
+  "signInWithGoogle": "Continue with Google",
+  "signInWithApple": "Continue with Apple",
+  "signInWithPhone": "Continue with Phone",
+
+  "level": "Level {level}",
+  "@level": {
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
+  "earnMultiplier": "+{percent}% earn rate",
+  "@earnMultiplier": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  }
+}

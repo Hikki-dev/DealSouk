@@ -72,6 +72,8 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
     final theme = Theme.of(context);
     final stores = MockData.initialStores;
     final products = MockData.initialProducts;
+    final profile = ref.watch(userProfileProvider);
+    final settings = ref.watch(adminSettingsProvider);
 
     final priceEntered = double.tryParse(_priceController.text.trim()) != null;
     final int baseReward = _tokenEstimateBeforeReceipt(priceEntered);
@@ -83,6 +85,8 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
     if (widget.bounty != null) {
       totalReward += widget.bounty!;
     }
+
+    final int remainingToday = settings.dailySubmissionCap - profile.submissionsToday;
 
     return ResponsiveContainer(
       appBar: AppBar(
@@ -165,18 +169,18 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                     color: AppTheme.limeAccent.withValues(alpha: 0.65),
                   ),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.info_outline_rounded,
                       color: AppTheme.forestDeep,
                       size: 18,
                     ),
-                    SizedBox(width: 10),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Daily demo limit: 3 of 10 submissions used. Prices and discounts are entered manually, not scanned with OCR.',
-                        style: TextStyle(
+                        '$remainingToday of ${settings.dailySubmissionCap} submissions left today. Prices entered manually, not OCR-scanned.',
+                        style: const TextStyle(
                           color: AppTheme.forestDeep,
                           fontSize: 12,
                           fontWeight: FontWeight.w800,
@@ -464,6 +468,18 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                           promoType: selectedPromo,
                           tokensReward: totalReward,
                         );
+
+                    // Award tokens immediately for demo flow
+                    ref.read(userTokensProvider.notifier).addTokens(totalReward);
+                    ref.read(userTransactionsProvider.notifier).addTransaction(
+                      totalReward,
+                      '+$totalReward tokens — submitted ${product.name} @ ${store.name}',
+                    );
+
+                    // Update profile and gamification state
+                    ref.read(userProfileProvider.notifier).incrementSubmissions();
+                    ref.read(streakProvider.notifier).recordActivity();
+                    ref.read(dailyChallengeProvider.notifier).recordProgress();
 
                     // Fulfill the request if applicable
                     if (widget.requestId != null) {

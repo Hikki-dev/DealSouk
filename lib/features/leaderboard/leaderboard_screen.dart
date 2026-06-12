@@ -25,18 +25,21 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     final tokens = ref.watch(userTokensProvider);
     final transactions = ref.watch(userTransactionsProvider);
     final profile = ref.watch(userProfileProvider);
+    final streak = ref.watch(streakProvider);
+    final badges = ref.watch(badgesProvider);
+    final dailyChallenge = ref.watch(dailyChallengeProvider);
 
     // Initial leaderboard list from mock data
     final baseLeaderboard = MockData.initialLeaderboard;
     // Replace the current user tokens dynamically in the leaderboard list
     final leaderboard = baseLeaderboard.map((user) {
       if (user.isCurrentUser) {
-        // Find Hessa's rank dynamically. We can recalculate it or just display rank #7
         return LeaderboardUser(
           rank: user.rank,
           name: '${profile.name} (You)',
           tokens: tokens,
           isCurrentUser: true,
+          streak: streak.currentStreak,
         );
       }
       return user;
@@ -53,6 +56,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
           name: user.name,
           tokens: user.tokens,
           isCurrentUser: user.isCurrentUser,
+          streak: user.streak,
         );
       },
     );
@@ -614,32 +618,13 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             ),
           ),
 
-          // Badges horizontal slider
+          // Badges horizontal slider (live from badgesProvider)
           SliverToBoxAdapter(
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Row(
-                children: [
-                  _badgeCard(
-                    Icons.workspace_premium,
-                    'First Submission',
-                    'Awarded on first pricing upload',
-                    theme,
-                  ),
-                  _badgeCard(
-                    Icons.local_fire_department,
-                    '7 Day Streak',
-                    'Submitted daily for a week',
-                    theme,
-                  ),
-                  _badgeCard(
-                    Icons.verified_user,
-                    'Verified Sourcer',
-                    'Over 95% price accuracy rating',
-                    theme,
-                  ),
-                ],
+                children: badges.map((badge) => _liveBadgeCard(badge, theme)).toList(),
               ),
             ),
           ),
@@ -666,30 +651,87 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             ),
           ),
           SliverToBoxAdapter(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                children: [
-                  _challengeCard(
-                    Icons.receipt_long_outlined,
-                    'Upload 2 receipts',
-                    '+30 tokens',
-                    '1 / 2 done',
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: GestureDetector(
+                onTap: () => context.push('/submit-price'),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: dailyChallenge.completed ? const Color(0xFFE8F5E9) : Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: dailyChallenge.completed ? AppTheme.forestDeep : const Color(0xFFE8EEE4),
+                    ),
                   ),
-                  _challengeCard(
-                    Icons.storefront_outlined,
-                    'Visit one nearby store',
-                    '+20 tokens',
-                    'Dubai Marina',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color: dailyChallenge.completed ? AppTheme.forestDeep : AppTheme.limeAccent,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              dailyChallenge.completed ? Icons.check_rounded : Icons.flag_circle_outlined,
+                              color: dailyChallenge.completed ? Colors.white : AppTheme.forestDeep,
+                              size: 17,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              dailyChallenge.description,
+                              style: const TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w900,
+                                color: AppTheme.textDark,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: AppTheme.amberAccent.withValues(alpha: 0.14),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              dailyChallenge.completed
+                                  ? 'Done! +${dailyChallenge.bonusTokens}T'
+                                  : '+${dailyChallenge.bonusTokens} bonus tokens',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFFC77C02),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (!dailyChallenge.completed) ...[
+                        const SizedBox(height: 10),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: (dailyChallenge.progressCount / dailyChallenge.targetCount).clamp(0.0, 1.0),
+                            backgroundColor: Colors.grey.shade100,
+                            valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.forestDeep),
+                            minHeight: 6,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${dailyChallenge.progressCount}/${dailyChallenge.targetCount} done • Tap to submit a price',
+                          style: TextStyle(fontSize: 10.5, color: Colors.grey.shade600, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ],
                   ),
-                  _challengeCard(
-                    Icons.verified_outlined,
-                    'Verify 3 fresh prices',
-                    '+25 tokens',
-                    'Expires tonight',
-                  ),
-                ],
+                ),
               ),
             ),
           ),
@@ -840,6 +882,19 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                           ),
                         ),
 
+                        // Streak flame
+                        if (user.streak > 0) ...[
+                          const Icon(Icons.local_fire_department, color: Colors.orange, size: 14),
+                          Text(
+                            '${user.streak}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange.shade700,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
                         // Tokens display
                         Row(
                           children: [
@@ -1027,6 +1082,65 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _liveBadgeCard(UserBadge badge, ThemeData theme) {
+    return Opacity(
+      opacity: badge.unlocked ? 1.0 : 0.45,
+      child: Card(
+        elevation: 0,
+        margin: const EdgeInsets.only(right: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: badge.unlocked ? AppTheme.amberAccent.withValues(alpha: 0.5) : Colors.grey.shade200,
+          ),
+        ),
+        child: Container(
+          width: 140,
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            children: [
+              Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: badge.unlocked ? AppTheme.amberLight : Colors.grey.shade100,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(badge.emoji, style: const TextStyle(fontSize: 22)),
+                  ),
+                  if (!badge.unlocked)
+                    const Icon(Icons.lock_rounded, size: 14, color: Colors.grey),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                badge.name,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11,
+                  color: badge.unlocked ? AppTheme.textDark : Colors.grey,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                badge.description,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 8, color: Colors.grey.shade600),
+              ),
+            ],
+          ),
         ),
       ),
     );

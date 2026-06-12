@@ -252,7 +252,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                           ? 'Audit & Verification'
                           : _activeTab == 'analytics'
                               ? 'Analytics & Performance'
-                              : 'System Settings',
+                              : _activeTab == 'settings'
+                                  ? 'System Settings'
+                                  : 'Sourcers Index',
                       style: GoogleFonts.fredoka(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -916,7 +918,21 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                           child: Text(isFlaggedReport ? 'Confirm Deletion' : 'Reject'),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      if (!isFlaggedReport) ...[
+                        const SizedBox(width: 8),
+                        OutlinedButton(
+                          onPressed: () => _showEditDialog(context, sub),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppTheme.forestDeep,
+                            side: const BorderSide(color: AppTheme.forestDeep),
+                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            textStyle: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.bold),
+                          ),
+                          child: const Text('Edit'),
+                        ),
+                      ],
+                      const SizedBox(width: 8),
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () => _approve(sub.id, sub),
@@ -1220,7 +1236,22 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         ),
         const SizedBox(height: 18),
 
-        // Sidebar Actions (Reject / Approve)
+        // Sidebar Actions (Reject / Edit / Approve)
+        if (!isFlaggedReport)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: OutlinedButton.icon(
+              onPressed: () => _showEditDialog(context, sub),
+              icon: const Icon(Icons.edit_outlined, size: 16),
+              label: Text('Edit Submission', style: GoogleFonts.nunito(fontWeight: FontWeight.bold)),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.forestDeep,
+                side: const BorderSide(color: AppTheme.forestDeep),
+                minimumSize: const Size.fromHeight(40),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ),
         Row(
           children: [
             Expanded(
@@ -1376,8 +1407,87 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     );
   }
 
+  // --- EDIT DIALOG ---
+  void _showEditDialog(BuildContext context, AdminSubmission sub) {
+    final priceCtrl = TextEditingController(text: sub.price.toStringAsFixed(2));
+    String selectedStore = sub.storeName;
+    final storeNames = ['Carrefour JLT', 'Lulu Al Barsha', 'Spinneys JLT', 'Union Coop Al Wasl', 'Nesto Al Qusais'];
+    if (!storeNames.contains(selectedStore)) storeNames.insert(0, selectedStore);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Text('Edit Submission', style: GoogleFonts.fredoka(fontWeight: FontWeight.bold)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    sub.productName,
+                    style: GoogleFonts.nunito(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textDark),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: priceCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(
+                      labelText: 'Corrected Price (AED)',
+                      prefixIcon: Icon(Icons.payments_outlined),
+                      suffixText: 'AED',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    value: selectedStore,
+                    decoration: const InputDecoration(
+                      labelText: 'Store',
+                      prefixIcon: Icon(Icons.store_outlined),
+                    ),
+                    items: storeNames.map((s) => DropdownMenuItem(value: s, child: Text(s, style: const TextStyle(fontSize: 13)))).toList(),
+                    onChanged: (val) => setDialogState(() => selectedStore = val ?? selectedStore),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Cancel', style: TextStyle(color: Colors.grey.shade600)),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final newPrice = double.tryParse(priceCtrl.text);
+                    ref.read(adminSubmissionsProvider.notifier).editSubmission(
+                      sub.id,
+                      storeName: selectedStore,
+                      price: newPrice,
+                    );
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Submission updated.'),
+                        backgroundColor: AppTheme.forestDeep,
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.forestDeep, foregroundColor: Colors.white),
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   // Dialog / mock panels support
   Widget _buildMockPanelContent() {
+    if (_activeTab == 'settings') {
+      return _buildSettingsPanel();
+    }
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -1395,6 +1505,124 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSettingsPanel() {
+    final settings = ref.watch(adminSettingsProvider);
+    final notifier = ref.read(adminSettingsProvider.notifier);
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Token Economy Settings',
+            style: GoogleFonts.fredoka(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textDark),
+          ),
+          const SizedBox(height: 20),
+          _settingsSlider(
+            label: 'Token Earn Rate (base)',
+            value: settings.tokenEarnRate.toDouble(),
+            min: 10,
+            max: 100,
+            divisions: 18,
+            displayValue: '${settings.tokenEarnRate} tokens',
+            onChanged: (v) => notifier.setTokenEarnRate(v.round()),
+          ),
+          const SizedBox(height: 20),
+          _settingsSlider(
+            label: 'Voucher Threshold (tokens)',
+            value: settings.voucherThreshold.toDouble(),
+            min: 200,
+            max: 1000,
+            divisions: 16,
+            displayValue: '${settings.voucherThreshold} tokens',
+            onChanged: (v) => notifier.setVoucherThreshold(v.round()),
+          ),
+          const SizedBox(height: 20),
+          _settingsSlider(
+            label: 'Daily Submission Cap',
+            value: settings.dailySubmissionCap.toDouble(),
+            min: 5,
+            max: 50,
+            divisions: 9,
+            displayValue: '${settings.dailySubmissionCap} per day',
+            onChanged: (v) => notifier.setDailySubmissionCap(v.round()),
+          ),
+          const SizedBox(height: 28),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8F5E9),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFFC8E6C9)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline_rounded, color: AppTheme.forestDeep, size: 18),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Changes take effect immediately across the live demo session.',
+                    style: GoogleFonts.nunito(fontSize: 12, color: AppTheme.forestDeep, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _settingsSlider({
+    required String label,
+    required double value,
+    required double min,
+    required double max,
+    required int divisions,
+    required String displayValue,
+    required ValueChanged<double> onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: GoogleFonts.nunito(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textDark)),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppTheme.limeAccent.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                displayValue,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppTheme.forestDeep),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        SliderTheme(
+          data: SliderThemeData(
+            activeTrackColor: AppTheme.forestDeep,
+            thumbColor: AppTheme.forestDeep,
+            inactiveTrackColor: Colors.grey.shade200,
+            overlayColor: AppTheme.forestDeep.withValues(alpha: 0.1),
+          ),
+          child: Slider(
+            value: value.clamp(min, max),
+            min: min,
+            max: max,
+            divisions: divisions,
+            onChanged: onChanged,
+          ),
+        ),
+      ],
     );
   }
 

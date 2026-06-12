@@ -48,3 +48,9 @@ app.*.map.json
 backend/.env
 backend/node_modules/
 backend/dist/
+backend/firebase-service-account.json
+
+# Firebase secrets (never commit — load via CI/CD or local env)
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+lib/firebase_options.dart

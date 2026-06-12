@@ -41,6 +41,33 @@ Production admin access must be based on backend-issued role data, such as Fireb
 
 The old `isAdmin` field is still accepted only as a compatibility bridge while the backend/database model is migrated.
 
+## Creating Or Removing Admins
+
+Do not hardcode admin emails in Flutter or backend route guards.
+
+After the user has signed in once and `/auth/verify` has created their backend profile, promote them from the backend with:
+
+```bash
+cd backend
+npm run admin:set -- --email admin@example.com --admin
+```
+
+Or by Firebase UID:
+
+```bash
+cd backend
+npm run admin:set -- --uid firebase_uid_here --admin
+```
+
+To remove admin access:
+
+```bash
+cd backend
+npm run admin:set -- --email admin@example.com --no-admin
+```
+
+This updates both the backend `User.isAdmin` field and Firebase custom claims. The backend `requireAdmin` middleware remains the source of truth for admin APIs.
+
 No production admin email is hardcoded in the client.
 
 ## Dev Mock Admin

@@ -1,6 +1,7 @@
 import "dotenv/config";
 import * as admin from "firebase-admin";
 import { PrismaClient } from "@prisma/client";
+import { encrypt } from "../src/services/encryption";
 
 const prisma = new PrismaClient();
 
@@ -48,9 +49,25 @@ async function main() {
     ? await admin.auth().getUser(args.uid)
     : await admin.auth().getUserByEmail(args.email!);
 
-  const user = await prisma.user.update({
+  const displayName =
+    firebaseUser.displayName ??
+    firebaseUser.email?.split("@")[0] ??
+    firebaseUser.phoneNumber ??
+    "DealSouk Admin";
+  const encryptedPhone = firebaseUser.phoneNumber
+    ? encrypt(firebaseUser.phoneNumber)
+    : null;
+
+  const user = await prisma.user.upsert({
     where: { firebaseUid: firebaseUser.uid },
-    data: { isAdmin: args.admin },
+    update: { isAdmin: args.admin },
+    create: {
+      firebaseUid: firebaseUser.uid,
+      displayName,
+      phoneNumber: encryptedPhone,
+      preferredLocale: "en",
+      isAdmin: args.admin,
+    },
   });
 
   await admin.auth().setCustomUserClaims(firebaseUser.uid, {

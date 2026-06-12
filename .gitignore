@@ -4,6 +4,10 @@
 *.pyc
 *.swp
 .DS_Store
+.agents/
+.claude/
+.goose/
+skills-lock.json
 .atom/
 .build/
 .buildlog/
@@ -45,9 +49,22 @@ app.*.map.json
 /android/app/release
 
 # Backend
-backend/.env
 backend/node_modules/
 backend/dist/
+
+# Environment files and local secrets
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+*.pem
+*.p8
+*.p12
+*.key
+*service-account*.json
+*serviceAccount*.json
 backend/firebase-service-account.json
 
 # Firebase secrets (never commit — load via CI/CD or local env)

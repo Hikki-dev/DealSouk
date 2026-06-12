@@ -85,31 +85,35 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       child: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xFF0A2616),
-              Color(0xFF0F3820),
-              Color(0xFF144D2B),
-            ],
+            colors: [Color(0xFF0A2616), Color(0xFF0F3820), Color(0xFF144D2B)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
         ),
         child: Stack(
           children: [
-            Positioned.fill(child: CustomPaint(painter: WelcomeGridPatternPainter())),
+            Positioned.fill(
+              child: CustomPaint(painter: WelcomeGridPatternPainter()),
+            ),
             Positioned(
-              bottom: 0, left: 0, right: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
               child: Opacity(
                 opacity: 0.10,
                 child: Image.network(
                   'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=80&w=1000&auto=format&fit=crop',
-                  height: 300, fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const SizedBox(height: 300),
+                  height: 300,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const SizedBox(height: 300),
                 ),
               ),
             ),
             Positioned(
-              bottom: 0, left: 0, right: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
               child: ClipPath(
                 clipper: const ScallopClipper.up(scallopRadius: 8),
                 child: Container(height: 18, color: AppTheme.cream),
@@ -117,226 +121,288 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
             ),
 
             SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Spacer(),
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24.0,
+                    vertical: 12.0,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 12),
 
-                    // Logo
-                    Center(
-                      child: Container(
-                        padding: const EdgeInsets.all(18),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.08),
-                              blurRadius: 24, offset: const Offset(0, 10),
+                      // Logo
+                      Center(
+                        child: Container(
+                          padding: const EdgeInsets.all(18),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 24,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 250),
+                            child: Icon(
+                              _isAdminMode
+                                  ? Icons.gavel_rounded
+                                  : Icons.insights_rounded,
+                              key: ValueKey<bool>(_isAdminMode),
+                              size: 44,
+                              color: AppTheme.forestDeep,
                             ),
-                          ],
-                        ),
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 250),
-                          child: Icon(
-                            _isAdminMode ? Icons.gavel_rounded : Icons.insights_rounded,
-                            key: ValueKey<bool>(_isAdminMode),
-                            size: 44, color: AppTheme.forestDeep,
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-                    const Text(
-                      'DealSouk',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900, color: Colors.white,
-                        letterSpacing: -0.5, fontSize: 40,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-
-                    AnimatedSize(
-                      duration: const Duration(milliseconds: 200),
-                      child: Text(
-                        _isAdminMode
-                            ? 'Review crowd-sourced grocery prices'
-                            : 'Save money on groceries in Dubai',
+                      const Text(
+                        'DealSouk',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.65),
-                          fontWeight: FontWeight.w500, fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          letterSpacing: -0.5,
+                          fontSize: 40,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
+                      const SizedBox(height: 8),
 
-                    // Mode toggle
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                      AnimatedSize(
+                        duration: const Duration(milliseconds: 200),
+                        child: Text(
+                          _isAdminMode
+                              ? 'Review crowd-sourced grocery prices'
+                              : 'Save money on groceries in Dubai',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.65),
+                            fontWeight: FontWeight.w500,
+                            fontSize: 15,
+                          ),
+                        ),
                       ),
-                      child: Row(
-                        children: [
-                          _modeTab('Customer Mode', !_isAdminMode, () => setState(() {
-                            _isAdminMode = false;
-                            _showPhoneInput = false;
-                            _showOtpInput = false;
-                          })),
-                          _modeTab('Admin Moderator', _isAdminMode, () => setState(() {
-                            _isAdminMode = true;
-                            _showPhoneInput = false;
-                            _showOtpInput = false;
-                          })),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
+                      const SizedBox(height: 16),
 
-                    // Value pillars
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: _isAdminMode
-                          ? const [
-                              _ValuePillar(icon: Icons.rate_review_rounded, label: 'Audit\nQueue'),
-                              SizedBox(width: 20),
-                              _ValuePillar(icon: Icons.security_rounded, label: 'Fraud\nFilter'),
-                              SizedBox(width: 20),
-                              _ValuePillar(icon: Icons.token_rounded, label: 'Issue\nTokens'),
-                            ]
-                          : const [
-                              _ValuePillar(icon: Icons.compare_arrows_rounded, label: 'Compare\nPrices'),
-                              SizedBox(width: 20),
-                              _ValuePillar(icon: Icons.bolt, label: 'Earn\nTokens'),
-                              SizedBox(width: 20),
-                              _ValuePillar(icon: Icons.savings_outlined, label: 'Save\nMoney'),
-                            ],
-                    ),
-
-                    const Spacer(flex: 2),
-
-                    // Info banner
-                    GestureDetector(
-                      onTap: () { if (!_isAdminMode) TutorialOverlay.show(context); },
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 20),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      // Mode toggle
+                      Container(
+                        padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.15),
+                          ),
                         ),
                         child: Row(
-                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.info_outline, color: Colors.white, size: 20),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                _isAdminMode
-                                    ? 'Moderator Panel: Verify receipts and shelf prices.'
-                                    : 'Live Dubai prices. Earn tokens • Tap to learn how!',
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 12.5, fontWeight: FontWeight.w600, color: Colors.white,
-                                ),
-                              ),
+                            _modeTab(
+                              'Customer Mode',
+                              !_isAdminMode,
+                              () => setState(() {
+                                _isAdminMode = false;
+                                _showPhoneInput = false;
+                                _showOtpInput = false;
+                              }),
+                            ),
+                            _modeTab(
+                              'Admin Moderator',
+                              _isAdminMode,
+                              () => setState(() {
+                                _isAdminMode = true;
+                                _showPhoneInput = false;
+                                _showOtpInput = false;
+                              }),
                             ),
                           ],
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 24),
 
-                    // Phone input (shown when user taps Sign in with Phone)
-                    if (_showPhoneInput && !_showOtpInput) ...[
-                      _PhoneInputField(
-                        controller: _phoneController,
-                        onSend: _sendOtp,
-                        loading: _loading,
-                        onCancel: () => setState(() => _showPhoneInput = false),
+                      // Value pillars
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: _isAdminMode
+                            ? const [
+                                _ValuePillar(
+                                  icon: Icons.rate_review_rounded,
+                                  label: 'Audit\nQueue',
+                                ),
+                                SizedBox(width: 20),
+                                _ValuePillar(
+                                  icon: Icons.security_rounded,
+                                  label: 'Fraud\nFilter',
+                                ),
+                                SizedBox(width: 20),
+                                _ValuePillar(
+                                  icon: Icons.token_rounded,
+                                  label: 'Issue\nTokens',
+                                ),
+                              ]
+                            : const [
+                                _ValuePillar(
+                                  icon: Icons.compare_arrows_rounded,
+                                  label: 'Compare\nPrices',
+                                ),
+                                SizedBox(width: 20),
+                                _ValuePillar(
+                                  icon: Icons.bolt,
+                                  label: 'Earn\nTokens',
+                                ),
+                                SizedBox(width: 20),
+                                _ValuePillar(
+                                  icon: Icons.savings_outlined,
+                                  label: 'Save\nMoney',
+                                ),
+                              ],
                       ),
-                      const SizedBox(height: 12),
-                    ],
 
-                    // OTP input
-                    if (_showOtpInput) ...[
-                      _OtpInputField(
-                        controller: _otpController,
-                        phone: _phoneController.text.trim(),
-                        onVerify: _verifyOtp,
-                        loading: _loading,
-                        onResend: _sendOtp,
-                        onCancel: () => setState(() {
-                          _showOtpInput = false;
-                          _showPhoneInput = false;
-                          _otpController.clear();
-                        }),
+                      const SizedBox(height: 32),
+
+                      // Info banner
+                      GestureDetector(
+                        onTap: () {
+                          if (!_isAdminMode) TutorialOverlay.show(context);
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 20),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.15),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.info_outline,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  _isAdminMode
+                                      ? 'Moderator Panel: Verify receipts and shelf prices.'
+                                      : 'Live Dubai prices. Earn tokens • Tap to learn how!',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 12),
-                    ],
 
-                    // Primary CTA
-                    if (!_showPhoneInput && !_showOtpInput) ...[
-                      _PrimaryCta(
-                        label: _isAdminMode ? 'Enter Admin Dashboard' : 'Continue with Google',
-                        loading: _loading,
-                        onTap: _handleGoogle,
-                      ),
-                      const SizedBox(height: 12),
-
-                      if (!_isAdminMode) ...[
-                        _SignInButton(
-                          icon: Icons.phone_iphone_rounded,
-                          label: 'Sign in with Phone',
-                          onTap: () => setState(() => _showPhoneInput = true),
+                      // Phone input (shown when user taps Sign in with Phone)
+                      if (_showPhoneInput && !_showOtpInput) ...[
+                        _PhoneInputField(
+                          controller: _phoneController,
+                          onSend: _sendOtp,
+                          loading: _loading,
+                          onCancel: () =>
+                              setState(() => _showPhoneInput = false),
                         ),
-                        const SizedBox(height: 10),
-                        _SignInButton(
-                          icon: Icons.apple,
-                          iconSize: 22,
-                          label: 'Sign in with Apple',
-                          onTap: _handleApple,
-                        ),
-                        const SizedBox(height: 10),
-                        _SignInButton(
-                          icon: Icons.visibility_outlined,
-                          label: 'Browse as Guest',
-                          onTap: () => ref.read(authProvider.notifier).continueAsGuest(),
-                        ),
-                      ] else ...[
-                        _SignInButton(
-                          icon: Icons.phone_iphone_rounded,
-                          label: 'Sign in with Phone',
-                          onTap: () => setState(() => _showPhoneInput = true),
-                        ),
-                        const SizedBox(height: 10),
-                        _SignInButton(
-                          icon: Icons.apple,
-                          iconSize: 22,
-                          label: 'Sign in with Apple',
-                          onTap: _handleApple,
-                        ),
+                        const SizedBox(height: 12),
                       ],
-                    ],
 
-                    const SizedBox(height: 20),
-                    Text(
-                      _isAdminMode
-                          ? 'Moderator console permissions apply.'
-                          : 'Crowd-sourced grocery data for Dubai.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 11),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
+                      // OTP input
+                      if (_showOtpInput) ...[
+                        _OtpInputField(
+                          controller: _otpController,
+                          phone: _phoneController.text.trim(),
+                          onVerify: _verifyOtp,
+                          loading: _loading,
+                          onResend: _sendOtp,
+                          onCancel: () => setState(() {
+                            _showOtpInput = false;
+                            _showPhoneInput = false;
+                            _otpController.clear();
+                          }),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+
+                      // Primary CTA
+                      if (!_showPhoneInput && !_showOtpInput) ...[
+                        _PrimaryCta(
+                          label: _isAdminMode
+                              ? 'Enter Admin Dashboard'
+                              : 'Continue with Google',
+                          loading: _loading,
+                          onTap: _handleGoogle,
+                        ),
+                        const SizedBox(height: 12),
+
+                        if (!_isAdminMode) ...[
+                          _SignInButton(
+                            icon: Icons.phone_iphone_rounded,
+                            label: 'Sign in with Phone',
+                            onTap: () => setState(() => _showPhoneInput = true),
+                          ),
+                          const SizedBox(height: 10),
+                          _SignInButton(
+                            icon: Icons.apple,
+                            iconSize: 22,
+                            label: 'Sign in with Apple',
+                            onTap: _handleApple,
+                          ),
+                          const SizedBox(height: 10),
+                          _SignInButton(
+                            icon: Icons.visibility_outlined,
+                            label: 'Browse as Guest',
+                            onTap: () => ref
+                                .read(authProvider.notifier)
+                                .continueAsGuest(),
+                          ),
+                        ] else ...[
+                          _SignInButton(
+                            icon: Icons.phone_iphone_rounded,
+                            label: 'Sign in with Phone',
+                            onTap: () => setState(() => _showPhoneInput = true),
+                          ),
+                          const SizedBox(height: 10),
+                          _SignInButton(
+                            icon: Icons.apple,
+                            iconSize: 22,
+                            label: 'Sign in with Apple',
+                            onTap: _handleApple,
+                          ),
+                        ],
+                      ],
+
+                      const SizedBox(height: 20),
+                      Text(
+                        _isAdminMode
+                            ? 'Moderator console permissions apply.'
+                            : 'Crowd-sourced grocery data for Dubai.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.4),
+                          fontSize: 11,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -346,7 +412,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
               const Positioned.fill(
                 child: ColoredBox(
                   color: Colors.black26,
-                  child: Center(child: CircularProgressIndicator(color: Colors.white)),
+                  child: Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  ),
                 ),
               ),
           ],
@@ -371,7 +439,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
               label,
               style: TextStyle(
                 color: active ? AppTheme.forestDeep : Colors.white,
-                fontWeight: FontWeight.bold, fontSize: 13,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
               ),
             ),
           ),
@@ -412,7 +481,9 @@ class _PhoneInputField extends StatelessWidget {
             prefixIcon: const Icon(Icons.phone, color: Colors.white54),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+              borderSide: BorderSide(
+                color: Colors.white.withValues(alpha: 0.3),
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
@@ -430,10 +501,15 @@ class _PhoneInputField extends StatelessWidget {
                   height: 50,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(25),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.25),
+                    ),
                   ),
                   child: const Center(
-                    child: Text('Cancel', style: TextStyle(color: Colors.white70, fontSize: 15)),
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(color: Colors.white70, fontSize: 15),
+                    ),
                   ),
                 ),
               ),
@@ -441,7 +517,11 @@ class _PhoneInputField extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               flex: 2,
-              child: _PrimaryCta(label: 'Send Code', loading: loading, onTap: onSend),
+              child: _PrimaryCta(
+                label: 'Send Code',
+                loading: loading,
+                onTap: onSend,
+              ),
             ),
           ],
         ),
@@ -477,7 +557,10 @@ class _OtpInputField extends StatelessWidget {
         Text(
           'Enter the 6-digit code sent to $phone',
           textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 13),
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.7),
+            fontSize: 13,
+          ),
         ),
         const SizedBox(height: 10),
         TextField(
@@ -486,14 +569,23 @@ class _OtpInputField extends StatelessWidget {
           maxLength: 6,
           autofocus: true,
           textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.white, fontSize: 24, letterSpacing: 8),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            letterSpacing: 8,
+          ),
           decoration: InputDecoration(
             counterText: '',
             hintText: '------',
-            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3), letterSpacing: 8),
+            hintStyle: TextStyle(
+              color: Colors.white.withValues(alpha: 0.3),
+              letterSpacing: 8,
+            ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+              borderSide: BorderSide(
+                color: Colors.white.withValues(alpha: 0.3),
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
@@ -511,10 +603,15 @@ class _OtpInputField extends StatelessWidget {
                   height: 50,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(25),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.25),
+                    ),
                   ),
                   child: const Center(
-                    child: Text('Cancel', style: TextStyle(color: Colors.white70, fontSize: 15)),
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(color: Colors.white70, fontSize: 15),
+                    ),
                   ),
                 ),
               ),
@@ -522,7 +619,11 @@ class _OtpInputField extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               flex: 2,
-              child: _PrimaryCta(label: 'Verify', loading: loading, onTap: onVerify),
+              child: _PrimaryCta(
+                label: 'Verify',
+                loading: loading,
+                onTap: onVerify,
+              ),
             ),
           ],
         ),
@@ -533,8 +634,10 @@ class _OtpInputField extends StatelessWidget {
             'Resend code',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.5), fontSize: 13,
-              decoration: TextDecoration.underline, decorationColor: Colors.white38,
+              color: Colors.white.withValues(alpha: 0.5),
+              fontSize: 13,
+              decoration: TextDecoration.underline,
+              decorationColor: Colors.white38,
             ),
           ),
         ),
@@ -550,7 +653,11 @@ class _PrimaryCta extends StatelessWidget {
   final VoidCallback onTap;
   final bool loading;
 
-  const _PrimaryCta({required this.label, required this.onTap, this.loading = false});
+  const _PrimaryCta({
+    required this.label,
+    required this.onTap,
+    this.loading = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -562,13 +669,31 @@ class _PrimaryCta extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(27),
           boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 16, offset: const Offset(0, 6)),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
           ],
         ),
         child: Center(
           child: loading
-              ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: AppTheme.forestDeep))
-              : Text(label, style: const TextStyle(color: AppTheme.forestDeep, fontSize: 16.5, fontWeight: FontWeight.w800)),
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: AppTheme.forestDeep,
+                  ),
+                )
+              : Text(
+                  label,
+                  style: const TextStyle(
+                    color: AppTheme.forestDeep,
+                    fontSize: 16.5,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
         ),
       ),
     );
@@ -599,8 +724,10 @@ class _ValuePillar extends StatelessWidget {
           label,
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 11, fontWeight: FontWeight.w600,
-            color: Colors.white.withValues(alpha: 0.85), height: 1.3,
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: Colors.white.withValues(alpha: 0.85),
+            height: 1.3,
           ),
         ),
       ],
@@ -615,8 +742,10 @@ class _SignInButton extends StatelessWidget {
   final VoidCallback onTap;
 
   const _SignInButton({
-    required this.icon, this.iconSize = 20,
-    required this.label, required this.onTap,
+    required this.icon,
+    this.iconSize = 20,
+    required this.label,
+    required this.onTap,
   });
 
   @override
@@ -627,14 +756,24 @@ class _SignInButton extends StatelessWidget {
         height: 50,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(25),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 1.3),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.25),
+            width: 1.3,
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: iconSize, color: Colors.white),
             const SizedBox(width: 8),
-            Text(label, style: const TextStyle(color: Colors.white, fontSize: 14.5, fontWeight: FontWeight.w600)),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14.5,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),

@@ -1441,7 +1441,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: selectedStore,
+                    initialValue: selectedStore,
                     decoration: const InputDecoration(
                       labelText: 'Store',
                       prefixIcon: Icon(Icons.store_outlined),

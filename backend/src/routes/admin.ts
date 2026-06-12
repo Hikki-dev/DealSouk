@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { prisma } from '../index';
 import { requireAuth, requireAdmin, AuthRequest } from '../middleware/auth';
-import { awardTokens } from '../services/tokenEngine';
+import { awardTokens, checkFirstSubmissionBonus, updateStreakOnApproval, updateChallengeProgress } from '../services/tokenEngine';
+import { notifyRankChange } from '../services/fcmNotifier';
 
 const router = Router();
 
@@ -51,12 +52,17 @@ router.post('/submissions/:id/approve', async (req: AuthRequest, res) => {
   });
 
   if (submission.tokensAwarded > 0) {
-    await awardTokens(
-      submission.sourcerId,
-      submission.tokensAwarded,
-      `Approved submission: ${req.params.id}`
-    );
+    await awardTokens(submission.sourcerId, submission.tokensAwarded, `Approved submission: ${req.params.id}`);
   }
+
+  // FR-07: Welcome bonus on first approved submission
+  await checkFirstSubmissionBonus(submission.sourcerId);
+
+  // FR-46: Update streak
+  await updateStreakOnApproval(submission.sourcerId);
+
+  // FR-47: Update daily challenge progress
+  await updateChallengeProgress(submission.sourcerId);
 
   res.json({ message: 'Approved', tokensAwarded: submission.tokensAwarded });
 });

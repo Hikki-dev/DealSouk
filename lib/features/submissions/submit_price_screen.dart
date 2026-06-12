@@ -49,25 +49,41 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
       if (!mounted) return;
       final storesLoaded = ref.read(storesProvider);
       if (storesLoaded.isEmpty) {
-        ref.read(storesProvider.notifier).fetchNearby(lat: 25.0771, lng: 55.1328, radiusKm: 15);
+        ref
+            .read(storesProvider.notifier)
+            .fetchNearby(lat: 25.0771, lng: 55.1328, radiusKm: 15);
       }
 
       // Prefill fields if fulfilling a Request Board bounty
       if (widget.prefilledStoreName != null) {
         final stores = ref.read(storesProvider);
         final match = stores.where(
-          (s) => s.name.toLowerCase().contains(widget.prefilledStoreName!.toLowerCase()) ||
-                 widget.prefilledStoreName!.toLowerCase().contains(s.name.toLowerCase()),
+          (s) =>
+              s.name.toLowerCase().contains(
+                widget.prefilledStoreName!.toLowerCase(),
+              ) ||
+              widget.prefilledStoreName!.toLowerCase().contains(
+                s.name.toLowerCase(),
+              ),
         );
-        if (match.isNotEmpty && mounted) setState(() => selectedStoreId = match.first.id);
+        if (match.isNotEmpty && mounted) {
+          setState(() => selectedStoreId = match.first.id);
+        }
       }
       if (widget.prefilledProductName != null) {
         final products = ref.read(productsProvider);
         final match = products.where(
-          (p) => p.name.toLowerCase().contains(widget.prefilledProductName!.toLowerCase()) ||
-                 widget.prefilledProductName!.toLowerCase().contains(p.name.toLowerCase()),
+          (p) =>
+              p.name.toLowerCase().contains(
+                widget.prefilledProductName!.toLowerCase(),
+              ) ||
+              widget.prefilledProductName!.toLowerCase().contains(
+                p.name.toLowerCase(),
+              ),
         );
-        if (match.isNotEmpty && mounted) setState(() => selectedProductId = match.first.id);
+        if (match.isNotEmpty && mounted) {
+          setState(() => selectedProductId = match.first.id);
+        }
       }
     });
   }
@@ -88,16 +104,15 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
 
     final priceEntered = double.tryParse(_priceController.text.trim()) != null;
     final int baseReward = _tokenEstimateBeforeReceipt(priceEntered);
-    var totalReward = uploadedReceipt
-        ? (baseReward * 1.5).round()
-        : baseReward;
+    var totalReward = uploadedReceipt ? (baseReward * 1.5).round() : baseReward;
 
     // Add active request bounty if fulfilling a request
     if (widget.bounty != null) {
       totalReward += widget.bounty!;
     }
 
-    final int remainingToday = settings.dailySubmissionCap - profile.submissionsToday;
+    final int remainingToday =
+        settings.dailySubmissionCap - profile.submissionsToday;
 
     return ResponsiveContainer(
       appBar: AppBar(
@@ -318,7 +333,8 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                           ? null
                           : () async {
                               setState(() => _uploadingReceipt = true);
-                              final url = await storageService.captureAndUploadReceipt();
+                              final url = await storageService
+                                  .captureAndUploadReceipt();
                               if (mounted) {
                                 setState(() {
                                   _uploadingReceipt = false;
@@ -468,8 +484,12 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
               GestureDetector(
                 onTap: () async {
                   if (_formKey.currentState!.validate()) {
-                    final store = stores.firstWhere((s) => s.id == selectedStoreId);
-                    final product = products.firstWhere((p) => p.id == selectedProductId);
+                    final store = stores.firstWhere(
+                      (s) => s.id == selectedStoreId,
+                    );
+                    final product = products.firstWhere(
+                      (p) => p.id == selectedProductId,
+                    );
                     final price = double.parse(_priceController.text);
 
                     int awarded = totalReward;
@@ -488,19 +508,26 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
 
                     // Optimistic UI updates
                     ref.read(userTokensProvider.notifier).addTokens(awarded);
-                    ref.read(userTransactionsProvider.notifier).addTransaction(
-                      awarded,
-                      '+$awarded tokens — submitted ${product.name} @ ${store.name}',
-                    );
-                    ref.read(userProfileProvider.notifier).incrementSubmissions();
+                    ref
+                        .read(userTransactionsProvider.notifier)
+                        .addTransaction(
+                          awarded,
+                          '+$awarded tokens — submitted ${product.name} @ ${store.name}',
+                        );
+                    ref
+                        .read(userProfileProvider.notifier)
+                        .incrementSubmissions();
                     ref.read(streakProvider.notifier).recordActivity();
                     ref.read(dailyChallengeProvider.notifier).recordProgress();
 
                     if (widget.requestId != null) {
-                      ref.read(priceRequestsProvider.notifier).fulfillPriceRequest(widget.requestId!);
+                      ref
+                          .read(priceRequestsProvider.notifier)
+                          .fulfillPriceRequest(widget.requestId!);
                     }
 
-                    if (mounted) _showSuccessDialog(context, awarded);
+                    if (!context.mounted) return;
+                    _showSuccessDialog(context, awarded);
                   }
                 },
                 child: Container(

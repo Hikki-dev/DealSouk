@@ -75,6 +75,8 @@ class Store {
   final double xOffset;
   final double yOffset;
   final int lastUpdatedHoursAgo;
+  final double lat;
+  final double lng;
 
   Store({
     required this.id,
@@ -86,14 +88,17 @@ class Store {
     required this.xOffset,
     required this.yOffset,
     this.lastUpdatedHoursAgo = 2,
+    this.lat = 25.0771,
+    this.lng = 55.1328,
   });
 
   factory Store.fromJson(Map<String, dynamic> json) {
-    final hoursAgo = json['lastUpdatedHoursAgo'] as int? ??
+    final hoursAgo =
+        json['lastUpdatedHoursAgo'] as int? ??
         (json['lastUpdatedAt'] != null
             ? DateTime.now()
-                .difference(DateTime.parse(json['lastUpdatedAt'] as String))
-                .inHours
+                  .difference(DateTime.parse(json['lastUpdatedAt'] as String))
+                  .inHours
             : 48);
     String freshness;
     if (json['isStale'] == true) {
@@ -115,6 +120,8 @@ class Store {
       xOffset: 0.5,
       yOffset: 0.5,
       lastUpdatedHoursAgo: hoursAgo,
+      lat: (json['lat'] as num?)?.toDouble() ?? 25.0771,
+      lng: (json['lng'] as num?)?.toDouble() ?? 55.1328,
     );
   }
 }
@@ -136,7 +143,11 @@ class StoreProductPrice {
 
   factory StoreProductPrice.fromJson(Map<String, dynamic> json) {
     final h = json['hoursAgo'] as int? ?? 0;
-    final label = h < 1 ? 'Just Now' : h < 24 ? '${h}h ago' : '${h ~/ 24}d ago';
+    final label = h < 1
+        ? 'Just Now'
+        : h < 24
+        ? '${h}h ago'
+        : '${h ~/ 24}d ago';
     final store = json['store'] as Map<String, dynamic>;
     return StoreProductPrice(
       storeId: store['id'] as String,
@@ -179,7 +190,10 @@ class LeaderboardUser {
     this.streak = 0,
   });
 
-  factory LeaderboardUser.fromJson(Map<String, dynamic> json, {bool isCurrentUser = false}) {
+  factory LeaderboardUser.fromJson(
+    Map<String, dynamic> json, {
+    bool isCurrentUser = false,
+  }) {
     return LeaderboardUser(
       rank: json['rank'] as int,
       name: json['displayName'] as String,
@@ -207,9 +221,13 @@ class TokenTransaction {
     String label = 'Recently';
     if (createdAt != null) {
       final diff = DateTime.now().difference(createdAt);
-      if (diff.inMinutes < 60) label = '${diff.inMinutes}m ago';
-      else if (diff.inHours < 24) label = '${diff.inHours}h ago';
-      else label = '${diff.inDays}d ago';
+      if (diff.inMinutes < 60) {
+        label = '${diff.inMinutes}m ago';
+      } else if (diff.inHours < 24) {
+        label = '${diff.inHours}h ago';
+      } else {
+        label = '${diff.inDays}d ago';
+      }
     }
     return TokenTransaction(
       id: json['id'] as String,
@@ -254,15 +272,20 @@ class AdminSubmission {
     String label = 'Recently';
     if (createdAt != null) {
       final diff = DateTime.now().difference(createdAt);
-      if (diff.inMinutes < 60) label = '${diff.inMinutes}m ago';
-      else if (diff.inHours < 24) label = '${diff.inHours}h ago';
-      else label = '${diff.inDays}d ago';
+      if (diff.inMinutes < 60) {
+        label = '${diff.inMinutes}m ago';
+      } else if (diff.inHours < 24) {
+        label = '${diff.inHours}h ago';
+      } else {
+        label = '${diff.inDays}d ago';
+      }
     }
     final product = json['product'] as Map<String, dynamic>? ?? {};
     final store = json['store'] as Map<String, dynamic>? ?? {};
     return AdminSubmission(
       id: json['id'] as String,
-      productName: product['name'] as String? ?? json['productName'] as String? ?? '',
+      productName:
+          product['name'] as String? ?? json['productName'] as String? ?? '',
       brand: product['brand'] as String? ?? '',
       storeName: '${store['chain'] ?? ''} ${store['branchName'] ?? ''}'.trim(),
       price: (json['priceAed'] as num?)?.toDouble() ?? 0.0,
@@ -325,9 +348,13 @@ class PriceRequest {
     String label = 'Recently';
     if (createdAt != null) {
       final diff = DateTime.now().difference(createdAt);
-      if (diff.inMinutes < 60) label = '${diff.inMinutes}m ago';
-      else if (diff.inHours < 24) label = '${diff.inHours}h ago';
-      else label = '${diff.inDays}d ago';
+      if (diff.inMinutes < 60) {
+        label = '${diff.inMinutes}m ago';
+      } else if (diff.inHours < 24) {
+        label = '${diff.inHours}h ago';
+      } else {
+        label = '${diff.inDays}d ago';
+      }
     }
     return PriceRequest(
       id: json['id'] as String,
@@ -341,10 +368,7 @@ class PriceRequest {
     );
   }
 
-  PriceRequest copyWith({
-    String? status,
-    String? timestampLabel,
-  }) {
+  PriceRequest copyWith({String? status, String? timestampLabel}) {
     return PriceRequest(
       id: id,
       productName: productName,
@@ -369,7 +393,11 @@ class StreakData {
     required this.lastActivityLabel,
   });
 
-  StreakData copyWith({int? currentStreak, int? longestStreak, String? lastActivityLabel}) {
+  StreakData copyWith({
+    int? currentStreak,
+    int? longestStreak,
+    String? lastActivityLabel,
+  }) {
     return StreakData(
       currentStreak: currentStreak ?? this.currentStreak,
       longestStreak: longestStreak ?? this.longestStreak,
@@ -423,6 +451,22 @@ class DailyChallenge {
     this.completed = false,
   });
 
+  factory DailyChallenge.fromJson(Map<String, dynamic> json) {
+    final progress = json['userProgress'] as Map<String, dynamic>?;
+    return DailyChallenge(
+      id: json['id'] as String,
+      description:
+          json['description'] as String? ??
+          json['title'] as String? ??
+          'Submit fresh prices today',
+      targetStore: json['chainTarget'] as String? ?? 'Any',
+      targetCount: json['targetCount'] as int? ?? 3,
+      bonusTokens: json['bonusTokens'] as int? ?? 30,
+      progressCount: progress?['progress'] as int? ?? 0,
+      completed: progress?['completed'] as bool? ?? false,
+    );
+  }
+
   DailyChallenge copyWith({int? progressCount, bool? completed}) {
     return DailyChallenge(
       id: id,
@@ -447,7 +491,11 @@ class AdminSettings {
     this.dailySubmissionCap = 30,
   });
 
-  AdminSettings copyWith({int? tokenEarnRate, int? voucherThreshold, int? dailySubmissionCap}) {
+  AdminSettings copyWith({
+    int? tokenEarnRate,
+    int? voucherThreshold,
+    int? dailySubmissionCap,
+  }) {
     return AdminSettings(
       tokenEarnRate: tokenEarnRate ?? this.tokenEarnRate,
       voucherThreshold: voucherThreshold ?? this.voucherThreshold,

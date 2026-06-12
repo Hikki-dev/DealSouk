@@ -12,7 +12,7 @@ class StoresService {
       'lat': lat,
       'lng': lng,
       'radius': radiusKm,
-      if (chain != null) 'chain': chain,
+      'chain': ?chain,
     });
     final list = res.data as List<dynamic>;
     return list

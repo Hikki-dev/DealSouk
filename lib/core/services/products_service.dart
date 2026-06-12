@@ -7,7 +7,7 @@ class ProductsService {
       '/products/search',
       params: {
         if (query.isNotEmpty) 'q': query,
-        if (category != null) 'category': category,
+        'category': ?category,
       },
     );
     final list = res.data as List<dynamic>;

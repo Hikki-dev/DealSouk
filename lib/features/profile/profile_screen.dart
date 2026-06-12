@@ -73,11 +73,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 2),
-                        image: DecorationImage(
-                          image: NetworkImage(profile.avatarUrl),
-                          fit: BoxFit.cover,
-                        ),
+                        image: profile.avatarUrl.isNotEmpty
+                            ? DecorationImage(
+                                image: NetworkImage(profile.avatarUrl),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
                       ),
+                      child: profile.avatarUrl.isEmpty
+                          ? const Center(
+                              child: Icon(
+                                Icons.person,
+                                color: Colors.white,
+                                size: 28,
+                              ),
+                            )
+                          : null,
                     ),
                     const SizedBox(width: 14),
                     Expanded(

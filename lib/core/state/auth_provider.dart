@@ -44,13 +44,15 @@ class AuthState {
 class AuthNotifier extends Notifier<AuthState> {
   @override
   AuthState build() {
-    // Listen to Firebase auth state changes
-    authService.authStateChanges.listen((user) {
-      if (user != null && state.status != AuthStatus.authenticated) {
-        _syncWithBackend(user);
-      } else if (user == null && state.status == AuthStatus.authenticated) {
-        state = const AuthState(status: AuthStatus.unauthenticated);
-      }
+    // Listen to Firebase auth state changes in a microtask to avoid accessing state during initialization
+    Future.microtask(() {
+      authService.authStateChanges.listen((user) {
+        if (user != null && state.status != AuthStatus.authenticated) {
+          _syncWithBackend(user);
+        } else if (user == null && state.status == AuthStatus.authenticated) {
+          state = const AuthState(status: AuthStatus.unauthenticated);
+        }
+      });
     });
 
     final current = authService.currentUser;

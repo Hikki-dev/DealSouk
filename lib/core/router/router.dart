@@ -54,14 +54,29 @@ GoRouter buildRouter(WidgetRef ref) {
       ),
 
       ShellRoute(
-        builder: (_ctx, _st, child) => ShellLayout(child: child),
+        builder: (ctx, st, child) => ShellLayout(child: child),
         routes: [
           GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
-          GoRoute(path: '/search', builder: (context, state) => const SearchScreen()),
-          GoRoute(path: '/stores', builder: (context, state) => const StoreScreen()),
-          GoRoute(path: '/cart', builder: (context, state) => const CartScreen()),
-          GoRoute(path: '/leaderboard', builder: (context, state) => const LeaderboardScreen()),
-          GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
+          GoRoute(
+            path: '/search',
+            builder: (context, state) => const SearchScreen(),
+          ),
+          GoRoute(
+            path: '/stores',
+            builder: (context, state) => const StoreScreen(),
+          ),
+          GoRoute(
+            path: '/cart',
+            builder: (context, state) => const CartScreen(),
+          ),
+          GoRoute(
+            path: '/leaderboard',
+            builder: (context, state) => const LeaderboardScreen(),
+          ),
+          GoRoute(
+            path: '/profile',
+            builder: (context, state) => const ProfileScreen(),
+          ),
         ],
       ),
 
@@ -105,32 +120,55 @@ final routerProvider = Provider<GoRouter>((ref) {
       final onWelcome = state.matchedLocation == '/welcome';
 
       if (status == AuthStatus.unknown) return null;
-      if (status == AuthStatus.unauthenticated) return onWelcome ? null : '/welcome';
+      if (status == AuthStatus.unauthenticated) {
+        return onWelcome ? null : '/welcome';
+      }
       if (onWelcome) return '/';
       if (state.matchedLocation == '/admin' && !authState.isAdmin) return '/';
       if (authState.isGuest &&
           (state.matchedLocation.startsWith('/submit-price') ||
-              state.matchedLocation == '/profile')) return '/';
+              state.matchedLocation == '/profile')) {
+        return '/';
+      }
 
       return null;
     },
     routes: [
-      GoRoute(path: '/welcome', builder: (_ctx, _st) => const WelcomeScreen()),
+      GoRoute(
+        path: '/welcome',
+        builder: (context, state) => const WelcomeScreen(),
+      ),
       ShellRoute(
-        builder: (_ctx, _st, child) => ShellLayout(child: child),
+        builder: (context, state, child) => ShellLayout(child: child),
         routes: [
-          GoRoute(path: '/', builder: (_ctx, _st) => const HomeScreen()),
-          GoRoute(path: '/search', builder: (_ctx, _st) => const SearchScreen()),
-          GoRoute(path: '/stores', builder: (_ctx, _st) => const StoreScreen()),
-          GoRoute(path: '/cart', builder: (_ctx, _st) => const CartScreen()),
-          GoRoute(path: '/leaderboard', builder: (_ctx, _st) => const LeaderboardScreen()),
-          GoRoute(path: '/profile', builder: (_ctx, _st) => const ProfileScreen()),
+          GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
+          GoRoute(
+            path: '/search',
+            builder: (context, state) => const SearchScreen(),
+          ),
+          GoRoute(
+            path: '/stores',
+            builder: (context, state) => const StoreScreen(),
+          ),
+          GoRoute(
+            path: '/cart',
+            builder: (context, state) => const CartScreen(),
+          ),
+          GoRoute(
+            path: '/leaderboard',
+            builder: (context, state) => const LeaderboardScreen(),
+          ),
+          GoRoute(
+            path: '/profile',
+            builder: (context, state) => const ProfileScreen(),
+          ),
         ],
       ),
-      GoRoute(path: '/admin', builder: (_ctx, _st) => const AdminScreen()),
+      GoRoute(path: '/admin', builder: (context, state) => const AdminScreen()),
       GoRoute(
         path: '/product/:id',
-        builder: (_, state) => ProductDetailScreen(productId: state.pathParameters['id'] ?? ''),
+        builder: (_, state) =>
+            ProductDetailScreen(productId: state.pathParameters['id'] ?? ''),
       ),
       GoRoute(
         path: '/submit-price',
@@ -158,22 +196,38 @@ class GoRouterRefreshStream extends ChangeNotifier {
 final GoRouter appRouter = GoRouter(
   initialLocation: '/welcome',
   routes: [
-    GoRoute(path: '/welcome', builder: (_ctx, _st) => const WelcomeScreen()),
+    GoRoute(
+      path: '/welcome',
+      builder: (context, state) => const WelcomeScreen(),
+    ),
     ShellRoute(
-      builder: (_ctx, _st, child) => ShellLayout(child: child),
+      builder: (context, state, child) => ShellLayout(child: child),
       routes: [
-        GoRoute(path: '/', builder: (_ctx, _st) => const HomeScreen()),
-        GoRoute(path: '/search', builder: (_ctx, _st) => const SearchScreen()),
-        GoRoute(path: '/stores', builder: (_ctx, _st) => const StoreScreen()),
-        GoRoute(path: '/cart', builder: (_ctx, _st) => const CartScreen()),
-        GoRoute(path: '/leaderboard', builder: (_ctx, _st) => const LeaderboardScreen()),
-        GoRoute(path: '/profile', builder: (_ctx, _st) => const ProfileScreen()),
+        GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
+        GoRoute(
+          path: '/search',
+          builder: (context, state) => const SearchScreen(),
+        ),
+        GoRoute(
+          path: '/stores',
+          builder: (context, state) => const StoreScreen(),
+        ),
+        GoRoute(path: '/cart', builder: (context, state) => const CartScreen()),
+        GoRoute(
+          path: '/leaderboard',
+          builder: (context, state) => const LeaderboardScreen(),
+        ),
+        GoRoute(
+          path: '/profile',
+          builder: (context, state) => const ProfileScreen(),
+        ),
       ],
     ),
-    GoRoute(path: '/admin', builder: (_ctx, _st) => const AdminScreen()),
+    GoRoute(path: '/admin', builder: (context, state) => const AdminScreen()),
     GoRoute(
       path: '/product/:id',
-      builder: (_, state) => ProductDetailScreen(productId: state.pathParameters['id'] ?? ''),
+      builder: (_, state) =>
+          ProductDetailScreen(productId: state.pathParameters['id'] ?? ''),
     ),
     GoRoute(
       path: '/submit-price',

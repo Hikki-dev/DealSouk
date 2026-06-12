@@ -21,7 +21,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
     Future.microtask(() {
       ref.read(productsProvider.notifier).fetch();
-      ref.read(storesProvider.notifier).fetchNearby(lat: 25.0771, lng: 55.1328, radiusKm: 15);
+      ref
+          .read(storesProvider.notifier)
+          .fetchNearby(lat: 25.0771, lng: 55.1328, radiusKm: 15);
+      ref.read(cartProvider.notifier).loadPersistedCart();
+      ref.read(dailyChallengeProvider.notifier).fetchToday();
     });
   }
 
@@ -86,448 +90,361 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-            // 1. Dribbble Screenshot Header: Green gradient, Checker Grid, Avatar, Cart button, Special offer card, capsule search
-            SliverToBoxAdapter(
-              child: Stack(
-                children: [
-                  // Gradient + Grid Pattern Background
-                  Positioned.fill(
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Color(0xFF1B5E20),
-                            Color(0xFF2E7D32),
-                            Color(0xFFE8F5E9),
-                            Color(0xFFF9FBF7),
-                            Color(0xFFF9FBF7),
-                          ],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          stops: [0.0, 0.22, 0.45, 0.65, 1.0],
-                        ),
-                      ),
-                      child: CustomPaint(
-                        painter: GridPatternPainter(),
+          // 1. Dribbble Screenshot Header: Green gradient, Checker Grid, Avatar, Cart button, Special offer card, capsule search
+          SliverToBoxAdapter(
+            child: Stack(
+              children: [
+                // Gradient + Grid Pattern Background
+                Positioned.fill(
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Color(0xFF1B5E20),
+                          Color(0xFF2E7D32),
+                          Color(0xFFE8F5E9),
+                          Color(0xFFF9FBF7),
+                          Color(0xFFF9FBF7),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        stops: [0.0, 0.22, 0.45, 0.65, 1.0],
                       ),
                     ),
+                    child: CustomPaint(painter: GridPatternPainter()),
                   ),
-                  // Header Content Column
-                  Container(
-                    padding: EdgeInsets.fromLTRB(
-                      20,
-                      MediaQuery.of(context).padding.top + 20,
-                      20,
-                      12,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Top Greeting Row
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                // Active User Avatar
-                                Container(
-                                  width: 48,
-                                  height: 48,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: Colors.white.withValues(alpha: 0.6), width: 1.5),
-                                    image: DecorationImage(
-                                      image: NetworkImage(profile.avatarUrl),
-                                      fit: BoxFit.cover,
-                                    ),
+                ),
+                // Header Content Column
+                Container(
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    MediaQuery.of(context).padding.top + 20,
+                    20,
+                    12,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Top Greeting Row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              // Active User Avatar
+                              Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.6),
+                                    width: 1.5,
                                   ),
+                                  image: profile.avatarUrl.isNotEmpty
+                                      ? DecorationImage(
+                                          image: NetworkImage(
+                                            profile.avatarUrl,
+                                          ),
+                                          fit: BoxFit.cover,
+                                        )
+                                      : null,
                                 ),
-                                const SizedBox(width: 12),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Morning, $firstName',
-                                      style: GoogleFonts.fredoka(
-                                        fontSize: 16.5,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      'What deals are you finding today?',
-                                      style: GoogleFonts.nunito(
-                                        fontSize: 12.5,
-                                        color: Colors.white.withValues(alpha: 0.85),
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            // Basket Button (Green outline in white circle)
-                            GestureDetector(
-                              onTap: () => context.go('/cart'),
-                              child: Stack(
-                                clipBehavior: Clip.none,
-                                children: [
-                                  Container(
-                                    width: 44,
-                                    height: 44,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.shopping_basket_outlined,
-                                      color: AppTheme.forestDeep,
-                                      size: 20,
-                                    ),
-                                  ),
-                                  if (cartCount > 0)
-                                    Positioned(
-                                      right: -2,
-                                      top: -2,
-                                      child: Container(
-                                        width: 18,
-                                        height: 18,
-                                        decoration: const BoxDecoration(
-                                          color: AppTheme.redAccent,
-                                          shape: BoxShape.circle,
+                                child: profile.avatarUrl.isEmpty
+                                    ? const Center(
+                                        child: Icon(
+                                          Icons.person,
+                                          color: Colors.white,
+                                          size: 24,
                                         ),
-                                        child: Center(
-                                          child: Text(
-                                            '$cartCount',
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 9.5,
-                                              fontWeight: FontWeight.bold,
-                                            ),
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(width: 12),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Morning, $firstName',
+                                    style: GoogleFonts.fredoka(
+                                      fontSize: 16.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'What deals are you finding today?',
+                                    style: GoogleFonts.nunito(
+                                      fontSize: 12.5,
+                                      color: Colors.white.withValues(
+                                        alpha: 0.85,
+                                      ),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          // Basket Button (Green outline in white circle)
+                          GestureDetector(
+                            onTap: () => context.go('/cart'),
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.shopping_basket_outlined,
+                                    color: AppTheme.forestDeep,
+                                    size: 20,
+                                  ),
+                                ),
+                                if (cartCount > 0)
+                                  Positioned(
+                                    right: -2,
+                                    top: -2,
+                                    child: Container(
+                                      width: 18,
+                                      height: 18,
+                                      decoration: const BoxDecoration(
+                                        color: AppTheme.redAccent,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          '$cartCount',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 9.5,
+                                            fontWeight: FontWeight.bold,
                                           ),
                                         ),
                                       ),
                                     ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 22),
-
-                        // Special Offer Carousel
-                        const _OfferCarousel(),
-                        const SizedBox(height: 20),
-
-                        // Search Bar (Capsule shape)
-                        GestureDetector(
-                          onTap: () {
-                            ref.read(filterProvider.notifier).reset();
-                            context.push('/search');
-                          },
-                          child: Container(
-                            height: 52,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(26),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.02),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 3),
-                                ),
+                                  ),
                               ],
                             ),
-                            padding: const EdgeInsets.symmetric(horizontal: 18),
-                        child: Row(
-                          children: [
-                            Icon(Icons.search_rounded, color: Colors.grey.shade400, size: 22),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Search vegetables, fruits and more',
-                              style: TextStyle(
-                                color: Colors.grey.shade400,
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const Spacer(),
-                            Icon(Icons.tune_rounded, color: AppTheme.forestDeep, size: 20),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+                      const SizedBox(height: 22),
 
-            // 2. Categories Row (Static 5 items)
-            SliverToBoxAdapter(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Categories',
-                          style: GoogleFonts.fredoka(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
+                      // Special Offer Carousel
+                      const _OfferCarousel(),
+                      const SizedBox(height: 20),
+
+                      // Search Bar (Capsule shape)
+                      GestureDetector(
+                        onTap: () {
+                          ref.read(filterProvider.notifier).reset();
+                          context.push('/search');
+                        },
+                        child: Container(
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(26),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.02),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
                           ),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            ref.read(filterProvider.notifier).reset();
-                            context.push('/search');
-                          },
-                          child: const Text(
-                            'See All',
-                            style: TextStyle(
-                              fontSize: 12.5,
-                              color: AppTheme.forestDeep,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(
-                    height: 94,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      itemCount: homeCategories.length,
-                      itemBuilder: (context, index) {
-                        final cat = homeCategories[index];
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: GestureDetector(
-                            onTap: () {
-                              ref.read(filterProvider.notifier).setCategory(cat.category);
-                              context.push('/search');
-                            },
-                            child: Column(
-                              children: [
-                                Container(
-                                  width: 58,
-                                  height: 58,
-                                  decoration: BoxDecoration(
-                                    color: cat.color,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.02),
-                                        blurRadius: 6,
-                                        offset: const Offset(0, 3),
-                                      ),
-                                    ],
-                                  ),
-                                  padding: const EdgeInsets.all(10),
-                                  child: Image.network(
-                                    cat.imageUrl,
-                                    fit: BoxFit.contain,
-                                    errorBuilder: (context, error, stackTrace) =>
-                                        Icon(Icons.fastfood_rounded, color: Colors.grey.shade400, size: 26),
-                                  ),
+                          padding: const EdgeInsets.symmetric(horizontal: 18),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.search_rounded,
+                                color: Colors.grey.shade400,
+                                size: 22,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Search vegetables, fruits and more',
+                                style: TextStyle(
+                                  color: Colors.grey.shade400,
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w500,
                                 ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  cat.label,
-                                  style: GoogleFonts.nunito(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // 3. DealSouk Token Balance Wallet Card (Clickable to Leaderboard)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 10),
-                child: _HomeTokenBalance(
-                  tokens: tokens,
-                  submissionsToday: profile.submissionsToday,
-                  dailyCap: settings.dailySubmissionCap,
-                ),
-              ),
-            ),
-
-            // 3b. Daily Challenge Card
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-                child: _DailyChallengeCard(challenge: dailyChallenge),
-              ),
-            ),
-
-            // 4. Quick-Tip concept banner: How it works
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE8F5E9),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFC8E6C9), width: 1.2),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.help_outline_rounded, color: AppTheme.forestDeep, size: 20),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'How it works: Compare local supermarket prices, upload shelf labels to earn tokens, and redeem vouchers!',
-                          style: GoogleFonts.nunito(
-                            fontSize: 12,
-                            color: AppTheme.forestDeep,
-                            fontWeight: FontWeight.bold,
-                            height: 1.3,
+                              ),
+                              const Spacer(),
+                              Icon(
+                                Icons.tune_rounded,
+                                color: AppTheme.forestDeep,
+                                size: 20,
+                              ),
+                            ],
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
-              ),
+              ],
             ),
+          ),
 
-            // 5. Freshness chip filters
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 8, bottom: 4),
-                child: _FreshnessChipRow(selected: filterState.freshnessFilter),
-              ),
-            ),
-
-            // 6. Verified prices feed (Fresh Price Feed) moved ABOVE the Fresh Products grid
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Fresh Price Feed',
-                      style: GoogleFonts.fredoka(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 250),
-                      transitionBuilder: (child, animation) => FadeTransition(
-                        opacity: animation,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0, 0.3),
-                            end: Offset.zero,
-                          ).animate(animation),
-                          child: child,
-                        ),
-                      ),
-                      child: Text(
-                        '${feedProducts.length} fresh prices',
-                        key: ValueKey<int>(feedProducts.length),
-                        style: const TextStyle(
-                          fontSize: 12,
+          // 2. Categories Row (Static 5 items)
+          SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Categories',
+                        style: GoogleFonts.fredoka(
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.redAccent,
+                          color: Colors.black,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Verified prices list cards (show up to 8 filtered results)
-            if (feedProducts.isEmpty)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
-                  child: Center(
-                    child: Column(
-                      children: [
-                        Icon(Icons.search_off_rounded, size: 48, color: Colors.grey.shade300),
-                        const SizedBox(height: 12),
-                        Text(
-                          'No prices found for this filter',
+                      GestureDetector(
+                        onTap: () {
+                          ref.read(filterProvider.notifier).reset();
+                          context.push('/search');
+                        },
+                        child: const Text(
+                          'See All',
                           style: TextStyle(
-                            color: Colors.grey.shade500,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 12.5,
+                            color: AppTheme.forestDeep,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Try selecting a wider time range',
-                          style: TextStyle(
-                            color: Colors.grey.shade400,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-              )
-            else
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                sliver: SliverList.builder(
-                  itemCount: feedProducts.take(8).length,
-                  itemBuilder: (context, index) =>
-                      _FreshPriceEntryCard(product: feedProducts[index]),
+                SizedBox(
+                  height: 94,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    itemCount: homeCategories.length,
+                    itemBuilder: (context, index) {
+                      final cat = homeCategories[index];
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: GestureDetector(
+                          onTap: () {
+                            ref
+                                .read(filterProvider.notifier)
+                                .setCategory(cat.category);
+                            context.push('/search');
+                          },
+                          child: Column(
+                            children: [
+                              Container(
+                                width: 58,
+                                height: 58,
+                                decoration: BoxDecoration(
+                                  color: cat.color,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.02,
+                                      ),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
+                                ),
+                                padding: const EdgeInsets.all(10),
+                                child: Image.network(
+                                  cat.imageUrl,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      Icon(
+                                        Icons.fastfood_rounded,
+                                        color: Colors.grey.shade400,
+                                        size: 26,
+                                      ),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                cat.label,
+                                style: GoogleFonts.nunito(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ),
-              ),
+              ],
+            ),
+          ),
 
-            // 7. Fresh Products Feed
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+          // 3. DealSouk Token Balance Wallet Card (Clickable to Leaderboard)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 10),
+              child: _HomeTokenBalance(
+                tokens: tokens,
+                submissionsToday: profile.submissionsToday,
+                dailyCap: settings.dailySubmissionCap,
+              ),
+            ),
+          ),
+
+          // 3b. Daily Challenge Card
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+              child: _DailyChallengeCard(challenge: dailyChallenge),
+            ),
+          ),
+
+          // 4. Quick-Tip concept banner: How it works
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F5E9),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: const Color(0xFFC8E6C9),
+                    width: 1.2,
+                  ),
+                ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Fresh Products',
-                      style: GoogleFonts.fredoka(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
+                    const Icon(
+                      Icons.help_outline_rounded,
+                      color: AppTheme.forestDeep,
+                      size: 20,
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        ref.read(filterProvider.notifier).reset();
-                        context.push('/search');
-                      },
-                      child: const Text(
-                        'See All',
-                        style: TextStyle(
-                          fontSize: 12.5,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'How it works: Compare local supermarket prices, upload shelf labels to earn tokens, and redeem vouchers!',
+                        style: GoogleFonts.nunito(
+                          fontSize: 12,
                           color: AppTheme.forestDeep,
                           fontWeight: FontWeight.bold,
+                          height: 1.3,
                         ),
                       ),
                     ),
@@ -535,58 +452,193 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
             ),
+          ),
 
-            // 2-column grid displaying filtered products
+          // 5. Freshness chip filters
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8, bottom: 4),
+              child: _FreshnessChipRow(selected: filterState.freshnessFilter),
+            ),
+          ),
+
+          // 6. Verified prices feed (Fresh Price Feed) moved ABOVE the Fresh Products grid
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Fresh Price Feed',
+                    style: GoogleFonts.fredoka(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 0.3),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      ),
+                    ),
+                    child: Text(
+                      '${feedProducts.length} fresh prices',
+                      key: ValueKey<int>(feedProducts.length),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.redAccent,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Verified prices list cards (show up to 8 filtered results)
+          if (feedProducts.isEmpty)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 32,
+                ),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.search_off_rounded,
+                        size: 48,
+                        color: Colors.grey.shade300,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'No prices found for this filter',
+                        style: TextStyle(
+                          color: Colors.grey.shade500,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Try selecting a wider time range',
+                        style: TextStyle(
+                          color: Colors.grey.shade400,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            )
+          else
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              sliver: SliverGrid(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.75,
-                  crossAxisSpacing: 14,
-                  mainAxisSpacing: 14,
-                ),
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) => ProductGridCard(product: feedProducts[index]),
-                  childCount: feedProducts.take(4).length,
-                ),
+              sliver: SliverList.builder(
+                itemCount: feedProducts.take(8).length,
+                itemBuilder: (context, index) =>
+                    _FreshPriceEntryCard(product: feedProducts[index]),
               ),
             ),
 
-            // 8. Featured stores header
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 22, 20, 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Featured Stores',
-                      style: GoogleFonts.fredoka(
-                        fontSize: 18,
+          // 7. Fresh Products Feed
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Fresh Products',
+                    style: GoogleFonts.fredoka(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      ref.read(filterProvider.notifier).reset();
+                      context.push('/search');
+                    },
+                    child: const Text(
+                      'See All',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: AppTheme.forestDeep,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () => context.go('/stores'),
-                      child: const Text(
-                        'See All',
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.forestDeep,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
+          ),
 
-            // Featured stores awning cards row
-            SliverToBoxAdapter(
-              child: Builder(builder: (context) {
+          // 2-column grid displaying filtered products
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            sliver: SliverGrid(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.75,
+                crossAxisSpacing: 14,
+                mainAxisSpacing: 14,
+              ),
+              delegate: SliverChildBuilderDelegate(
+                (context, index) =>
+                    ProductGridCard(product: feedProducts[index]),
+                childCount: feedProducts.take(4).length,
+              ),
+            ),
+          ),
+
+          // 8. Featured stores header
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 22, 20, 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Featured Stores',
+                    style: GoogleFonts.fredoka(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => context.go('/stores'),
+                    child: const Text(
+                      'See All',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.forestDeep,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Featured stores awning cards row
+          SliverToBoxAdapter(
+            child: Builder(
+              builder: (context) {
                 final stores = ref.watch(storesProvider);
                 if (stores.length < 2) return const SizedBox.shrink();
                 return Padding(
@@ -599,14 +651,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ],
                   ),
                 );
-              }),
+              },
             ),
+          ),
 
-            const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
-          ],
-        ),
-      );
-    }
+          const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
+        ],
+      ),
+    );
+  }
 }
 
 List<Product> _filterByFreshness(List<Product> products, String freshness) {
@@ -647,7 +700,11 @@ class _HomeTokenBalance extends StatelessWidget {
   final int submissionsToday;
   final int dailyCap;
 
-  const _HomeTokenBalance({required this.tokens, required this.submissionsToday, required this.dailyCap});
+  const _HomeTokenBalance({
+    required this.tokens,
+    required this.submissionsToday,
+    required this.dailyCap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -697,7 +754,10 @@ class _HomeTokenBalance extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     '${dailyCap - submissionsToday} submissions left today • Tap to claim',
-                    style: const TextStyle(color: Colors.white70, fontSize: 11.5),
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 11.5,
+                    ),
                   ),
                 ],
               ),
@@ -739,7 +799,9 @@ class _DailyChallengeCard extends StatelessWidget {
           color: challenge.completed ? const Color(0xFFE8F5E9) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: challenge.completed ? AppTheme.forestDeep : const Color(0xFFE8EEE4),
+            color: challenge.completed
+                ? AppTheme.forestDeep
+                : const Color(0xFFE8EEE4),
           ),
           boxShadow: [
             BoxShadow(
@@ -755,7 +817,9 @@ class _DailyChallengeCard extends StatelessWidget {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: challenge.completed ? AppTheme.forestDeep : AppTheme.limeAccent,
+                color: challenge.completed
+                    ? AppTheme.forestDeep
+                    : AppTheme.limeAccent,
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -793,9 +857,12 @@ class _DailyChallengeCard extends StatelessWidget {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(3),
                       child: LinearProgressIndicator(
-                        value: (challenge.progressCount / challenge.targetCount).clamp(0.0, 1.0),
+                        value: (challenge.progressCount / challenge.targetCount)
+                            .clamp(0.0, 1.0),
                         backgroundColor: Colors.grey.shade100,
-                        valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.forestDeep),
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          AppTheme.forestDeep,
+                        ),
                         minHeight: 4,
                       ),
                     ),
@@ -1314,4 +1381,3 @@ class _OfferCardData {
     required this.imageUrl,
   });
 }
-

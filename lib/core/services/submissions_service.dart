@@ -34,7 +34,7 @@ class SubmissionsService {
       'storeId': storeId,
       'priceAed': priceAed,
       'hasReceipt': hasReceipt,
-      if (receiptUrl != null) 'receiptUrl': receiptUrl,
+      'receiptUrl': ?receiptUrl,
     });
     final data = res.data as Map<String, dynamic>;
     return SubmissionResult(

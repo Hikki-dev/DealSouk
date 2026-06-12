@@ -14,7 +14,9 @@ class RequestBoardView extends ConsumerWidget {
     final requests = ref.watch(priceRequestsProvider);
     final userTokens = ref.watch(userTokensProvider);
 
-    final activeRequests = requests.where((r) => r.status == 'pending').toList();
+    final activeRequests = requests
+        .where((r) => r.status == 'open' || r.status == 'pending')
+        .toList();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -31,7 +33,11 @@ class RequestBoardView extends ConsumerWidget {
             ),
             child: Row(
               children: [
-                const Icon(Icons.help_center_rounded, color: AppTheme.amberAccent, size: 24),
+                const Icon(
+                  Icons.help_center_rounded,
+                  color: AppTheme.amberAccent,
+                  size: 24,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -61,17 +67,24 @@ class RequestBoardView extends ConsumerWidget {
                 ),
               ),
               ElevatedButton.icon(
-                onPressed: () => _showRequestFormSheet(context, ref, userTokens),
+                onPressed: () =>
+                    _showRequestFormSheet(context, ref, userTokens),
                 icon: const Icon(Icons.add_comment_rounded, size: 16),
                 label: const Text('Request Price Check'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.forestDeep,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                  textStyle: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -89,16 +102,26 @@ class RequestBoardView extends ConsumerWidget {
               ),
               child: Column(
                 children: [
-                  const Icon(Icons.check_circle_outline_rounded, color: Colors.green, size: 44),
+                  const Icon(
+                    Icons.check_circle_outline_rounded,
+                    color: Colors.green,
+                    size: 44,
+                  ),
                   const SizedBox(height: 12),
                   Text(
                     'All requests fulfilled!',
-                    style: GoogleFonts.fredoka(fontWeight: FontWeight.bold, color: Colors.black87),
+                    style: GoogleFonts.fredoka(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Post a new request if you need a price checked.',
-                    style: GoogleFonts.nunito(color: Colors.grey, fontSize: 11.5),
+                    style: GoogleFonts.nunito(
+                      color: Colors.grey,
+                      fontSize: 11.5,
+                    ),
                   ),
                 ],
               ),
@@ -119,7 +142,11 @@ class RequestBoardView extends ConsumerWidget {
     );
   }
 
-  void _showRequestFormSheet(BuildContext context, WidgetRef ref, int userTokens) {
+  void _showRequestFormSheet(
+    BuildContext context,
+    WidgetRef ref,
+    int userTokens,
+  ) {
     final formKey = GlobalKey<FormState>();
     String productName = '';
     String selectedStore = 'Carrefour';
@@ -225,10 +252,7 @@ class RequestBoardView extends ConsumerWidget {
                     ),
                   ),
                   items: stores.map((s) {
-                    return DropdownMenuItem<String>(
-                      value: s,
-                      child: Text(s),
-                    );
+                    return DropdownMenuItem<String>(value: s, child: Text(s));
                   }).toList(),
                   onChanged: (val) => selectedStore = val!,
                 ),
@@ -245,7 +269,10 @@ class RequestBoardView extends ConsumerWidget {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.error_outline_rounded, color: Colors.red),
+                        const Icon(
+                          Icons.error_outline_rounded,
+                          color: Colors.red,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -266,9 +293,11 @@ class RequestBoardView extends ConsumerWidget {
                       ? () {
                           if (formKey.currentState!.validate()) {
                             formKey.currentState!.save();
-                            
+
                             // Call provider method to request
-                            ref.read(priceRequestsProvider.notifier).addPriceRequest(
+                            ref
+                                .read(priceRequestsProvider.notifier)
+                                .addPriceRequest(
                                   productName: productName,
                                   storeName: selectedStore,
                                   bounty: 10,
@@ -276,7 +305,7 @@ class RequestBoardView extends ConsumerWidget {
                                 );
 
                             Navigator.pop(context);
-                            
+
                             // Success Dialog
                             showDialog(
                               context: context,
@@ -286,7 +315,10 @@ class RequestBoardView extends ConsumerWidget {
                                 ),
                                 title: const Row(
                                   children: [
-                                    Icon(Icons.check_circle_rounded, color: Colors.green),
+                                    Icon(
+                                      Icons.check_circle_rounded,
+                                      color: Colors.green,
+                                    ),
                                     SizedBox(width: 8),
                                     Text('Request Placed!'),
                                   ],
@@ -363,7 +395,11 @@ class _RequestItemCard extends StatelessWidget {
               color: AppTheme.limeAccent.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.help_center_outlined, color: AppTheme.forestDeep, size: 20),
+            child: const Icon(
+              Icons.help_center_outlined,
+              color: AppTheme.forestDeep,
+              size: 20,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -399,14 +435,21 @@ class _RequestItemCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppTheme.amberLight,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.bolt, color: AppTheme.amberAccent, size: 14),
+                    const Icon(
+                      Icons.bolt,
+                      color: AppTheme.amberAccent,
+                      size: 14,
+                    ),
                     const SizedBox(width: 2),
                     Text(
                       '+${request.tokensBounty}',
@@ -434,7 +477,10 @@ class _RequestItemCard extends StatelessWidget {
                   );
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.forestDeep,
                     borderRadius: BorderRadius.circular(10),

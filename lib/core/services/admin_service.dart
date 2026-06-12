@@ -16,7 +16,7 @@ class AdminService {
 
   Future<void> rejectSubmission(String id, {String? reason}) async {
     await apiClient.post('/admin/submissions/$id/reject', data: {
-      if (reason != null) 'reason': reason,
+      'reason': ?reason,
     });
   }
 
@@ -26,9 +26,9 @@ class AdminService {
     double? price,
   }) async {
     await apiClient.patch('/admin/submissions/$id', data: {
-      if (productName != null) 'productName': productName,
-      if (storeName != null) 'storeName': storeName,
-      if (price != null) 'priceAed': price,
+      'productName': ?productName,
+      'storeName': ?storeName,
+      'priceAed': ?price,
     });
   }
 

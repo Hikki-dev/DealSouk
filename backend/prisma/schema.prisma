@@ -8,34 +8,41 @@ datasource db {
 }
 
 model User {
-  id              String    @id @default(cuid())
-  firebaseUid     String    @unique
-  displayName     String
-  phoneNumber     String?   @unique
-  homeArea        String?
-  preferredLocale String    @default("en")
-  tokenBalance    Int       @default(0)
-  accuracyRating  Float     @default(100.0)
-  isSuspended     Boolean   @default(false)
-  suspendedUntil  DateTime?
-  isAdmin         Boolean   @default(false)
-  fcmToken        String?
-  createdAt       DateTime  @default(now())
+  id                   String    @id @default(cuid())
+  firebaseUid          String    @unique
+  displayName          String
+  phoneNumber          String?   @unique
+  homeArea             String?
+  preferredLocale      String    @default("en")
+  tokenBalance         Int       @default(0)
+  accuracyRating       Float     @default(100.0)
+  isSuspended          Boolean   @default(false)
+  suspendedUntil       DateTime?
+  isAdmin              Boolean   @default(false)
+  fcmToken             String?
+  currentStreak        Int       @default(0)
+  longestStreak        Int       @default(0)
+  lastSubmissionDate   DateTime?
+  lifetimeTokensEarned Int       @default(0)
+  level                Int       @default(1)
+  createdAt            DateTime  @default(now())
 
-  submissions  PriceSubmission[]
-  tokenLedger  TokenTransaction[]
-  requests     PriceRequest[]
-  badges       UserBadge[]
-  flags        SubmissionFlag[]
+  submissions     PriceSubmission[]
+  tokenLedger     TokenTransaction[]
+  requests        PriceRequest[]
+  badges          UserBadge[]
+  flags           SubmissionFlag[]
+  cartItems       CartItem[]
+  dailyChallenges UserDailyChallenge[]
 }
 
 model Store {
-  id          String  @id @default(cuid())
-  chain       String
-  branchName  String
-  area        String
-  lat         Float
-  lng         Float
+  id         String @id @default(cuid())
+  chain      String
+  branchName String
+  area       String
+  lat        Float
+  lng        Float
 
   submissions PriceSubmission[]
 
@@ -44,14 +51,15 @@ model Store {
 }
 
 model Product {
-  id          String  @id @default(cuid())
-  name        String
-  brand       String?
-  packSize    String?
-  category    String
-  imageUrl    String?
+  id       String  @id @default(cuid())
+  name     String
+  brand    String?
+  packSize String?
+  category String
+  imageUrl String?
 
   submissions PriceSubmission[]
+  cartItems   CartItem[]
 
   @@index([name])
   @@index([category])
@@ -71,10 +79,10 @@ model PriceSubmission {
   submittedAt   DateTime @default(now())
   expiresAt     DateTime
 
-  product  Product @relation(fields: [productId], references: [id])
-  store    Store   @relation(fields: [storeId], references: [id])
-  sourcer  User    @relation(fields: [sourcerId], references: [id])
-  flags    SubmissionFlag[]
+  product Product          @relation(fields: [productId], references: [id])
+  store   Store            @relation(fields: [storeId], references: [id])
+  sourcer User             @relation(fields: [sourcerId], references: [id])
+  flags   SubmissionFlag[]
 
   @@index([productId, storeId, submittedAt])
   @@index([status, submittedAt])
@@ -85,7 +93,7 @@ model SubmissionFlag {
   id           String   @id @default(cuid())
   submissionId String
   flaggerId    String
-  reason       String   // "price_wrong" | "product_mismatch" | "store_wrong" | "duplicate"
+  reason       String // "price_wrong" | "product_mismatch" | "store_wrong" | "duplicate"
   createdAt    DateTime @default(now())
 
   submission PriceSubmission @relation(fields: [submissionId], references: [id])
@@ -97,7 +105,7 @@ model SubmissionFlag {
 model TokenTransaction {
   id        String   @id @default(cuid())
   userId    String
-  amount    Int      // positive = earn, negative = spend
+  amount    Int // positive = earn, negative = spend
   reason    String
   createdAt DateTime @default(now())
 
@@ -143,10 +151,55 @@ model UserBadge {
 }
 
 model AdminSettings {
-  id                 Int @id @default(1) // singleton row
-  tokenEarnRate      Int @default(50)
-  voucherThreshold   Int @default(500)
-  dailySubmissionCap Int @default(30)
-  requestCostTokens  Int @default(10)
+  id                 Int   @id @default(1) // singleton row
+  tokenEarnRate      Int   @default(50)
+  voucherThreshold   Int   @default(500)
+  dailySubmissionCap Int   @default(30)
+  requestCostTokens  Int   @default(10)
   decayFactor        Float @default(0.7) // multiplier when duplicate nearby submission exists
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  quantity  Int      @default(1)
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+model DailyChallenge {
+  id          String   @id @default(cuid())
+  date        DateTime @db.Date
+  title       String
+  description String
+  chainTarget String?
+  areaTarget  String?
+  targetCount Int      @default(5)
+  bonusTokens Int      @default(100)
+
+  userProgress UserDailyChallenge[]
+
+  @@unique([date])
+}
+
+model UserDailyChallenge {
+  id           String    @id @default(cuid())
+  userId       String
+  challengeId  String
+  progress     Int       @default(0)
+  completed    Boolean   @default(false)
+  completedAt  DateTime?
+  bonusAwarded Boolean   @default(false)
+
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge DailyChallenge @relation(fields: [challengeId], references: [id])
+
+  @@unique([userId, challengeId])
+  @@index([userId])
 }

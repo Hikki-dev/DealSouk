@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/state/state.dart';
+import '../../core/state/auth_provider.dart';
 import '../../core/theme/theme.dart';
 import '../../core/models/models.dart';
 
@@ -227,7 +228,12 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                     fontSize: 10,
                   ),
                 ),
-                onTap: () => context.go('/welcome'),
+                onTap: () async {
+                  await ref.read(authProvider.notifier).signOut();
+                  if (context.mounted) {
+                    context.go('/welcome');
+                  }
+                },
               ),
             ],
           ),

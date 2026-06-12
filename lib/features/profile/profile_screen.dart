@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/models/models.dart';
 import '../../core/state/state.dart';
+import '../../core/state/auth_provider.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/tutorial_overlay.dart';
 
@@ -243,7 +244,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   // ── TAB 1: Submissions ──
   Widget _buildSubmissionsTab(List<dynamic> mySubmissions, int accuracyPct) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 100),
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 160),
       children: [
         // Accuracy chip
         Container(
@@ -411,7 +412,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   // ── TAB 2: Token History ──
   Widget _buildTokenHistoryTab(List<dynamic> transactions, int tokens) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 100),
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 160),
       children: [
         Container(
           padding: const EdgeInsets.all(14),
@@ -525,7 +526,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   // ── TAB 3: Requests ──
   Widget _buildRequestsTab(List<dynamic> myRequests) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 100),
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 160),
       children: [
         if (myRequests.isEmpty)
           Center(
@@ -632,7 +633,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   ) {
     final remaining = settings.voucherThreshold - tokens;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 100),
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 160),
       children: [
         // Voucher section
         Container(
@@ -889,7 +890,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
         // Log out
         GestureDetector(
-          onTap: () => context.go('/welcome'),
+          onTap: () async {
+            await ref.read(authProvider.notifier).signOut();
+            if (context.mounted) {
+              context.go('/welcome');
+            }
+          },
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 14),
             decoration: BoxDecoration(

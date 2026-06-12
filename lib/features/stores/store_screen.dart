@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -17,6 +18,10 @@ class StoreScreen extends ConsumerStatefulWidget {
 }
 
 class _StoreScreenState extends ConsumerState<StoreScreen> {
+  GoogleMapController? _mapController;
+  Position? _currentPosition;
+  bool _isLocating = false;
+
   bool _isGoogleMapsInitialized() {
     return checkGoogleMapsInitialized();
   }
@@ -40,12 +45,74 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch stores near Dubai Marina by default — user location will refine this
-    Future.microtask(
-      () => ref
-          .read(storesProvider.notifier)
-          .fetchNearby(lat: 25.0771, lng: 55.1328, radiusKm: 15),
-    );
+    _initLocationAndFetchStores();
+  }
+
+  Future<void> _initLocationAndFetchStores() async {
+    setState(() => _isLocating = true);
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _fetchDefaultStores();
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          _fetchDefaultStores();
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        _fetchDefaultStores();
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+
+      setState(() {
+        _currentPosition = position;
+        _isLocating = false;
+      });
+
+      // Fetch nearby stores near actual user position
+      await ref.read(storesProvider.notifier).fetchNearby(
+            lat: position.latitude,
+            lng: position.longitude,
+            radiusKm: 15,
+          );
+
+      if (_mapController != null) {
+        _mapController!.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(
+              target: LatLng(position.latitude, position.longitude),
+              zoom: 13.5,
+            ),
+          ),
+        );
+      }
+    } catch (_) {
+      _fetchDefaultStores();
+    }
+  }
+
+  void _fetchDefaultStores() {
+    setState(() {
+      _isLocating = false;
+    });
+    ref.read(storesProvider.notifier).fetchNearby(
+          lat: 25.0771,
+          lng: 55.1328,
+          radiusKm: 15,
+        );
   }
 
   @override
@@ -254,42 +321,104 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                         ),
                         const SizedBox(height: 16),
                         SizedBox(
-                          height: 160,
+                          height: 260,
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(18),
                             child: _isGoogleMapsInitialized()
-                                ? GoogleMap(
-                                    initialCameraPosition: const CameraPosition(
-                                      target: LatLng(
-                                        25.0771,
-                                        55.1328,
-                                      ), // Centered at Dubai Marina
-                                      zoom: 11.5,
-                                    ),
-                                    markers: filtered.map((store) {
-                                      final isStale =
-                                          store.lastUpdatedHoursAgo > 48;
-                                      return Marker(
-                                        markerId: MarkerId(store.id),
-                                        position: LatLng(store.lat, store.lng),
-                                        infoWindow: InfoWindow(
-                                          title: store.name,
-                                          snippet:
-                                              '${store.branch} • ${store.distance} km',
-                                          onTap: () =>
-                                              _showStorePrices(context, store),
+                                ? Stack(
+                                    children: [
+                                      GoogleMap(
+                                        initialCameraPosition: CameraPosition(
+                                          target: _currentPosition != null
+                                              ? LatLng(
+                                                  _currentPosition!.latitude,
+                                                  _currentPosition!.longitude,
+                                                )
+                                              : const LatLng(
+                                                  25.0771,
+                                                  55.1328,
+                                                ), // Centered at Dubai Marina
+                                          zoom: 11.5,
                                         ),
-                                        icon:
-                                            BitmapDescriptor.defaultMarkerWithHue(
+                                        onMapCreated: (controller) {
+                                          _mapController = controller;
+                                        },
+                                        myLocationEnabled:
+                                            _currentPosition != null,
+                                        myLocationButtonEnabled: false,
+                                        markers: filtered.map((store) {
+                                          final isStale =
+                                              store.lastUpdatedHoursAgo > 48;
+                                          return Marker(
+                                            markerId: MarkerId(store.id),
+                                            position:
+                                                LatLng(store.lat, store.lng),
+                                            infoWindow: InfoWindow(
+                                              title: store.name,
+                                              snippet:
+                                                  '${store.branch} • ${store.distance} km',
+                                              onTap: () => _showStorePrices(
+                                                context,
+                                                store,
+                                              ),
+                                            ),
+                                            icon: BitmapDescriptor
+                                                .defaultMarkerWithHue(
                                               isStale
                                                   ? BitmapDescriptor.hueBlue
                                                   : BitmapDescriptor.hueRed,
                                             ),
-                                      );
-                                    }).toSet(),
-                                    mapToolbarEnabled: false,
-                                    myLocationButtonEnabled: false,
-                                    zoomControlsEnabled: false,
+                                          );
+                                        }).toSet(),
+                                        mapToolbarEnabled: false,
+                                        zoomControlsEnabled: false,
+                                      ),
+                                      Positioned(
+                                        bottom: 12,
+                                        right: 12,
+                                        child: GestureDetector(
+                                          onTap: _initLocationAndFetchStores,
+                                          child: Container(
+                                            width: 40,
+                                            height: 40,
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              shape: BoxShape.circle,
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black
+                                                      .withValues(alpha: 0.15),
+                                                  blurRadius: 6,
+                                                  offset: const Offset(0, 3),
+                                                ),
+                                              ],
+                                            ),
+                                            child: Center(
+                                              child: _isLocating
+                                                  ? const SizedBox(
+                                                      width: 18,
+                                                      height: 18,
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                        valueColor:
+                                                            AlwaysStoppedAnimation<
+                                                                Color>(
+                                                          AppTheme.forestDeep,
+                                                        ),
+                                                      ),
+                                                    )
+                                                  : const Icon(
+                                                      Icons.my_location_rounded,
+                                                      color:
+                                                          AppTheme.forestDeep,
+                                                      size: 18,
+                                                    ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   )
                                 : Container(
                                     color: Colors.black26,

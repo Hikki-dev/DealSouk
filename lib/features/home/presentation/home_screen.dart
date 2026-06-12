@@ -64,31 +64,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // Categories defined for Dribbble layout with premium transparent 3D clay illustrations
     final List<_CategoryInfo> homeCategories = [
       const _CategoryInfo(
-        'assets/category_fresh.png',
+        Icons.eco_rounded,
         'Fresh',
         'Fresh',
         Color(0xFFE8F5E9), // Pastel green background
       ),
       const _CategoryInfo(
-        'assets/category_fruits.png',
+        Icons.apple_rounded,
         'Fruits',
         'Fruits',
         Color(0xFFFFEBEE), // Pastel pink background
       ),
       const _CategoryInfo(
-        'assets/category_snack.png',
+        Icons.fastfood_rounded,
         'Snack',
         'Snacks',
         Color(0xFFFFF8E1), // Pastel yellow background
       ),
       const _CategoryInfo(
-        'assets/category_grocery.png',
+        Icons.local_grocery_store_rounded,
         'Grocery',
         'Dairy & Sweet',
         Color(0xFFE0F2F1), // Pastel teal background
       ),
       const _CategoryInfo(
-        'assets/category_oils.png',
+        Icons.water_drop_rounded,
         'Oils',
         'Bakery',
         Color(0xFFF3E5F5), // Pastel purple background
@@ -374,15 +374,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   ],
                                 ),
                                 padding: const EdgeInsets.all(10),
-                                child: Image.network(
-                                  cat.imageUrl,
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      Icon(
-                                        Icons.fastfood_rounded,
-                                        color: Colors.grey.shade400,
-                                        size: 26,
-                                      ),
+                                child: Icon(
+                                  cat.icon,
+                                  color: AppTheme.forestDeep.withValues(
+                                    alpha: 0.42,
+                                  ),
+                                  size: 28,
                                 ),
                               ),
                               const SizedBox(height: 6),
@@ -1496,12 +1493,12 @@ class _TrustPill extends StatelessWidget {
 }
 
 class _CategoryInfo {
-  final String imageUrl;
+  final IconData icon;
   final String label;
   final String category;
   final Color color;
 
-  const _CategoryInfo(this.imageUrl, this.label, this.category, this.color);
+  const _CategoryInfo(this.icon, this.label, this.category, this.color);
 }
 
 class _FeaturedStoreCard extends StatelessWidget {
@@ -1678,17 +1675,17 @@ class _OfferCarouselState extends State<_OfferCarousel> {
       const _OfferCardData(
         title: 'Know The Best Price\nBefore You Leave',
         subtitle: 'Fresh prices from shoppers near you',
-        imageUrl: 'assets/promo_vegetables.png',
+        icon: Icons.savings_rounded,
       ),
       const _OfferCardData(
         title: 'Save The Trip\nAnd The Dirhams',
         subtitle: 'Compare nearby stores before you go',
-        imageUrl: 'assets/category_fresh.png',
+        icon: Icons.route_rounded,
       ),
       const _OfferCardData(
         title: 'Need A Price Checked?\nAsk The Community',
         subtitle: 'A real shopper can check the shelf',
-        imageUrl: 'assets/product_apples.png',
+        icon: Icons.add_a_photo_rounded,
       ),
     ];
 
@@ -1747,12 +1744,7 @@ class _OfferCarouselState extends State<_OfferCarousel> {
                       child: SizedBox(
                         height: 120,
                         width: 130,
-                        child: Image.network(
-                          offer.imageUrl,
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const SizedBox(height: 120),
-                        ),
+                        child: _OfferIconArt(icon: offer.icon),
                       ),
                     ),
                   ],
@@ -1789,14 +1781,50 @@ class _OfferCarouselState extends State<_OfferCarousel> {
   }
 }
 
+class _OfferIconArt extends StatelessWidget {
+  final IconData icon;
+
+  const _OfferIconArt({required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Container(
+          width: 112,
+          height: 112,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.56),
+            shape: BoxShape.circle,
+          ),
+        ),
+        Container(
+          width: 82,
+          height: 82,
+          decoration: BoxDecoration(
+            color: AppTheme.forestDeep.withValues(alpha: 0.10),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            color: AppTheme.forestDeep.withValues(alpha: 0.78),
+            size: 40,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _OfferCardData {
   final String title;
   final String subtitle;
-  final String imageUrl;
+  final IconData icon;
 
   const _OfferCardData({
     required this.title,
     required this.subtitle,
-    required this.imageUrl,
+    required this.icon,
   });
 }

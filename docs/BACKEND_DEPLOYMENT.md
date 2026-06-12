@@ -28,7 +28,7 @@ Local development loads `backend/.env` through `dotenv`; production values must 
 
 ## Deployment Steps
 
-1. Provision PostgreSQL in the required region.
+1. Provision PostgreSQL in the required region. For Neon, use the direct connection string for the first deploy because Prisma migrations run during deployment.
 2. Store all env vars in the hosting provider secret manager.
 3. Run Prisma migrations:
 
@@ -45,6 +45,21 @@ npm start
 6. Verify `/health`.
 7. Verify authenticated routes reject missing tokens.
 8. Verify `/admin/*` rejects non-admin users.
+
+## Render Deployment
+
+The current production-candidate branch includes `render.yaml` and a backend `render:build` script.
+
+Recommended Render values:
+
+- Service type: Web Service
+- Branch: `feature/flutter-api-integration`
+- Root directory: `backend`
+- Build command: `npm ci && npm run render:build`
+- Start command: `npm start`
+- Health check path: `/health`
+
+See `docs/RENDER_BACKEND_DEPLOYMENT.md`.
 
 ## Required Production Checks
 

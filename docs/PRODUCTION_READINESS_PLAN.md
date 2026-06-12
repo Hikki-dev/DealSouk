@@ -130,6 +130,23 @@ Required Vercel env vars:
 
 See `docs/VERCEL_ADMIN_DEPLOYMENT.md`.
 
+## Render Backend API
+
+Render should host the backend API that mobile and admin web clients call. The repository now includes `render.yaml`, and the backend has a `render:build` script that runs Prisma generation, production migrations, and TypeScript compilation.
+
+Use the Render project to create a Web Service from branch `feature/flutter-api-integration`, with root directory `backend`, build command `npm ci && npm run render:build`, start command `npm start`, and health check path `/health`.
+
+Required Render secrets:
+
+- `DATABASE_URL`
+- `DATABASE_ENCRYPTION_KEY`
+- `FIREBASE_PROJECT_ID`
+- `FIREBASE_CLIENT_EMAIL`
+- `FIREBASE_PRIVATE_KEY`
+- `ALLOWED_ORIGINS`
+
+See `docs/RENDER_BACKEND_DEPLOYMENT.md`.
+
 ## Public Production Blockers
 
 These cannot be skipped for a real user launch:

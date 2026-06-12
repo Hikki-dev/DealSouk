@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/state/state.dart';
-import '../../core/mock_data/mock_data.dart';
 import '../../core/models/models.dart';
 import '../../core/theme/theme.dart';
 import 'request_board_view.dart';
@@ -19,6 +18,16 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   bool _showRequestBoard = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Fetch real data on screen open
+    Future.microtask(() {
+      ref.read(leaderboardProvider.notifier).fetch();
+      ref.read(priceRequestsProvider.notifier).fetchBoard();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
 
     final theme = Theme.of(context);
@@ -29,21 +38,22 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     final badges = ref.watch(badgesProvider);
     final dailyChallenge = ref.watch(dailyChallengeProvider);
 
-    // Initial leaderboard list from mock data
-    final baseLeaderboard = MockData.initialLeaderboard;
-    // Replace the current user tokens dynamically in the leaderboard list
-    final leaderboard = baseLeaderboard.map((user) {
-      if (user.isCurrentUser) {
-        return LeaderboardUser(
-          rank: user.rank,
-          name: '${profile.name} (You)',
-          tokens: tokens,
-          isCurrentUser: true,
-          streak: streak.currentStreak,
-        );
-      }
-      return user;
-    }).toList();
+    // Use real leaderboard data; inject current user row if available
+    final apiLeaderboard = ref.watch(leaderboardProvider);
+    final leaderboard = apiLeaderboard.isEmpty
+        ? <LeaderboardUser>[]
+        : apiLeaderboard.map((user) {
+            if (user.isCurrentUser) {
+              return LeaderboardUser(
+                rank: user.rank,
+                name: '${profile.name} (You)',
+                tokens: tokens > 0 ? tokens : user.tokens,
+                isCurrentUser: true,
+                streak: streak.currentStreak,
+              );
+            }
+            return user;
+          }).toList();
 
     // Sort leaderboard by tokens descending, update ranks
     leaderboard.sort((a, b) => b.tokens.compareTo(a.tokens));

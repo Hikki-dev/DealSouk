@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../core/mock_data/mock_data.dart';
 import '../../core/models/models.dart';
+import '../../core/state/state.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/souk_widgets.dart';
 
@@ -20,8 +20,19 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
   static const List<String> _chains = ['All', 'Carrefour', 'Lulu', 'Spinneys', 'Union Coop', 'Nesto'];
 
   @override
+  void initState() {
+    super.initState();
+    // Fetch stores near Dubai Marina by default — user location will refine this
+    Future.microtask(() => ref.read(storesProvider.notifier).fetchNearby(
+          lat: 25.0771,
+          lng: 55.1328,
+          radiusKm: 15,
+        ));
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final stores = MockData.initialStores;
+    final stores = ref.watch(storesProvider);
     final filtered = _selectedChain == 'All'
         ? stores
         : stores.where((s) => s.name.toLowerCase().contains(_selectedChain.toLowerCase())).toList();
@@ -317,20 +328,6 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
 
   void _showStorePrices(BuildContext context, Store store) {
     final pricingList = <Map<String, dynamic>>[];
-    for (final product in MockData.initialProducts) {
-      final prices = MockData.productPrices[product.id] ?? [];
-      final match = prices.where(
-        (price) => price.storeId == store.id || price.storeName == store.name,
-      );
-      if (match.isNotEmpty) {
-        pricingList.add({
-          'product': product,
-          'price': match.first.price,
-          'updated': match.first.updatedAtLabel,
-          'hoursAgo': match.first.submittedHoursAgo,
-        });
-      }
-    }
 
     final isStale = store.lastUpdatedHoursAgo > 48;
 
@@ -524,11 +521,7 @@ class _StoreChoiceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isStale = store.lastUpdatedHoursAgo > 48;
-    final prices = MockData.productPrices.values
-        .expand((items) => items)
-        .where((price) => price.storeId == store.id || price.storeName == store.name)
-        .toList();
-    final sampleTotal = prices.take(3).fold<double>(0, (sum, item) => sum + item.price);
+    final sampleTotal = 0.0;
 
     return Opacity(
       opacity: isStale ? 0.6 : 1.0,

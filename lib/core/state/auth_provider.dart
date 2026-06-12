@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/auth_service.dart';
 import '../services/api_client.dart';
+import '../services/profile_service.dart';
+import 'state.dart';
 
 enum AuthStatus { unknown, unauthenticated, guest, authenticated }
 
@@ -73,6 +75,8 @@ class AuthNotifier extends Notifier<AuthState> {
         displayName: data['displayName'] as String?,
         isAdmin: data['isAdmin'] as bool? ?? false,
       );
+      // Sync profile data into Riverpod state
+      _syncProfileProviders(data);
     } catch (_) {
       // Backend not reachable yet — still mark as authenticated via Firebase
       state = AuthState(
@@ -81,6 +85,16 @@ class AuthNotifier extends Notifier<AuthState> {
         displayName: user.displayName ?? user.phoneNumber ?? 'Souk User',
       );
     }
+  }
+
+  void _syncProfileProviders(Map<String, dynamic> data) {
+    try {
+      final profileData = ProfileData.fromJson(data);
+      ref.read(userTokensProvider.notifier).sync(profileData.tokenBalance);
+      ref.read(userProfileProvider.notifier).syncFromProfile(profileData);
+      // Load transactions in background
+      ref.read(userTransactionsProvider.notifier).fetch();
+    } catch (_) {}
   }
 
   Future<void> signInWithGoogle() async {

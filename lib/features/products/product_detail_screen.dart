@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/state/state.dart';
 import '../../core/models/models.dart';
-import '../../core/mock_data/mock_data.dart';
+import '../../core/services/products_service.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/responsive_container.dart';
 import '../../core/widgets/souk_widgets.dart';
@@ -24,6 +24,18 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   bool _isFavorite = false;
   bool _compareExpanded = true;
   bool _trendExpanded = false;
+  List<StoreProductPrice> _storePrices = [];
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() async {
+      try {
+        final prices = await productsService.getPrices(widget.productId);
+        if (mounted) setState(() => _storePrices = prices);
+      } catch (_) {}
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,8 +55,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       ),
     );
 
-    final storePrices = MockData.productPrices[widget.productId] ?? [];
-    final sortedPrices = List<StoreProductPrice>.from(storePrices)
+    final sortedPrices = List<StoreProductPrice>.from(_storePrices)
       ..sort((a, b) => a.price.compareTo(b.price));
 
     final selectedPrice = sortedPrices.isNotEmpty

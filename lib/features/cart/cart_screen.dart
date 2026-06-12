@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/state/state.dart';
 import '../../core/models/models.dart';
-import '../../core/mock_data/mock_data.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/responsive_container.dart';
 import '../../core/widgets/souk_widgets.dart';
@@ -30,35 +29,15 @@ class _CartScreenState extends ConsumerState<CartScreen> {
   Widget build(BuildContext context) {
     final cartItems = ref.watch(cartProvider);
 
-    // Calculate dynamic basket prices across major stores
-    final stores = MockData.initialStores;
+    // Cart uses lowest known prices per product for comparison
     final Map<String, double> storeTotals = {};
 
-    for (var store in stores) {
-      double total = 0.0;
-      bool hasAllItems = true;
-
-      for (var cartItem in cartItems) {
-        final prices = MockData.productPrices[cartItem.product.id] ?? [];
-        final storePrice = prices.firstWhere(
-          (p) => p.storeId == store.id || p.storeName == store.name,
-          orElse: () => StoreProductPrice(
-            storeId: '',
-            storeName: '',
-            price: -1,
-            updatedAtLabel: '',
-          ),
-        );
-
-        if (storePrice.price > 0) {
-          total += storePrice.price * cartItem.quantity;
-        } else {
-          hasAllItems = false;
-        }
-      }
-
-      if (hasAllItems && cartItems.isNotEmpty) {
-        storeTotals[store.name] = total;
+    // Use the lowestPrice from each product as the best available price
+    for (var cartItem in cartItems) {
+      if (cartItem.product.lowestPrice > 0 && cartItem.product.lowestPriceStore.isNotEmpty) {
+        final storeName = cartItem.product.lowestPriceStore;
+        storeTotals[storeName] = (storeTotals[storeName] ?? 0) +
+            cartItem.product.lowestPrice * cartItem.quantity;
       }
     }
 

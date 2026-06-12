@@ -21,6 +21,31 @@ class Product {
     this.imageUrl = '',
   });
 
+  factory Product.fromJson(Map<String, dynamic> json) {
+    final hoursAgo = json['hoursAgo'] as int?;
+    String updatedLabel;
+    if (hoursAgo == null || json['lowestPrice'] == null) {
+      updatedLabel = 'No recent price';
+    } else if (hoursAgo < 1) {
+      updatedLabel = 'Updated Just Now';
+    } else if (hoursAgo < 24) {
+      updatedLabel = 'Updated ${hoursAgo}h ago';
+    } else {
+      updatedLabel = 'Updated ${hoursAgo ~/ 24}d ago';
+    }
+    return Product(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      brand: json['brand'] as String? ?? '',
+      packSize: json['packSize'] as String? ?? '',
+      category: json['category'] as String,
+      lowestPrice: (json['lowestPrice'] as num?)?.toDouble() ?? 0.0,
+      lowestPriceStore: json['lowestPriceStore'] as String? ?? '—',
+      updatedAtLabel: updatedLabel,
+      imageUrl: json['imageUrl'] as String? ?? '',
+    );
+  }
+
   Product copyWith({
     double? lowestPrice,
     String? lowestPriceStore,
@@ -62,6 +87,36 @@ class Store {
     required this.yOffset,
     this.lastUpdatedHoursAgo = 2,
   });
+
+  factory Store.fromJson(Map<String, dynamic> json) {
+    final hoursAgo = json['lastUpdatedHoursAgo'] as int? ??
+        (json['lastUpdatedAt'] != null
+            ? DateTime.now()
+                .difference(DateTime.parse(json['lastUpdatedAt'] as String))
+                .inHours
+            : 48);
+    String freshness;
+    if (json['isStale'] == true) {
+      freshness = 'Updated ${hoursAgo}h ago';
+    } else if (hoursAgo < 1) {
+      freshness = 'Fresh';
+    } else if (hoursAgo < 6) {
+      freshness = 'Fresh';
+    } else {
+      freshness = 'Updated ${hoursAgo}h ago';
+    }
+    return Store(
+      id: json['id'] as String,
+      name: json['chain'] as String,
+      branch: json['branchName'] as String,
+      distance: (json['distanceKm'] as num?)?.toDouble() ?? 0.0,
+      pricesCount: (json['activeSubmissionCount'] as int?) ?? 0,
+      freshness: freshness,
+      xOffset: 0.5,
+      yOffset: 0.5,
+      lastUpdatedHoursAgo: hoursAgo,
+    );
+  }
 }
 
 class StoreProductPrice {
@@ -78,6 +133,19 @@ class StoreProductPrice {
     required this.updatedAtLabel,
     this.submittedHoursAgo = 2,
   });
+
+  factory StoreProductPrice.fromJson(Map<String, dynamic> json) {
+    final h = json['hoursAgo'] as int? ?? 0;
+    final label = h < 1 ? 'Just Now' : h < 24 ? '${h}h ago' : '${h ~/ 24}d ago';
+    final store = json['store'] as Map<String, dynamic>;
+    return StoreProductPrice(
+      storeId: store['id'] as String,
+      storeName: '${store['chain']} – ${store['branchName']}',
+      price: (json['priceAed'] as num).toDouble(),
+      updatedAtLabel: label,
+      submittedHoursAgo: h,
+    );
+  }
 }
 
 class CartItem {
@@ -110,6 +178,15 @@ class LeaderboardUser {
     required this.isCurrentUser,
     this.streak = 0,
   });
+
+  factory LeaderboardUser.fromJson(Map<String, dynamic> json, {bool isCurrentUser = false}) {
+    return LeaderboardUser(
+      rank: json['rank'] as int,
+      name: json['displayName'] as String,
+      tokens: (json['tokensThisMonth'] as int?) ?? 0,
+      isCurrentUser: isCurrentUser,
+    );
+  }
 }
 
 class TokenTransaction {
@@ -124,6 +201,23 @@ class TokenTransaction {
     required this.title,
     required this.timestampLabel,
   });
+
+  factory TokenTransaction.fromJson(Map<String, dynamic> json) {
+    final createdAt = DateTime.tryParse(json['createdAt'] as String? ?? '');
+    String label = 'Recently';
+    if (createdAt != null) {
+      final diff = DateTime.now().difference(createdAt);
+      if (diff.inMinutes < 60) label = '${diff.inMinutes}m ago';
+      else if (diff.inHours < 24) label = '${diff.inHours}h ago';
+      else label = '${diff.inDays}d ago';
+    }
+    return TokenTransaction(
+      id: json['id'] as String,
+      amount: json['amount'] as int,
+      title: json['reason'] as String,
+      timestampLabel: label,
+    );
+  }
 }
 
 class AdminSubmission {
@@ -154,6 +248,33 @@ class AdminSubmission {
     this.sourcerName = 'Hessa Al Maktoum',
     this.status = 'pending',
   });
+
+  factory AdminSubmission.fromJson(Map<String, dynamic> json) {
+    final createdAt = DateTime.tryParse(json['submittedAt'] as String? ?? '');
+    String label = 'Recently';
+    if (createdAt != null) {
+      final diff = DateTime.now().difference(createdAt);
+      if (diff.inMinutes < 60) label = '${diff.inMinutes}m ago';
+      else if (diff.inHours < 24) label = '${diff.inHours}h ago';
+      else label = '${diff.inDays}d ago';
+    }
+    final product = json['product'] as Map<String, dynamic>? ?? {};
+    final store = json['store'] as Map<String, dynamic>? ?? {};
+    return AdminSubmission(
+      id: json['id'] as String,
+      productName: product['name'] as String? ?? json['productName'] as String? ?? '',
+      brand: product['brand'] as String? ?? '',
+      storeName: '${store['chain'] ?? ''} ${store['branchName'] ?? ''}'.trim(),
+      price: (json['priceAed'] as num?)?.toDouble() ?? 0.0,
+      hasReceipt: json['hasReceipt'] as bool? ?? false,
+      hasPhoto: false,
+      promoType: 'Price Submission',
+      tokensReward: json['tokensAwarded'] as int? ?? 0,
+      timestampLabel: label,
+      sourcerName: json['sourcerName'] as String? ?? 'Sourcer',
+      status: json['status'] as String? ?? 'pending',
+    );
+  }
 
   AdminSubmission copyWith({
     String? productName,
@@ -198,6 +319,27 @@ class PriceRequest {
     required this.timestampLabel,
     required this.distance,
   });
+
+  factory PriceRequest.fromJson(Map<String, dynamic> json) {
+    final createdAt = DateTime.tryParse(json['createdAt'] as String? ?? '');
+    String label = 'Recently';
+    if (createdAt != null) {
+      final diff = DateTime.now().difference(createdAt);
+      if (diff.inMinutes < 60) label = '${diff.inMinutes}m ago';
+      else if (diff.inHours < 24) label = '${diff.inHours}h ago';
+      else label = '${diff.inDays}d ago';
+    }
+    return PriceRequest(
+      id: json['id'] as String,
+      productName: json['productName'] as String,
+      storeName: json['storeName'] as String,
+      tokensBounty: json['bountyTokens'] as int? ?? 0,
+      requesterName: json['requesterName'] as String? ?? 'Sourcer',
+      status: json['status'] as String? ?? 'open',
+      timestampLabel: label,
+      distance: (json['distanceKm'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
 
   PriceRequest copyWith({
     String? status,

@@ -22,7 +22,28 @@ router.get('/search', async (req, res) => {
     orderBy: { name: 'asc' },
   });
 
-  res.json(products);
+  // Augment each product with its cheapest fresh price (approved, < 72h)
+  const cutoff = new Date(Date.now() - 72 * 60 * 60 * 1000);
+  const enriched = await Promise.all(
+    products.map(async (p) => {
+      const cheapest = await prisma.priceSubmission.findFirst({
+        where: { productId: p.id, status: 'approved', submittedAt: { gte: cutoff } },
+        orderBy: { priceAed: 'asc' },
+        include: { store: true },
+      });
+      const hoursAgo = cheapest
+        ? Math.round((Date.now() - cheapest.submittedAt.getTime()) / 3_600_000)
+        : null;
+      return {
+        ...p,
+        lowestPrice: cheapest ? Number(cheapest.priceAed) : null,
+        lowestPriceStore: cheapest ? cheapest.store.chain : null,
+        hoursAgo,
+      };
+    })
+  );
+
+  res.json(enriched);
 });
 
 // GET /products/:id

@@ -5,15 +5,28 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/state/state.dart';
 import '../../core/models/models.dart';
-import '../../core/mock_data/mock_data.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/souk_widgets.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.read(productsProvider.notifier).fetch();
+      ref.read(storesProvider.notifier).fetchNearby(lat: 25.0771, lng: 55.1328, radiusKm: 15);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final products = ref.watch(productsProvider);
     final filterState = ref.watch(filterProvider);
     final tokens = ref.watch(userTokensProvider);
@@ -573,20 +586,20 @@ class HomeScreen extends ConsumerWidget {
 
             // Featured stores awning cards row
             SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _FeaturedStoreCard(store: MockData.initialStores[0]),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: _FeaturedStoreCard(store: MockData.initialStores[1]),
-                    ),
-                  ],
-                ),
-              ),
+              child: Builder(builder: (context) {
+                final stores = ref.watch(storesProvider);
+                if (stores.length < 2) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      Expanded(child: _FeaturedStoreCard(store: stores[0])),
+                      const SizedBox(width: 14),
+                      Expanded(child: _FeaturedStoreCard(store: stores[1])),
+                    ],
+                  ),
+                );
+              }),
             ),
 
             const SliverPadding(padding: EdgeInsets.only(bottom: 100)),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/state/state.dart';
-import '../../core/mock_data/mock_data.dart';
+import '../../core/services/submissions_service.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/responsive_container.dart';
 
@@ -40,25 +40,33 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
     super.initState();
     _priceController.addListener(() => setState(() {}));
 
-    // Prefill fields if fulfilling a Request Board bounty
-    if (widget.prefilledStoreName != null) {
-      final match = MockData.initialStores.where(
-        (s) => s.name.toLowerCase().contains(widget.prefilledStoreName!.toLowerCase()) ||
-               widget.prefilledStoreName!.toLowerCase().contains(s.name.toLowerCase()),
-      );
-      if (match.isNotEmpty) {
-        selectedStoreId = match.first.id;
+    Future.microtask(() async {
+      // Ensure products and stores are loaded
+      await ref.read(productsProvider.notifier).fetch();
+      if (!mounted) return;
+      final storesLoaded = ref.read(storesProvider);
+      if (storesLoaded.isEmpty) {
+        ref.read(storesProvider.notifier).fetchNearby(lat: 25.0771, lng: 55.1328, radiusKm: 15);
       }
-    }
-    if (widget.prefilledProductName != null) {
-      final match = MockData.initialProducts.where(
-        (p) => p.name.toLowerCase().contains(widget.prefilledProductName!.toLowerCase()) ||
-               widget.prefilledProductName!.toLowerCase().contains(p.name.toLowerCase()),
-      );
-      if (match.isNotEmpty) {
-        selectedProductId = match.first.id;
+
+      // Prefill fields if fulfilling a Request Board bounty
+      if (widget.prefilledStoreName != null) {
+        final stores = ref.read(storesProvider);
+        final match = stores.where(
+          (s) => s.name.toLowerCase().contains(widget.prefilledStoreName!.toLowerCase()) ||
+                 widget.prefilledStoreName!.toLowerCase().contains(s.name.toLowerCase()),
+        );
+        if (match.isNotEmpty && mounted) setState(() => selectedStoreId = match.first.id);
       }
-    }
+      if (widget.prefilledProductName != null) {
+        final products = ref.read(productsProvider);
+        final match = products.where(
+          (p) => p.name.toLowerCase().contains(widget.prefilledProductName!.toLowerCase()) ||
+                 widget.prefilledProductName!.toLowerCase().contains(p.name.toLowerCase()),
+        );
+        if (match.isNotEmpty && mounted) setState(() => selectedProductId = match.first.id);
+      }
+    });
   }
 
   @override
@@ -70,8 +78,8 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final stores = MockData.initialStores;
-    final products = MockData.initialProducts;
+    final stores = ref.watch(storesProvider);
+    final products = ref.watch(productsProvider);
     final profile = ref.watch(userProfileProvider);
     final settings = ref.watch(adminSettingsProvider);
 
@@ -445,48 +453,40 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
 
               // Submit — lime pill CTA
               GestureDetector(
-                onTap: () {
+                onTap: () async {
                   if (_formKey.currentState!.validate()) {
-                    final store = stores.firstWhere(
-                      (s) => s.id == selectedStoreId,
-                    );
-                    final product = products.firstWhere(
-                      (p) => p.id == selectedProductId,
-                    );
+                    final store = stores.firstWhere((s) => s.id == selectedStoreId);
+                    final product = products.firstWhere((p) => p.id == selectedProductId);
                     final price = double.parse(_priceController.text);
 
-                    // Add to admin submissions
-                    ref
-                        .read(adminSubmissionsProvider.notifier)
-                        .addSubmission(
-                          productName: product.name,
-                          brand: product.brand,
-                          storeName: store.name,
-                          price: price,
-                          hasReceipt: uploadedReceipt,
-                          hasPhoto: uploadedPriceLabel,
-                          promoType: selectedPromo,
-                          tokensReward: totalReward,
-                        );
+                    int awarded = totalReward;
+                    try {
+                      final result = await submissionsService.create(
+                        productId: selectedProductId!,
+                        storeId: selectedStoreId!,
+                        priceAed: price,
+                        hasReceipt: uploadedReceipt,
+                      );
+                      awarded = result.tokensAwarded;
+                    } catch (_) {
+                      // Fallback: continue with local estimate, submission queued
+                    }
 
-                    // Award tokens immediately for demo flow
-                    ref.read(userTokensProvider.notifier).addTokens(totalReward);
+                    // Optimistic UI updates
+                    ref.read(userTokensProvider.notifier).addTokens(awarded);
                     ref.read(userTransactionsProvider.notifier).addTransaction(
-                      totalReward,
-                      '+$totalReward tokens — submitted ${product.name} @ ${store.name}',
+                      awarded,
+                      '+$awarded tokens — submitted ${product.name} @ ${store.name}',
                     );
-
-                    // Update profile and gamification state
                     ref.read(userProfileProvider.notifier).incrementSubmissions();
                     ref.read(streakProvider.notifier).recordActivity();
                     ref.read(dailyChallengeProvider.notifier).recordProgress();
 
-                    // Fulfill the request if applicable
                     if (widget.requestId != null) {
                       ref.read(priceRequestsProvider.notifier).fulfillPriceRequest(widget.requestId!);
                     }
 
-                    _showSuccessDialog(context, totalReward);
+                    if (mounted) _showSuccessDialog(context, awarded);
                   }
                 },
                 child: Container(

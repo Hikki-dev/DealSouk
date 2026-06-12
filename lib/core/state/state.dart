@@ -1,17 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/models.dart';
-import '../mock_data/mock_data.dart';
+import '../services/products_service.dart';
+import '../services/profile_service.dart';
+import '../services/submissions_service.dart';
+import '../services/requests_service.dart';
+import '../services/leaderboard_service.dart';
+import '../services/admin_service.dart';
+import '../services/stores_service.dart';
 
 // --- Products State ---
 class ProductsNotifier extends Notifier<List<Product>> {
   @override
-  List<Product> build() => MockData.initialProducts;
+  List<Product> build() => [];
+
+  Future<void> fetch({String query = '', String? category}) async {
+    try {
+      final results = await productsService.search(query: query, category: category);
+      state = results;
+    } catch (_) {
+      // keep current state on error
+    }
+  }
 
   void updateProductPrice(String productId, double price, String storeName) {
     state = state.map((product) {
       if (product.id == productId) {
-        if (price < product.lowestPrice) {
+        if (price < product.lowestPrice || product.lowestPrice == 0) {
           return product.copyWith(
             lowestPrice: price,
             lowestPriceStore: storeName,
@@ -30,18 +45,58 @@ final productsProvider = NotifierProvider<ProductsNotifier, List<Product>>(
   ProductsNotifier.new,
 );
 
+// --- Stores State ---
+class StoresNotifier extends Notifier<List<Store>> {
+  @override
+  List<Store> build() => [];
+
+  Future<void> fetchNearby({
+    required double lat,
+    required double lng,
+    double radiusKm = 5,
+  }) async {
+    try {
+      final results = await storesService.getNearby(lat: lat, lng: lng, radiusKm: radiusKm);
+      state = results;
+    } catch (_) {
+      // keep current state
+    }
+  }
+}
+
+final storesProvider = NotifierProvider<StoresNotifier, List<Store>>(
+  StoresNotifier.new,
+);
+
+// --- Leaderboard State ---
+class LeaderboardNotifier extends Notifier<List<LeaderboardUser>> {
+  @override
+  List<LeaderboardUser> build() => [];
+
+  Future<void> fetch() async {
+    try {
+      final results = await leaderboardService.getMonthly();
+      state = results;
+    } catch (_) {
+      // keep current state
+    }
+  }
+}
+
+final leaderboardProvider = NotifierProvider<LeaderboardNotifier, List<LeaderboardUser>>(
+  LeaderboardNotifier.new,
+);
+
 // --- User Tokens State ---
 class UserTokensNotifier extends Notifier<int> {
   @override
-  int build() => 340;
+  int build() => 0;
 
-  void addTokens(int amount) {
-    state = state + amount;
-  }
+  void sync(int balance) => state = balance;
 
-  void deductTokens(int amount) {
-    state = state - amount;
-  }
+  void addTokens(int amount) => state = state + amount;
+
+  void deductTokens(int amount) => state = state - amount;
 }
 
 final userTokensProvider = NotifierProvider<UserTokensNotifier, int>(
@@ -51,7 +106,14 @@ final userTokensProvider = NotifierProvider<UserTokensNotifier, int>(
 // --- User Transactions State ---
 class UserTransactionsNotifier extends Notifier<List<TokenTransaction>> {
   @override
-  List<TokenTransaction> build() => MockData.initialTokenTransactions;
+  List<TokenTransaction> build() => [];
+
+  Future<void> fetch() async {
+    try {
+      final results = await profileService.getTransactions();
+      state = results;
+    } catch (_) {}
+  }
 
   void addTransaction(int amount, String title) {
     final newTx = TokenTransaction(
@@ -72,17 +134,7 @@ final userTransactionsProvider =
 // --- Cart State ---
 class CartNotifier extends Notifier<List<CartItem>> {
   @override
-  List<CartItem> build() {
-    final spinach = MockData.initialProducts.firstWhere((p) => p.id == 'spinach');
-    final apples = MockData.initialProducts.firstWhere((p) => p.id == 'apples');
-    final lettuce = MockData.initialProducts.firstWhere((p) => p.id == 'lettuce');
-
-    return [
-      CartItem(product: spinach, quantity: 1, priceAtAdd: spinach.lowestPrice + 0.30),
-      CartItem(product: apples, quantity: 2, priceAtAdd: apples.lowestPrice + 0.20),
-      CartItem(product: lettuce, quantity: 1, priceAtAdd: lettuce.lowestPrice),
-    ];
-  }
+  List<CartItem> build() => [];
 
   void addToCart(Product product) {
     final existingIndex = state.indexWhere(
@@ -129,7 +181,48 @@ final cartProvider = NotifierProvider<CartNotifier, List<CartItem>>(
 // --- Admin Submissions State ---
 class AdminSubmissionsNotifier extends Notifier<List<AdminSubmission>> {
   @override
-  List<AdminSubmission> build() => MockData.initialAdminSubmissions;
+  List<AdminSubmission> build() => [];
+
+  Future<void> fetchQueue() async {
+    try {
+      final results = await adminService.getQueue();
+      state = results;
+    } catch (_) {}
+  }
+
+  Future<void> approveSubmission(String id, WidgetRef ref) async {
+    try {
+      await adminService.approveSubmission(id);
+      state = state.where((s) => s.id != id).toList();
+      // Refresh tokens and transactions from backend
+      await ref.read(userTransactionsProvider.notifier).fetch();
+      final profile = await profileService.getMyProfile();
+      ref.read(userTokensProvider.notifier).sync(profile.tokenBalance);
+    } catch (_) {
+      state = state.where((s) => s.id != id).toList();
+    }
+  }
+
+  Future<void> rejectSubmission(String id) async {
+    try {
+      await adminService.rejectSubmission(id);
+    } catch (_) {}
+    state = state.where((s) => s.id != id).toList();
+  }
+
+  Future<void> editSubmission(String id, {
+    String? productName,
+    String? storeName,
+    double? price,
+  }) async {
+    try {
+      await adminService.editSubmission(id, productName: productName, storeName: storeName, price: price);
+      state = state.map((s) {
+        if (s.id == id) return s.copyWith(productName: productName, storeName: storeName, price: price);
+        return s;
+      }).toList();
+    } catch (_) {}
+  }
 
   void addSubmission({
     required String productName,
@@ -140,7 +233,7 @@ class AdminSubmissionsNotifier extends Notifier<List<AdminSubmission>> {
     required bool hasPhoto,
     required String promoType,
     required int tokensReward,
-    String sourcerName = 'Hessa Al Maktoum',
+    String sourcerName = 'Sourcer',
   }) {
     final newSub = AdminSubmission(
       id: 'sub_${DateTime.now().millisecondsSinceEpoch}',
@@ -157,57 +250,6 @@ class AdminSubmissionsNotifier extends Notifier<List<AdminSubmission>> {
       status: 'pending',
     );
     state = [newSub, ...state];
-  }
-
-  void editSubmission(String id, {String? productName, String? storeName, double? price}) {
-    state = state.map((s) {
-      if (s.id == id) return s.copyWith(productName: productName, storeName: storeName, price: price);
-      return s;
-    }).toList();
-  }
-
-  void approveSubmission(String id, WidgetRef ref) {
-    final submissionIndex = state.indexWhere((sub) => sub.id == id);
-    if (submissionIndex >= 0) {
-      final sub = state[submissionIndex];
-      state = state.where((s) => s.id != id).toList();
-
-      if (sub.promoType == 'Flagged Report') {
-        final products = ref.read(productsProvider);
-        final product = products.firstWhere(
-          (p) => p.name.toLowerCase().contains(sub.productName.toLowerCase()) ||
-                 sub.productName.toLowerCase().contains(p.name.toLowerCase()),
-          orElse: () => products.first,
-        );
-        ref.read(flaggedPricesProvider.notifier).resetFlags(product.id, sub.storeName);
-        return;
-      }
-
-      ref.read(userTokensProvider.notifier).addTokens(sub.tokensReward);
-      ref
-          .read(userTransactionsProvider.notifier)
-          .addTransaction(
-            sub.tokensReward,
-            '+${sub.tokensReward} tokens - Approved ${sub.productName} price',
-          );
-
-      final products = ref.read(productsProvider);
-      final product = products.firstWhere(
-        (p) =>
-            p.name.toLowerCase().contains(sub.productName.toLowerCase()) ||
-            sub.productName.toLowerCase().contains(p.name.toLowerCase()),
-        orElse: () => products.first,
-      );
-      ref
-          .read(productsProvider.notifier)
-          .updateProductPrice(product.id, sub.price, sub.storeName);
-
-      ref.read(badgesProvider.notifier).checkAndUnlock('submission_approved');
-    }
-  }
-
-  void rejectSubmission(String id) {
-    state = state.where((s) => s.id != id).toList();
   }
 }
 
@@ -278,8 +320,8 @@ class UserProfile {
     required this.name,
     required this.location,
     required this.avatarUrl,
-    this.submissionsToday = 3,
-    this.homeArea = 'Dubai Marina',
+    this.submissionsToday = 0,
+    this.homeArea = 'Dubai',
   });
 
   UserProfile copyWith({
@@ -301,12 +343,22 @@ class UserProfile {
 class UserProfileNotifier extends Notifier<UserProfile> {
   @override
   UserProfile build() => UserProfile(
-        name: 'Hessa Al Maktoum',
-        location: 'Dubai Marina sourcer',
-        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80',
-        submissionsToday: 3,
-        homeArea: 'Dubai Marina',
+        name: 'Sourcer',
+        location: 'Dubai',
+        avatarUrl: '',
+        submissionsToday: 0,
+        homeArea: 'Dubai',
       );
+
+  void syncFromProfile(ProfileData data) {
+    state = UserProfile(
+      name: data.displayName,
+      location: data.homeArea ?? 'Dubai',
+      avatarUrl: '',
+      submissionsToday: 0,
+      homeArea: data.homeArea ?? 'Dubai',
+    );
+  }
 
   void incrementSubmissions() {
     final settings = ref.read(adminSettingsProvider);
@@ -326,41 +378,52 @@ final userProfileProvider = NotifierProvider<UserProfileNotifier, UserProfile>(
 // --- Price Requests State ---
 class PriceRequestsNotifier extends Notifier<List<PriceRequest>> {
   @override
-  List<PriceRequest> build() => MockData.initialPriceRequests;
+  List<PriceRequest> build() => [];
 
-  void addPriceRequest({
+  Future<void> fetchBoard() async {
+    try {
+      final results = await requestsService.getBoard();
+      state = results;
+    } catch (_) {}
+  }
+
+  Future<void> addPriceRequest({
     required String productName,
     required String storeName,
     required int bounty,
     required String requesterName,
-  }) {
-    final newRequest = PriceRequest(
-      id: 'req_${DateTime.now().millisecondsSinceEpoch}',
-      productName: productName,
-      storeName: storeName,
-      tokensBounty: bounty,
-      requesterName: requesterName,
-      status: 'pending',
-      timestampLabel: 'Just now',
-      distance: 1.0 + (DateTime.now().millisecondsSinceEpoch % 500) / 100.0,
-    );
-
-    ref.read(userTokensProvider.notifier).deductTokens(bounty);
-    ref.read(userTransactionsProvider.notifier).addTransaction(
-          -bounty,
-          'Requested price check: $productName at $storeName',
-        );
-
-    state = [newRequest, ...state];
+  }) async {
+    try {
+      final created = await requestsService.create(
+        productName: productName,
+        storeName: storeName,
+        bountyTokens: bounty,
+      );
+      // Optimistic balance deduction — backend already deducted
+      ref.read(userTokensProvider.notifier).deductTokens(bounty);
+      ref.read(userTransactionsProvider.notifier).addTransaction(
+            -bounty,
+            'Requested price check: $productName at $storeName',
+          );
+      state = [created, ...state];
+    } catch (_) {}
   }
 
-  void fulfillPriceRequest(String requestId) {
-    state = state.map((req) {
-      if (req.id == requestId) {
-        return req.copyWith(status: 'fulfilled', timestampLabel: 'Fulfilled Just Now');
-      }
-      return req;
-    }).toList();
+  Future<void> fulfillPriceRequest(String requestId) async {
+    try {
+      final earned = await requestsService.fulfill(requestId);
+      ref.read(userTokensProvider.notifier).addTokens(earned);
+      ref.read(userTransactionsProvider.notifier).addTransaction(
+            earned,
+            'Fulfilled a price request',
+          );
+      state = state.map((req) {
+        if (req.id == requestId) {
+          return req.copyWith(status: 'fulfilled', timestampLabel: 'Fulfilled Just Now');
+        }
+        return req;
+      }).toList();
+    } catch (_) {}
   }
 
   void refundPriceRequest(String requestId) {
@@ -387,25 +450,21 @@ class FlaggedPricesNotifier extends Notifier<Map<String, int>> {
   @override
   Map<String, int> build() => {};
 
-  void flagPrice(String productId, String storeName, String productName, double price) {
-    final key = '${productId}_$storeName';
-    final currentFlags = state[key] ?? 0;
-    final newFlags = currentFlags + 1;
-
-    state = {...state, key: newFlags};
-
-    if (newFlags >= 3) {
-      ref.read(adminSubmissionsProvider.notifier).addSubmission(
-            productName: productName,
-            brand: 'Community Flagged Report',
-            storeName: storeName,
-            price: price,
-            hasReceipt: false,
-            hasPhoto: false,
-            promoType: 'Flagged Report',
-            tokensReward: 0,
-          );
+  Future<void> flagPrice(
+    String productId,
+    String storeName,
+    String productName,
+    double price, {
+    String? submissionId,
+  }) async {
+    if (submissionId != null) {
+      try {
+        await submissionsService.flag(submissionId, 'price_wrong');
+      } catch (_) {}
     }
+    final key = '${productId}_$storeName';
+    final newFlags = (state[key] ?? 0) + 1;
+    state = {...state, key: newFlags};
   }
 
   void resetFlags(String productId, String storeName) {
@@ -440,7 +499,19 @@ final navbarVisibleProvider = NotifierProvider<NavbarVisibleNotifier, bool>(
 // --- Streak State ---
 class StreakNotifier extends Notifier<StreakData> {
   @override
-  StreakData build() => MockData.initialStreak;
+  StreakData build() => const StreakData(
+        currentStreak: 0,
+        longestStreak: 0,
+        lastActivityLabel: '—',
+      );
+
+  void sync(int current, int longest) {
+    state = StreakData(
+      currentStreak: current,
+      longestStreak: longest,
+      lastActivityLabel: 'Today',
+    );
+  }
 
   void recordActivity() {
     final current = state;
@@ -451,7 +522,6 @@ class StreakNotifier extends Notifier<StreakData> {
       longestStreak: longest,
       lastActivityLabel: 'Just now',
     );
-
     ref.read(badgesProvider.notifier).checkAndUnlock('streak_$newStreak');
   }
 }
@@ -463,7 +533,14 @@ final streakProvider = NotifierProvider<StreakNotifier, StreakData>(
 // --- Badges State ---
 class BadgesNotifier extends Notifier<List<UserBadge>> {
   @override
-  List<UserBadge> build() => MockData.initialBadges;
+  List<UserBadge> build() => const [
+        UserBadge(id: 'first_submission', name: 'First Price', emoji: '🏷️', description: 'Submit your first price', unlocked: false),
+        UserBadge(id: 'streak_7', name: '7-Day Streak', emoji: '🔥', description: 'Submit 7 days in a row', unlocked: false),
+        UserBadge(id: 'streak_30', name: 'Monthly Regular', emoji: '📅', description: '30-day submission streak', unlocked: false),
+        UserBadge(id: 'first_request', name: 'Price Detective', emoji: '🔍', description: 'Fulfill your first price request', unlocked: false),
+        UserBadge(id: 'accuracy_90', name: 'Trusted Sourcer', emoji: '✅', description: 'Maintain 90%+ accuracy rating', unlocked: false),
+        UserBadge(id: 'voucher_earned', name: 'Voucher Winner', emoji: '🎁', description: 'Earn your first voucher', unlocked: false),
+      ];
 
   void checkAndUnlock(String event) {
     final updated = state.map((badge) {
@@ -492,7 +569,13 @@ final badgesProvider = NotifierProvider<BadgesNotifier, List<UserBadge>>(
 // --- Daily Challenge State ---
 class DailyChallengeNotifier extends Notifier<DailyChallenge> {
   @override
-  DailyChallenge build() => MockData.initialDailyChallenge;
+  DailyChallenge build() => const DailyChallenge(
+        id: 'daily_1',
+        description: 'Submit 3 fresh prices today',
+        targetStore: 'Any',
+        targetCount: 3,
+        bonusTokens: 30,
+      );
 
   void recordProgress() {
     if (state.completed) return;
@@ -531,12 +614,27 @@ class AdminSettingsNotifier extends Notifier<AdminSettings> {
   @override
   AdminSettings build() => const AdminSettings();
 
-  void setTokenEarnRate(int rate) =>
-      state = state.copyWith(tokenEarnRate: rate);
-  void setVoucherThreshold(int threshold) =>
-      state = state.copyWith(voucherThreshold: threshold);
-  void setDailySubmissionCap(int cap) =>
-      state = state.copyWith(dailySubmissionCap: cap);
+  Future<void> fetchSettings() async {
+    try {
+      final settings = await adminService.getSettings();
+      state = settings;
+    } catch (_) {}
+  }
+
+  Future<void> setTokenEarnRate(int rate) async {
+    state = state.copyWith(tokenEarnRate: rate);
+    await adminService.updateSettings(state);
+  }
+
+  Future<void> setVoucherThreshold(int threshold) async {
+    state = state.copyWith(voucherThreshold: threshold);
+    await adminService.updateSettings(state);
+  }
+
+  Future<void> setDailySubmissionCap(int cap) async {
+    state = state.copyWith(dailySubmissionCap: cap);
+    await adminService.updateSettings(state);
+  }
 }
 
 final adminSettingsProvider =

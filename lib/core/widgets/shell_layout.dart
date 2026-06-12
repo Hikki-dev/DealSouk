@@ -3,10 +3,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../state/state.dart';
-import '../theme/theme.dart';
-import 'responsive_container.dart';
-import 'tutorial_overlay.dart';
+import 'package:dealsouk/features/cart/presentation/cart_providers.dart';
+import 'package:dealsouk/features/profile/presentation/profile_providers.dart';
+import 'package:dealsouk/core/theme/theme.dart';
+import 'package:dealsouk/core/widgets/responsive_container.dart';
+import 'package:dealsouk/core/widgets/tutorial_overlay.dart';
 
 class ShellLayout extends StatefulWidget {
   final Widget child;
@@ -76,7 +77,8 @@ class _ShellLayoutBody extends ConsumerWidget {
           duration: const Duration(milliseconds: 200),
           opacity: isNavbarVisible ? 1.0 : 0.0,
           child: (() {
-            final isIos = defaultTargetPlatform == TargetPlatform.iOS ||
+            final isIos =
+                defaultTargetPlatform == TargetPlatform.iOS ||
                 defaultTargetPlatform == TargetPlatform.macOS;
 
             final navItems = Row(

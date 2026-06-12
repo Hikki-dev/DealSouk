@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import * as admin from 'firebase-admin';
 import { prisma } from '../index';
+import { encrypt } from '../services/encryption';
 
 const router = Router();
 
@@ -21,7 +22,8 @@ router.post('/verify', async (req, res) => {
 
     if (!user) {
       const displayName = decoded.name ?? decoded.email?.split('@')[0] ?? 'Souk User';
-      const phoneNumber = decoded.phone_number ?? null;
+      const rawPhoneNumber = decoded.phone_number ?? null;
+      const phoneNumber = rawPhoneNumber ? encrypt(rawPhoneNumber) : null;
       user = await prisma.user.create({
         data: {
           firebaseUid: decoded.uid,
@@ -39,6 +41,8 @@ router.post('/verify', async (req, res) => {
       });
     }
 
+    const roles = user.isAdmin ? ['user', 'admin'] : ['user'];
+
     res.json({
       id: user.id,
       displayName: user.displayName,
@@ -46,6 +50,8 @@ router.post('/verify', async (req, res) => {
       preferredLocale: user.preferredLocale,
       tokenBalance: user.tokenBalance,
       accuracyRating: user.accuracyRating,
+      role: user.isAdmin ? 'admin' : 'user',
+      roles,
       isAdmin: user.isAdmin,
       isSuspended: user.isSuspended,
       createdAt: user.createdAt,

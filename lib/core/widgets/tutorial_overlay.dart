@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../theme/theme.dart';
+import 'package:dealsouk/core/theme/theme.dart';
 
 class TutorialOverlay extends StatefulWidget {
   const TutorialOverlay({super.key});
@@ -34,9 +34,9 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
           "Need a price you cannot see? Ask the community to check it, or help others by sharing a shelf price.",
     ),
     const _TutorialSlide(
-      title: "Save Useful Prices",
+      title: "Earn Shopping Rewards",
       description:
-          "Save items to a simple price list and see which nearby store looks worth visiting.",
+          "Share prices or check shelves to earn tokens, then swap them for real supermarket vouchers.",
     ),
   ];
 

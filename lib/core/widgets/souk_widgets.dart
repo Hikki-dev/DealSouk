@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../models/models.dart';
-import '../state/state.dart';
-import '../theme/theme.dart';
+import 'package:dealsouk/features/products/domain/product.dart';
+import 'package:dealsouk/features/cart/presentation/cart_providers.dart';
+import 'package:dealsouk/core/theme/theme.dart';
 
 /// Clips a container so its bottom edge becomes one smooth downward arc —
 /// the curve under the reference design's dark green headers.

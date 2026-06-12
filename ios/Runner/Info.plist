@@ -60,7 +60,5 @@
 	<string>We need camera access to capture price labels and receipts.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>We need your location to find nearby deals and show them on the map.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>We need your location to find nearby deals and show them on the map.</string>
 </dict>
 </plist>

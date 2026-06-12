@@ -1,85 +1,55 @@
-# DealSouk Client & Backend Security Audit
+# DealSouk Security Audit
 
-**Date**: June 12, 2026  
-**Auditor**: Antigravity AI  
-**Repository Branch**: `feature/flutter-api-integration`
+Date: 2026-06-12
+Branch audited: `feature/flutter-api-integration`
+Scope: Flutter app, platform manifests, backend auth/admin routes, local config hygiene.
 
-This document details the security posture of the DealSouk crowd-sourced price comparison application. It covers 20 specific security checkpoints across the Flutter client and the Node.js/TypeScript backend, mapping vulnerabilities to risk ratings, codebase evidence, and recommended remediation.
+## Summary
 
----
+| Severity | Count | Notes |
+|---|---:|---|
+| Critical | 0 | No current client-side admin bypass or plaintext release API default found. |
+| High | 4 | Local secrets exist outside git, Firebase config history risk, PII/privacy gaps, mock/admin affordances. |
+| Medium | 9 | Permission wording, analytics/crash setup, mock fallbacks, export/monitoring gaps, dependency advisory follow-up. |
+| Low | 2 | Cleanup/readme/documentation polish. |
+| Passed | 6 | Auth token attachment, admin route guard, HTTPS client guard, background location avoidance, `.env` gitignore, backend admin middleware. |
 
-## Executive Summary Statistics
+## Security Matrix
 
-| Severity | Count | Status Description |
-|---|---|---|
-| 🔴 **Critical** | 4 | Immediate release blockers; routes auth bypasses or leaks data over plaintext. |
-| 🟡 **High** | 2 | Significant functional or compliance risk (PDPL, unhandled UI exceptions). |
-| 🔵 **Medium** | 3 | Privacy configurations or trace artifacts needing cleanup before App Store review. |
-| 🟢 **Low** | 1 | Minor testing or local configuration adjustments. |
-| 🟢 **Passed** | 10 | Fully compliant with security and PRD rules. |
-
----
-
-## Detailed Security Matrix
-
-### 1. Credentials & Configuration Management
-
-| Checkpoint | Target Description | Severity | Code Evidence | Gaps & Risk Analysis | Recommended Fix |
+| # | Check | Rating | Evidence | Finding | Action |
 |---|---|---|---|---|---|
-| **01** | API keys committed in repo | 🟢 **Passed** | `backend/.env.example` | No production Firebase service account keys, Postgres credentials, or FCM tokens are committed. | Maintain credential loading via `.env` files in local runs and environment variables in CI/CD. |
-| **02** | Firebase config exposure | 🔵 **Medium** | `.gitignore:L70-L74` | Local Firebase configurations (`google-services.json`, `GoogleService-Info.plist`, `firebase_options.dart`) are ignored, but git history reveals they were previously tracked before commit `bd5f642`. | Run `git-filter-repo` to purge config files from history. Rotate Firebase project identifiers. |
-| **03** | Google Maps API key exposure | 🔴 **Critical** | `AndroidManifest.xml:L36`<br>`AppDelegate.swift`<br>`index.html` | Google Maps API keys are hardcoded as placeholders (`YOUR_GOOGLE_MAPS_API_KEY`), which will break maps on devices. If developers replace them locally, they risk committing them. | Inject API keys via Gradle/Xcode build variables at compile time. Do not check keys into git. |
-| **04** | `.env` files committed | 🟢 **Passed** | `.gitignore:L55-L61` | `.env` and `.env.local` files are properly ignored. Only `.env.example` is tracked. | Keep ignoring local env files; configure CI/CD injection. |
+| 1 | API keys committed in repo | High | `.gitignore`, `git ls-files` | No secret config files are currently tracked, but local ignored files exist: `android/app/google-services.json`, `ios/Runner/GoogleService-Info.plist`, `lib/firebase_options.dart`, `backend/.env`, `backend/firebase-service-account.json`. Firebase config files were previously tracked in branch history. | Keep ignored; rotate any exposed keys; purge history before public release. |
+| 2 | Firebase config exposure | High | `lib/firebase_options.dart` ignored but present locally; `docs/FIREBASE_PRODUCTION_SETUP.md` | Flutter analysis in a clean clone requires Firebase options from CI secret or local generation. Firebase web/mobile API keys are identifiers, not service-account secrets, but they still need project restriction and history cleanup. | Use GitHub Secrets for CI, run `flutterfire configure` locally, restrict Firebase/Google keys by app bundle/package/referrer, and purge/rotate history before public release. |
+| 3 | Google Maps API key exposure | Medium | `android/app/src/main/AndroidManifest.xml`, `ios/Runner/Info.plist`, `web/index.html` | No Google Maps key is committed in platform manifests. Current implementation mostly uses `flutter_map`/OSM; `google_maps_flutter` is now added for MVP readiness. | Inject Maps keys through CI/build settings when native Google Maps is wired. |
+| 4 | `.env` files committed | Passed | `.gitignore`, `git ls-files` | `.env` files are ignored and not tracked. | Continue using `.env.example` only. |
+| 5 | Hardcoded bearer tokens | Passed | `lib/core/network/api_client.dart` | Firebase ID tokens are fetched dynamically and added as `Authorization: Bearer ...`. | No action. |
+| 6 | Hardcoded user IDs | Medium | `backend/prisma/seed.ts`, `lib/features/stores/data/dubai_stores_seed.dart` | Seed data and static Dubai store fallback are dev/demo fixtures. No production user ID is used for auth, but fallback data can appear in production if API fails. | Keep fixtures in dev/mock repositories or feature flags. |
+| 7 | Hardcoded admin access | Passed | `backend/src/middleware/auth.ts`, `backend/src/routes/auth.ts`, `lib/features/auth/domain/auth_role.dart` | Admin access is role/claim based. No production admin email is hardcoded. | Migrate fully from legacy `isAdmin` boolean to Firebase custom claims or backend roles when ready. |
+| 8 | Hardcoded profile/user/token/cart data | Medium | `lib/features/*/presentation/*_providers.dart` | Central mock state has been split, but some UI counters and admin metrics remain seeded/mock-like. | Keep mock-only values under dev fixtures and make production screens read backend data only. |
+| 9 | Admin route without auth guard | Passed | `lib/app/route_guard.dart`, `lib/app/router.dart`, `test/app/route_guard_test.dart` | `/admin` now redirects guests/unauthenticated users to `/welcome`, authenticated non-admins to `/unauthorized`, and admins through. Backend `/admin/*` uses `requireAdmin`. | Keep guard tests in CI. |
+| 10 | Insecure HTTP URLs | Passed | `lib/core/network/api_client.dart` | Default API URL is `https://api.dealsouk.ae`; release builds reject non-HTTPS `API_BASE_URL`. | No action for client. Ensure deployed backend terminates TLS. |
+| 11 | Missing HTTPS enforcement | Medium | `backend/src/index.ts`, `docs/BACKEND_DEPLOYMENT.md` | Client enforces HTTPS in release. Backend uses Helmet and production CORS fails closed unless `ALLOWED_ORIGINS` is configured, but HTTPS/HSTS still need hosting-layer verification. | Configure HSTS and HTTPS redirect in deployment platform. |
+| 12 | Debug logs leaking data | Medium | `backend/src/services/tokenEngine.ts`, `backend/src/routes/admin.ts` | Backend logs user IDs/token balances for voucher and suspension events. Not full PII, but user IDs are sensitive operational data. | Replace raw user IDs with structured redacted logs. |
+| 13 | Android permissions | Passed | `android/app/src/main/AndroidManifest.xml` | Uses `INTERNET`, `CAMERA`, `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION`; no background location. | No background location should be added for MVP. |
+| 14 | iOS permissions | Passed | `ios/Runner/Info.plist` | Uses camera and when-in-use location copy; no always-location key present. | No action. |
+| 15 | Location permission wording | Medium | `ios/Runner/Info.plist`, `lib/features/stores/presentation/store_screen.dart` | Wording is understandable, but the app should show a pre-permission explainer before the OS dialog. | Add a simple in-app explanation: "We use your location only to show nearby supermarket prices." |
+| 16 | Camera/photo permission wording | Passed | `ios/Runner/Info.plist` | Camera copy explains price labels and receipts. | No action. |
+| 17 | Secure storage requirement | Medium | `pubspec.yaml` | `flutter_secure_storage` is now added, but no app-specific secure-storage wrapper exists yet. Firebase Auth handles its own session persistence. | Use secure storage for any future non-Firebase secrets or opaque app session metadata. |
+| 18 | Token/session handling | Passed | `lib/core/network/api_client.dart`, Firebase Auth SDK | ID token refresh is handled on 401 retry. | Add integration tests around expired-token retry later. |
+| 19 | Guest mode restrictions | Medium | `lib/app/route_guard.dart`, `lib/features/cart/presentation/cart_providers.dart` | Guest profile/submission routes are guarded and cart API sync is skipped for guests. Guest UI can still save local cart items. | Decide whether guest local cart is intentional; otherwise prompt sign-in on add-to-cart. |
+| 20 | Privacy/PDPL risks | Medium | `backend/prisma/schema.prisma`, `backend/src/routes/auth.ts`, `lib/features/auth/presentation/welcome_screen.dart`, `lib/features/legal/presentation/privacy_policy_screen.dart`, `docs/PRIVACY_POLICY.md` | Privacy consent and policy screen exist, and precise GPS is not stored persistently in schema. Phone number encryption is being introduced, but display name/home area remain plain and legal review is still required. | Finish PII classification, verify encryption migration, and get Arabic/English policy reviewed before public launch. |
+| 21 | Dependency advisories | Medium | `backend/package-lock.json`, `npm audit --omit=dev` | Firebase Admin currently pulls a transitive `uuid` advisory through Google Cloud libraries. npm's automatic fix proposes a breaking downgrade, so it was not applied. | Track upstream Firebase Admin/Google Cloud dependency updates and retest before production. |
 
----
+## Current Release Blockers
 
-### 2. Authentication & Authorization Controls
+No direct admin-route or plaintext-client release blocker remains in the current working tree.
 
-| Checkpoint | Target Description | Severity | Code Evidence | Gaps & Risk Analysis | Recommended Fix |
-|---|---|---|---|---|---|
-| **05** | Hardcoded bearer tokens | 🟢 **Passed** | `api_client.dart:L24-L49` | Authentication tokens are dynamically requested from Firebase Auth and attached to requests. | No action required. |
-| **06** | Hardcoded user IDs | 🟢 **Passed** | `prisma/seed.ts:L111-L125` | Mock seed user (`dummy_seed_sourcer_uid`) is used for local database population only. Production API users are resolved dynamically via Firebase tokens. | Keep seed user ids segregated from production environments. |
-| **07** | Hardcoded admin access | 🟢 **Passed** | `schema.prisma:L21`<br>`auth.ts:L49` | Admin rights are resolved dynamically using the `isAdmin` boolean field in the database. | No action required. |
-| **08** | Hardcoded profile data | 🟢 **Passed** | `state.dart` | Hardcoded mock data maps have been deleted. Profile, cart, and submissions states are loaded dynamically from the API. | No action required. |
-| **09** | Admin route without auth guard | 🔴 **Critical** | [router.dart](file:///Users/hikki/Desktop/DealSouk/lib/core/router/router.dart#L194) | The legacy static `appRouter` is still exported and contains **no route redirection logic or admin check guards**. If imported, it allows users to bypass authorization check blocks. | Remove the legacy `appRouter` entirely from the codebase. |
+The highest-risk items before production are:
 
----
-
-### 3. Transport & Network Security
-
-| Checkpoint | Target Description | Severity | Code Evidence | Gaps & Risk Analysis | Recommended Fix |
-|---|---|---|---|---|---|
-| **10** | Insecure HTTP URLs | 🔴 **Critical** | [api_client.dart](file:///Users/hikki/Desktop/DealSouk/lib/core/services/api_client.dart#L11) | The default URL is hardcoded as plaintext HTTP (`http://100.69.54.28:3000`). Profile credentials and coordinates are sent unencrypted. | Require HTTPS. Throw an assertion error in release mode if the API URL does not begin with `https://`. |
-| **11** | Missing HTTPS enforcement | 🔴 **Critical** | `api_client.dart` | The client permits connecting to unencrypted endpoints. The backend has no middleware to force redirection to HTTPS. | Configure backend middleware to force HTTPS redirection and set HTTP Strict Transport Security (HSTS) headers. |
-| **12** | Debug logs leaking data | 🟢 **Passed** | `backend/src/` | Console logging only outputs lifecycle and connection indicators; no sensitive PII or location tokens are printed. | Maintain print filters; replace standard prints with `debugPrint` in the client. |
-
----
-
-### 4. Device Permissions & Privacy Controls
-
-| Checkpoint | Target Description | Severity | Code Evidence | Gaps & Risk Analysis | Recommended Fix |
-|---|---|---|---|---|---|
-| **13** | AndroidManifest permissions | 🟢 **Passed** | `AndroidManifest.xml:L2-L5` | Requests `INTERNET`, `CAMERA`, and location permissions. Background location is NOT requested, satisfying PRD rules. | No action required. |
-| **14** | iOS Info.plist permissions | 🔵 **Medium** | `Info.plist:L63-L64` | Plist declares `NSLocationAlwaysAndWhenInUseUsageDescription` (Always Allow Location). This is unnecessary since background location is out of scope. | Remove `NSLocationAlwaysAndWhenInUseUsageDescription` to prevent App Store rejection. |
-| **15** | Location permission wording | 🔵 **Medium** | [store_screen.dart](file:///Users/hikki/Desktop/DealSouk/lib/features/stores/store_screen.dart#L60) | The app directly launches the OS location permission dialog without a plain-language explainer overlay, violating `FR-04`. | Implement a simple pre-prompt dialog explaining that location is needed to display nearby supermarket pricing. |
-| **16** | Camera/photo permission wording | 🟢 **Passed** | `Info.plist:L59-L60` | Camera description string is clear: *"We need camera access to capture price labels and receipts."* | No action required. |
-
----
-
-### 5. Session, Storage & Compliance
-
-| Checkpoint | Target Description | Severity | Code Evidence | Gaps & Risk Analysis | Recommended Fix |
-|---|---|---|---|---|---|
-| **17** | Secure storage requirement | 🟢 **Passed** | Firebase SDK | Session caching is managed natively by the Firebase Auth SDK (using Keychain on iOS and Keystore on Android). | No action required. |
-| **18** | Token/session handling | 🟢 **Passed** | Firebase SDK | Tokens expire and refresh automatically. Session tokens expire after 30 days of inactivity, satisfying `NFR-08`. | No action required. |
-| **19** | Guest mode restrictions | 🟡 **High** | [router.dart](file:///Users/hikki/Desktop/DealSouk/lib/core/router/router.dart#L42-L46) | Guest users can access the Grocery Cart screen and click "Add to Cart". These actions trigger API syncs to `/profile/me/cart` without tokens, resulting in unhandled 401 errors. | Disable the "Add to Cart" button for guest users and show a prompt asking them to sign in. |
-| **20** | Privacy & PDPL compliance | 🟡 **High** | `welcome_screen.dart`<br>`schema.prisma` | 1. The Welcome/Login screen lacks privacy policy consent checkboxes.<br>2. User PII (phone numbers, display names) is stored in plaintext in PostgreSQL instead of being encrypted at rest. | 1. Add privacy policy checkboxes to the registration screen.<br>2. Encrypt phone numbers at rest in the database. |
-
----
-
-## Key Security Recommendations (Priority Actions)
-
-1. **Purge Git History (Medium)**: Use `git-filter-repo` to delete `google-services.json` and `GoogleService-Info.plist` from previous commits, then rotate project credentials.
-2. **Remove Legacy Router (Critical)**: Delete the legacy static `appRouter` from [router.dart](file:///Users/hikki/Desktop/DealSouk/lib/core/router/router.dart#L194) to eliminate the auth bypass vector.
-3. **Enforce HTTPS (Critical)**: Change the default endpoint in [api_client.dart](file:///Users/hikki/Desktop/DealSouk/lib/core/services/api_client.dart#L11) to a secure HTTPS URL, and add compile-time checks to prevent HTTP traffic in release builds.
-4. **Fix Guest Cart Sync (High)**: Add guest checks in [cart_screen.dart](file:///Users/hikki/Desktop/DealSouk/lib/features/cart/cart_screen.dart) to prevent unauthenticated API requests to the cart endpoints.
+1. Rotate/purge previously tracked Firebase config and service-account material from git history.
+2. Ensure a fresh clone can generate `lib/firebase_options.dart` through documented setup.
+3. Finish PII encryption/migration and legal review of privacy-policy copy.
+4. Move remaining mock/demo metrics behind dev-only fixtures.
+5. Keep production env values in secret managers only; do not commit Firebase files, `.env`, private keys, signing keys, or service-account JSON.
+6. Add server-side malware scanning for uploaded receipt/price-label images.
+7. Re-check backend dependency advisories before production deployment.

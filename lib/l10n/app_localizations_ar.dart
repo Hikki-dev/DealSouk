@@ -99,7 +99,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lastMonthChampions => 'أبطال الشهر الماضي';
 
   @override
-  String get sourcerBadges => 'شارات المورّد';
+  String get sourcerBadges => 'شارات المتسوق';
 
   @override
   String get todaysChallenges => 'تحديات اليوم';

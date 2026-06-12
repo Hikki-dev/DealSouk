@@ -93,6 +93,31 @@ router.get('/me/transactions', requireAuth, async (req: AuthRequest, res) => {
   res.json(transactions);
 });
 
+// GET /profile/me/vouchers — user's voucher requests and approved codes
+router.get('/me/vouchers', requireAuth, async (req: AuthRequest, res) => {
+  const vouchers = await prisma.voucherRequest.findMany({
+    where: { userId: req.userId! },
+    orderBy: { requestedAt: 'desc' },
+    take: 20,
+  });
+
+  res.json(
+    vouchers.map((voucher) => ({
+      id: voucher.id,
+      status: voucher.status,
+      thresholdTokens: voucher.thresholdTokens,
+      tokenCost: voucher.tokenCost,
+      denominationAed: voucher.denominationAed,
+      supermarket: voucher.supermarket,
+      voucherCode: voucher.status === 'approved' ? voucher.voucherCode : null,
+      requestedAt: voucher.requestedAt,
+      reviewedAt: voucher.reviewedAt,
+      deliveredAt: voucher.deliveredAt,
+      adminNote: voucher.adminNote,
+    })),
+  );
+});
+
 // GET /profile/me/submissions
 router.get('/me/submissions', requireAuth, async (req: AuthRequest, res) => {
   const submissions = await prisma.priceSubmission.findMany({

@@ -241,7 +241,41 @@ async function checkVoucherThreshold(userId: string): Promise<void> {
   const settings = await getSettings();
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) return;
-  if (user.tokenBalance >= settings.voucherThreshold) {
-    console.log(`[VOUCHER] User ${userId} crossed threshold (${user.tokenBalance} tokens). Admin approval required.`);
+  if (user.tokenBalance < settings.voucherThreshold) return;
+
+  const existing = await prisma.voucherRequest.findFirst({
+    where: {
+      userId,
+      status: { in: ['pending', 'approved'] },
+    },
+  });
+  if (existing) return;
+
+  const dominantStore = await prisma.priceSubmission.groupBy({
+    by: ['storeId'],
+    where: {
+      sourcerId: userId,
+      status: 'approved',
+      submittedAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+    },
+    _count: { storeId: true },
+    orderBy: { _count: { storeId: 'desc' } },
+    take: 1,
+  });
+
+  let supermarket = 'Partner supermarket';
+  if (dominantStore[0]) {
+    const store = await prisma.store.findUnique({ where: { id: dominantStore[0].storeId } });
+    supermarket = store?.chain ?? supermarket;
   }
+
+  await prisma.voucherRequest.create({
+    data: {
+      userId,
+      thresholdTokens: settings.voucherThreshold,
+      tokenCost: settings.voucherThreshold,
+      denominationAed: 50,
+      supermarket,
+    },
+  });
 }

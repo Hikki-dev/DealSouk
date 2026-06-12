@@ -275,7 +275,7 @@ abstract class AppLocalizations {
   /// No description provided for @sourcerBadges.
   ///
   /// In en, this message translates to:
-  /// **'Sourcer Badges'**
+  /// **'Shopper Badges'**
   String get sourcerBadges;
 
   /// No description provided for @todaysChallenges.

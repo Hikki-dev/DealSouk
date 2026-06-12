@@ -9,10 +9,21 @@ const router = Router();
 // Submission rate limit: max 5 per minute per account (NFR-09)
 const submitLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 5,
+  max: Number(process.env.SUBMISSION_RATE_LIMIT_PER_MINUTE ?? 5),
   keyGenerator: (req: AuthRequest) => req.userId ?? req.ip ?? 'anon',
   message: { error: 'Too many submissions. Max 5 per minute.' },
 });
+
+const MAX_PRICE_AED = 10000;
+const MAX_URL_LENGTH = 2048;
+
+function isHttpsUrl(value: string): boolean {
+  try {
+    return new URL(value).protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
 
 // GET /submissions/feed?page=&limit=
 router.get('/feed', async (req, res) => {
@@ -50,8 +61,13 @@ router.post('/', requireAuth, submitLimiter, async (req: AuthRequest, res) => {
     receiptUrl?: string;
   };
 
-  if (!productId || !storeId || priceAed == null || priceAed <= 0) {
+  if (!productId || !storeId || priceAed == null || priceAed <= 0 || priceAed > MAX_PRICE_AED) {
     res.status(400).json({ error: 'productId, storeId, and a positive priceAed are required' });
+    return;
+  }
+
+  if (receiptUrl && (receiptUrl.length > MAX_URL_LENGTH || !isHttpsUrl(receiptUrl))) {
+    res.status(400).json({ error: 'receiptUrl must be a valid HTTPS URL' });
     return;
   }
 

@@ -57,6 +57,44 @@ router.get('/nearby', async (req, res) => {
   res.json(nearby);
 });
 
+// GET /stores/:id/prices — fresh approved prices available at one branch
+router.get('/:id/prices', async (req, res) => {
+  const cutoff = new Date(Date.now() - 72 * 60 * 60 * 1000);
+
+  const prices = await prisma.priceSubmission.findMany({
+    where: {
+      storeId: req.params.id,
+      status: 'approved',
+      submittedAt: { gte: cutoff },
+    },
+    include: {
+      product: true,
+      store: true,
+    },
+    orderBy: { submittedAt: 'desc' },
+    take: 50,
+  });
+
+  res.json(
+    prices.map((p) => ({
+      id: p.id,
+      priceAed: Number(p.priceAed),
+      hasReceipt: p.hasReceipt,
+      submittedAt: p.submittedAt,
+      hoursAgo: Math.round((Date.now() - p.submittedAt.getTime()) / 3_600_000),
+      storeName: p.store.chain,
+      product: {
+        id: p.product.id,
+        name: p.product.name,
+        brand: p.product.brand,
+        packSize: p.product.packSize,
+        category: p.product.category,
+        imageUrl: p.product.imageUrl,
+      },
+    }))
+  );
+});
+
 // GET /stores/:id
 router.get('/:id', async (req, res) => {
   const store = await prisma.store.findUnique({ where: { id: req.params.id } });

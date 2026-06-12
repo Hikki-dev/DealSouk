@@ -1,0 +1,53 @@
+name: iOS Internal Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_base_url:
+        description: Production or staging API base URL
+        required: true
+        default: https://api.dealsouk.ae
+
+jobs:
+  build-ios:
+    name: Build unsigned iOS app
+    runs-on: macos-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Restore Firebase iOS config from secrets
+        env:
+          FIREBASE_OPTIONS_DART_B64: ${{ secrets.FIREBASE_OPTIONS_DART_B64 }}
+          GOOGLE_SERVICE_INFO_PLIST_B64: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST_B64 }}
+        run: |
+          if [ -z "$FIREBASE_OPTIONS_DART_B64" ] || [ -z "$GOOGLE_SERVICE_INFO_PLIST_B64" ]; then
+            echo "Missing Firebase iOS secrets. Configure FIREBASE_OPTIONS_DART_B64 and GOOGLE_SERVICE_INFO_PLIST_B64."
+            exit 1
+          fi
+          echo "$FIREBASE_OPTIONS_DART_B64" | base64 --decode > lib/firebase_options.dart
+          echo "$GOOGLE_SERVICE_INFO_PLIST_B64" | base64 --decode > ios/Runner/GoogleService-Info.plist
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build unsigned iOS release
+        run: >
+          flutter build ios --release --no-codesign
+          --dart-define=API_BASE_URL=${{ inputs.api_base_url }}
+          --dart-define=ADMIN_MODE=false
+
+      - name: Upload iOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dealsouk-ios-unsigned
+          path: build/ios/iphoneos
+          if-no-files-found: error
+

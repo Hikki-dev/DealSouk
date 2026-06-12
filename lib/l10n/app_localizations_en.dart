@@ -99,7 +99,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lastMonthChampions => 'Last Month\'s Champions';
 
   @override
-  String get sourcerBadges => 'Sourcer Badges';
+  String get sourcerBadges => 'Shopper Badges';
 
   @override
   String get todaysChallenges => 'Today\'s Challenges';

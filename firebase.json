@@ -1,1 +1,33 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"dealsouk-6e140","appId":"1:548247133447:android:e2c50d9720cb3100e1b9a2","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"dealsouk-6e140","appId":"1:548247133447:ios:c15d8a9f4e427acce1b9a2","uploadDebugSymbols":false,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"dealsouk-6e140","configurations":{"android":"1:548247133447:android:e2c50d9720cb3100e1b9a2","ios":"1:548247133447:ios:c15d8a9f4e427acce1b9a2"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "dealsouk-6e140",
+          "appId": "1:548247133447:android:e2c50d9720cb3100e1b9a2",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "dealsouk-6e140",
+          "appId": "1:548247133447:ios:c15d8a9f4e427acce1b9a2",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "dealsouk-6e140",
+          "configurations": {
+            "android": "1:548247133447:android:e2c50d9720cb3100e1b9a2",
+            "ios": "1:548247133447:ios:c15d8a9f4e427acce1b9a2"
+          }
+        }
+      }
+    }
+  },
+  "storage": {
+    "rules": "firebase/storage.rules"
+  }
+}

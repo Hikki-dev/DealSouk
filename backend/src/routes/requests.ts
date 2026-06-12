@@ -3,8 +3,18 @@ import { prisma } from "../index";
 import { requireAuth, AuthRequest } from "../middleware/auth";
 import { spendTokens, awardTokens } from "../services/tokenEngine";
 import { notifyRequestFulfilled } from "../services/fcmNotifier";
+import rateLimit from "express-rate-limit";
 
 const router = Router();
+const MAX_REQUEST_TEXT_LENGTH = 120;
+const MAX_BOUNTY_TOKENS = 100;
+
+const createRequestLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: Number(process.env.REQUEST_RATE_LIMIT_PER_MINUTE ?? 10),
+  keyGenerator: (req: AuthRequest) => req.userId ?? req.ip ?? "anon",
+  message: { error: "Too many price requests. Please try again in a minute." },
+});
 
 // GET /requests/board — open requests sorted by bounty, expire stale ones first
 router.get("/board", async (req, res) => {
@@ -51,20 +61,34 @@ router.get("/mine", requireAuth, async (req: AuthRequest, res) => {
 });
 
 // POST /requests — create a new price request, deduct tokens
-router.post("/", requireAuth, async (req: AuthRequest, res) => {
+router.post("/", requireAuth, createRequestLimiter, async (req: AuthRequest, res) => {
   const { productName, storeName, bountyTokens } = req.body as {
     productName: string;
     storeName: string;
     bountyTokens?: number;
   };
 
-  if (!productName || !storeName) {
+  const cleanProductName = productName?.trim();
+  const cleanStoreName = storeName?.trim();
+
+  if (!cleanProductName || !cleanStoreName) {
     res.status(400).json({ error: "productName and storeName are required" });
+    return;
+  }
+  if (
+    cleanProductName.length > MAX_REQUEST_TEXT_LENGTH ||
+    cleanStoreName.length > MAX_REQUEST_TEXT_LENGTH
+  ) {
+    res.status(400).json({ error: "Request text is too long" });
     return;
   }
 
   const settings = await prisma.adminSettings.findUnique({ where: { id: 1 } });
   const cost = bountyTokens ?? settings?.requestCostTokens ?? 10;
+  if (!Number.isInteger(cost) || cost < 1 || cost > MAX_BOUNTY_TOKENS) {
+    res.status(400).json({ error: "bountyTokens must be between 1 and 100" });
+    return;
+  }
 
   try {
     await spendTokens(
@@ -81,8 +105,8 @@ router.post("/", requireAuth, async (req: AuthRequest, res) => {
   const request = await prisma.priceRequest.create({
     data: {
       requesterId: req.userId!,
-      productName,
-      storeName,
+      productName: cleanProductName,
+      storeName: cleanStoreName,
       bountyTokens: cost,
       expiresAt,
     },

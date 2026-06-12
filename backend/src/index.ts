@@ -1,8 +1,10 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { PrismaClient } from "@prisma/client";
+import { requireProductionEnv } from "./config/env";
 
 import authRoutes from "./routes/auth";
 import productRoutes from "./routes/products";
@@ -18,14 +20,44 @@ export const prisma = new PrismaClient();
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
+const isProduction = process.env.NODE_ENV === "production";
 
+requireProductionEnv([
+  "DATABASE_URL",
+  "DATABASE_ENCRYPTION_KEY",
+  "FIREBASE_PROJECT_ID",
+  "FIREBASE_CLIENT_EMAIL",
+  "FIREBASE_PRIVATE_KEY",
+  "ALLOWED_ORIGINS",
+]);
+
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ?.split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+if (isProduction && (!allowedOrigins || allowedOrigins.length === 0)) {
+  throw new Error("ALLOWED_ORIGINS must be configured in production");
+}
+
+app.set("trust proxy", 1);
 app.use(helmet());
-app.use(cors({ origin: process.env.ALLOWED_ORIGINS?.split(",") ?? "*" }));
-app.use(express.json({ limit: "10mb" }));
+app.use(
+  cors({
+    origin: allowedOrigins ?? [
+      "http://localhost:3000",
+      "http://localhost:5000",
+      "http://localhost:5173",
+    ],
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
+app.use(express.json({ limit: process.env.JSON_BODY_LIMIT ?? "1mb" }));
 
 const globalLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 120,
+  max: Number(process.env.GLOBAL_RATE_LIMIT_PER_MINUTE ?? 120),
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -33,6 +65,15 @@ app.use(globalLimiter);
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+app.get("/system/status", (_req, res) => {
+  res.json({
+    maintenance: process.env.MAINTENANCE_MODE === "true",
+    message:
+      process.env.MAINTENANCE_MESSAGE ??
+      "DealSouk is undergoing scheduled maintenance. Some features may be unavailable.",
+  });
 });
 
 app.use("/auth", authRoutes);

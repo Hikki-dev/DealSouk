@@ -36,7 +36,7 @@ To ensure the app is understandable to families, grocery shoppers, and casual co
   - Simplify pillars to: **"Compare Prices"**, **"Find Nearby"**, **"Request Price"**
   - Change footer to: **"Supermarket prices shared by shoppers in Dubai."**
 * **Priority:** High
-* **Exact File Path:** [welcome_screen.dart](file:///Users/hikki/Desktop/DealSouk/lib/features/auth/welcome_screen.dart)
+* **Exact File Path:** [welcome_screen.dart](lib/features/auth/presentation/welcome_screen.dart)
 
 ---
 
@@ -53,7 +53,7 @@ To ensure the app is understandable to families, grocery shoppers, and casual co
   - Update Slide 3 description to: **"Share prices or check shelves to earn tokens, then swap them for real supermarket vouchers."**
   - Keep slide count at 3 (meets requirement) but align graphics to explicitly show the reward economy.
 * **Priority:** Critical
-* **Exact File Path:** [tutorial_overlay.dart](file:///Users/hikki/Desktop/DealSouk/lib/core/widgets/tutorial_overlay.dart)
+* **Exact File Path:** [tutorial_overlay.dart](lib/core/widgets/tutorial_overlay.dart)
 
 ---
 
@@ -74,7 +74,7 @@ To ensure the app is understandable to families, grocery shoppers, and casual co
     - **Freshness:** `"Updated 2 hours ago"` (or `"Updated today"`)
     - **Verification:** `"Verified with photo"` (with a camera icon) if shelf/receipt photo is available.
 * **Priority:** Critical
-* **Exact File Path:** [home_screen.dart](file:///Users/hikki/Desktop/DealSouk/lib/features/home/home_screen.dart)
+* **Exact File Path:** [home_screen.dart](lib/features/home/presentation/home_screen.dart)
 
 ---
 
@@ -88,7 +88,7 @@ To ensure the app is understandable to families, grocery shoppers, and casual co
   - Revamp empty state to say: **"We couldn't find '${searchQuery}'. Would you like another shopper to check this price for you?"**
   - Include a large primary button: **"Request this price (+15 Tokens)"** which immediately opens the price request sheet pre-filled with the search query.
 * **Priority:** High
-* **Exact File Path:** [search_screen.dart](file:///Users/hikki/Desktop/DealSouk/lib/features/products/search_screen.dart)
+* **Exact File Path:** [search_screen.dart](lib/features/products/presentation/search_screen.dart)
 
 ---
 
@@ -108,7 +108,7 @@ To ensure the app is understandable to families, grocery shoppers, and casual co
     - **Store & Distance** (e.g., `Carrefour • 1.8 km away`)
     - **Freshness & Verification** (e.g., `Updated 2 hours ago • Verified with photo`)
 * **Priority:** High
-* **Exact File Path:** [product_detail_screen.dart](file:///Users/hikki/Desktop/DealSouk/lib/features/products/product_detail_screen.dart)
+* **Exact File Path:** [product_detail_screen.dart](lib/features/products/presentation/product_detail_screen.dart)
 
 ---
 
@@ -131,8 +131,8 @@ To ensure the app is understandable to families, grocery shoppers, and casual co
   - Display store distance within the comparison cards.
 * **Priority:** High
 * **Exact File Paths:**
-  - [cart_screen.dart](file:///Users/hikki/Desktop/DealSouk/lib/features/cart/cart_screen.dart)
-  - [shell_layout.dart](file:///Users/hikki/Desktop/DealSouk/lib/core/widgets/shell_layout.dart)
+  - [cart_screen.dart](lib/features/cart/presentation/cart_screen.dart)
+  - [shell_layout.dart](lib/core/widgets/shell_layout.dart)
 
 ---
 
@@ -150,7 +150,7 @@ To ensure the app is understandable to families, grocery shoppers, and casual co
     - **Step 4: Submit & Earn** (Show the final points calculation screen with a large **"Submit a price"** button detailing the reward: *"Tap to earn +15 Tokens!"*).
   - Change "Send for review" button text to: **"Submit a price"**.
 * **Priority:** High
-* **Exact File Path:** [submit_price_screen.dart](file:///Users/hikki/Desktop/DealSouk/lib/features/submissions/submit_price_screen.dart)
+* **Exact File Path:** [submit_price_screen.dart](lib/features/submissions/presentation/submit_price_screen.dart)
 
 ---
 
@@ -165,14 +165,14 @@ To ensure the app is understandable to families, grocery shoppers, and casual co
 * **Better Wording / Layout:**
   - Rename badge and ranking labels:
     - Change "Sourcer Badges" to **"Shopper Badges"** or **"Contributor Badges"**.
-    - Change level titles in `state.dart` from "Regular Sourcer" to **"Regular Contributor"**, and "Senior Sourcer" to **"Expert Price-Sharer"**.
+    - Change level titles in token/profile presentation helpers from "Regular Sourcer" to **"Regular Contributor"**, and "Senior Sourcer" to **"Expert Price-Sharer"**.
   - Update action button on request cards from "I can check" to: **"Check price (+15 Tokens)"** or **"Help Check Price"**.
   - Improve request empty state to: **"All price requests are completed! Need a price? Tap 'Ask for a price' to request a price check."**
 * **Priority:** Medium
 * **Exact File Paths:**
-  - [leaderboard_screen.dart](file:///Users/hikki/Desktop/DealSouk/lib/features/leaderboard/leaderboard_screen.dart)
-  - [request_board_view.dart](file:///Users/hikki/Desktop/DealSouk/lib/features/leaderboard/request_board_view.dart)
-  - [state.dart](file:///Users/hikki/Desktop/DealSouk/lib/core/state/state.dart)
+  - [leaderboard_screen.dart](lib/features/leaderboard/presentation/leaderboard_screen.dart)
+  - [request_board_view.dart](lib/features/requests/presentation/request_board_view.dart)
+  - [tokens_providers.dart](lib/features/tokens/presentation/tokens_providers.dart)
 
 ---
 
@@ -190,7 +190,7 @@ To ensure the app is understandable to families, grocery shoppers, and casual co
   - Add a prominent info banner when showing default stores: **"Showing default stores. Grant location permission to find supermarkets near you."** with a button to trigger settings.
   - Remove fake price calculations on `_StoreChoiceCard`. Replace it with: **"Compare prices"** or show actual store pricing statistics (e.g., *"14 prices active"*).
 * **Priority:** Critical
-* **Exact File Path:** [store_screen.dart](file:///Users/hikki/Desktop/DealSouk/lib/features/stores/store_screen.dart)
+* **Exact File Path:** [store_screen.dart](lib/features/stores/presentation/store_screen.dart)
 
 ---
 
@@ -206,3 +206,7 @@ A critical requirement for Dubai users is supporting both English and Arabic. Th
 3. **Map Marker Details:**
    - **Current Issue:** Map info window snippets and popups are hardcoded in English formatting (`store.distance + " km"`).
    - **Remedy:** Format distances and names properly using localizable strings (e.g., `"{distance} كم"` in Arabic).
+
+## Current Refactor Note
+
+The file paths in this review reflect the current feature-first tree (`features/*/presentation`). The old global `lib/core/state/state.dart` no longer exists in the current working tree; wording and level-title cleanup should happen in the feature-level token/profile providers and widgets.

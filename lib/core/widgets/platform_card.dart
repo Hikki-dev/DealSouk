@@ -29,7 +29,8 @@ class PlatformCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final platform = defaultTargetPlatform;
-    final isIos = platform == TargetPlatform.iOS || platform == TargetPlatform.macOS;
+    final isIos =
+        platform == TargetPlatform.iOS || platform == TargetPlatform.macOS;
 
     Gradient? iosGradient;
     if (gradient is LinearGradient) {
@@ -77,21 +78,26 @@ class PlatformCard extends StatelessWidget {
                 margin: margin,
                 decoration: BoxDecoration(
                   color: iosGradient == null
-                      ? (color?.withValues(alpha: 0.6) ?? Colors.white.withValues(alpha: 0.6))
+                      ? (color?.withValues(alpha: 0.6) ??
+                            Colors.white.withValues(alpha: 0.6))
                       : null,
                   gradient: iosGradient,
                   borderRadius: BorderRadius.circular(borderRadius),
-                  border: border ?? Border.all(
-                    color: Colors.white.withValues(alpha: 0.25),
-                    width: 1.5,
-                  ),
-                  boxShadow: boxShadow ?? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.02),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                  border:
+                      border ??
+                      Border.all(
+                        color: Colors.white.withValues(alpha: 0.25),
+                        width: 1.5,
+                      ),
+                  boxShadow:
+                      boxShadow ??
+                      [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.02),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                 ),
                 child: child,
               ),
@@ -104,26 +110,24 @@ class PlatformCard extends StatelessWidget {
               color: gradient == null ? (color ?? Colors.white) : null,
               gradient: gradient,
               borderRadius: BorderRadius.circular(borderRadius),
-              border: border ?? Border.all(
-                color: const Color(0xFFE8EEE4),
-                width: 1.2,
-              ),
-              boxShadow: boxShadow ?? [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
-                ),
-              ],
+              border:
+                  border ??
+                  Border.all(color: const Color(0xFFE8EEE4), width: 1.2),
+              boxShadow:
+                  boxShadow ??
+                  [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
             ),
             child: child,
           );
 
     if (onTap != null) {
-      return GestureDetector(
-        onTap: onTap,
-        child: baseCard,
-      );
+      return GestureDetector(onTap: onTap, child: baseCard);
     }
 
     return baseCard;

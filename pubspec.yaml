@@ -55,10 +55,18 @@ dependencies:
 
   # Location & Maps
   geolocator: ^13.0.4
-  google_maps_flutter: ^2.10.1
+  google_maps_flutter: ^2.17.1
+  flutter_map: ^8.1.1
+  latlong2: ^0.9.1
 
   # Media
   image_picker: ^1.1.2
+  mobile_scanner: ^7.2.0
+
+  # Production telemetry and secure local storage
+  firebase_analytics: ^11.6.0
+  firebase_crashlytics: ^4.3.10
+  flutter_secure_storage: ^10.3.1
 
   # Crypto (Apple Sign-In nonce)
   crypto: ^3.0.6

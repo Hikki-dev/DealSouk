@@ -30,6 +30,7 @@ model User {
   submissions     PriceSubmission[]
   tokenLedger     TokenTransaction[]
   requests        PriceRequest[]
+  vouchers        VoucherRequest[]
   badges          UserBadge[]
   flags           SubmissionFlag[]
   cartItems       CartItem[]
@@ -57,12 +58,14 @@ model Product {
   packSize String?
   category String
   imageUrl String?
+  barcode  String? @unique
 
   submissions PriceSubmission[]
   cartItems   CartItem[]
 
   @@index([name])
   @@index([category])
+  @@index([barcode])
 }
 
 model PriceSubmission {
@@ -112,6 +115,26 @@ model TokenTransaction {
   user User @relation(fields: [userId], references: [id])
 
   @@index([userId, createdAt])
+}
+
+model VoucherRequest {
+  id             String    @id @default(cuid())
+  userId         String
+  status         String    @default("pending") // pending | approved | rejected
+  thresholdTokens Int
+  tokenCost      Int
+  denominationAed Int     @default(50)
+  supermarket    String
+  voucherCode    String?
+  adminNote      String?
+  requestedAt    DateTime @default(now())
+  reviewedAt     DateTime?
+  deliveredAt    DateTime?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([status, requestedAt])
+  @@index([userId, status])
 }
 
 model PriceRequest {

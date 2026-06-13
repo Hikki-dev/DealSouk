@@ -78,3 +78,9 @@ android/app/google-services.json
 ios/Runner/GoogleService-Info.plist
 lib/firebase_options.dart
 .vercel
+
+# Internal/private project docs and agent notes
+/docs/
+AUDIT_REPORT.md
+AGENTS.md
+CLAUDE.md

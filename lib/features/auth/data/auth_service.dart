@@ -12,7 +12,7 @@ class AuthService {
     clientId: kIsWeb
         ? (const String.fromEnvironment('GOOGLE_WEB_CLIENT_ID').isNotEmpty
               ? const String.fromEnvironment('GOOGLE_WEB_CLIENT_ID')
-              : null)
+              : '548247133447-mockclientid.apps.googleusercontent.com')
         : null,
   );
 

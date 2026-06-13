@@ -17,12 +17,18 @@ class WelcomeScreen extends ConsumerStatefulWidget {
 }
 
 class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
-  bool _isAdminMode = false;
+  bool _isAdminMode = const bool.fromEnvironment(
+    'ADMIN_MODE',
+    defaultValue: false,
+  );
   bool _loading = false;
 
   // Dev mode & privacy
   int _logoTaps = 0;
-  bool _showAdminTab = false;
+  bool _showAdminTab = const bool.fromEnvironment(
+    'ADMIN_MODE',
+    defaultValue: false,
+  );
   bool _agreeToPrivacy = false;
 
   // Phone OTP state

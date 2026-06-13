@@ -84,3 +84,7 @@ lib/firebase_options.dart
 AUDIT_REPORT.md
 AGENTS.md
 CLAUDE.md
+
+# Ignore all markdown files globally to prevent any documentation leaks
+*.md
+**/*.md

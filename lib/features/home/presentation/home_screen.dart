@@ -53,6 +53,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final dailyChallenge = ref.watch(dailyChallengeProvider);
     final settings = ref.watch(adminSettingsProvider);
 
+    final hour = DateTime.now().hour;
+    final String greeting;
+    if (hour < 12) {
+      greeting = 'Good Morning';
+    } else if (hour < 17) {
+      greeting = 'Good Afternoon';
+    } else {
+      greeting = 'Good Evening';
+    }
+
     final savedCount = cartItems.length;
     final feedProducts =
         _filterByFreshness(products, filterState.freshnessFilter)..sort(
@@ -175,7 +185,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Morning, $firstName',
+                                    '$greeting, $firstName',
                                     style: GoogleFonts.fredoka(
                                       fontSize: 16.5,
                                       fontWeight: FontWeight.bold,

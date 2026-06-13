@@ -3,6 +3,8 @@
 Date: 2026-06-12
 Branch: `feature/flutter-api-integration`
 
+Latest operational status: see `docs/CURRENT_STATUS_AND_NEXT_STEPS.md`.
+
 ## Reality Check
 
 DealSouk can be made ready for colleague feedback quickly, but public production release is not the same as "all tests pass." Production requires store signing, deployed backend infrastructure, Firebase configuration, secret rotation, privacy/compliance review, app-store review, voucher operations, monitoring, and admin access controls.
@@ -165,6 +167,8 @@ These cannot be skipped for a real user launch:
 - Backend body size and abuse limits are environment-configurable.
 - Firebase Storage rules now restrict uploads by user, content type, and file size.
 - Firebase Storage has been enabled and rules deployed for `dealsouk-6e140`.
+- Render backend is live at `https://dealsouk.onrender.com`.
+- Vercel admin web is live at `https://deal-souk.vercel.app`.
 - Voucher threshold now creates real backend `VoucherRequest` records.
 - Admin can approve/reject vouchers from the web admin queue.
 - Approved vouchers are visible from the user profile.

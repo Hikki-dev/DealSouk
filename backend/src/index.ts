@@ -68,11 +68,14 @@ app.get("/health", (_req, res) => {
 });
 
 app.get("/system/status", (_req, res) => {
+  const maintenance = process.env.MAINTENANCE_MODE === "true";
+
   res.json({
-    maintenance: process.env.MAINTENANCE_MODE === "true",
-    message:
-      process.env.MAINTENANCE_MESSAGE ??
-      "DealSouk is undergoing scheduled maintenance. Some features may be unavailable.",
+    maintenance,
+    message: maintenance
+      ? process.env.MAINTENANCE_MESSAGE ??
+        "DealSouk is undergoing scheduled maintenance. Some features may be unavailable."
+      : "DealSouk is operating normally.",
   });
 });
 

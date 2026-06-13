@@ -8,6 +8,10 @@ on:
         required: true
         default: https://dealsouk.onrender.com
 
+concurrency:
+  group: admin-web-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-admin-web:
     name: Build Flutter Web admin

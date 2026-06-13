@@ -1,11 +1,12 @@
 name: Android Internal APK
 
 on:
+  # Cut a version by pushing a tag, e.g. `git tag v2.1.0 && git push --tags`.
+  # The tag name (minus the leading v) becomes the app versionName.
   push:
-    branches:
-      - stabilize/mvp-audit
-  release:
-    types: [published]
+    tags:
+      - 'v*'
+  # Manual trigger for ad-hoc internal builds (no release is published).
   workflow_dispatch:
     inputs:
       api_base_url:
@@ -15,6 +16,12 @@ on:
 
 permissions:
   contents: write
+
+# A newer run for the same ref cancels the older one — no more competing builds
+# when you push twice in a row.
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-android:
@@ -26,6 +33,19 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Derive version
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            VERSION_NAME="${GITHUB_REF_NAME#v}"
+          else
+            VERSION_NAME="0.0.0-dev"
+          fi
+          echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          # versionCode must strictly increase for every build; run_number does.
+          echo "code=$GITHUB_RUN_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "Building versionName=$VERSION_NAME (versionCode=$GITHUB_RUN_NUMBER)"
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -61,6 +81,8 @@ jobs:
       - name: Build Shopper APK (User Mode)
         run: |
           flutter build apk --release \
+            --build-name="${{ steps.version.outputs.name }}" \
+            --build-number="${{ steps.version.outputs.code }}" \
             --dart-define=API_BASE_URL="$API_BASE_URL" \
             --dart-define=ADMIN_MODE=false
           mkdir -p build/outputs
@@ -69,6 +91,8 @@ jobs:
       - name: Build Shopper split APKs
         run: |
           flutter build apk --release --split-per-abi \
+            --build-name="${{ steps.version.outputs.name }}" \
+            --build-number="${{ steps.version.outputs.code }}" \
             --dart-define=API_BASE_URL="$API_BASE_URL" \
             --dart-define=ADMIN_MODE=false
           cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build/outputs/DealSouk-Shopper-arm64-v8a.apk
@@ -78,6 +102,8 @@ jobs:
       - name: Build Admin APK (Moderator Mode)
         run: |
           flutter build apk --release \
+            --build-name="${{ steps.version.outputs.name }}" \
+            --build-number="${{ steps.version.outputs.code }}" \
             --dart-define=API_BASE_URL="$API_BASE_URL" \
             --dart-define=ADMIN_MODE=true
           cp build/app/outputs/flutter-apk/app-release.apk build/outputs/DealSouk-Admin.apk
@@ -100,10 +126,16 @@ jobs:
           path: build/outputs/DealSouk-Admin.apk
           if-no-files-found: error
 
-      - name: Upload APKs to Release Assets
-        if: github.event_name == 'release'
+      # On a version tag, create (or update) the matching GitHub Release and
+      # attach every APK. Manual (workflow_dispatch) runs skip this and just
+      # leave the APKs as downloadable build artifacts above.
+      - name: Publish release with APKs
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.ref_name }}
+          name: DealSouk ${{ github.ref_name }}
+          generate_release_notes: true
           files: |
             build/outputs/DealSouk-Shopper.apk
             build/outputs/DealSouk-Shopper-arm64-v8a.apk

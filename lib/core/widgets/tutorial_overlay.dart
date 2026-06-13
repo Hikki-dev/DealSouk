@@ -1,17 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../theme/theme.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dealsouk/core/theme/theme.dart';
+import 'package:dealsouk/l10n/app_localizations.dart';
 
 class TutorialOverlay extends StatefulWidget {
   const TutorialOverlay({super.key});
 
-  static void show(BuildContext context) {
-    showDialog(
+  /// Bump this ONLY when a major new feature is added that warrants re-showing
+  /// the tutorial to everyone. Users who've already seen version N won't be
+  /// shown it again until this exceeds N — so it never nags after skip/done.
+  static const int kTutorialVersion = 1;
+  static const String _prefsKey = 'tutorial_seen_version';
+
+  /// True if the user hasn't yet seen the current tutorial version.
+  static Future<bool> shouldShow() async {
+    final prefs = await SharedPreferences.getInstance();
+    return (prefs.getInt(_prefsKey) ?? 0) < kTutorialVersion;
+  }
+
+  /// Records that the user has seen the current version (called on skip/done),
+  /// so it won't appear again until [kTutorialVersion] is bumped.
+  static Future<void> markSeen() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_prefsKey, kTutorialVersion);
+  }
+
+  /// Shows the tutorial and marks it seen once dismissed (skip OR done).
+  static Future<void> show(BuildContext context) async {
+    await showDialog(
       context: context,
       barrierDismissible: false,
       barrierColor: Colors.black.withValues(alpha: 0.65),
       builder: (context) => const TutorialOverlay(),
     );
+    await markSeen();
   }
 
   @override
@@ -22,18 +45,26 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  final List<_TutorialSlide> _slides = [
-    const _TutorialSlide(
-      title: "Compare Grocery Prices",
-      description: "Find the lowest prices for fruits, vegetables, dairy, and snacks in Dubai's leading supermarkets. Compare prices in real-time to save on your basket.",
+  List<_TutorialSlide> _buildSlides(AppLocalizations l) => [
+    _TutorialSlide(
+      title: l.tutorialCompareTitle,
+      description: l.tutorialCompareDescription,
     ),
-    const _TutorialSlide(
-      title: "Submit Prices & Earn Tokens",
-      description: "Spotted a lower price or want to fulfill shopper requests? Scan barcodes, capture shelf price tags, or upload receipts to earn points and claim rewards.",
+    _TutorialSlide(
+      title: l.tutorialMapTitle,
+      description: l.tutorialMapDescription,
     ),
-    const _TutorialSlide(
-      title: "Claim Cash Vouchers",
-      description: "Earn 500 tokens to redeem for AED 50 gift vouchers. Vouchers are redeemable directly at checkout counters of Carrefour, Union Coop, Lulu, and more!",
+    _TutorialSlide(
+      title: l.tutorialAskTitle,
+      description: l.tutorialAskDescription,
+    ),
+    _TutorialSlide(
+      title: l.tutorialEarnTitle,
+      description: l.tutorialEarnDescription,
+    ),
+    _TutorialSlide(
+      title: l.tutorialCompeteTitle,
+      description: l.tutorialCompeteDescription,
     ),
   ];
 
@@ -48,12 +79,119 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
       case 0:
         return _buildCompareVisual();
       case 1:
-        return _buildSubmitVisual();
+        return _buildMapVisual();
       case 2:
+        return _buildSubmitVisual();
+      case 3:
         return _buildRedeemVisual();
+      case 4:
+        return _buildCompeteVisual();
       default:
         return Container();
     }
+  }
+
+  Widget _buildMapVisual() {
+    return _iconCardVisual(
+      icon: Icons.map_rounded,
+      iconBg: const Color(0xFFE3F2FD),
+      iconColor: const Color(0xFF1E88E5),
+      rows: const [
+        ('Carrefour — Mall of the Emirates', 'Updated 2h ago'),
+        ('Union Coop — Al Barsha', 'Updated 5h ago'),
+        ('Lulu — Al Qusais', 'Updated 1d ago'),
+      ],
+    );
+  }
+
+  Widget _buildCompeteVisual() {
+    return _iconCardVisual(
+      icon: Icons.emoji_events_rounded,
+      iconBg: const Color(0xFFFFF3E0),
+      iconColor: AppTheme.amberAccent,
+      rows: const [
+        ('🔥 5-day streak', '+50 bonus'),
+        ('🥇 Rank #1 this month', '320 tokens'),
+        ('🏅 New badge unlocked', 'Top Sourcer'),
+      ],
+    );
+  }
+
+  /// Shared compact "icon + 3 labelled rows" mock used by simpler slides.
+  Widget _iconCardVisual({
+    required IconData icon,
+    required Color iconBg,
+    required Color iconColor,
+    required List<(String, String)> rows,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE8EEE4), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: iconColor, size: 18),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Divider(height: 1),
+          const SizedBox(height: 8),
+          ...rows.map(
+            (row) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Text(
+                      row.$1,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textDark,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    row.$2,
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildCompareVisual() {
@@ -95,11 +233,19 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                 children: [
                   const Text(
                     'Fuji Apples',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: AppTheme.textDark),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12.5,
+                      color: AppTheme.textDark,
+                    ),
                   ),
                   Text(
                     'Pack size: 1 kg',
-                    style: TextStyle(fontSize: 9.5, color: Colors.grey.shade600, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      fontSize: 9.5,
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
@@ -119,16 +265,24 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
     );
   }
 
-  Widget _buildMiniPriceRow(String store, String price, {bool isCheapest = false}) {
+  Widget _buildMiniPriceRow(
+    String store,
+    String price, {
+    bool isCheapest = false,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Row(
           children: [
             Icon(
-              isCheapest ? Icons.check_circle_rounded : Icons.storefront_outlined,
+              isCheapest
+                  ? Icons.check_circle_rounded
+                  : Icons.storefront_outlined,
               size: 14,
-              color: isCheapest ? AppTheme.emeraldPrimary : Colors.grey.shade400,
+              color: isCheapest
+                  ? AppTheme.emeraldPrimary
+                  : Colors.grey.shade400,
             ),
             const SizedBox(width: 6),
             Text(
@@ -154,14 +308,21 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
             if (isCheapest) ...[
               const SizedBox(width: 6),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 4,
+                  vertical: 1.5,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFE8F5E9),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: const Text(
                   'CHEAPEST',
-                  style: TextStyle(color: AppTheme.forestDeep, fontSize: 7, fontWeight: FontWeight.w900),
+                  style: TextStyle(
+                    color: AppTheme.forestDeep,
+                    fontSize: 7,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
             ],
@@ -196,7 +357,11 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
             children: [
               const Text(
                 'Price Submission',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: AppTheme.textDark),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12.5,
+                  color: AppTheme.textDark,
+                ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -210,7 +375,11 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                     SizedBox(width: 2),
                     Text(
                       '+15 Tokens',
-                      style: TextStyle(color: Color(0xFFC77C02), fontSize: 8.5, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: Color(0xFFC77C02),
+                        fontSize: 8.5,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -223,7 +392,11 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
           // Store Name
           Text(
             'Union Coop - Al Barsha',
-            style: TextStyle(fontSize: 9.5, color: Colors.grey.shade600, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 9.5,
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 6),
           // Price field mock
@@ -237,8 +410,18 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Price per item', style: TextStyle(fontSize: 9.5, color: Colors.black54)),
-                Text('AED 3.90', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: AppTheme.forestDeep)),
+                Text(
+                  'Price per item',
+                  style: TextStyle(fontSize: 9.5, color: Colors.black54),
+                ),
+                Text(
+                  'AED 3.90',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.forestDeep,
+                  ),
+                ),
               ],
             ),
           ),
@@ -270,7 +453,11 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
           const SizedBox(width: 4),
           Text(
             label,
-            style: const TextStyle(color: AppTheme.forestDeep, fontSize: 8.5, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: AppTheme.forestDeep,
+              fontSize: 8.5,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
@@ -305,7 +492,11 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                   color: AppTheme.amberLight,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.confirmation_num_rounded, color: AppTheme.amberAccent, size: 16),
+                child: const Icon(
+                  Icons.confirmation_num_rounded,
+                  color: AppTheme.amberAccent,
+                  size: 16,
+                ),
               ),
               const SizedBox(width: 8),
               const Expanded(
@@ -315,11 +506,19 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                   children: [
                     Text(
                       'Union Coop Voucher',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppTheme.textDark),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        color: AppTheme.textDark,
+                      ),
                     ),
                     Text(
                       'Value: AED 50.00',
-                      style: TextStyle(fontSize: 9, color: AppTheme.forestDeep, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 9,
+                        color: AppTheme.forestDeep,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -341,7 +540,11 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(20, (index) {
-                    final double width = (index % 3 == 0) ? 2.5 : (index % 2 == 0) ? 1.5 : 0.8;
+                    final double width = (index % 3 == 0)
+                        ? 2.5
+                        : (index % 2 == 0)
+                        ? 1.5
+                        : 0.8;
                     return Container(
                       width: width,
                       height: 20,
@@ -370,6 +573,8 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final slides = _buildSlides(l);
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       elevation: 16,
@@ -379,12 +584,13 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
         constraints: const BoxConstraints(maxWidth: 420, maxHeight: 540),
         child: Column(
           children: [
-            // Close button in top-right
+            // Close button in top-right (top-end mirrors in RTL)
             Align(
-              alignment: Alignment.topRight,
+              alignment: AlignmentDirectional.topEnd,
               child: Padding(
-                padding: const EdgeInsets.only(top: 12, right: 12),
+                padding: const EdgeInsetsDirectional.only(top: 12, end: 12),
                 child: IconButton(
+                  tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                   icon: const Icon(Icons.close_rounded, color: Colors.grey),
                   onPressed: () => Navigator.pop(context),
                 ),
@@ -395,14 +601,14 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
-                itemCount: _slides.length,
+                itemCount: slides.length,
                 onPageChanged: (page) {
                   setState(() {
                     _currentPage = page;
                   });
                 },
                 itemBuilder: (context, index) {
-                  final slide = _slides[index];
+                  final slide = slides[index];
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24.0),
                     child: Column(
@@ -452,7 +658,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                   TextButton(
                     onPressed: () => Navigator.pop(context),
                     child: Text(
-                      'Skip',
+                      l.tutorialSkip,
                       style: TextStyle(
                         color: Colors.grey.shade500,
                         fontWeight: FontWeight.bold,
@@ -463,7 +669,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
 
                   // Dots Indicator
                   Row(
-                    children: List.generate(_slides.length, (index) {
+                    children: List.generate(slides.length, (index) {
                       final isSelected = index == _currentPage;
                       return AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
@@ -471,7 +677,9 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                         height: 7,
                         width: isSelected ? 20 : 7,
                         decoration: BoxDecoration(
-                          color: isSelected ? AppTheme.forestDeep : Colors.grey.shade300,
+                          color: isSelected
+                              ? AppTheme.forestDeep
+                              : Colors.grey.shade300,
                           borderRadius: BorderRadius.circular(4),
                         ),
                       );
@@ -481,7 +689,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                   // Next / Done button
                   ElevatedButton(
                     onPressed: () {
-                      if (_currentPage < _slides.length - 1) {
+                      if (_currentPage < slides.length - 1) {
                         _pageController.nextPage(
                           duration: const Duration(milliseconds: 300),
                           curve: Curves.easeInOut,
@@ -496,10 +704,15 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
                     ),
                     child: Text(
-                      _currentPage == _slides.length - 1 ? 'Start' : 'Next',
+                      _currentPage == slides.length - 1
+                          ? l.tutorialGetStarted
+                          : l.tutorialNext,
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -517,8 +730,5 @@ class _TutorialSlide {
   final String title;
   final String description;
 
-  const _TutorialSlide({
-    required this.title,
-    required this.description,
-  });
+  const _TutorialSlide({required this.title, required this.description});
 }

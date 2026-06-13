@@ -1,24 +1,20 @@
 {
   "@@locale": "ar",
-
   "appTitle": "ديل سوق",
   "home": "الرئيسية",
   "map": "الخريطة",
   "cart": "السلة",
   "leaderboard": "المتصدرون",
   "profile": "الملف الشخصي",
-
   "greeting": "صباح الخير",
   "greetingAfternoon": "مساء الخير",
   "greetingEvening": "مساء الخير",
-
   "freshPrices": "أسعار حديثة",
   "freshPricesSubtitle": "أسعار مجتمعية مباشرة بالقرب منك",
   "searchProducts": "ابحث عن المنتجات…",
   "searchNearbyStores": "ابحث عن المتاجر القريبة في دبي",
   "nearbyStores": "السوبرماركت القريبة",
   "storeMap": "خريطة المتاجر",
-
   "tokens": "رموز",
   "tokenBalance": "رصيد الرموز",
   "earnTokens": "اكسب رموزاً",
@@ -28,34 +24,38 @@
   "voucherProgress": "اكسب {remaining} رمزاً إضافياً لاستبدال قسيمتك.",
   "@voucherProgress": {
     "placeholders": {
-      "remaining": { "type": "int" }
+      "remaining": {
+        "type": "int"
+      }
     }
   },
   "claimVoucher": "استرداد القسيمة الآن",
   "voucherClaimed": "تم استرداد القسيمة!",
   "voucherDescription": "أظهر الرمز الشريطي أو الكود أدناه لأمين الصندوق في أي فرع لـ Union Coop في دبي.",
   "backToRewards": "العودة إلى المكافآت",
-
   "leaderboardTitle": "المكافآت والمتصدرون",
   "dubaiLeaderboard": "متصدرو دبي",
   "lastMonthChampions": "أبطال الشهر الماضي",
-  "sourcerBadges": "شارات المورّد",
+  "sourcerBadges": "شارات المتسوق",
   "todaysChallenges": "تحديات اليوم",
   "activeRequestBoard": "لوحة الطلبات النشطة",
   "leaderboardStreaks": "المتصدرون والسلاسل",
   "yourRank": "المرتبة #{rank}",
   "@yourRank": {
     "placeholders": {
-      "rank": { "type": "int" }
+      "rank": {
+        "type": "int"
+      }
     }
   },
   "dayStreak": "سلسلة {days} يوم",
   "@dayStreak": {
     "placeholders": {
-      "days": { "type": "int" }
+      "days": {
+        "type": "int"
+      }
     }
   },
-
   "submitPrice": "رفع سعر",
   "submitForReview": "إرسال للمراجعة",
   "priceSubmitted": "تم إرسال السعر!",
@@ -75,33 +75,43 @@
   "dailyCapRemaining": "تبقّى {remaining} من {cap} تقديمات اليوم",
   "@dailyCapRemaining": {
     "placeholders": {
-      "remaining": { "type": "int" },
-      "cap": { "type": "int" }
+      "remaining": {
+        "type": "int"
+      },
+      "cap": {
+        "type": "int"
+      }
     }
   },
-
   "dailyChallenge": "تحدي اليوم",
   "challengeBonus": "+{tokens} رمز إضافي",
   "@challengeBonus": {
     "placeholders": {
-      "tokens": { "type": "int" }
+      "tokens": {
+        "type": "int"
+      }
     }
   },
   "challengeCompleted": "تم! +{tokens} رمز مكتسب",
   "@challengeCompleted": {
     "placeholders": {
-      "tokens": { "type": "int" }
+      "tokens": {
+        "type": "int"
+      }
     }
   },
   "challengeProgress": "{done}/{total} مكتمل",
   "@challengeProgress": {
     "placeholders": {
-      "done": { "type": "int" },
-      "total": { "type": "int" }
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "tapToComplete": "اضغط لبدء التقديم",
-
   "profileSettings": "الملف الشخصي والإعدادات",
   "mySubmissions": "تقديماتي",
   "myTokenHistory": "سجل الرموز",
@@ -117,7 +127,9 @@
   "accuracyRatingDesc": "{percent}٪ من تقديماتك تمت الموافقة عليها",
   "@accuracyRatingDesc": {
     "placeholders": {
-      "percent": { "type": "int" }
+      "percent": {
+        "type": "int"
+      }
     }
   },
   "noSubmissionsYet": "لا توجد تقديمات بعد.\nقدّم سعراً للبدء!",
@@ -128,7 +140,6 @@
   "fulfilled": "مكتمل",
   "open": "مفتوح",
   "refunded": "مسترجع",
-
   "adminConsole": "لوحة الإشراف",
   "priceModeration": "مراجعة الأسعار",
   "analytics": "التحليلات",
@@ -143,12 +154,13 @@
   "tokenEarnRate": "معدل كسب الرموز (أساسي)",
   "voucherThreshold": "حد استرداد القسيمة (رموز)",
   "dailySubmissionCap": "الحد اليومي للتقديمات",
-
   "freshLabel": "حديث",
   "updatedAgoLabel": "محدّث منذ {hours} ساعة",
   "@updatedAgoLabel": {
     "placeholders": {
-      "hours": { "type": "int" }
+      "hours": {
+        "type": "int"
+      }
     }
   },
   "unverifiedOutdated": "غير موثّق — قد يكون قديماً",
@@ -157,18 +169,22 @@
   "filterByChain": "تصفية حسب السلسلة",
   "allChains": "الكل",
   "submitPriceHere": "قدّم سعراً هنا",
-
   "betterPriceFound": "سعر أفضل لـ {item}! الآن {price} درهم في {store}.",
   "@betterPriceFound": {
     "placeholders": {
-      "item": { "type": "String" },
-      "price": { "type": "String" },
-      "store": { "type": "String" }
+      "item": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      },
+      "store": {
+        "type": "String"
+      }
     }
   },
   "dismiss": "إغلاق",
   "requestFulfilled": "تم استيفاء الطلب! تحويل الرموز إلى مقدم الطلب.",
-
   "noResultsFound": "لا توجد نتائج",
   "cartEmpty": "سلة التسوق فارغة",
   "addItemsToCart": "تصفح المنتجات وأضف العناصر لمقارنة الأسعار.",
@@ -176,22 +192,442 @@
   "bestStore": "أفضل متجر",
   "checkout": "إتمام الشراء",
   "applyCoupon": "تطبيق كوبون",
-
   "guestMode": "تصفح كضيف",
   "signInWithGoogle": "التسجيل عبر Google",
   "signInWithApple": "التسجيل عبر Apple",
   "signInWithPhone": "التسجيل برقم الهاتف",
-
   "level": "المستوى {level}",
   "@level": {
     "placeholders": {
-      "level": { "type": "int" }
+      "level": {
+        "type": "int"
+      }
     }
   },
   "earnMultiplier": "+{percent}٪ معدل كسب",
   "@earnMultiplier": {
     "placeholders": {
-      "percent": { "type": "int" }
+      "percent": {
+        "type": "int"
+      }
     }
-  }
+  },
+  "homeCategories": "الفئات",
+  "homeCategoryFresh": "طازج",
+  "homeCategoryFruits": "فواكه",
+  "homeCategorySnack": "وجبات خفيفة",
+  "homeCategoryGrocery": "بقالة",
+  "homeCategoryOils": "زيوت",
+  "homeSeeAll": "عرض الكل",
+  "homeGreetingLine": "{greeting}، {name}",
+  "homeFindNearbyPrices": "اعرف الأسعار القريبة قبل أن تذهب",
+  "homeSearchHint": "ابحث عن منتج لمقارنة الأسعار القريبة",
+  "homeSearchResultsCount": "{count, plural, =1{نتيجة واحدة} other{{count} نتائج}}",
+  "@homeSearchResultsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeHowItWorks": "ببساطة: ابحث عن منتج، تحقق من المتاجر القريبة، ثم قرر أين يستحق الذهاب.",
+  "homeBestPricesNearYou": "أفضل الأسعار القريبة منك",
+  "homePricesCount": "{count} سعر",
+  "homeNoPricesMatch": "لا توجد أسعار تطابق هذا الفلتر بعد",
+  "homeNoPricesHint": "جرّب كل الأسعار، ابحث عن منتج، أو اطلب من المتسوقين التحقق من سعر.",
+  "homeFindAnItem": "ابحث عن منتج",
+  "homeBrowseItems": "تصفح المنتجات",
+  "homeFeaturedStores": "متاجر مميزة",
+  "homeEarnRewardsToday": "اكسب مكافآت اليوم",
+  "homePriceSharesLeft": "تبقى {count} مشاركة سعر لكسب الرموز",
+  "homeDailyChallenge": "التحدي اليومي",
+  "homeChallengeDoneBadge": "تم! ‎+{tokens}‎ رمز",
+  "homeDailyChallengeDetails": "تفاصيل التحدي اليومي",
+  "homeChallengeFinished": "لقد أنهيت هذا التحدي!",
+  "homeChallengeEarnBonus": "اكسب رموزًا إضافية بالمشاركة اليوم",
+  "homeTargetSupermarket": "السوبر ماركت المستهدف",
+  "homeAnySupermarketChain": "أي سلسلة سوبر ماركت",
+  "homeYourProgress": "تقدمك",
+  "homeProgressPrices": "{progress} / {target} سعر",
+  "homeRewardBonus": "مكافأة إضافية",
+  "homeRewardBonusValue": "‎+{tokens}‎ رمز",
+  "homeHowToComplete": "كيفية الإكمال:",
+  "homeStepVisitStore": "زر أي فرع من {store}.",
+  "homeAGenericSupermarket": "أي سوبر ماركت",
+  "homeStepVerifyPrices": "ابحث عن منتجات البقالة وتحقق من أسعارها على الرفوف.",
+  "homeStepSubmitPrice": "اضغط على \"إرسال السعر\" في التطبيق، أدخل تفاصيل السعر، ثم أرسله.",
+  "homeStepApproved": "بعد الموافقة، سيتحدث تقدمك وستحصل على مكافأة الرموز!",
+  "homeCompletedRewardClaimed": "اكتمل! تم استلام المكافأة",
+  "homeStartChallengeNow": "ابدأ التحدي الآن",
+  "homeFreshnessAll": "الكل",
+  "homeFreshnessUnder6h": "أقل من 6 ساعات",
+  "homeFreshnessUnder24h": "أقل من 24 ساعة",
+  "homeFreshnessUnder72h": "أقل من 72 ساعة",
+  "homeUpdatedJustNow": "تم التحديث الآن",
+  "homeUpdatedHoursAgo": "تم التحديث قبل {hours} ساعة",
+  "homeUpdatedDaysAgo": "تم التحديث قبل {days} يوم",
+  "homeVerifiedWithPhoto": "موثّق بصورة",
+  "homeKmAway": "{distance} كم",
+  "homeStoreDistancePrices": "{distance} كم • {count} سعر",
+  "homeOffer1Title": "اعرف أفضل سعر\nقبل أن تخرج",
+  "homeOffer1Subtitle": "أسعار حديثة من متسوقين بقربك",
+  "homeOffer2Title": "وفّر الرحلة\nوالدراهم",
+  "homeOffer2Subtitle": "قارن المتاجر القريبة قبل أن تذهب",
+  "homeOffer3Title": "تحتاج التحقق من سعر؟\nاسأل المجتمع",
+  "homeOffer3Subtitle": "يمكن لمتسوق حقيقي التحقق من الرف",
+  "searchDailyFoods": "أطعمة يومية",
+  "searchMyList": "قائمتي",
+  "searchCatFresh": "طازج",
+  "searchCatFruits": "فواكه",
+  "searchCatSnacks": "وجبات خفيفة",
+  "searchCatGrocery": "بقالة",
+  "searchCatOils": "زيوت",
+  "searchHint": "ابحث عن الخضروات والفواكه والمزيد",
+  "searchScanBarcode": "مسح الباركود",
+  "searchEmptyCategoryTitle": "لا توجد منتجات في هذه الفئة",
+  "searchEmptyQueryTitle": "لم نتمكن من العثور على \"{query}\"",
+  "searchEmptyCategorySubtitle": "جرّب تغيير الفئة أو عد لاحقًا.",
+  "searchEmptyQuerySubtitle": "اضغط أدناه لتطلب من المتسوقين الآخرين التحقق من السعر نيابة عنك!",
+  "searchAskShoppersToCheck": "اطلب من المتسوقين التحقق",
+  "searchRequestPriceCheckTitle": "اطلب التحقق من السعر",
+  "searchRequestPriceCheckDescription": "سيتحقق المتسوقون الآخرون من سعر هذا المنتج نيابة عنك. يستخدم هذا {requestCost} رمزًا ويُسترد إذا انتهت صلاحيته.",
+  "searchItemNameLabel": "اسم المنتج",
+  "searchItemNameHint": "مثال: حليب الروابي الطازج 2 لتر",
+  "searchEnterProductName": "أدخل اسم المنتج",
+  "searchChooseSupermarket": "اختر السوبر ماركت",
+  "searchRequestPosted": "تم نشر الطلب! سيتم إخطار المتسوقين القريبين من ذلك المتجر.",
+  "searchAskForThisPrice": "اطلب هذا السعر",
+  "cartNoStoreYet": "لا يوجد متجر بعد",
+  "cartMyList": "قائمتي",
+  "cartClearSavedPrices": "مسح الأسعار المحفوظة",
+  "cartSavedPricesCleared": "تم مسح الأسعار المحفوظة",
+  "cartItemsYouAreChecking": "العناصر التي تتحقق منها",
+  "cartAddMore": "أضف المزيد",
+  "cartPriceDroppedOn": "انخفض سعر {product}!",
+  "cartItemsCheaperNow": "{count} عناصر في قائمتك أصبحت أرخص الآن!",
+  "cartPriceDropDetail": "الآن {price} درهم في {store} (كان {old} درهم).",
+  "cartNoSavedPricesYet": "لا توجد أسعار محفوظة بعد",
+  "cartEmptyStateSubtitle": "ابحث عن منتج واحفظه هنا لمعرفة المتجر القريب الذي يستحق الزيارة.",
+  "cartFindPricesNearby": "ابحث عن الأسعار القريبة",
+  "cartShoppingListOptions": "خيارات قائمة التسوق",
+  "cartCheapestBasket": "أرخص سلة",
+  "cartStoreWithDistance": "{store} ({distance} كم)",
+  "cartClosestOption": "الخيار الأقرب",
+  "cartSaveAtStore": "وفّر {amount} درهم في {store}",
+  "cartClosestIsCheapest": "متجرك الأقرب هو أيضًا الخيار الأرخص!",
+  "cartBestSeenAt": "أفضل سعر شوهد في {store}",
+  "cartRemove": "إزالة",
+  "cartNearbyStoreComparison": "مقارنة المتاجر القريبة",
+  "cartKmAway": "على بُعد {distance} كم",
+  "cartBest": "الأفضل",
+  "cartExtraAmount": "+{amount} درهم",
+  "cartPlainLanguageNote": "ديل سوق لا يبيع البقالة. هذه القائمة تساعدك فقط على تحديد أين تتحقق من الأسعار القريبة.",
+  "storeLocationPromptTitle": "اعثر على المتاجر القريبة منك",
+  "storeLocationPromptBody": "يستخدم ديل سوق موقعك لعرض المسافة بينك وبين كل متجر في دبي.",
+  "storeLocationPromptSkip": "تخطٍ",
+  "storeLocationPromptAllow": "السماح",
+  "storeMapTitle": "خريطة المتاجر — دبي",
+  "storeSearchHint": "ابحث باسم المتجر أو المنطقة…",
+  "storeNoStoresFound": "لم يتم العثور على متاجر",
+  "storeDubaiStoresCount": "{count} متجر في دبي",
+  "storeTapPinHint": "اضغط على العلامة لعرض تفاصيل الفرع",
+  "storeMarkerTooltipWithDistance": "{name} · {branch}\nيبعد {km} كم",
+  "storeMarkerTooltip": "{name}\n{branch}",
+  "storeResetDubai": "دبي",
+  "storeNearYouTitle": "بالقرب منك في دبي",
+  "storeAllStoresTitle": "جميع متاجر دبي",
+  "storeWithinRadiusSorted": "ضمن {km} كم · مرتبة حسب المسافة",
+  "storeStoresCount": "{count} متجر",
+  "storeNoStoresMatch": "لا توجد متاجر تطابق \"{query}\"",
+  "storeStaleBadge": "قديم",
+  "storePricesLoadErrorTitle": "تعذّر تحميل الأسعار",
+  "storePricesLoadErrorSubtitle": "تحقق من اتصالك أو أرسل سعرًا جديدًا لهذا الفرع.",
+  "storeNoPricesTitle": "لا توجد أسعار حديثة بعد",
+  "storeNoPricesSubtitle": "كن أول من يشارك سعر رف في هذا الفرع.",
+  "storePriceVerifiedWithPhoto": "{label} · مؤكد بصورة",
+  "storeSubmitPriceHere": "أرسل السعر هنا",
+  "storeDistanceKm": "{km} كم",
+  "storeViewPrices": "عرض الأسعار",
+  "submitStepSelectSupermarket": "اختر السوبر ماركت",
+  "submitStepSelectProduct": "اختر المنتج",
+  "submitStepEnterPrice": "أدخل السعر",
+  "submitStepConfirmSubmit": "التأكيد والإرسال",
+  "submitWhereDidYouSeePrice": "أين رأيت السعر؟",
+  "submitSelectSupermarketHint": "اختر السوبر ماركت من قائمة الأماكن القريبة.",
+  "submitSubmissionsLeftToday": "تبقى {remaining} من {cap} عمليات إرسال اليوم.",
+  "submitWhichProduct": "ما هو المنتج؟",
+  "submitSearchSelectProductHint": "ابحث عن المنتج أو اختره وأرفق صورة إثبات.",
+  "submitSearchBarcodeHint": "ابحث بالاسم أو العلامة التجارية أو امسح الباركود",
+  "submitScanBarcodeTooltip": "مسح الباركود",
+  "submitNoProductsFound": "لم يتم العثور على منتجات مطابقة لبحثك.",
+  "submitAttachProofRequired": "أرفق إثباتًا (مطلوب)",
+  "submitPriceLabelPhoto": "صورة ملصق السعر",
+  "submitReceiptPhoto": "صورة الإيصال",
+  "submitUploading": "جارٍ الرفع…",
+  "submitEnterPriceDetails": "أدخل تفاصيل السعر",
+  "submitEnterShelfPriceHint": "أدخل سعر الرف والعروض الترويجية النشطة.",
+  "submitEnterPriceAed": "أدخل السعر (درهم)",
+  "submitManualShelfPriceHelper": "إدخال يدوي لسعر الرف، مثال 14.75",
+  "submitPleaseEnterPrice": "يرجى إدخال السعر",
+  "submitPleaseEnterValidNumber": "يرجى إدخال رقم صالح",
+  "submitPromotionType": "نوع العرض الترويجي",
+  "submitPromoNone": "لا يوجد",
+  "submitPromoDiscount": "خصم",
+  "submitPromoBogo": "اشترِ واحدًا واحصل على آخر",
+  "submitPromoBundle": "حزمة",
+  "submitConfirmDetails": "تأكيد التفاصيل",
+  "submitReviewBeforeSubmission": "يرجى مراجعة التفاصيل قبل الإرسال.",
+  "submitSummarySupermarket": "السوبر ماركت",
+  "submitSummaryProduct": "المنتج",
+  "submitSummaryPrice": "السعر",
+  "submitSummaryPromotion": "العرض الترويجي",
+  "submitSummaryProof": "الإثبات",
+  "submitProofPhotoAttached": "تم إرفاق صورة",
+  "submitTokenRewardEstimate": "تقدير مكافأة التوكنات",
+  "submitPlusTokens": "+{tokens} توكن",
+  "submitTokenFreshShelfPrice": "سعر رف جديد",
+  "submitTokenStoreSelected": "تم اختيار المتجر",
+  "submitTokenProductSelected": "تم اختيار المنتج",
+  "submitTokenAedPriceEntered": "تم إدخال السعر بالدرهم",
+  "submitTokenPriceLabelAttached": "تم إرفاق ملصق السعر",
+  "submitTokenAttachPriceLabel": "أرفق ملصق السعر",
+  "submitTokenNoPromotion": "لم يتم اختيار عرض ترويجي",
+  "submitTokenPromoNoted": "تم تسجيل عرض {promo}",
+  "submitTokenReceiptMultiplier": "مضاعف الإيصال المُوثَّق 1.5×",
+  "submitTokenAttachReceiptBonus": "أرفق الإيصال للحصول على مكافأة 1.5×",
+  "submitTokenMultiplierApplied": "تم تطبيق ×1.5",
+  "submitTokenNotApplied": "غير مطبق",
+  "submitTokensAmount": "+{count} توكن",
+  "submitTokenAmount": "+{count} توكن",
+  "submitTotalRewardEstimate": "إجمالي تقدير المكافأة",
+  "submitTokensTotal": "{tokens} توكن",
+  "submitBack": "رجوع",
+  "submitNext": "التالي",
+  "submitSubmitAPrice": "إرسال سعر",
+  "submitCouldNotSendPrice": "تعذّر إرسال هذا السعر. يرجى التحقق من اتصالك والمحاولة مرة أخرى.",
+  "submitSavedOffline": "تم الحفظ. سنرسل هذا السعر تلقائيًا عند عودة الاتصال بالإنترنت.",
+  "offlineBanner": "أنت غير متصل بالإنترنت — تم حفظ تغييراتك وستتم مزامنتها عند عودة الاتصال.",
+  "offlinePendingSync": "{count, plural, =1{تغيير واحد بانتظار المزامنة} other{{count} تغييرات بانتظار المزامنة}}",
+  "@offlinePendingSync": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "submitTransactionDescription": "+{tokens} توكن — تم إرسال {product} في {store}",
+  "submitPhotoUploaded": "تم رفع الصورة",
+  "submitTapToUpload": "اضغط للرفع",
+  "submitPriceSubmitted": "تم إرسال السعر!",
+  "submitTokensGained": "+{tokens} توكن",
+  "submitPendingReviewMessage": "إرسال السعر الخاص بك قيد المراجعة.\nسيتم إضافة التوكنات إلى {name} بعد موافقة المسؤول.",
+  "submitOpenAdminReview": "فتح مراجعة المسؤول",
+  "submitViewTokenBalance": "عرض رصيد التوكنات",
+  "profileLevelBadge": "مستوى {level} {title}",
+  "profileDayStreak": "سلسلة {days} يوم",
+  "profileTabSubmissions": "المساهمات",
+  "profileTabTokens": "النقاط",
+  "profileTabRequests": "الطلبات",
+  "profileTabSettings": "الإعدادات",
+  "profilePhotoUpdated": "تم تحديث صورة الملف الشخصي",
+  "profilePhotoRemoved": "تمت إزالة صورة الملف الشخصي",
+  "profileAccuracyRating": "تقييم الدقة",
+  "profileAccuracyApproved": "تمت الموافقة على {percent}% من مساهماتك",
+  "profileNoSubmissions": "لم تتم مشاركة أي أسعار بعد.\nشارك سعرًا من الرف لمساعدة المتسوقين وكسب النقاط.",
+  "profileCurrentBalance": "الرصيد الحالي",
+  "profileTapLeaderboardRedeem": "اضغط على لوحة المتصدرين للاستبدال",
+  "profileNoTokenActivity": "لا يوجد نشاط نقاط بعد.\nشارك سعرًا أو ساعد في طلب لبدء الكسب.",
+  "profileNoPriceRequests": "لا توجد طلبات أسعار بعد.\nاطلب سعرًا عندما لا تجد منتجًا.",
+  "profileCancelRequest": "إلغاء الطلب",
+  "profileCancelRequestTitle": "إلغاء الطلب؟",
+  "profileCancelRequestBody": "هل أنت متأكد أنك تريد إلغاء طلب السعر لـ \"{product}\"؟ ستتم إعادة نقاط المكافأة إليك.",
+  "profileNo": "لا",
+  "profileYesCancel": "نعم، إلغاء",
+  "profileVoucherApproved": "تمت الموافقة على القسيمة",
+  "profileCodePending": "الرمز قيد الإصدار",
+  "profileVoucherUnderReview": "القسيمة قيد المراجعة",
+  "profileVoucherPendingBody": "قسيمتك بقيمة {amount} درهم من {supermarket} بانتظار موافقة المشرف.",
+  "profileVoucherReady": "القسيمة جاهزة!",
+  "profileVoucherReadyBody": "توجه إلى تبويب لوحة المتصدرين لاستلام قسيمة يونيون كوب بقيمة 50 درهمًا.",
+  "profileClaimVoucherNow": "استلم القسيمة الآن",
+  "profileVoucherGoalTitle": "قسيمة يونيون كوب بقيمة 50 درهمًا",
+  "profileEarnMoreTokens": "اكسب {count} نقطة إضافية لفتح قسيمتك.",
+  "profilePhotoTitle": "صورة الملف الشخصي",
+  "profilePhotoSubtitleEmpty": "أضف صورة ودودة ليتعرف عليك المتسوقون",
+  "profilePhotoSubtitleSet": "غيّر صورتك الحالية أو أزلها",
+  "profileChangePhoto": "تغيير الصورة",
+  "profileRemovePhoto": "إزالة الصورة",
+  "profilePhotoTakePhoto": "التقاط صورة",
+  "profilePhotoChooseLibrary": "اختيار من المعرض",
+  "profileEditPhotoTooltip": "تعديل صورة الملف الشخصي",
+  "profileStatTokens": "النقاط",
+  "profileStatAccuracy": "الدقة",
+  "profileStatApproved": "مقبولة",
+  "profileStatStreak": "التتابع",
+  "profileSectionSubmissions": "مساهماتي",
+  "profileSectionTokens": "سجل النقاط",
+  "profileSectionRequests": "طلباتي",
+  "profileSectionSettings": "الإعدادات والحساب",
+  "profileDisplayName": "الاسم المعروض",
+  "profileEditDisplayName": "تعديل الاسم المعروض",
+  "profileNameLabel": "الاسم",
+  "profileCancel": "إلغاء",
+  "profileSave": "حفظ",
+  "profileHomeArea": "المنطقة السكنية",
+  "profileLanguage": "اللغة",
+  "profileViewTutorial": "عرض دليل التطبيق",
+  "profileViewTutorialSubtitle": "إعادة تشغيل دليل مقدمة ديل سوق",
+  "profilePrivacyTerms": "الخصوصية والشروط",
+  "profilePrivacyTermsSubtitle": "الموقع والصور والنقاط والقسائم وحذف الحساب",
+  "profileAdminConsole": "وحدة مراجعة المشرف",
+  "profileAdminConsoleSubtitle": "مراجعة مساهمات الأسعار",
+  "profileLogOut": "تسجيل الخروج من النسخة التجريبية",
+  "welcomePrivacyConsentRequired": "يرجى الموافقة على سياسة الخصوصية للمتابعة.",
+  "welcomeInvalidPhoneNumber": "يرجى إدخال رقم هاتف صالح مكون من {digits} أرقام لـ {country}.",
+  "welcomeSelectCountry": "اختر الدولة",
+  "welcomeModeratorToggleEnabled": "تم تفعيل وضع المشرف",
+  "welcomeModeratorToggleDisabled": "تم إيقاف وضع المشرف",
+  "welcomeTaglineAdmin": "راجع أسعار السوبر ماركت التي يشاركها المتسوقون",
+  "welcomeTaglineCustomer": "أسعار يشاركها المتسوقون بالقرب منك",
+  "welcomeCustomerModeTab": "وضع العميل",
+  "welcomeAdminModeratorTab": "مشرف الإدارة",
+  "welcomePillarAuditQueue": "قائمة\nالمراجعة",
+  "welcomePillarFraudFilter": "فلتر\nالاحتيال",
+  "welcomePillarIssueTokens": "إصدار\nالرموز",
+  "welcomePillarComparePrices": "قارن\nالأسعار",
+  "welcomePillarFindNearby": "ابحث\nبالقرب",
+  "welcomePillarRequestPrice": "اطلب\nسعراً",
+  "welcomeInfoBannerAdmin": "لوحة المشرف: تحقق من الإيصالات وأسعار الرفوف.",
+  "welcomeInfoBannerCustomer": "لا طلبات هنا. فقط تحقق من الأسعار قبل أن تذهب.",
+  "welcomePrivacyConsentPrefix": "أوافق على ",
+  "welcomePrivacyPolicyLink": "سياسة الخصوصية",
+  "welcomePrivacyConsentSuffix": " وأوافق على معالجة الموقع على مستوى الحي.",
+  "welcomeEnterAdminDashboard": "ادخل لوحة الإدارة",
+  "welcomeContinueWithGoogle": "المتابعة باستخدام جوجل",
+  "welcomeSignInWithPhone": "تسجيل الدخول بالهاتف",
+  "welcomeSignInWithApple": "تسجيل الدخول باستخدام آبل",
+  "welcomeBrowseAsGuest": "التصفح كضيف",
+  "welcomeFooterAdmin": "تُطبَّق صلاحيات وحدة تحكم المشرف.",
+  "welcomeFooterCustomer": "أسعار السوبر ماركت التي يشاركها المتسوقون في دبي.",
+  "welcomeCancel": "إلغاء",
+  "welcomeSendCode": "إرسال الرمز",
+  "welcomeOtpPrompt": "أدخل الرمز المكون من 6 أرقام المرسل إلى {phone}",
+  "welcomeVerify": "تحقق",
+  "welcomeResendCode": "إعادة إرسال الرمز",
+  "productDetailsTitle": "التفاصيل",
+  "productAddToFavourites": "إضافة إلى المفضلة",
+  "productRemoveFromFavourites": "إزالة من المفضلة",
+  "productBestPriceSeenAt": "أفضل سعر شوهد في {store}",
+  "productRequestThisPrice": "اطلب هذا السعر",
+  "productRequestPriceConfirmation": "اطلب هذا السعر! سيتحقق منه متسوقون آخرون قريبًا.",
+  "productCompareStorePrices": "قارن أسعار المتاجر",
+  "productNoFreshPrices": "لا توجد أسعار محدثة بعد.",
+  "productNoFreshPricesHint": "اطلب من متسوق آخر التحقق من هذا المنتج قبل أن تذهب.",
+  "productPriceFlaggedHidden": "تم الإبلاغ عن السعر وإخفاؤه (بانتظار مراجعة المشرف)",
+  "productStoreDistance": "{store} • على بُعد {distance} كم",
+  "productFreshnessVerified": "{freshness} • مُتحقق منه بالصورة",
+  "productUpdatedJustNow": "تم التحديث الآن",
+  "productUpdatedHoursAgo": "تم التحديث قبل {hours} ساعة",
+  "productUpdatedDaysAgo": "تم التحديث قبل {days} يوم",
+  "productUpdatedLabel": "تم التحديث {label}",
+  "productBestPriceBadge": "أفضل سعر",
+  "productReportHiddenMessage": "شكرًا. تم إخفاء هذا السعر حتى يراجعه المشرف.",
+  "productReportPendingMessage": "شكرًا. سنخفي هذا السعر بعد 3 بلاغات فريدة.",
+  "productReported": "تم الإبلاغ",
+  "productReportWrongPrice": "الإبلاغ عن سعر خاطئ",
+  "productPriceHistory90Day": "سجل الأسعار لـ 90 يومًا",
+  "productYouMayAlsoLike": "قد يعجبك أيضًا",
+  "productBestSeenPrice": "أفضل سعر شوهد",
+  "productSignInToSavePrices": "يرجى تسجيل الدخول لحفظ الأسعار ومقارنة سلال البقالة.",
+  "productSignInAction": "تسجيل الدخول",
+  "productSavedForComparison": "تم حفظ {name} لمقارنة الأسعار",
+  "productViewAction": "عرض",
+  "productSavePrice": "حفظ السعر",
+  "productNoPriceHistory": "لا يوجد سجل أسعار معتمد بعد. بمجرد أن يقدم المتسوقون أسعارًا محدثة، سترى الاتجاه هنا.",
+  "productPriceRange": "الأدنى {lowest} • الأعلى {highest}",
+  "productLatestPrice": "الأحدث {latest}",
+  "requestBannerExplanation": "هل تحتاج إلى التحقق من سعر؟ اسأل المتسوقين القريبين. إذا كان أحدهم في المتجر بالفعل، يمكنه إرسال سعر الرف لك.",
+  "requestBoardTitle": "عمليات التحقق من الأسعار المطلوبة ({count})",
+  "requestAskForPrice": "اطلب سعرًا",
+  "requestEmptyTitle": "تم إنجاز جميع طلبات الأسعار!",
+  "requestEmptySubtitle": "هل تحتاج إلى سعر؟ اضغط على \"اطلب سعرًا\" لطلب التحقق من السعر.",
+  "requestFormTitle": "اطلب التحقق من سعر",
+  "requestFormSubtitle": "أخبرنا بالمنتج والمتجر. يستهلك هذا {tokens} رمزًا ويُرد تلقائيًا إذا انتهت صلاحيته.",
+  "requestItemNameLabel": "اسم المنتج",
+  "requestItemNameHint": "مثل: حليب، أرز، تفاح",
+  "requestItemNameValidation": "يرجى إدخال اسم المنتج",
+  "requestStoreLabel": "سلسلة المتاجر",
+  "requestSentTitle": "تم إرسال طلب السعر",
+  "requestSentBody": "يمكن للمتسوقين القريبين التحقق من {productName} في {storeName}. تم حجز {tokens} رمزًا وسيُرد إذا انتهت صلاحية الطلب.",
+  "requestSentConfirm": "رائع",
+  "requestSubmitButton": "اطلب هذا السعر",
+  "requestCardSubtitle": "{storeName} • {distance} كم • نشره {requesterName}",
+  "requestCheckPriceButton": "تحقق من السعر (+{tokens} رمزًا)",
+  "leaderRewardsTitle": "المكافآت ولوحة المتصدرين",
+  "leaderToggleStreaks": "المتصدرون والسلاسل",
+  "leaderToggleRequestBoard": "لوحة الطلبات النشطة",
+  "leaderRankNumber": "المرتبة #{n}",
+  "leaderRankUnknown": "المرتبة —",
+  "leaderDayStreak": "سلسلة {days} يوم",
+  "leaderTokensLabel": "النقاط",
+  "leaderVoucherName": "قسيمة يونيون كوب بقيمة 50 درهم",
+  "leaderTokenProgress": "{tokens} / {target} نقطة",
+  "leaderVoucherRedeemed": "تم استبدال قسيمة يونيون كوب بقيمة 50 درهم",
+  "leaderVoucherClaimedTitle": "تم استلام القسيمة!",
+  "leaderVoucherClaimedBody": "اعرض الباركود أو الرمز أدناه على أمين الصندوق في أي فرع يونيون كوب في دبي.",
+  "leaderBackToRewards": "العودة إلى المكافآت",
+  "leaderClaimVoucher": "استلم القسيمة الآن",
+  "leaderEarnMoreTokens": "اكسب {count} نقطة إضافية لاستبدال قسيمتك.",
+  "leaderShopperBadges": "شارات المتسوق",
+  "leaderTodaysChallenges": "تحديات اليوم",
+  "leaderChallengeDone": "تم! +{tokens} نقطة",
+  "leaderChallengeBonus": "+{tokens} نقطة إضافية",
+  "leaderChallengeProgress": "{progress}/{target} مكتمل • اضغط لإرسال سعر",
+  "leaderDubaiLeaderboard": "لوحة متصدري دبي",
+  "leaderHallOfFame": "قاعة المشاهير",
+  "leaderTopChampions": "أبطال الشهر الماضي",
+  "leaderYouMarker": "{name} (أنت)",
+  "privacyTitle": "الخصوصية والشروط",
+  "privacySummaryTitle": "ملخص مبسط",
+  "privacySummaryItem1": "يساعد ديل سوق المتسوقين على مقارنة أسعار البقالة باستخدام الأسعار المقدمة من المجتمع.",
+  "privacySummaryItem2": "نطلب فقط المعلومات اللازمة لتشغيل التطبيق: حسابك، ومنطقة سكنك، واللغة، والمساهمات، والطلبات، والرموز، وسجل الإشراف.",
+  "privacySummaryItem3": "نستخدم موقع جهازك فقط لعرض أسعار المتاجر القريبة. لا يُخزَّن موقع GPS الدقيق بشكل دائم.",
+  "privacySummaryItem4": "الرموز هي مكافآت داخل ديل سوق. وهي ليست نقوداً، ولا يمكن تحويلها، ولا يمكن بيعها.",
+  "privacySummaryItem5": "تُستخدم الصور للتحقق من ملصقات الأسعار أو الإيصالات. لا ترفع صوراً تحتوي على معلومات شخصية.",
+  "privacySummaryItem6": "يمكنك طلب حذف الحساب من إعدادات الملف الشخصي.",
+  "privacyCollectTitle": "ما الذي نجمعه",
+  "privacyCollectItem1": "تفاصيل الحساب: معرّف حساب فايربيس، واسم العرض، ورقم الهاتف إذا استخدمت تسجيل الدخول بالهاتف، واللغة المفضلة.",
+  "privacyCollectItem2": "منطقة التسوق: الحي أو المنطقة، وليس سجل موقع GPS دقيق دائم.",
+  "privacyCollectItem3": "بيانات الأسعار: المنتجات، والمتاجر، والأسعار، والطوابع الزمنية، وصور ملصقات الرفوف أو الإيصالات الاختيارية، وعلامات الإشراف.",
+  "privacyCollectItem4": "بيانات المكافآت: رصيد الرموز، وسجل الرموز، وطلبات القسائم، والشارات، والسلاسل، ومجاميع لوحة المتصدرين.",
+  "privacyCollectItem5": "رمز المراسلة للجهاز: يُستخدم فقط لإشعارات ديل سوق مثل تلبية الطلبات أو تحديثات المكافآت.",
+  "privacyUseTitle": "كيف نستخدم البيانات",
+  "privacyUseItem1": "لعرض أسعار حديثة بالقرب منك.",
+  "privacyUseItem2": "لحساب المدخرات والطلبات والرموز والمكافآت.",
+  "privacyUseItem3": "للكشف عن المساهمات الخاطئة أو القديمة أو المكررة أو المشبوهة.",
+  "privacyUseItem4": "لتشغيل إشراف المسؤولين والموافقة على القسائم.",
+  "privacyUseItem5": "لتحسين الموثوقية والأمان وسهولة الاستخدام بالعربية والإنجليزية.",
+  "privacyChoicesTitle": "خياراتك",
+  "privacyChoicesItem1": "يمكنك التصفح كضيف مع ميزات محدودة.",
+  "privacyChoicesItem2": "يمكنك تغيير اسم العرض ومنطقة سكنك واللغة.",
+  "privacyChoicesItem3": "يمكنك رفض الوصول إلى الموقع والاستمرار في استخدام الميزات غير المعتمدة على الموقع.",
+  "privacyChoicesItem4": "يمكنك طلب حذف الحساب. ونقوم بإخفاء هوية بيانات الحساب اللازمة لمنع الاحتيال وسجلات تدقيق المعاملات المالية والمكافآت.",
+  "privacyArabicTitle": "الملخص بالعربية",
+  "privacyArabicItem1": "نستخدم موقعك فقط لعرض أسعار المتاجر القريبة، ولا نخزن موقع GPS الدقيق بشكل دائم.",
+  "privacyArabicItem2": "الرموز مكافآت داخل التطبيق وليست نقوداً ولا يمكن بيعها أو تحويلها.",
+  "privacyArabicItem3": "صور الأسعار أو الإيصالات تستخدم للتحقق فقط. لا ترفع صوراً تحتوي على معلومات شخصية.",
+  "privacyArabicItem4": "يمكنك طلب حذف الحساب من الإعدادات.",
+  "tutorialCompareTitle": "قارن أسعار البقالة",
+  "tutorialCompareDescription": "اعثر على الأسعار القريبة للفواكه والخضروات ومنتجات الألبان والوجبات الخفيفة في متاجر دبي قبل مغادرة المنزل.",
+  "tutorialMapTitle": "اعثر على المتاجر على الخريطة",
+  "tutorialMapDescription": "شاهد المتاجر المشاركة في أنحاء دبي على الخريطة، ومدى حداثة أسعار كل متجر قبل أن تذهب.",
+  "tutorialAskTitle": "اطلب التحقق من الأسعار",
+  "tutorialAskDescription": "تحتاج سعراً لا يمكنك رؤيته؟ اطلب من المجتمع التحقق منه، أو ساعد الآخرين بمشاركة سعر من الرف.",
+  "tutorialEarnTitle": "اكسب مكافآت التسوق",
+  "tutorialEarnDescription": "شارك الأسعار أو تحقق من الرفوف لكسب الرموز، ثم استبدلها بقسائم متاجر حقيقية.",
+  "tutorialCompeteTitle": "تسلّق لوحة المتصدرين",
+  "tutorialCompeteDescription": "حافظ على سلسلتك اليومية، وأكمل التحديات، واكسب الأوسمة، وارتقِ في لوحة متصدري دبي مع مساهماتك.",
+  "tutorialSkip": "تخطٍّ",
+  "tutorialNext": "التالي",
+  "tutorialGetStarted": "ابدأ الآن"
 }

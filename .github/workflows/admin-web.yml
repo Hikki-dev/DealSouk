@@ -1,0 +1,58 @@
+name: Admin Web Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_base_url:
+        description: Production or staging API base URL
+        required: true
+        default: https://dealsouk.onrender.com
+
+concurrency:
+  group: admin-web-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-admin-web:
+    name: Build Flutter Web admin
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Secret scan
+        run: python3 scripts/secret_scan.py
+
+      - name: Restore Firebase web config from secret
+        env:
+          FIREBASE_OPTIONS_DART_B64: ${{ secrets.FIREBASE_OPTIONS_DART_B64 }}
+        run: |
+          if [ -z "$FIREBASE_OPTIONS_DART_B64" ]; then
+            echo "Missing FIREBASE_OPTIONS_DART_B64 secret."
+            exit 1
+          fi
+          echo "$FIREBASE_OPTIONS_DART_B64" | base64 --decode > lib/firebase_options.dart
+          dart format lib/firebase_options.dart
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build admin web
+        run: >
+          flutter build web --release
+          --dart-define=API_BASE_URL=${{ inputs.api_base_url }}
+          --dart-define=ADMIN_MODE=true
+
+      - name: Upload web artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dealsouk-admin-web
+          path: build/web
+          if-no-files-found: error

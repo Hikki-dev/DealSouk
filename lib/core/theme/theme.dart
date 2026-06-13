@@ -2,24 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // ── Vibrant Green palette (Dribbble template design) ──
-  static const Color forestDeep = Color(0xFF2E7D32);    // Primary fresh green
-  static const Color forestMid = Color(0xFF388E3C);     // Mid green for gradients
-  static const Color limeAccent = Color(0xFF4CAF50);    // Vibrant accent green
-  static const Color cream = Color(0xFFE8F5E9);         // Light green backdrop
-  static const Color creamCircle = Color(0xFFC8E6C9);   // Subdued green circles
-  static const Color redAccent = Color(0xFFE53935);     // Alert / highlight accent
-  static const Color maroon = Color(0xFF1B5E20);        // Dark green headings
+  // Warm, approachable palette for everyday grocery price discovery.
+  static const Color forestDeep = Color(0xFF7A4A1D);
+  static const Color forestMid = Color(0xFFC46A2D);
+  static const Color limeAccent = Color(0xFFF5A524);
+  static const Color cream = Color(0xFFFFF3E0);
+  static const Color creamCircle = Color(0xFFFFD8A8);
+  static const Color redAccent = Color(0xFFD94F35);
+  static const Color maroon = Color(0xFF5D2E12);
 
   // Legacy names kept so existing screens restyle automatically
   static const Color emeraldPrimary = forestDeep;
-  static const Color emeraldLight = Color(0xFFE8F5E9);
-  static const Color amberAccent = Color(0xFFFFA000);   // Warm yellow for deals/tokens
+  static const Color emeraldLight = Color(0xFFFFF3E0);
+  static const Color amberAccent = Color(
+    0xFFFFA000,
+  ); // Warm yellow for deals/tokens
   static const Color amberLight = Color(0xFFFFF8E1);
-  static const Color background = Color(0xFFF9FBF7);    // Very soft warm/greenish off-white
+  static const Color background = Color(0xFFFFFAF2);
   static const Color surface = Colors.white;
-  static const Color textDark = Color(0xFF212121);      // Near black
-  static const Color textLight = Color(0xFF757575);     // Grey text
+  static const Color textDark = Color(0xFF212121); // Near black
+  static const Color textLight = Color(0xFF757575); // Grey text
 
   static ThemeData get lightTheme {
     final base = ThemeData(useMaterial3: true);
@@ -51,6 +53,7 @@ class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
+      splashFactory: InkSparkle.splashFactory,
       colorScheme: ColorScheme.light(
         primary: forestDeep,
         primaryContainer: emeraldLight,

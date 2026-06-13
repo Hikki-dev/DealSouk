@@ -1,0 +1,146 @@
+name: Android Internal APK
+
+on:
+  # Cut a version by pushing a tag, e.g. `git tag v2.1.0 && git push --tags`.
+  # The tag name (minus the leading v) becomes the app versionName.
+  push:
+    tags:
+      - 'v*'
+  # Manual trigger for ad-hoc internal builds (no release is published).
+  workflow_dispatch:
+    inputs:
+      api_base_url:
+        description: Production or staging API base URL
+        required: true
+        default: https://dealsouk.onrender.com
+
+permissions:
+  contents: write
+
+# A newer run for the same ref cancels the older one — no more competing builds
+# when you push twice in a row.
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-android:
+    name: Build Android APKs
+    runs-on: ubuntu-latest
+    env:
+      API_BASE_URL: ${{ github.event.inputs.api_base_url || 'https://dealsouk.onrender.com' }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Derive version
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            VERSION_NAME="${GITHUB_REF_NAME#v}"
+          else
+            VERSION_NAME="0.0.0-dev"
+          fi
+          echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          # versionCode must strictly increase for every build; run_number does.
+          echo "code=$GITHUB_RUN_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "Building versionName=$VERSION_NAME (versionCode=$GITHUB_RUN_NUMBER)"
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Secret scan
+        run: python3 scripts/secret_scan.py
+
+      - name: Restore Firebase mobile config from secrets
+        env:
+          FIREBASE_OPTIONS_DART_B64: ${{ secrets.FIREBASE_OPTIONS_DART_B64 }}
+          GOOGLE_SERVICES_JSON_B64: ${{ secrets.GOOGLE_SERVICES_JSON_B64 }}
+        run: |
+          if [ -z "$FIREBASE_OPTIONS_DART_B64" ] || [ -z "$GOOGLE_SERVICES_JSON_B64" ]; then
+            echo "Missing Firebase Android secrets. Configure FIREBASE_OPTIONS_DART_B64 and GOOGLE_SERVICES_JSON_B64."
+            exit 1
+          fi
+          echo "$FIREBASE_OPTIONS_DART_B64" | base64 --decode > lib/firebase_options.dart
+          dart format lib/firebase_options.dart
+          echo "$GOOGLE_SERVICES_JSON_B64" | base64 --decode > android/app/google-services.json
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Shopper APK (User Mode)
+        run: |
+          flutter build apk --release \
+            --build-name="${{ steps.version.outputs.name }}" \
+            --build-number="${{ steps.version.outputs.code }}" \
+            --dart-define=API_BASE_URL="$API_BASE_URL" \
+            --dart-define=ADMIN_MODE=false
+          mkdir -p build/outputs
+          cp build/app/outputs/flutter-apk/app-release.apk build/outputs/DealSouk-Shopper.apk
+
+      - name: Build Shopper split APKs
+        run: |
+          flutter build apk --release --split-per-abi \
+            --build-name="${{ steps.version.outputs.name }}" \
+            --build-number="${{ steps.version.outputs.code }}" \
+            --dart-define=API_BASE_URL="$API_BASE_URL" \
+            --dart-define=ADMIN_MODE=false
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build/outputs/DealSouk-Shopper-arm64-v8a.apk
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build/outputs/DealSouk-Shopper-armeabi-v7a.apk
+          cp build/app/outputs/flutter-apk/app-x86_64-release.apk build/outputs/DealSouk-Shopper-x86_64.apk
+
+      - name: Build Admin APK (Moderator Mode)
+        run: |
+          flutter build apk --release \
+            --build-name="${{ steps.version.outputs.name }}" \
+            --build-number="${{ steps.version.outputs.code }}" \
+            --dart-define=API_BASE_URL="$API_BASE_URL" \
+            --dart-define=ADMIN_MODE=true
+          cp build/app/outputs/flutter-apk/app-release.apk build/outputs/DealSouk-Admin.apk
+
+      - name: Upload Shopper APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Dealsouk-Shopper-APK
+          path: |
+            build/outputs/DealSouk-Shopper.apk
+            build/outputs/DealSouk-Shopper-arm64-v8a.apk
+            build/outputs/DealSouk-Shopper-armeabi-v7a.apk
+            build/outputs/DealSouk-Shopper-x86_64.apk
+          if-no-files-found: error
+
+      - name: Upload Admin APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Dealsouk-Admin-APK
+          path: build/outputs/DealSouk-Admin.apk
+          if-no-files-found: error
+
+      # On a version tag, create (or update) the matching GitHub Release and
+      # attach every APK. Manual (workflow_dispatch) runs skip this and just
+      # leave the APKs as downloadable build artifacts above.
+      - name: Publish release with APKs
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: DealSouk ${{ github.ref_name }}
+          generate_release_notes: true
+          files: |
+            build/outputs/DealSouk-Shopper.apk
+            build/outputs/DealSouk-Shopper-arm64-v8a.apk
+            build/outputs/DealSouk-Shopper-armeabi-v7a.apk
+            build/outputs/DealSouk-Shopper-x86_64.apk
+            build/outputs/DealSouk-Admin.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

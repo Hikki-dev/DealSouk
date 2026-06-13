@@ -1,24 +1,20 @@
 {
   "@@locale": "en",
-
   "appTitle": "DealSouk",
   "home": "Home",
   "map": "Map",
   "cart": "Cart",
   "leaderboard": "Leaderboard",
   "profile": "Profile",
-
   "greeting": "Good morning",
   "greetingAfternoon": "Good afternoon",
   "greetingEvening": "Good evening",
-
   "freshPrices": "Fresh Prices",
   "freshPricesSubtitle": "Live crowd-sourced prices near you",
   "searchProducts": "Search products…",
   "searchNearbyStores": "Search nearby Dubai stores",
   "nearbyStores": "Nearby Supermarkets",
   "storeMap": "Store Map",
-
   "tokens": "Tokens",
   "tokenBalance": "Token Balance",
   "earnTokens": "Earn tokens",
@@ -28,34 +24,38 @@
   "voucherProgress": "Earn {remaining} more tokens to redeem your voucher.",
   "@voucherProgress": {
     "placeholders": {
-      "remaining": { "type": "int" }
+      "remaining": {
+        "type": "int"
+      }
     }
   },
   "claimVoucher": "Claim Voucher Now",
   "voucherClaimed": "Voucher Claimed!",
   "voucherDescription": "Show the barcode or code below to the cashier at any Union Coop checkout in Dubai.",
   "backToRewards": "Back to Rewards",
-
   "leaderboardTitle": "Rewards & Leaderboard",
   "dubaiLeaderboard": "Dubai Leaderboard",
   "lastMonthChampions": "Last Month's Champions",
-  "sourcerBadges": "Sourcer Badges",
+  "sourcerBadges": "Shopper Badges",
   "todaysChallenges": "Today's Challenges",
   "activeRequestBoard": "Active Request Board",
   "leaderboardStreaks": "Leaderboard & Streaks",
   "yourRank": "Rank #{rank}",
   "@yourRank": {
     "placeholders": {
-      "rank": { "type": "int" }
+      "rank": {
+        "type": "int"
+      }
     }
   },
   "dayStreak": "{days} Day Streak",
   "@dayStreak": {
     "placeholders": {
-      "days": { "type": "int" }
+      "days": {
+        "type": "int"
+      }
     }
   },
-
   "submitPrice": "Upload Price",
   "submitForReview": "Send for review",
   "priceSubmitted": "Price Submitted!",
@@ -75,33 +75,43 @@
   "dailyCapRemaining": "{remaining} of {cap} submissions left today",
   "@dailyCapRemaining": {
     "placeholders": {
-      "remaining": { "type": "int" },
-      "cap": { "type": "int" }
+      "remaining": {
+        "type": "int"
+      },
+      "cap": {
+        "type": "int"
+      }
     }
   },
-
   "dailyChallenge": "Daily Challenge",
   "challengeBonus": "+{tokens} bonus tokens",
   "@challengeBonus": {
     "placeholders": {
-      "tokens": { "type": "int" }
+      "tokens": {
+        "type": "int"
+      }
     }
   },
   "challengeCompleted": "Done! +{tokens} tokens earned",
   "@challengeCompleted": {
     "placeholders": {
-      "tokens": { "type": "int" }
+      "tokens": {
+        "type": "int"
+      }
     }
   },
   "challengeProgress": "{done}/{total} done",
   "@challengeProgress": {
     "placeholders": {
-      "done": { "type": "int" },
-      "total": { "type": "int" }
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "tapToComplete": "Tap to start submitting",
-
   "profileSettings": "Profile & Settings",
   "mySubmissions": "My Submissions",
   "myTokenHistory": "Token History",
@@ -117,7 +127,9 @@
   "accuracyRatingDesc": "{percent}% of your submissions approved",
   "@accuracyRatingDesc": {
     "placeholders": {
-      "percent": { "type": "int" }
+      "percent": {
+        "type": "int"
+      }
     }
   },
   "noSubmissionsYet": "No submissions yet.\nSubmit a price to get started!",
@@ -128,7 +140,6 @@
   "fulfilled": "Fulfilled",
   "open": "Open",
   "refunded": "Refunded",
-
   "adminConsole": "Moderator Console",
   "priceModeration": "Price Moderation",
   "analytics": "Analytics",
@@ -143,12 +154,13 @@
   "tokenEarnRate": "Token Earn Rate (base)",
   "voucherThreshold": "Voucher Threshold (tokens)",
   "dailySubmissionCap": "Daily Submission Cap",
-
   "freshLabel": "Fresh",
   "updatedAgoLabel": "Updated {hours}h ago",
   "@updatedAgoLabel": {
     "placeholders": {
-      "hours": { "type": "int" }
+      "hours": {
+        "type": "int"
+      }
     }
   },
   "unverifiedOutdated": "Unverified — may be outdated",
@@ -157,18 +169,22 @@
   "filterByChain": "Filter by chain",
   "allChains": "All",
   "submitPriceHere": "Submit Price Here",
-
   "betterPriceFound": "Better price found for {item}! Now AED {price} at {store}.",
   "@betterPriceFound": {
     "placeholders": {
-      "item": { "type": "String" },
-      "price": { "type": "String" },
-      "store": { "type": "String" }
+      "item": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      },
+      "store": {
+        "type": "String"
+      }
     }
   },
   "dismiss": "Dismiss",
   "requestFulfilled": "Request fulfilled! Tokens transferred to requester.",
-
   "noResultsFound": "No results found",
   "cartEmpty": "Your cart is empty",
   "addItemsToCart": "Browse products and add items to compare prices.",
@@ -176,22 +192,806 @@
   "bestStore": "Best Store",
   "checkout": "Checkout",
   "applyCoupon": "Apply Coupon",
-
   "guestMode": "Continue as Guest",
   "signInWithGoogle": "Continue with Google",
   "signInWithApple": "Continue with Apple",
   "signInWithPhone": "Continue with Phone",
-
   "level": "Level {level}",
   "@level": {
     "placeholders": {
-      "level": { "type": "int" }
+      "level": {
+        "type": "int"
+      }
     }
   },
   "earnMultiplier": "+{percent}% earn rate",
   "@earnMultiplier": {
     "placeholders": {
-      "percent": { "type": "int" }
+      "percent": {
+        "type": "int"
+      }
     }
-  }
+  },
+  "homeCategories": "Categories",
+  "homeCategoryFresh": "Fresh",
+  "homeCategoryFruits": "Fruits",
+  "homeCategorySnack": "Snack",
+  "homeCategoryGrocery": "Grocery",
+  "homeCategoryOils": "Oils",
+  "homeSeeAll": "See All",
+  "homeGreetingLine": "{greeting}, {name}",
+  "@homeGreetingLine": {
+    "placeholders": {
+      "greeting": {},
+      "name": {}
+    }
+  },
+  "homeFindNearbyPrices": "Find nearby prices before you go",
+  "homeSearchHint": "Search an item to compare prices nearby",
+  "homeSearchResultsCount": "{count, plural, =1{1 result} other{{count} results}}",
+  "@homeSearchResultsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeHowItWorks": "Simple: search an item, check nearby stores, then decide where it is worth going.",
+  "homeBestPricesNearYou": "Best prices near you",
+  "homePricesCount": "{count} prices",
+  "@homePricesCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "homeNoPricesMatch": "No prices match this filter yet",
+  "homeNoPricesHint": "Try All prices, search for an item, or ask shoppers to check a price.",
+  "homeFindAnItem": "Find an item",
+  "homeBrowseItems": "Browse items",
+  "homeFeaturedStores": "Featured Stores",
+  "homeEarnRewardsToday": "Earn rewards today",
+  "homePriceSharesLeft": "{count} price shares left to earn tokens",
+  "@homePriceSharesLeft": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "homeDailyChallenge": "Daily Challenge",
+  "homeChallengeDoneBadge": "Done! +{tokens}T",
+  "@homeChallengeDoneBadge": {
+    "placeholders": {
+      "tokens": {}
+    }
+  },
+  "homeDailyChallengeDetails": "Daily Challenge Details",
+  "homeChallengeFinished": "You have finished this challenge!",
+  "homeChallengeEarnBonus": "Earn bonus tokens by participating today",
+  "homeTargetSupermarket": "Target Supermarket",
+  "homeAnySupermarketChain": "Any Supermarket Chain",
+  "homeYourProgress": "Your Progress",
+  "homeProgressPrices": "{progress} / {target} prices",
+  "@homeProgressPrices": {
+    "placeholders": {
+      "progress": {},
+      "target": {}
+    }
+  },
+  "homeRewardBonus": "Reward Bonus",
+  "homeRewardBonusValue": "+{tokens} Tokens",
+  "@homeRewardBonusValue": {
+    "placeholders": {
+      "tokens": {}
+    }
+  },
+  "homeHowToComplete": "How to complete:",
+  "homeStepVisitStore": "Visit any branch of {store}.",
+  "@homeStepVisitStore": {
+    "placeholders": {
+      "store": {}
+    }
+  },
+  "homeAGenericSupermarket": "a supermarket",
+  "homeStepVerifyPrices": "Find grocery products and verify their shelf prices.",
+  "homeStepSubmitPrice": "Tap \"Submit Price\" in the app, fill in the price details, and submit.",
+  "homeStepApproved": "Once approved, your progress will update and you'll receive the token bonus!",
+  "homeCompletedRewardClaimed": "Completed! Reward Claimed",
+  "homeStartChallengeNow": "Start Challenge Now",
+  "homeFreshnessAll": "All",
+  "homeFreshnessUnder6h": "Under 6h",
+  "homeFreshnessUnder24h": "Under 24h",
+  "homeFreshnessUnder72h": "Under 72h",
+  "homeUpdatedJustNow": "Updated just now",
+  "homeUpdatedHoursAgo": "Updated {hours} hours ago",
+  "@homeUpdatedHoursAgo": {
+    "placeholders": {
+      "hours": {}
+    }
+  },
+  "homeUpdatedDaysAgo": "Updated {days} days ago",
+  "@homeUpdatedDaysAgo": {
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "homeVerifiedWithPhoto": "Verified with photo",
+  "homeKmAway": "{distance} km away",
+  "@homeKmAway": {
+    "placeholders": {
+      "distance": {}
+    }
+  },
+  "homeStoreDistancePrices": "{distance} km away • {count} prices",
+  "@homeStoreDistancePrices": {
+    "placeholders": {
+      "distance": {},
+      "count": {}
+    }
+  },
+  "homeOffer1Title": "Know The Best Price\nBefore You Leave",
+  "homeOffer1Subtitle": "Fresh prices from shoppers near you",
+  "homeOffer2Title": "Save The Trip\nAnd The Dirhams",
+  "homeOffer2Subtitle": "Compare nearby stores before you go",
+  "homeOffer3Title": "Need A Price Checked?\nAsk The Community",
+  "homeOffer3Subtitle": "A real shopper can check the shelf",
+  "searchDailyFoods": "Daily Foods",
+  "searchMyList": "My list",
+  "searchCatFresh": "Fresh",
+  "searchCatFruits": "Fruits",
+  "searchCatSnacks": "Snacks",
+  "searchCatGrocery": "Grocery",
+  "searchCatOils": "Oils",
+  "searchHint": "Search vegetables, fruits and more",
+  "searchScanBarcode": "Scan barcode",
+  "searchEmptyCategoryTitle": "No products found in this category",
+  "searchEmptyQueryTitle": "We couldn't find \"{query}\"",
+  "@searchEmptyQueryTitle": {
+    "placeholders": {
+      "query": {}
+    }
+  },
+  "searchEmptyCategorySubtitle": "Try changing category or check back later.",
+  "searchEmptyQuerySubtitle": "Tap below to ask other shoppers to check the price for you!",
+  "searchAskShoppersToCheck": "Ask shoppers to check",
+  "searchRequestPriceCheckTitle": "Request a price check",
+  "searchRequestPriceCheckDescription": "Other shoppers will check the price of this item for you. This uses {requestCost} tokens and refunds if it expires.",
+  "@searchRequestPriceCheckDescription": {
+    "placeholders": {
+      "requestCost": {}
+    }
+  },
+  "searchItemNameLabel": "Item name",
+  "searchItemNameHint": "e.g. Al Rawabi Fresh Milk 2L",
+  "searchEnterProductName": "Enter product name",
+  "searchChooseSupermarket": "Choose supermarket",
+  "searchRequestPosted": "Request posted! Shoppers near that store will be notified.",
+  "searchAskForThisPrice": "Ask for this price",
+  "cartNoStoreYet": "No store yet",
+  "cartMyList": "My List",
+  "cartClearSavedPrices": "Clear saved prices",
+  "cartSavedPricesCleared": "Saved prices cleared",
+  "cartItemsYouAreChecking": "Items you are checking",
+  "cartAddMore": "Add more",
+  "cartPriceDroppedOn": "Price dropped on {product}!",
+  "@cartPriceDroppedOn": {
+    "placeholders": {
+      "product": {}
+    }
+  },
+  "cartItemsCheaperNow": "{count} items in your list are cheaper now!",
+  "@cartItemsCheaperNow": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "cartPriceDropDetail": "Now AED {price} at {store} (was AED {old}).",
+  "@cartPriceDropDetail": {
+    "placeholders": {
+      "price": {},
+      "store": {},
+      "old": {}
+    }
+  },
+  "cartNoSavedPricesYet": "No saved prices yet",
+  "cartEmptyStateSubtitle": "Search an item and save it here to see which nearby store is worth visiting.",
+  "cartFindPricesNearby": "Find prices nearby",
+  "cartShoppingListOptions": "Shopping List Options",
+  "cartCheapestBasket": "Cheapest Basket",
+  "cartStoreWithDistance": "{store} ({distance} km)",
+  "@cartStoreWithDistance": {
+    "placeholders": {
+      "store": {},
+      "distance": {}
+    }
+  },
+  "cartClosestOption": "Closest Option",
+  "cartSaveAtStore": "Save AED {amount} at {store}",
+  "@cartSaveAtStore": {
+    "placeholders": {
+      "amount": {},
+      "store": {}
+    }
+  },
+  "cartClosestIsCheapest": "Your closest store is also the cheapest option!",
+  "cartBestSeenAt": "Best seen at {store}",
+  "@cartBestSeenAt": {
+    "placeholders": {
+      "store": {}
+    }
+  },
+  "cartRemove": "Remove",
+  "cartNearbyStoreComparison": "Nearby store comparison",
+  "cartKmAway": "{distance} km away",
+  "@cartKmAway": {
+    "placeholders": {
+      "distance": {}
+    }
+  },
+  "cartBest": "Best",
+  "cartExtraAmount": "+AED {amount}",
+  "@cartExtraAmount": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "cartPlainLanguageNote": "DealSouk does not sell groceries. This list only helps you decide where to check prices nearby.",
+  "storeLocationPromptTitle": "Find Supermarkets Near You",
+  "storeLocationPromptBody": "DealSouk uses your location to show how far each Dubai supermarket is from you.",
+  "storeLocationPromptSkip": "Skip",
+  "storeLocationPromptAllow": "Allow",
+  "storeMapTitle": "Store Map — Dubai",
+  "storeSearchHint": "Search store name or area…",
+  "storeNoStoresFound": "No stores found",
+  "storeDubaiStoresCount": "{count} Dubai stores",
+  "@storeDubaiStoresCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "storeTapPinHint": "Tap a pin to see branch details",
+  "storeMarkerTooltipWithDistance": "{name} · {branch}\n{km} km away",
+  "@storeMarkerTooltipWithDistance": {
+    "placeholders": {
+      "name": {},
+      "branch": {},
+      "km": {}
+    }
+  },
+  "storeMarkerTooltip": "{name}\n{branch}",
+  "@storeMarkerTooltip": {
+    "placeholders": {
+      "name": {},
+      "branch": {}
+    }
+  },
+  "storeResetDubai": "Dubai",
+  "storeNearYouTitle": "Near You in Dubai",
+  "storeAllStoresTitle": "All Dubai Stores",
+  "storeWithinRadiusSorted": "Within {km} km · sorted by distance",
+  "@storeWithinRadiusSorted": {
+    "placeholders": {
+      "km": {}
+    }
+  },
+  "storeStoresCount": "{count} stores",
+  "@storeStoresCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "storeNoStoresMatch": "No stores match \"{query}\"",
+  "@storeNoStoresMatch": {
+    "placeholders": {
+      "query": {}
+    }
+  },
+  "storeStaleBadge": "Stale",
+  "storePricesLoadErrorTitle": "Could not load prices",
+  "storePricesLoadErrorSubtitle": "Check your connection or submit a fresh price for this branch.",
+  "storeNoPricesTitle": "No fresh prices yet",
+  "storeNoPricesSubtitle": "Be the first to share a shelf price at this branch.",
+  "storePriceVerifiedWithPhoto": "{label} · Verified with photo",
+  "@storePriceVerifiedWithPhoto": {
+    "placeholders": {
+      "label": {}
+    }
+  },
+  "storeSubmitPriceHere": "Submit Price Here",
+  "storeDistanceKm": "{km} km",
+  "@storeDistanceKm": {
+    "placeholders": {
+      "km": {}
+    }
+  },
+  "storeViewPrices": "View Prices",
+  "submitStepSelectSupermarket": "Select Supermarket",
+  "submitStepSelectProduct": "Select Product",
+  "submitStepEnterPrice": "Enter Price",
+  "submitStepConfirmSubmit": "Confirm & submit",
+  "submitWhereDidYouSeePrice": "Where did you see the price?",
+  "submitSelectSupermarketHint": "Select the supermarket from the nearby list.",
+  "submitSubmissionsLeftToday": "{remaining} of {cap} submissions left today.",
+  "@submitSubmissionsLeftToday": {
+    "placeholders": {
+      "remaining": {},
+      "cap": {}
+    }
+  },
+  "submitWhichProduct": "Which product is it?",
+  "submitSearchSelectProductHint": "Search or select product and attach proof photo.",
+  "submitSearchBarcodeHint": "Search name, brand or scan barcode",
+  "submitScanBarcodeTooltip": "Scan barcode",
+  "submitNoProductsFound": "No products found matching your search.",
+  "submitAttachProofRequired": "Attach Proof (Required)",
+  "submitPriceLabelPhoto": "Price Label Photo",
+  "submitReceiptPhoto": "Receipt Photo",
+  "submitUploading": "Uploading…",
+  "submitEnterPriceDetails": "Enter Price details",
+  "submitEnterShelfPriceHint": "Enter the shelf price and active promotions.",
+  "submitEnterPriceAed": "Enter Price (AED)",
+  "submitManualShelfPriceHelper": "Manual shelf price entry, e.g. 14.75",
+  "submitPleaseEnterPrice": "Please enter a price",
+  "submitPleaseEnterValidNumber": "Please enter a valid number",
+  "submitPromotionType": "Promotion Type",
+  "submitPromoNone": "None",
+  "submitPromoDiscount": "Discount",
+  "submitPromoBogo": "BOGO",
+  "submitPromoBundle": "Bundle",
+  "submitConfirmDetails": "Confirm details",
+  "submitReviewBeforeSubmission": "Please review details before submission.",
+  "submitSummarySupermarket": "Supermarket",
+  "submitSummaryProduct": "Product",
+  "submitSummaryPrice": "Price",
+  "submitSummaryPromotion": "Promotion",
+  "submitSummaryProof": "Proof",
+  "submitProofPhotoAttached": "Photo Attached",
+  "submitTokenRewardEstimate": "Token reward estimate",
+  "submitPlusTokens": "+{tokens} Tokens",
+  "@submitPlusTokens": {
+    "placeholders": {
+      "tokens": {}
+    }
+  },
+  "submitTokenFreshShelfPrice": "Fresh shelf price",
+  "submitTokenStoreSelected": "Store selected",
+  "submitTokenProductSelected": "Product selected",
+  "submitTokenAedPriceEntered": "AED price entered",
+  "submitTokenPriceLabelAttached": "Price label attached",
+  "submitTokenAttachPriceLabel": "Attach price label",
+  "submitTokenNoPromotion": "No promotion selected",
+  "submitTokenPromoNoted": "{promo} promo noted",
+  "@submitTokenPromoNoted": {
+    "placeholders": {
+      "promo": {}
+    }
+  },
+  "submitTokenReceiptMultiplier": "1.5× Verified Receipt Multiplier",
+  "submitTokenAttachReceiptBonus": "Attach Receipt for 1.5× Bonus",
+  "submitTokenMultiplierApplied": "×1.5 applied",
+  "submitTokenNotApplied": "not applied",
+  "submitTokensAmount": "+{count} tokens",
+  "@submitTokensAmount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "submitTokenAmount": "+{count} token",
+  "@submitTokenAmount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "submitTotalRewardEstimate": "Total Reward Estimate",
+  "submitTokensTotal": "{tokens} Tokens",
+  "@submitTokensTotal": {
+    "placeholders": {
+      "tokens": {}
+    }
+  },
+  "submitBack": "Back",
+  "submitNext": "Next",
+  "submitSubmitAPrice": "Submit a price",
+  "submitCouldNotSendPrice": "We could not send this price. Please check your connection and try again.",
+  "submitSavedOffline": "Saved. We'll submit this price automatically when you're back online.",
+  "offlineBanner": "You're offline — changes are saved and will sync when you reconnect.",
+  "offlinePendingSync": "{count, plural, =1{1 change waiting to sync} other{{count} changes waiting to sync}}",
+  "@offlinePendingSync": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "submitTransactionDescription": "+{tokens} tokens — submitted {product} @ {store}",
+  "@submitTransactionDescription": {
+    "placeholders": {
+      "tokens": {},
+      "product": {},
+      "store": {}
+    }
+  },
+  "submitPhotoUploaded": "Photo Uploaded",
+  "submitTapToUpload": "Tap to Upload",
+  "submitPriceSubmitted": "Price Submitted!",
+  "submitTokensGained": "+{tokens} tokens",
+  "@submitTokensGained": {
+    "placeholders": {
+      "tokens": {}
+    }
+  },
+  "submitPendingReviewMessage": "Your price submission is pending review.\nTokens will be credited to {name} after admin approval.",
+  "@submitPendingReviewMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "submitOpenAdminReview": "Open Admin Review",
+  "submitViewTokenBalance": "View Token Balance",
+  "profileLevelBadge": "Lv.{level} {title}",
+  "@profileLevelBadge": {
+    "placeholders": {
+      "level": {},
+      "title": {}
+    }
+  },
+  "profileDayStreak": "{days} day streak",
+  "@profileDayStreak": {
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "profileTabSubmissions": "Submissions",
+  "profileTabTokens": "Tokens",
+  "profileTabRequests": "Requests",
+  "profileTabSettings": "Settings",
+  "profilePhotoUpdated": "Profile photo updated",
+  "profilePhotoRemoved": "Profile photo removed",
+  "profileAccuracyRating": "Accuracy Rating",
+  "profileAccuracyApproved": "{percent}% of your submissions approved",
+  "@profileAccuracyApproved": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
+  "profileNoSubmissions": "No prices shared yet.\nShare a shelf price to help shoppers and earn tokens.",
+  "profileCurrentBalance": "Current Balance",
+  "profileTapLeaderboardRedeem": "Tap Leaderboard to redeem",
+  "profileNoTokenActivity": "No token activity yet.\nShare a price or help with a request to start earning.",
+  "profileNoPriceRequests": "No price requests yet.\nAsk for a price when you cannot find an item.",
+  "profileCancelRequest": "Cancel request",
+  "profileCancelRequestTitle": "Cancel Request?",
+  "profileCancelRequestBody": "Are you sure you want to cancel your price request for \"{product}\"? Your bounty tokens will be refunded.",
+  "@profileCancelRequestBody": {
+    "placeholders": {
+      "product": {}
+    }
+  },
+  "profileNo": "No",
+  "profileYesCancel": "Yes, Cancel",
+  "profileVoucherApproved": "Voucher Approved",
+  "profileCodePending": "Code pending",
+  "profileVoucherUnderReview": "Voucher Under Review",
+  "profileVoucherPendingBody": "Your AED {amount} {supermarket} voucher is waiting for admin approval.",
+  "@profileVoucherPendingBody": {
+    "placeholders": {
+      "amount": {},
+      "supermarket": {}
+    }
+  },
+  "profileVoucherReady": "Voucher Ready!",
+  "profileVoucherReadyBody": "Head to the Leaderboard tab to claim your AED 50 Union Coop voucher.",
+  "profileClaimVoucherNow": "Claim Voucher Now",
+  "profileVoucherGoalTitle": "AED 50 Union Coop Voucher",
+  "profileEarnMoreTokens": "Earn {count} more tokens to unlock your voucher.",
+  "@profileEarnMoreTokens": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "profilePhotoTitle": "Profile Photo",
+  "profilePhotoSubtitleEmpty": "Add a friendly photo so shoppers recognise you",
+  "profilePhotoSubtitleSet": "Change or remove your current photo",
+  "profileChangePhoto": "Change photo",
+  "profileRemovePhoto": "Remove photo",
+  "profilePhotoTakePhoto": "Take a photo",
+  "profilePhotoChooseLibrary": "Choose from library",
+  "profileEditPhotoTooltip": "Edit profile photo",
+  "profileStatTokens": "Tokens",
+  "profileStatAccuracy": "Accuracy",
+  "profileStatApproved": "Approved",
+  "profileStatStreak": "Streak",
+  "profileSectionSubmissions": "My Submissions",
+  "profileSectionTokens": "Token History",
+  "profileSectionRequests": "My Requests",
+  "profileSectionSettings": "Settings & Account",
+  "profileDisplayName": "Display Name",
+  "profileEditDisplayName": "Edit display name",
+  "profileNameLabel": "Name",
+  "profileCancel": "Cancel",
+  "profileSave": "Save",
+  "profileHomeArea": "Home Area",
+  "profileLanguage": "Language",
+  "profileViewTutorial": "View App Tutorial",
+  "profileViewTutorialSubtitle": "Re-run the DealSouk intro guide",
+  "profilePrivacyTerms": "Privacy & Terms",
+  "profilePrivacyTermsSubtitle": "Location, photos, tokens, vouchers, and account deletion",
+  "profileAdminConsole": "Admin Review Console",
+  "profileAdminConsoleSubtitle": "Moderate price submissions",
+  "profileLogOut": "Log Out of Demo",
+  "welcomePrivacyConsentRequired": "Please agree to the Privacy Policy to continue.",
+  "welcomeInvalidPhoneNumber": "Please enter a valid {digits}-digit phone number for {country}.",
+  "@welcomeInvalidPhoneNumber": {
+    "placeholders": {
+      "digits": {},
+      "country": {}
+    }
+  },
+  "welcomeSelectCountry": "Select Country",
+  "welcomeModeratorToggleEnabled": "Moderator toggle enabled",
+  "welcomeModeratorToggleDisabled": "Moderator toggle disabled",
+  "welcomeTaglineAdmin": "Review supermarket prices shared by shoppers",
+  "welcomeTaglineCustomer": "Prices shared by shoppers near you",
+  "welcomeCustomerModeTab": "Customer Mode",
+  "welcomeAdminModeratorTab": "Admin Moderator",
+  "welcomePillarAuditQueue": "Audit\nQueue",
+  "welcomePillarFraudFilter": "Fraud\nFilter",
+  "welcomePillarIssueTokens": "Issue\nTokens",
+  "welcomePillarComparePrices": "Compare\nPrices",
+  "welcomePillarFindNearby": "Find\nNearby",
+  "welcomePillarRequestPrice": "Request\nPrice",
+  "welcomeInfoBannerAdmin": "Moderator Panel: Verify receipts and shelf prices.",
+  "welcomeInfoBannerCustomer": "No ordering here. Just check prices before you go.",
+  "welcomePrivacyConsentPrefix": "I agree to the ",
+  "welcomePrivacyPolicyLink": "Privacy Policy",
+  "welcomePrivacyConsentSuffix": " and consent to neighbourhood-level location processing.",
+  "welcomeEnterAdminDashboard": "Enter Admin Dashboard",
+  "welcomeContinueWithGoogle": "Continue with Google",
+  "welcomeSignInWithPhone": "Sign in with Phone",
+  "welcomeSignInWithApple": "Sign in with Apple",
+  "welcomeBrowseAsGuest": "Browse as Guest",
+  "welcomeFooterAdmin": "Moderator console permissions apply.",
+  "welcomeFooterCustomer": "Supermarket prices shared by shoppers in Dubai.",
+  "welcomeCancel": "Cancel",
+  "welcomeSendCode": "Send Code",
+  "welcomeOtpPrompt": "Enter the 6-digit code sent to {phone}",
+  "@welcomeOtpPrompt": {
+    "placeholders": {
+      "phone": {}
+    }
+  },
+  "welcomeVerify": "Verify",
+  "welcomeResendCode": "Resend code",
+  "productDetailsTitle": "Details",
+  "productAddToFavourites": "Add to favourites",
+  "productRemoveFromFavourites": "Remove from favourites",
+  "productBestPriceSeenAt": "Best price seen at {store}",
+  "@productBestPriceSeenAt": {
+    "placeholders": {
+      "store": {}
+    }
+  },
+  "productRequestThisPrice": "Request this price",
+  "productRequestPriceConfirmation": "Request this price! Other shoppers will check it soon.",
+  "productCompareStorePrices": "Compare Store Prices",
+  "productNoFreshPrices": "No fresh prices yet.",
+  "productNoFreshPricesHint": "Ask another shopper to check this item before you make the trip.",
+  "productPriceFlaggedHidden": "Price flagged & hidden (Pending admin audit)",
+  "productStoreDistance": "{store} • {distance} km away",
+  "@productStoreDistance": {
+    "placeholders": {
+      "store": {},
+      "distance": {}
+    }
+  },
+  "productFreshnessVerified": "{freshness} • Verified with photo",
+  "@productFreshnessVerified": {
+    "placeholders": {
+      "freshness": {}
+    }
+  },
+  "productUpdatedJustNow": "Updated just now",
+  "productUpdatedHoursAgo": "Updated {hours} hours ago",
+  "@productUpdatedHoursAgo": {
+    "placeholders": {
+      "hours": {}
+    }
+  },
+  "productUpdatedDaysAgo": "Updated {days} days ago",
+  "@productUpdatedDaysAgo": {
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "productUpdatedLabel": "Updated {label}",
+  "@productUpdatedLabel": {
+    "placeholders": {
+      "label": {}
+    }
+  },
+  "productBestPriceBadge": "BEST PRICE",
+  "productReportHiddenMessage": "Thanks. This price is hidden until an admin reviews it.",
+  "productReportPendingMessage": "Thanks. We will hide this price after 3 unique reports.",
+  "productReported": "Reported",
+  "productReportWrongPrice": "Report wrong price",
+  "productPriceHistory90Day": "90-Day Price History",
+  "productYouMayAlsoLike": "You may also like",
+  "productBestSeenPrice": "Best seen price",
+  "productSignInToSavePrices": "Please sign in to save prices and compare grocery baskets.",
+  "productSignInAction": "SIGN IN",
+  "productSavedForComparison": "{name} saved for price comparison",
+  "@productSavedForComparison": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "productViewAction": "VIEW",
+  "productSavePrice": "Save Price",
+  "productNoPriceHistory": "No approved price history yet. Once shoppers submit fresh prices, you will see the trend here.",
+  "productPriceRange": "Lowest {lowest} • Highest {highest}",
+  "@productPriceRange": {
+    "placeholders": {
+      "lowest": {},
+      "highest": {}
+    }
+  },
+  "productLatestPrice": "Latest {latest}",
+  "@productLatestPrice": {
+    "placeholders": {
+      "latest": {}
+    }
+  },
+  "requestBannerExplanation": "Need a price checked? Ask nearby shoppers. If someone is already at that store, they can send back the shelf price.",
+  "requestBoardTitle": "Price checks people need ({count})",
+  "@requestBoardTitle": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "requestAskForPrice": "Ask for a price",
+  "requestEmptyTitle": "All price requests are completed!",
+  "requestEmptySubtitle": "Need a price? Tap 'Ask for a price' to request a price check.",
+  "requestFormTitle": "Ask for a price check",
+  "requestFormSubtitle": "Tell us the item and store. This uses {tokens} tokens and refunds automatically if it expires.",
+  "@requestFormSubtitle": {
+    "placeholders": {
+      "tokens": {}
+    }
+  },
+  "requestItemNameLabel": "Item name",
+  "requestItemNameHint": "e.g. milk, rice, apples",
+  "requestItemNameValidation": "Please enter the item name",
+  "requestStoreLabel": "Supermarket Chain",
+  "requestSentTitle": "Price request sent",
+  "requestSentBody": "Nearby shoppers can check {productName} at {storeName}. {tokens} tokens were reserved and will refund if the request expires.",
+  "@requestSentBody": {
+    "placeholders": {
+      "productName": {},
+      "storeName": {},
+      "tokens": {}
+    }
+  },
+  "requestSentConfirm": "Great",
+  "requestSubmitButton": "Ask for this price",
+  "requestCardSubtitle": "{storeName} • {distance} km • Posted by {requesterName}",
+  "@requestCardSubtitle": {
+    "placeholders": {
+      "storeName": {},
+      "distance": {},
+      "requesterName": {}
+    }
+  },
+  "requestCheckPriceButton": "Check price (+{tokens} Tokens)",
+  "@requestCheckPriceButton": {
+    "placeholders": {
+      "tokens": {}
+    }
+  },
+  "leaderRewardsTitle": "Rewards & Leaderboard",
+  "leaderToggleStreaks": "Leaderboard & Streaks",
+  "leaderToggleRequestBoard": "Active Request Board",
+  "leaderRankNumber": "Rank #{n}",
+  "@leaderRankNumber": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "leaderRankUnknown": "Rank —",
+  "leaderDayStreak": "{days} Day Streak",
+  "@leaderDayStreak": {
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "leaderTokensLabel": "Tokens",
+  "leaderVoucherName": "AED 50 Union Coop Voucher",
+  "leaderTokenProgress": "{tokens} / {target} T",
+  "@leaderTokenProgress": {
+    "placeholders": {
+      "tokens": {},
+      "target": {}
+    }
+  },
+  "leaderVoucherRedeemed": "Redeemed AED 50 Union Coop Voucher",
+  "leaderVoucherClaimedTitle": "Voucher Claimed!",
+  "leaderVoucherClaimedBody": "Show the barcode or code below to the cashier at any Union Coop checkout in Dubai.",
+  "leaderBackToRewards": "Back to Rewards",
+  "leaderClaimVoucher": "Claim Voucher Now",
+  "leaderEarnMoreTokens": "Earn {count} more tokens to redeem your voucher.",
+  "@leaderEarnMoreTokens": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "leaderShopperBadges": "Shopper Badges",
+  "leaderTodaysChallenges": "Today's Challenges",
+  "leaderChallengeDone": "Done! +{tokens}T",
+  "@leaderChallengeDone": {
+    "placeholders": {
+      "tokens": {}
+    }
+  },
+  "leaderChallengeBonus": "+{tokens} bonus tokens",
+  "@leaderChallengeBonus": {
+    "placeholders": {
+      "tokens": {}
+    }
+  },
+  "leaderChallengeProgress": "{progress}/{target} done • Tap to submit a price",
+  "@leaderChallengeProgress": {
+    "placeholders": {
+      "progress": {},
+      "target": {}
+    }
+  },
+  "leaderDubaiLeaderboard": "Dubai Leaderboard",
+  "leaderHallOfFame": "Hall of Fame",
+  "leaderTopChampions": "Last month's top champions",
+  "leaderYouMarker": "{name} (You)",
+  "@leaderYouMarker": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "privacyTitle": "Privacy & Terms",
+  "privacySummaryTitle": "Plain English Summary",
+  "privacySummaryItem1": "DealSouk helps shoppers compare grocery prices using community-submitted prices.",
+  "privacySummaryItem2": "We ask for only the information needed to run the app: your account, home area, language, submissions, requests, tokens, and moderation history.",
+  "privacySummaryItem3": "We use your device location only to show nearby supermarket prices. Precise GPS is not stored permanently.",
+  "privacySummaryItem4": "Tokens are rewards inside DealSouk. They are not cash, cannot be transferred, and cannot be sold.",
+  "privacySummaryItem5": "Photos are used to verify price labels or receipts. Do not upload photos with personal information.",
+  "privacySummaryItem6": "You can request account deletion from Profile settings.",
+  "privacyCollectTitle": "What We Collect",
+  "privacyCollectItem1": "Account details: Firebase account ID, display name, phone number if you use phone login, and preferred language.",
+  "privacyCollectItem2": "Shopping area: neighbourhood or area, not a permanent precise GPS record.",
+  "privacyCollectItem3": "Price data: products, stores, prices, timestamps, optional shelf label or receipt photos, and moderation flags.",
+  "privacyCollectItem4": "Rewards data: token balance, token history, voucher requests, badges, streaks, and leaderboard totals.",
+  "privacyCollectItem5": "Device messaging token: used only for DealSouk notifications such as request fulfilment or reward updates.",
+  "privacyUseTitle": "How We Use Data",
+  "privacyUseItem1": "To show fresh prices near you.",
+  "privacyUseItem2": "To calculate savings, requests, tokens, and rewards.",
+  "privacyUseItem3": "To detect wrong, stale, duplicate, or suspicious submissions.",
+  "privacyUseItem4": "To operate admin moderation and voucher approval.",
+  "privacyUseItem5": "To improve reliability, security, and Arabic/English usability.",
+  "privacyChoicesTitle": "Your Choices",
+  "privacyChoicesItem1": "You may browse as a guest with limited features.",
+  "privacyChoicesItem2": "You can change your display name, home area, and language.",
+  "privacyChoicesItem3": "You can deny location access and still use non-location features.",
+  "privacyChoicesItem4": "You can request account deletion. We anonymise account data needed for fraud prevention and financial/reward audit records.",
+  "privacyArabicTitle": "Arabic Summary",
+  "privacyArabicItem1": "We use your location only to show nearby store prices, and we do not permanently store precise GPS location.",
+  "privacyArabicItem2": "Tokens are in-app rewards, not cash, and cannot be sold or transferred.",
+  "privacyArabicItem3": "Price or receipt photos are used for verification only. Do not upload photos containing personal information.",
+  "privacyArabicItem4": "You can request account deletion from settings.",
+  "tutorialCompareTitle": "Compare Grocery Prices",
+  "tutorialCompareDescription": "Find nearby prices for fruits, vegetables, dairy, and snacks in Dubai supermarkets before you leave home.",
+  "tutorialMapTitle": "Find Stores On The Map",
+  "tutorialMapDescription": "See participating supermarkets across Dubai on the map, with how fresh each store's prices are before you go.",
+  "tutorialAskTitle": "Ask For Price Checks",
+  "tutorialAskDescription": "Need a price you cannot see? Ask the community to check it, or help others by sharing a shelf price.",
+  "tutorialEarnTitle": "Earn Shopping Rewards",
+  "tutorialEarnDescription": "Share prices or check shelves to earn tokens, then swap them for real supermarket vouchers.",
+  "tutorialCompeteTitle": "Climb The Leaderboard",
+  "tutorialCompeteDescription": "Keep a daily streak, complete challenges, earn badges, and rise up the Dubai leaderboard as you contribute.",
+  "tutorialSkip": "Skip",
+  "tutorialNext": "Next",
+  "tutorialGetStarted": "Get Started"
 }

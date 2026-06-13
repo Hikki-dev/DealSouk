@@ -1,10 +1,16 @@
+import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../state/state.dart';
-import '../theme/theme.dart';
-import 'responsive_container.dart';
-import 'tutorial_overlay.dart';
+import 'package:dealsouk/features/cart/presentation/cart_providers.dart';
+import 'package:dealsouk/features/profile/presentation/profile_providers.dart';
+import 'package:dealsouk/core/theme/theme.dart';
+import 'package:dealsouk/core/offline/connectivity_service.dart';
+import 'package:dealsouk/core/offline/sync_service.dart';
+import 'package:dealsouk/core/widgets/responsive_container.dart';
+import 'package:dealsouk/core/widgets/tutorial_overlay.dart';
+import 'package:dealsouk/l10n/app_localizations.dart';
 
 class ShellLayout extends StatefulWidget {
   final Widget child;
@@ -16,15 +22,19 @@ class ShellLayout extends StatefulWidget {
 }
 
 class _ShellLayoutState extends State<ShellLayout> {
-  static bool _hasShownTutorial = false;
+  // Session guard so the async check runs once per app launch; the real
+  // "show once ever" gate is the persisted version in TutorialOverlay.
+  static bool _tutorialChecked = false;
 
   @override
   void initState() {
     super.initState();
-    if (!_hasShownTutorial) {
-      _hasShownTutorial = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        TutorialOverlay.show(context);
+    if (!_tutorialChecked) {
+      _tutorialChecked = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (await TutorialOverlay.shouldShow() && mounted) {
+          await TutorialOverlay.show(context);
+        }
       });
     }
   }
@@ -43,11 +53,13 @@ class _ShellLayoutBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cartItems = ref.watch(cartProvider);
-    final cartCount = cartItems.fold<int>(
-      0,
-      (sum, item) => sum + item.quantity,
-    );
+    final savedCount = cartItems.length;
     final isNavbarVisible = ref.watch(navbarVisibleProvider);
+    // Watching here also constructs the SyncController, arming its auto-sync
+    // listener for the whole authenticated session (NFR-22).
+    final isOnline = ref.watch(isOnlineProvider);
+    final pendingSync = ref.watch(syncControllerProvider);
+    final showOfflineBanner = !isOnline || pendingSync > 0;
 
     final String location = GoRouterState.of(context).uri.toString();
     int selectedIndex = -1;
@@ -76,61 +88,159 @@ class _ShellLayoutBody extends ConsumerWidget {
         child: AnimatedOpacity(
           duration: const Duration(milliseconds: 200),
           opacity: isNavbarVisible ? 1.0 : 0.0,
-          child: Container(
-            margin: EdgeInsets.fromLTRB(24, 0, 24, bottomPad + 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(32),
-              border: Border.all(color: Colors.grey.shade100, width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-            child: Row(
+          child: (() {
+            final isIos =
+                defaultTargetPlatform == TargetPlatform.iOS ||
+                defaultTargetPlatform == TargetPlatform.macOS;
+
+            final l = AppLocalizations.of(context)!;
+            final navItems = Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _SoukNavItem(
                   icon: Icons.home_outlined,
                   selectedIcon: Icons.home_rounded,
+                  label: l.home,
                   selected: selectedIndex == 0,
                   onTap: () => context.go('/'),
                 ),
                 _SoukNavItem(
                   icon: Icons.map_outlined,
                   selectedIcon: Icons.map_rounded,
+                  label: l.map,
                   selected: selectedIndex == 1,
                   onTap: () => context.go('/stores'),
                 ),
                 _SoukNavItem(
-                  icon: Icons.shopping_basket_outlined,
-                  selectedIcon: Icons.shopping_basket_rounded,
+                  icon: Icons.bookmark_border_rounded,
+                  selectedIcon: Icons.bookmark_rounded,
+                  label: l.cart,
                   selected: selectedIndex == 2,
-                  badge: cartCount,
+                  badge: savedCount,
                   onTap: () => context.go('/cart'),
                 ),
                 _SoukNavItem(
                   icon: Icons.emoji_events_outlined,
                   selectedIcon: Icons.emoji_events_rounded,
+                  label: l.leaderboard,
                   selected: selectedIndex == 3,
                   onTap: () => context.go('/leaderboard'),
                 ),
                 _SoukNavItem(
                   icon: Icons.person_outline_rounded,
                   selectedIcon: Icons.person_rounded,
+                  label: l.profile,
                   selected: selectedIndex == 4,
                   onTap: () => context.go('/profile'),
                 ),
               ],
+            );
+
+            final double glassOpacity = isIos ? 0.65 : 0.72;
+            final Color glassBorderColor = isIos
+                ? Colors.white.withValues(alpha: 0.35)
+                : Colors.white.withValues(alpha: 0.5);
+
+            return Container(
+              margin: EdgeInsets.fromLTRB(24, 0, 24, bottomPad + 16),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(32),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 16.0, sigmaY: 16.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: glassOpacity),
+                      borderRadius: BorderRadius.circular(32),
+                      border: Border.all(color: glassBorderColor, width: 1.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 6,
+                      horizontal: 16,
+                    ),
+                    child: navItems,
+                  ),
+                ),
+              ),
+            );
+          })(),
+        ),
+      ),
+      child: Stack(
+        children: [
+          child,
+          if (showOfflineBanner)
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: bottomPad + 96,
+              child: _OfflineBanner(online: isOnline, pending: pendingSync),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Slim status pill shown above the navbar while offline or while queued
+/// changes are still waiting to sync (NFR-22).
+class _OfflineBanner extends StatelessWidget {
+  const _OfflineBanner({required this.online, required this.pending});
+
+  final bool online;
+  final int pending;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final message = !online ? l.offlineBanner : l.offlinePendingSync(pending);
+    final color = !online ? const Color(0xFF6B5B4A) : AppTheme.forestDeep;
+    return SafeArea(
+      top: false,
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.18),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                online ? Icons.sync_rounded : Icons.cloud_off_rounded,
+                color: Colors.white,
+                size: 16,
+              ),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  message,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
-      child: child,
     );
   }
 }
@@ -138,6 +248,7 @@ class _ShellLayoutBody extends ConsumerWidget {
 class _SoukNavItem extends StatelessWidget {
   final IconData icon;
   final IconData selectedIcon;
+  final String label;
   final bool selected;
   final int badge;
   final VoidCallback onTap;
@@ -145,6 +256,7 @@ class _SoukNavItem extends StatelessWidget {
   const _SoukNavItem({
     required this.icon,
     required this.selectedIcon,
+    required this.label,
     required this.selected,
     this.badge = 0,
     required this.onTap,
@@ -152,56 +264,61 @@ class _SoukNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        width: 46,
-        height: 46,
-        alignment: Alignment.center,
-        child: Stack(
-          clipBehavior: Clip.none,
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          width: 46,
+          height: 46,
           alignment: Alignment.center,
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: selected ? 40 : 0,
-              height: selected ? 40 : 0,
-              decoration: const BoxDecoration(
-                color: Color(0xFFE8F5E9), // Soft green active pill background
-                shape: BoxShape.circle,
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: selected ? 40 : 0,
+                height: selected ? 40 : 0,
+                decoration: const BoxDecoration(
+                  color: AppTheme.cream,
+                  shape: BoxShape.circle,
+                ),
               ),
-            ),
-            Icon(
-              selected ? selectedIcon : icon,
-              color: selected ? AppTheme.forestDeep : Colors.grey.shade400,
-              size: 22,
-            ),
-            if (badge > 0)
-              Positioned(
-                right: -4,
-                top: -4,
-                child: Container(
-                  width: 16,
-                  height: 16,
-                  decoration: BoxDecoration(
-                    color: AppTheme.redAccent,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 1.5),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '$badge',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 8,
-                        fontWeight: FontWeight.bold,
+              Icon(
+                selected ? selectedIcon : icon,
+                color: selected ? AppTheme.forestDeep : Colors.grey.shade400,
+                size: 22,
+              ),
+              if (badge > 0)
+                Positioned(
+                  right: -4,
+                  top: -4,
+                  child: Container(
+                    width: 16,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: AppTheme.redAccent,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 1.5),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '$badge',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

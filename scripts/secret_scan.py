@@ -45,6 +45,7 @@ CONTENT_RULES = {
 
 ALLOWED_PATHS = {
     "backend/.env.example",
+    "backend/render.env.example",
 }
 
 SKIP_PREFIXES = (

@@ -37,6 +37,25 @@ npm start
 
 Render can also read the checked-in `render.yaml` blueprint for these non-secret settings.
 
+## Local Render Env Helper
+
+There is no committed `render.env` because it contains production secrets.
+
+Local helper files:
+
+| File | Purpose | Commit? |
+|---|---|---|
+| `backend/render.env` | Real local paste/import file for Render environment variables. | No |
+| `backend/render.env.example` | Safe template showing required keys. | Yes |
+
+To copy the real local Render env values:
+
+```bash
+pbcopy < backend/render.env
+```
+
+Then paste into Render's environment variable import/paste UI if available, or copy each key/value manually.
+
 ## Required Secrets
 
 Set these in Render environment variables, not in git:

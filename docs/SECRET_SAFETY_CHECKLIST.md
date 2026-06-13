@@ -10,6 +10,7 @@ Current tracked files are clean for high-risk secrets.
 The repository does not currently track:
 
 - `backend/.env`
+- `backend/render.env`
 - `backend/firebase-service-account.json`
 - `android/app/google-services.json`
 - `ios/Runner/GoogleService-Info.plist`
@@ -22,6 +23,11 @@ Vercel stores these as encrypted environment variables:
 - `API_BASE_URL`
 
 Render must store backend secrets as environment variables only.
+
+Local Render helper:
+
+- `backend/render.env` is ignored and may contain real Render env values for copy/paste.
+- `backend/render.env.example` is the committed safe template.
 
 ## Still Required Before Public Launch
 

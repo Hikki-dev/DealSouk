@@ -22,6 +22,7 @@ import profileRoutes from "./routes/profile";
 import adminRoutes from "./routes/admin";
 import challengeRoutes from "./routes/challenges";
 import translateRoutes from "./routes/translate";
+import logoRoutes from "./routes/logos";
 import { startMaintenanceScheduler } from "./services/maintenance";
 
 export const prisma = new PrismaClient();
@@ -111,6 +112,7 @@ app.use("/profile", profileRoutes);
 app.use("/admin", adminRoutes);
 app.use("/challenges", challengeRoutes);
 app.use("/translate", translateRoutes);
+app.use("/logos", logoRoutes);
 
 app.use(
   (

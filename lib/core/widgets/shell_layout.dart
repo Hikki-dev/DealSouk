@@ -22,15 +22,19 @@ class ShellLayout extends StatefulWidget {
 }
 
 class _ShellLayoutState extends State<ShellLayout> {
-  static bool _hasShownTutorial = false;
+  // Session guard so the async check runs once per app launch; the real
+  // "show once ever" gate is the persisted version in TutorialOverlay.
+  static bool _tutorialChecked = false;
 
   @override
   void initState() {
     super.initState();
-    if (!_hasShownTutorial) {
-      _hasShownTutorial = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        TutorialOverlay.show(context);
+    if (!_tutorialChecked) {
+      _tutorialChecked = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (await TutorialOverlay.shouldShow() && mounted) {
+          await TutorialOverlay.show(context);
+        }
       });
     }
   }

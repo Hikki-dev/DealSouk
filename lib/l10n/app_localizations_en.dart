@@ -1794,6 +1794,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Find nearby prices for fruits, vegetables, dairy, and snacks in Dubai supermarkets before you leave home.';
 
   @override
+  String get tutorialMapTitle => 'Find Stores On The Map';
+
+  @override
+  String get tutorialMapDescription =>
+      'See participating supermarkets across Dubai on the map, with how fresh each store\'s prices are before you go.';
+
+  @override
   String get tutorialAskTitle => 'Ask For Price Checks';
 
   @override
@@ -1806,6 +1813,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tutorialEarnDescription =>
       'Share prices or check shelves to earn tokens, then swap them for real supermarket vouchers.';
+
+  @override
+  String get tutorialCompeteTitle => 'Climb The Leaderboard';
+
+  @override
+  String get tutorialCompeteDescription =>
+      'Keep a daily streak, complete challenges, earn badges, and rise up the Dubai leaderboard as you contribute.';
 
   @override
   String get tutorialSkip => 'Skip';

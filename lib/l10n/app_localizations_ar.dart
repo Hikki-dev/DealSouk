@@ -1785,6 +1785,13 @@ class AppLocalizationsAr extends AppLocalizations {
       'اعثر على الأسعار القريبة للفواكه والخضروات ومنتجات الألبان والوجبات الخفيفة في متاجر دبي قبل مغادرة المنزل.';
 
   @override
+  String get tutorialMapTitle => 'اعثر على المتاجر على الخريطة';
+
+  @override
+  String get tutorialMapDescription =>
+      'شاهد المتاجر المشاركة في أنحاء دبي على الخريطة، ومدى حداثة أسعار كل متجر قبل أن تذهب.';
+
+  @override
   String get tutorialAskTitle => 'اطلب التحقق من الأسعار';
 
   @override
@@ -1797,6 +1804,13 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get tutorialEarnDescription =>
       'شارك الأسعار أو تحقق من الرفوف لكسب الرموز، ثم استبدلها بقسائم متاجر حقيقية.';
+
+  @override
+  String get tutorialCompeteTitle => 'تسلّق لوحة المتصدرين';
+
+  @override
+  String get tutorialCompeteDescription =>
+      'حافظ على سلسلتك اليومية، وأكمل التحديات، واكسب الأوسمة، وارتقِ في لوحة متصدري دبي مع مساهماتك.';
 
   @override
   String get tutorialSkip => 'تخطٍّ';

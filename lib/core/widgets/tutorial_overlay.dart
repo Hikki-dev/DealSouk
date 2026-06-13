@@ -1,18 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/l10n/app_localizations.dart';
 
 class TutorialOverlay extends StatefulWidget {
   const TutorialOverlay({super.key});
 
-  static void show(BuildContext context) {
-    showDialog(
+  /// Bump this ONLY when a major new feature is added that warrants re-showing
+  /// the tutorial to everyone. Users who've already seen version N won't be
+  /// shown it again until this exceeds N — so it never nags after skip/done.
+  static const int kTutorialVersion = 1;
+  static const String _prefsKey = 'tutorial_seen_version';
+
+  /// True if the user hasn't yet seen the current tutorial version.
+  static Future<bool> shouldShow() async {
+    final prefs = await SharedPreferences.getInstance();
+    return (prefs.getInt(_prefsKey) ?? 0) < kTutorialVersion;
+  }
+
+  /// Records that the user has seen the current version (called on skip/done),
+  /// so it won't appear again until [kTutorialVersion] is bumped.
+  static Future<void> markSeen() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_prefsKey, kTutorialVersion);
+  }
+
+  /// Shows the tutorial and marks it seen once dismissed (skip OR done).
+  static Future<void> show(BuildContext context) async {
+    await showDialog(
       context: context,
       barrierDismissible: false,
       barrierColor: Colors.black.withValues(alpha: 0.65),
       builder: (context) => const TutorialOverlay(),
     );
+    await markSeen();
   }
 
   @override
@@ -29,12 +51,20 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
       description: l.tutorialCompareDescription,
     ),
     _TutorialSlide(
+      title: l.tutorialMapTitle,
+      description: l.tutorialMapDescription,
+    ),
+    _TutorialSlide(
       title: l.tutorialAskTitle,
       description: l.tutorialAskDescription,
     ),
     _TutorialSlide(
       title: l.tutorialEarnTitle,
       description: l.tutorialEarnDescription,
+    ),
+    _TutorialSlide(
+      title: l.tutorialCompeteTitle,
+      description: l.tutorialCompeteDescription,
     ),
   ];
 
@@ -49,12 +79,119 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
       case 0:
         return _buildCompareVisual();
       case 1:
-        return _buildSubmitVisual();
+        return _buildMapVisual();
       case 2:
+        return _buildSubmitVisual();
+      case 3:
         return _buildRedeemVisual();
+      case 4:
+        return _buildCompeteVisual();
       default:
         return Container();
     }
+  }
+
+  Widget _buildMapVisual() {
+    return _iconCardVisual(
+      icon: Icons.map_rounded,
+      iconBg: const Color(0xFFE3F2FD),
+      iconColor: const Color(0xFF1E88E5),
+      rows: const [
+        ('Carrefour — Mall of the Emirates', 'Updated 2h ago'),
+        ('Union Coop — Al Barsha', 'Updated 5h ago'),
+        ('Lulu — Al Qusais', 'Updated 1d ago'),
+      ],
+    );
+  }
+
+  Widget _buildCompeteVisual() {
+    return _iconCardVisual(
+      icon: Icons.emoji_events_rounded,
+      iconBg: const Color(0xFFFFF3E0),
+      iconColor: AppTheme.amberAccent,
+      rows: const [
+        ('🔥 5-day streak', '+50 bonus'),
+        ('🥇 Rank #1 this month', '320 tokens'),
+        ('🏅 New badge unlocked', 'Top Sourcer'),
+      ],
+    );
+  }
+
+  /// Shared compact "icon + 3 labelled rows" mock used by simpler slides.
+  Widget _iconCardVisual({
+    required IconData icon,
+    required Color iconBg,
+    required Color iconColor,
+    required List<(String, String)> rows,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE8EEE4), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: iconColor, size: 18),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Divider(height: 1),
+          const SizedBox(height: 8),
+          ...rows.map(
+            (row) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Text(
+                      row.$1,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textDark,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    row.$2,
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildCompareVisual() {

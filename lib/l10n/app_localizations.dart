@@ -3160,6 +3160,18 @@ abstract class AppLocalizations {
   /// **'Find nearby prices for fruits, vegetables, dairy, and snacks in Dubai supermarkets before you leave home.'**
   String get tutorialCompareDescription;
 
+  /// No description provided for @tutorialMapTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Find Stores On The Map'**
+  String get tutorialMapTitle;
+
+  /// No description provided for @tutorialMapDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'See participating supermarkets across Dubai on the map, with how fresh each store\'s prices are before you go.'**
+  String get tutorialMapDescription;
+
   /// No description provided for @tutorialAskTitle.
   ///
   /// In en, this message translates to:
@@ -3183,6 +3195,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share prices or check shelves to earn tokens, then swap them for real supermarket vouchers.'**
   String get tutorialEarnDescription;
+
+  /// No description provided for @tutorialCompeteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Climb The Leaderboard'**
+  String get tutorialCompeteTitle;
+
+  /// No description provided for @tutorialCompeteDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep a daily streak, complete challenges, earn badges, and rise up the Dubai leaderboard as you contribute.'**
+  String get tutorialCompeteDescription;
 
   /// No description provided for @tutorialSkip.
   ///

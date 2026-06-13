@@ -8,6 +8,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:dealsouk/core/network/api_client.dart';
 import 'package:dealsouk/features/stores/data/stores_service.dart';
 import 'package:dealsouk/features/profile/presentation/profile_providers.dart';
 import 'package:dealsouk/features/stores/domain/store.dart';
@@ -1383,37 +1384,38 @@ class _StoreChoiceCard extends StatelessWidget {
 /// Maps a chain name to its publicly available logo URL.
 /// Sourced from Clearbit's logo CDN — no API key required for standard logos.
 /// Maps a store name to its bundled brand-logo asset path.
-/// Resolves a store name to its brand logo, served from Google's favicon CDN
-/// (`s2/favicons`). This pulls each chain's real logo mark by domain, is fast
-/// and reliably reachable, and Flutter caches the image after the first load so
-/// repeat views are instant. Returns null for unknown chains; [_LogoAvatar]
-/// then shows a colored letter circle (also used while loading / on error).
+/// Resolves a store name to its brand logo, served through our own backend
+/// (`/logos/:slug`). The backend proxies the chain's logo mark and adds CORS +
+/// cache headers, so it renders on Flutter Web (CanvasKit) too — a direct
+/// third-party favicon URL fails there for lack of CORS. Cached after first
+/// load, so repeat views are instant. Returns null for unknown chains;
+/// [_LogoAvatar] then shows a colored letter circle (also used while loading).
 String? _chainLogoUrl(String name) {
   final n = name.toLowerCase();
-  String? domain;
+  String? slug;
   if (n.contains('carrefour')) {
-    domain = 'carrefouruae.com';
+    slug = 'carrefour';
   } else if (n.contains('lulu')) {
-    domain = 'luluhypermarket.com';
+    slug = 'lulu';
   } else if (n.contains('spinneys')) {
-    domain = 'spinneys.com';
+    slug = 'spinneys';
   } else if (n.contains('waitrose')) {
-    domain = 'waitrose.com';
+    slug = 'waitrose';
   } else if (n.contains('union')) {
-    domain = 'unioncoop.ae';
+    slug = 'union_coop';
   } else if (n.contains('choithrams')) {
-    domain = 'choithrams.com';
+    slug = 'choithrams';
   } else if (n.contains('geant')) {
-    domain = 'geantonline.ae';
+    slug = 'geant';
   } else if (n.contains('nesto')) {
-    domain = 'nestogroup.com';
+    slug = 'nesto';
   } else if (n.contains('al maya')) {
-    domain = 'almaya.ae';
+    slug = 'al_maya';
   } else if (n.contains('grandiose')) {
-    domain = 'grandiose.ae';
+    slug = 'grandiose';
   }
-  if (domain == null) return null;
-  return 'https://www.google.com/s2/favicons?sz=128&domain=$domain';
+  if (slug == null) return null;
+  return '${apiClient.baseUrl}/logos/$slug';
 }
 
 // ─── Logo Avatar Widget ───────────────────────────────────────────────────────

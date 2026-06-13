@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import 'package:dealsouk/features/cart/presentation/cart_providers.dart';
 import 'package:dealsouk/features/profile/presentation/profile_providers.dart';
 import 'package:dealsouk/core/theme/theme.dart';
+import 'package:dealsouk/core/offline/connectivity_service.dart';
+import 'package:dealsouk/core/offline/sync_service.dart';
 import 'package:dealsouk/core/widgets/responsive_container.dart';
 import 'package:dealsouk/core/widgets/tutorial_overlay.dart';
 import 'package:dealsouk/l10n/app_localizations.dart';
@@ -49,6 +51,11 @@ class _ShellLayoutBody extends ConsumerWidget {
     final cartItems = ref.watch(cartProvider);
     final savedCount = cartItems.length;
     final isNavbarVisible = ref.watch(navbarVisibleProvider);
+    // Watching here also constructs the SyncController, arming its auto-sync
+    // listener for the whole authenticated session (NFR-22).
+    final isOnline = ref.watch(isOnlineProvider);
+    final pendingSync = ref.watch(syncControllerProvider);
+    final showOfflineBanner = !isOnline || pendingSync > 0;
 
     final String location = GoRouterState.of(context).uri.toString();
     int selectedIndex = -1;
@@ -161,7 +168,75 @@ class _ShellLayoutBody extends ConsumerWidget {
           })(),
         ),
       ),
-      child: child,
+      child: Stack(
+        children: [
+          child,
+          if (showOfflineBanner)
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: bottomPad + 96,
+              child: _OfflineBanner(online: isOnline, pending: pendingSync),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Slim status pill shown above the navbar while offline or while queued
+/// changes are still waiting to sync (NFR-22).
+class _OfflineBanner extends StatelessWidget {
+  const _OfflineBanner({required this.online, required this.pending});
+
+  final bool online;
+  final int pending;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final message = !online ? l.offlineBanner : l.offlinePendingSync(pending);
+    final color = !online ? const Color(0xFF6B5B4A) : AppTheme.forestDeep;
+    return SafeArea(
+      top: false,
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.18),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                online ? Icons.sync_rounded : Icons.cloud_off_rounded,
+                color: Colors.white,
+                size: 16,
+              ),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  message,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

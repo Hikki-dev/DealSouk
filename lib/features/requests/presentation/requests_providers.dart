@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dealsouk/features/requests/domain/price_request.dart';
 import 'package:dealsouk/features/requests/data/requests_service.dart';
 import 'package:dealsouk/features/tokens/presentation/tokens_providers.dart';
+import 'package:dealsouk/core/offline/connectivity_service.dart';
+import 'package:dealsouk/core/offline/sync_service.dart';
 
 class PriceRequestsNotifier extends Notifier<List<PriceRequest>> {
   @override
@@ -101,12 +103,8 @@ class MyRequestsNotifier extends Notifier<List<PriceRequest>> {
     required String storeName,
     required int requestCostTokens,
   }) async {
-    try {
-      final created = await requestsService.create(
-        productName: productName,
-        storeName: storeName,
-        requestCostTokens: requestCostTokens,
-      );
+    // Optimistically reflect the token cost regardless of connectivity.
+    void applyTokenCost() {
       if (requestCostTokens > 0) {
         ref.read(userTokensProvider.notifier).deductTokens(requestCostTokens);
         ref
@@ -116,10 +114,43 @@ class MyRequestsNotifier extends Notifier<List<PriceRequest>> {
               'Requested price check: $productName at $storeName',
             );
       }
+    }
+
+    // Offline (NFR-22): queue the request and replay it on reconnect. It will
+    // appear on the board once synced; the token cost is shown immediately.
+    if (!await isCurrentlyOnline()) {
+      await ref
+          .read(syncControllerProvider.notifier)
+          .enqueueRequest(
+            productName: productName,
+            storeName: storeName,
+            requestCostTokens: requestCostTokens,
+          );
+      applyTokenCost();
+      return;
+    }
+
+    try {
+      final created = await requestsService.create(
+        productName: productName,
+        storeName: storeName,
+        requestCostTokens: requestCostTokens,
+      );
+      applyTokenCost();
       state = [created, ...state];
       // Sync to the board so other shoppers see it instantly
       ref.read(priceRequestsProvider.notifier).fetchBoard();
-    } catch (_) {}
+    } catch (_) {
+      // Network failure mid-request — queue it so it isn't lost.
+      await ref
+          .read(syncControllerProvider.notifier)
+          .enqueueRequest(
+            productName: productName,
+            storeName: storeName,
+            requestCostTokens: requestCostTokens,
+          );
+      applyTokenCost();
+    }
   }
 
   Future<void> cancelRequest(String requestId) async {

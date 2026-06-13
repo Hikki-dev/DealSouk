@@ -57,6 +57,26 @@ export async function clearElapsedSuspensions(now = new Date()): Promise<number>
   return result.count;
 }
 
+// Refresh the daily price-history rollup (NFR-05). CONCURRENTLY keeps reads
+// non-blocking but requires the view to have been populated once and to have a
+// unique index — both true after the migration. On the first run (or any error)
+// we fall back to a plain refresh, and tolerate the view being absent.
+export async function refreshPriceHistoryRollup(): Promise<void> {
+  try {
+    await prisma.$executeRawUnsafe(
+      'REFRESH MATERIALIZED VIEW CONCURRENTLY price_history_daily',
+    );
+  } catch {
+    try {
+      await prisma.$executeRawUnsafe(
+        'REFRESH MATERIALIZED VIEW price_history_daily',
+      );
+    } catch (err) {
+      console.error('[Maintenance] price-history rollup refresh skipped:', err);
+    }
+  }
+}
+
 let running = false;
 
 export async function runMaintenance(): Promise<void> {
@@ -69,6 +89,7 @@ export async function runMaintenance(): Promise<void> {
       await refundExpiredRequests(now),
       await clearElapsedSuspensions(now),
     ];
+    await refreshPriceHistoryRollup();
     if (expired || refunded || unsuspended) {
       console.log(
         `[Maintenance] expired ${expired} submissions, refunded ${refunded} requests, lifted ${unsuspended} suspensions`,

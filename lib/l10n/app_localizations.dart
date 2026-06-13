@@ -1910,6 +1910,24 @@ abstract class AppLocalizations {
   /// **'We could not send this price. Please check your connection and try again.'**
   String get submitCouldNotSendPrice;
 
+  /// No description provided for @submitSavedOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved. We\'ll submit this price automatically when you\'re back online.'**
+  String get submitSavedOffline;
+
+  /// No description provided for @offlineBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re offline — changes are saved and will sync when you reconnect.'**
+  String get offlineBanner;
+
+  /// No description provided for @offlinePendingSync.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 change waiting to sync} other{{count} changes waiting to sync}}'**
+  String offlinePendingSync(int count);
+
   /// No description provided for @submitTransactionDescription.
   ///
   /// In en, this message translates to:

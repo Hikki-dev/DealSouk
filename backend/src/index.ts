@@ -2,9 +2,11 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import rateLimit from "express-rate-limit";
+import rateLimit, { Store } from "express-rate-limit";
+import { RedisStore } from "rate-limit-redis";
 import { PrismaClient } from "@prisma/client";
 import { requireProductionEnv } from "./config/env";
+import { redis, isRedisEnabled } from "./services/redis";
 
 // TODO: Integrate TimescaleDB for time-series grocery price history data scaling.
 // TODO: Integrate Redis for leaderboard ranking caches, API rate-limiting, and session caching.
@@ -61,11 +63,25 @@ app.use(
 );
 app.use(express.json({ limit: process.env.JSON_BODY_LIMIT ?? "1mb" }));
 
+// When Redis is configured, share the rate-limit counters across all API
+// instances so the limit holds under horizontal scaling (NFR-05). Otherwise
+// fall back to the default per-instance in-memory store.
+let rateLimitStore: Store | undefined;
+if (isRedisEnabled && redis) {
+  const r = redis;
+  rateLimitStore = new RedisStore({
+    sendCommand: (...args: string[]) =>
+      r.call(args[0], ...args.slice(1)) as Promise<never>,
+    prefix: "rl:global:",
+  });
+}
+
 const globalLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: Number(process.env.GLOBAL_RATE_LIMIT_PER_MINUTE ?? 120),
   standardHeaders: true,
   legacyHeaders: false,
+  store: rateLimitStore,
 });
 app.use(globalLimiter);
 

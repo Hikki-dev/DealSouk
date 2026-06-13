@@ -405,6 +405,16 @@
   "submitNext": "التالي",
   "submitSubmitAPrice": "إرسال سعر",
   "submitCouldNotSendPrice": "تعذّر إرسال هذا السعر. يرجى التحقق من اتصالك والمحاولة مرة أخرى.",
+  "submitSavedOffline": "تم الحفظ. سنرسل هذا السعر تلقائيًا عند عودة الاتصال بالإنترنت.",
+  "offlineBanner": "أنت غير متصل بالإنترنت — تم حفظ تغييراتك وستتم مزامنتها عند عودة الاتصال.",
+  "offlinePendingSync": "{count, plural, =1{تغيير واحد بانتظار المزامنة} other{{count} تغييرات بانتظار المزامنة}}",
+  "@offlinePendingSync": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "submitTransactionDescription": "+{tokens} توكن — تم إرسال {product} في {store}",
   "submitPhotoUploaded": "تم رفع الصورة",
   "submitTapToUpload": "اضغط للرفع",

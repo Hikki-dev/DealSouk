@@ -1038,6 +1038,25 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعذّر إرسال هذا السعر. يرجى التحقق من اتصالك والمحاولة مرة أخرى.';
 
   @override
+  String get submitSavedOffline =>
+      'تم الحفظ. سنرسل هذا السعر تلقائيًا عند عودة الاتصال بالإنترنت.';
+
+  @override
+  String get offlineBanner =>
+      'أنت غير متصل بالإنترنت — تم حفظ تغييراتك وستتم مزامنتها عند عودة الاتصال.';
+
+  @override
+  String offlinePendingSync(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count تغييرات بانتظار المزامنة',
+      one: 'تغيير واحد بانتظار المزامنة',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String submitTransactionDescription(
     Object tokens,
     Object product,

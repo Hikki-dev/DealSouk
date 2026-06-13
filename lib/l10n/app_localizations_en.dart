@@ -1043,6 +1043,25 @@ class AppLocalizationsEn extends AppLocalizations {
       'We could not send this price. Please check your connection and try again.';
 
   @override
+  String get submitSavedOffline =>
+      'Saved. We\'ll submit this price automatically when you\'re back online.';
+
+  @override
+  String get offlineBanner =>
+      'You\'re offline — changes are saved and will sync when you reconnect.';
+
+  @override
+  String offlinePendingSync(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count changes waiting to sync',
+      one: '1 change waiting to sync',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String submitTransactionDescription(
     Object tokens,
     Object product,

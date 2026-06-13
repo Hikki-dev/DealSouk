@@ -15,6 +15,8 @@ import 'package:dealsouk/features/auth/presentation/auth_providers.dart';
 import 'package:dealsouk/features/admin/presentation/admin_providers.dart';
 import 'package:dealsouk/features/tokens/presentation/tokens_providers.dart';
 import 'package:dealsouk/features/submissions/data/submissions_service.dart';
+import 'package:dealsouk/core/offline/connectivity_service.dart';
+import 'package:dealsouk/core/offline/sync_service.dart';
 import 'package:dealsouk/core/network/storage_service.dart';
 import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/core/widgets/responsive_container.dart';
@@ -899,6 +901,30 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                           (p) => p.id == selectedProductId,
                         );
                         final price = double.parse(_priceController.text);
+
+                        // Offline (NFR-22): queue the submission and replay it
+                        // on reconnect. Tokens are awarded after it syncs and is
+                        // approved, so we don't credit them optimistically here.
+                        if (!await isCurrentlyOnline()) {
+                          await ref
+                              .read(syncControllerProvider.notifier)
+                              .enqueueSubmission(
+                                productId: selectedProductId!,
+                                storeId: selectedStoreId!,
+                                priceAed: price,
+                                hasReceipt: uploadedReceipt,
+                                receiptUrl: _receiptUrl,
+                              );
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              backgroundColor: AppTheme.forestDeep,
+                              content: Text(l.submitSavedOffline),
+                            ),
+                          );
+                          context.pop();
+                          return;
+                        }
 
                         int awarded = totalReward;
                         try {

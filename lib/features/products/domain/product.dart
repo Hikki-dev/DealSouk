@@ -24,6 +24,21 @@ class Product {
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
+    // Round-trip path: a cached product already carries its display label.
+    if (json['updatedAtLabel'] != null && json['hoursAgo'] == null) {
+      return Product(
+        id: json['id'] as String,
+        name: json['name'] as String,
+        brand: json['brand'] as String? ?? '',
+        packSize: json['packSize'] as String? ?? '',
+        category: json['category'] as String,
+        lowestPrice: (json['lowestPrice'] as num?)?.toDouble() ?? 0.0,
+        lowestPriceStore: json['lowestPriceStore'] as String? ?? '—',
+        updatedAtLabel: json['updatedAtLabel'] as String,
+        imageUrl: json['imageUrl'] as String? ?? '',
+        barcode: json['barcode'] as String? ?? '',
+      );
+    }
     final hoursAgo = json['hoursAgo'] as int?;
     String updatedLabel;
     if (hoursAgo == null || json['lowestPrice'] == null) {
@@ -67,4 +82,19 @@ class Product {
       barcode: barcode,
     );
   }
+
+  /// Serialises every field (including the resolved label) so it can be cached
+  /// locally and rebuilt offline via [Product.fromJson].
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'brand': brand,
+    'packSize': packSize,
+    'category': category,
+    'lowestPrice': lowestPrice,
+    'lowestPriceStore': lowestPriceStore,
+    'updatedAtLabel': updatedAtLabel,
+    'imageUrl': imageUrl,
+    'barcode': barcode,
+  };
 }

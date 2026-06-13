@@ -591,6 +591,16 @@
   "submitNext": "Next",
   "submitSubmitAPrice": "Submit a price",
   "submitCouldNotSendPrice": "We could not send this price. Please check your connection and try again.",
+  "submitSavedOffline": "Saved. We'll submit this price automatically when you're back online.",
+  "offlineBanner": "You're offline — changes are saved and will sync when you reconnect.",
+  "offlinePendingSync": "{count, plural, =1{1 change waiting to sync} other{{count} changes waiting to sync}}",
+  "@offlinePendingSync": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "submitTransactionDescription": "+{tokens} tokens — submitted {product} @ {store}",
   "@submitTransactionDescription": {
     "placeholders": {

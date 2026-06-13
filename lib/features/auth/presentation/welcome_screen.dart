@@ -993,7 +993,7 @@ class _PrimaryCta extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Image.network(
-                      'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/512px-Google_%22G%22_Logo.svg.png',
+                      'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
                       height: 20,
                       width: 20,
                       errorBuilder: (context, error, stackTrace) =>

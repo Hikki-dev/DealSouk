@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:dealsouk/features/stores/data/stores_service.dart';
+import 'package:dealsouk/features/profile/presentation/profile_providers.dart';
 import 'package:dealsouk/features/stores/domain/store.dart';
 import 'package:dealsouk/features/stores/presentation/stores_providers.dart';
 import 'package:dealsouk/core/theme/theme.dart';
@@ -880,8 +881,11 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
     final isStale = store.lastUpdatedHoursAgo > 48;
     final pricesFuture = storesService.getPrices(store.id);
 
+    ref.read(navbarVisibleProvider.notifier).hide();
+
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
@@ -1085,7 +1089,9 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
           },
         );
       },
-    );
+    ).whenComplete(() {
+      ref.read(navbarVisibleProvider.notifier).show();
+    });
   }
 }
 

@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:dealsouk/features/products/presentation/products_providers.dart';
 import 'package:dealsouk/features/cart/presentation/cart_providers.dart';
 import 'package:dealsouk/features/requests/presentation/requests_providers.dart';
+import 'package:dealsouk/features/profile/presentation/profile_providers.dart';
 import 'package:dealsouk/features/admin/presentation/admin_providers.dart';
 import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/core/widgets/responsive_container.dart';
@@ -380,8 +381,11 @@ class SearchScreen extends ConsumerWidget {
       'Geant',
     ];
 
+    ref.read(navbarVisibleProvider.notifier).hide();
+
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
@@ -447,12 +451,11 @@ class SearchScreen extends ConsumerWidget {
                   onPressed: () {
                     if (formKey.currentState!.validate()) {
                       ref
-                          .read(priceRequestsProvider.notifier)
+                          .read(myRequestsProvider.notifier)
                           .addPriceRequest(
                             productName: productName.trim(),
                             storeName: selectedStore,
                             requestCostTokens: requestCost,
-                            requesterName: 'Shopper',
                           );
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -483,6 +486,8 @@ class SearchScreen extends ConsumerWidget {
           ),
         );
       },
-    );
+    ).whenComplete(() {
+      ref.read(navbarVisibleProvider.notifier).show();
+    });
   }
 }

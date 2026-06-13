@@ -48,7 +48,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     _tabController = TabController(length: 4, vsync: this);
     final profile = ref.read(userProfileProvider);
     _nameController = TextEditingController(text: profile.name);
-    Future.microtask(() => ref.read(userVouchersProvider.notifier).fetch());
+    Future.microtask(() {
+      ref.read(userVouchersProvider.notifier).fetch();
+      ref.read(myRequestsProvider.notifier).fetchMyRequests();
+    });
   }
 
   @override
@@ -64,7 +67,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     final profile = ref.watch(userProfileProvider);
     final submissions = ref.watch(adminSubmissionsProvider);
     final transactions = ref.watch(userTransactionsProvider);
-    final requests = ref.watch(priceRequestsProvider);
     final settings = ref.watch(adminSettingsProvider);
     final vouchers = ref.watch(userVouchersProvider);
     final locale = ref.watch(localeProvider);
@@ -73,9 +75,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     final mySubmissions = submissions
         .where((s) => s.sourcerName == profile.name)
         .toList();
-    final myRequests = requests
-        .where((r) => r.requesterName == profile.name)
-        .toList();
+    final myRequests = ref.watch(myRequestsProvider);
     final level = tokensToLevel(tokens);
     final approvedCount = mySubmissions
         .where((s) => s.status == 'approved')
@@ -552,108 +552,159 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     );
   }
 
-  // ── TAB 3: Requests ──
   Widget _buildRequestsTab(List<dynamic> myRequests) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 160),
-      children: [
-        if (myRequests.isEmpty)
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 40),
-              child: Text(
-                'No price requests yet.\nAsk for a price when you cannot find an item.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.grey.shade500,
-                  fontSize: 13.5,
-                  height: 1.45,
+    return RefreshIndicator(
+      onRefresh: () async {
+        await ref.read(myRequestsProvider.notifier).fetchMyRequests();
+      },
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 18, 16, 160),
+        children: [
+          if (myRequests.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 40),
+                child: Text(
+                  'No price requests yet.\nAsk for a price when you cannot find an item.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.grey.shade500,
+                    fontSize: 13.5,
+                    height: 1.45,
+                  ),
                 ),
               ),
-            ),
-          )
-        else
-          ...myRequests.map((req) {
-            final statusColor = req.status == 'fulfilled'
-                ? Colors.green
-                : req.status == 'refunded'
-                ? Colors.blue
-                : Colors.orange;
-            return Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE8EEE4)),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
+            )
+          else
+            ...myRequests.map((req) {
+              final statusColor = req.status == 'fulfilled'
+                  ? Colors.green
+                  : req.status == 'refunded'
+                  ? Colors.blue
+                  : Colors.orange;
+              return Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE8EEE4)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.search_rounded,
+                        color: statusColor,
+                        size: 18,
+                      ),
                     ),
-                    child: Icon(
-                      Icons.search_rounded,
-                      color: statusColor,
-                      size: 18,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          req.productName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            req.productName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          '${req.storeName} • ${req.timestampLabel}',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey.shade600,
+                          Text(
+                            '${req.storeName} • ${req.timestampLabel}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (req.status == 'open') ...[
+                          IconButton(
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            icon: const Icon(
+                              Icons.cancel_outlined,
+                              color: AppTheme.redAccent,
+                              size: 20,
+                            ),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  title: const Text('Cancel Request?'),
+                                  content: Text(
+                                    'Are you sure you want to cancel your price request for "${req.productName}"? Your bounty tokens will be refunded.',
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('No'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        ref
+                                            .read(myRequestsProvider.notifier)
+                                            .cancelRequest(req.id);
+                                        Navigator.pop(context);
+                                      },
+                                      child: const Text(
+                                        'Yes, Cancel',
+                                        style: TextStyle(
+                                          color: AppTheme.redAccent,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: statusColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            req.status.toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: statusColor,
+                            ),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 7,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: statusColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          req.status.toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                            color: statusColor,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          }),
-      ],
+                  ],
+                ),
+              );
+            }),
+        ],
+      ),
     );
   }
 

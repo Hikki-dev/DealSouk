@@ -175,6 +175,7 @@ class RequestBoardView extends ConsumerWidget {
 
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
@@ -268,12 +269,11 @@ class RequestBoardView extends ConsumerWidget {
                       formKey.currentState!.save();
 
                       ref
-                          .read(priceRequestsProvider.notifier)
+                          .read(myRequestsProvider.notifier)
                           .addPriceRequest(
                             productName: productName,
                             storeName: selectedStore,
                             requestCostTokens: requestCost,
-                            requesterName: 'Shopper',
                           );
 
                       Navigator.pop(context);

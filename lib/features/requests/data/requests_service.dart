@@ -31,6 +31,18 @@ class RequestsService {
     final data = res.data as Map<String, dynamic>;
     return data['tokensEarned'] as int? ?? 0;
   }
+
+  Future<List<PriceRequest>> getMyRequests() async {
+    final res = await apiClient.get('/requests/mine');
+    final list = res.data as List<dynamic>;
+    return list
+        .map((e) => PriceRequest.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<void> cancel(String requestId) async {
+    await apiClient.delete('/requests/$requestId');
+  }
 }
 
 final requestsService = RequestsService();

@@ -169,4 +169,40 @@ router.post("/:id/fulfill", requireAuth, fulfillRequestLimiter, async (req: Auth
   });
 });
 
+// DELETE /requests/:id — cancel/delete a price request and refund bounty if still open (FR-30)
+router.delete("/:id", requireAuth, async (req: AuthRequest, res) => {
+  const request = await prisma.priceRequest.findUnique({
+    where: { id: req.params.id },
+  });
+
+  if (!request) {
+    res.status(404).json({ error: "Request not found" });
+    return;
+  }
+
+  if (request.requesterId !== req.userId) {
+    res.status(403).json({ error: "Not authorized to cancel this request" });
+    return;
+  }
+
+  if (request.status === "open") {
+    await prisma.priceRequest.update({
+      where: { id: req.params.id },
+      data: { status: "refunded" },
+    });
+    await awardTokens(
+      req.userId!,
+      request.bountyTokens,
+      `Refund: cancelled request for ${request.productName}`,
+    );
+  } else {
+    await prisma.priceRequest.update({
+      where: { id: req.params.id },
+      data: { status: "cancelled" },
+    });
+  }
+
+  res.json({ message: "Request cancelled successfully" });
+});
+
 export default router;

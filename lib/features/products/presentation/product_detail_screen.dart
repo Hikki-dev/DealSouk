@@ -247,7 +247,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                   TextButton.icon(
                                     onPressed: () {
                                       ref
-                                          .read(priceRequestsProvider.notifier)
+                                          .read(myRequestsProvider.notifier)
                                           .addPriceRequest(
                                             productName: product.name,
                                             storeName:
@@ -259,7 +259,6 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                                 ? product.lowestPriceStore
                                                 : 'Carrefour',
                                             requestCostTokens: requestCost,
-                                            requesterName: 'Shopper',
                                           );
                                       ScaffoldMessenger.of(
                                         context,

@@ -484,8 +484,10 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                                     );
 
                                 // Show claimed code popup
+                                ref.read(navbarVisibleProvider.notifier).hide();
                                 showModalBottomSheet(
                                   context: context,
+                                  useRootNavigator: true,
                                   backgroundColor: Colors.white,
                                   isScrollControlled: true,
                                   shape: const RoundedRectangleBorder(
@@ -624,7 +626,9 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                                       ),
                                     );
                                   },
-                                );
+                                ).whenComplete(() {
+                                  ref.read(navbarVisibleProvider.notifier).show();
+                                });
                               },
                               icon: const Icon(
                                 Icons.confirmation_num_outlined,

@@ -282,28 +282,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       const _OfferCarousel(),
                       const SizedBox(height: 20),
 
-                      // Live search bar — filters the catalog instantly in place.
-                      GlassContainer(
+                      // Live search bar — filters the catalog instantly in
+                      // place. Solid white so it stays readable wherever the
+                      // hero gradient fades to cream.
+                      Container(
                         height: 52,
-                        borderRadius: 26,
-                        color: Colors.white.withValues(alpha: 0.28),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.38),
-                          width: 1.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.04),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
                         padding: const EdgeInsets.symmetric(horizontal: 18),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(26),
+                          border: Border.all(
+                            color: const Color(0xFFE8EEE4),
+                            width: 1.2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.10),
+                              blurRadius: 14,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
                         child: Row(
                           children: [
                             Icon(
                               Icons.search_rounded,
-                              color: Colors.white.withValues(alpha: 0.95),
+                              color: AppTheme.forestDeep,
                               size: 22,
                             ),
                             const SizedBox(width: 12),
@@ -314,9 +318,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 textInputAction: TextInputAction.search,
                                 onChanged: (v) =>
                                     setState(() => _searchQuery = v),
-                                cursorColor: Colors.white,
+                                cursorColor: AppTheme.forestDeep,
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: AppTheme.textDark,
                                   fontSize: 13.5,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -325,9 +329,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   border: InputBorder.none,
                                   hintText: l.homeSearchHint,
                                   hintStyle: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.9),
+                                    color: Colors.grey.shade500,
                                     fontSize: 13.5,
-                                    fontWeight: FontWeight.w600,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
                               ),
@@ -337,14 +341,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 onTap: _clearSearch,
                                 child: Icon(
                                   Icons.close_rounded,
-                                  color: Colors.white.withValues(alpha: 0.95),
+                                  color: Colors.grey.shade600,
                                   size: 20,
                                 ),
                               )
                             else
                               Icon(
                                 Icons.tune_rounded,
-                                color: Colors.white.withValues(alpha: 0.95),
+                                color: AppTheme.forestDeep,
                                 size: 20,
                               ),
                           ],

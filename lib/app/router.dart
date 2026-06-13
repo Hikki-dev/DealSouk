@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -33,6 +34,8 @@ GoRouter buildRouter(WidgetRef ref) {
         isUnauthenticated: authState.status == AuthStatus.unauthenticated,
         isGuest: authState.isGuest,
         isAdmin: authState.isAdmin,
+        // Browser QA convenience only — never relaxes the guard in release.
+        allowGuestProfile: kDebugMode,
       );
     },
     routes: [
@@ -123,6 +126,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         isUnauthenticated: authState.status == AuthStatus.unauthenticated,
         isGuest: authState.isGuest,
         isAdmin: authState.isAdmin,
+        // Browser QA convenience only — never relaxes the guard in release.
+        allowGuestProfile: kDebugMode,
       );
     },
     routes: [

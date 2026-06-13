@@ -6,7 +6,7 @@ on:
       api_base_url:
         description: Production or staging API base URL
         required: true
-        default: https://dealsouk-api.onrender.com
+        default: https://dealsouk.onrender.com
 
 jobs:
   build-ios:

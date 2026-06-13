@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - production
+      - stabilize/mvp-audit
       - "feature/**"
       - "codex/**"
 
@@ -29,7 +30,9 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: backend/package-lock.json
+          cache-dependency-path: |
+            backend/package-lock.json
+            firebase/functions/package-lock.json
 
       - name: Secret scan
         run: python3 scripts/secret_scan.py
@@ -67,4 +70,12 @@ jobs:
 
       - name: Build backend
         working-directory: backend
+        run: npm run build
+
+      - name: Install Firebase Functions dependencies
+        working-directory: firebase/functions
+        run: npm ci
+
+      - name: Build Firebase Functions
+        working-directory: firebase/functions
         run: npm run build

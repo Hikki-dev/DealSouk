@@ -54,6 +54,8 @@ app.*.map.json
 backend/node_modules/
 backend/dist/
 backend/render.env
+firebase/functions/node_modules/
+firebase/functions/lib/
 
 # Environment files and local secrets
 .env
@@ -76,6 +78,3 @@ android/app/google-services.json
 ios/Runner/GoogleService-Info.plist
 lib/firebase_options.dart
 .vercel
-
-# Documentation
-/docs/

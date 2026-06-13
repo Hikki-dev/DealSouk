@@ -27,6 +27,10 @@
       }
     }
   },
+  "functions": {
+    "source": "firebase/functions",
+    "runtime": "nodejs20"
+  },
   "storage": {
     "rules": "firebase/storage.rules"
   }

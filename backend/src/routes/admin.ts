@@ -97,15 +97,14 @@ router.post('/submissions/:id/approve', adminWriteLimiter, async (req: AuthReque
     res.status(404).json({ error: 'Submission not found' });
     return;
   }
-  if (submission.status === 'approved') {
+  const updated = await prisma.priceSubmission.updateMany({
+    where: { id: req.params.id, status: { not: 'approved' } },
+    data: { status: 'approved' },
+  });
+  if (updated.count === 0) {
     res.status(400).json({ error: 'Already approved' });
     return;
   }
-
-  await prisma.priceSubmission.update({
-    where: { id: req.params.id },
-    data: { status: 'approved' },
-  });
 
   if (submission.tokensAwarded > 0) {
     await awardTokens(submission.sourcerId, submission.tokensAwarded, `Approved submission: ${req.params.id}`);
@@ -514,71 +513,95 @@ router.get('/exports/submissions.csv', async (_req, res) => {
 router.post('/vouchers/:id/approve', adminWriteLimiter, async (req: AuthRequest, res) => {
   const { adminNote } = req.body as { adminNote?: string };
 
-  const voucher = await prisma.voucherRequest.findUnique({
-    where: { id: req.params.id },
-    include: { user: true },
-  });
-  if (!voucher) {
-    res.status(404).json({ error: 'Voucher request not found' });
-    return;
-  }
-  if (voucher.status !== 'pending') {
-    res.status(400).json({ error: 'Voucher request is already reviewed' });
-    return;
-  }
-  if (voucher.user.tokenBalance < voucher.tokenCost) {
-    res.status(400).json({ error: 'User no longer has enough tokens for this voucher' });
-    return;
-  }
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Lock the voucher request and verify status
+      const voucher = await tx.voucherRequest.findUnique({
+        where: { id: req.params.id },
+        include: { user: true },
+      });
+      if (!voucher) {
+        throw new Error('NOT_FOUND');
+      }
+      if (voucher.status !== 'pending') {
+        throw new Error('ALREADY_REVIEWED');
+      }
+      if (voucher.user.tokenBalance < voucher.tokenCost) {
+        throw new Error('INSUFFICIENT_TOKENS');
+      }
 
-  // Find an unused voucher code in inventory for the correct supermarket and denomination
-  const inventoryItem = await prisma.voucherInventory.findFirst({
-    where: {
-      supermarket: { equals: voucher.supermarket, mode: 'insensitive' },
-      denominationAed: voucher.denominationAed,
-      isUsed: false,
-    },
-  });
+      // 2. Find and lock an unused voucher code in inventory
+      const inventoryItem = await tx.voucherInventory.findFirst({
+        where: {
+          supermarket: { equals: voucher.supermarket, mode: 'insensitive' },
+          denominationAed: voucher.denominationAed,
+          isUsed: false,
+        },
+      });
+      if (!inventoryItem) {
+        throw new Error('NO_STOCK');
+      }
 
-  if (!inventoryItem) {
-    res.status(400).json({
-      error: `No voucher inventory available for ${voucher.supermarket} (AED ${voucher.denominationAed}). Please import more voucher stock.`,
+      // 3. Mark the inventory item as used
+      await tx.voucherInventory.update({
+        where: { id: inventoryItem.id },
+        data: {
+          isUsed: true,
+          usedAt: new Date(),
+          voucherRequestId: voucher.id,
+        },
+      });
+
+      // 4. Deduct tokens from user
+      await tx.tokenTransaction.create({
+        data: {
+          userId: voucher.userId,
+          amount: -voucher.tokenCost,
+          reason: `Voucher approved: AED ${voucher.denominationAed} ${voucher.supermarket}`,
+        },
+      });
+      await tx.user.update({
+        where: { id: voucher.userId },
+        data: { tokenBalance: { decrement: voucher.tokenCost } },
+      });
+
+      // 5. Update voucher request
+      return tx.voucherRequest.update({
+        where: { id: voucher.id },
+        data: {
+          status: 'approved',
+          voucherCode: inventoryItem.code,
+          adminNote: adminNote?.trim() || null,
+          reviewedAt: new Date(),
+          deliveredAt: new Date(),
+        },
+      });
     });
-    return;
+
+    res.json({
+      id: result.id,
+      status: result.status,
+      denominationAed: result.denominationAed,
+      supermarket: result.supermarket,
+      voucherCode: result.voucherCode,
+      deliveredAt: result.deliveredAt,
+    });
+  } catch (err: any) {
+    if (err.message === 'NOT_FOUND') {
+      res.status(404).json({ error: 'Voucher request not found' });
+    } else if (err.message === 'ALREADY_REVIEWED') {
+      res.status(400).json({ error: 'Voucher request is already reviewed' });
+    } else if (err.message === 'INSUFFICIENT_TOKENS') {
+      res.status(400).json({ error: 'User no longer has enough tokens for this voucher' });
+    } else if (err.message === 'NO_STOCK') {
+      res.status(400).json({
+        error: 'No voucher inventory available. Please import more voucher stock.',
+      });
+    } else {
+      console.error('[Voucher Approval] Transaction failed:', err);
+      res.status(500).json({ error: 'Failed to approve voucher request' });
+    }
   }
-
-  // Deduct tokens from user
-  await spendTokens(voucher.userId, voucher.tokenCost, `Voucher approved: AED ${voucher.denominationAed} ${voucher.supermarket}`);
-
-  // Mark the inventory item as used
-  await prisma.voucherInventory.update({
-    where: { id: inventoryItem.id },
-    data: {
-      isUsed: true,
-      usedAt: new Date(),
-      voucherRequestId: voucher.id,
-    },
-  });
-
-  const updated = await prisma.voucherRequest.update({
-    where: { id: voucher.id },
-    data: {
-      status: 'approved',
-      voucherCode: inventoryItem.code,
-      adminNote: adminNote?.trim() || null,
-      reviewedAt: new Date(),
-      deliveredAt: new Date(),
-    },
-  });
-
-  res.json({
-    id: updated.id,
-    status: updated.status,
-    denominationAed: updated.denominationAed,
-    supermarket: updated.supermarket,
-    voucherCode: updated.voucherCode,
-    deliveredAt: updated.deliveredAt,
-  });
 });
 
 // POST /admin/vouchers/:id/reject — reject without deducting tokens

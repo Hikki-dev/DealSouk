@@ -28,15 +28,17 @@ router.get("/board", async (req, res) => {
     include: { requester: true },
   });
   for (const r of expired) {
-    await prisma.priceRequest.update({
-      where: { id: r.id },
+    const updated = await prisma.priceRequest.updateMany({
+      where: { id: r.id, status: "open" },
       data: { status: "expired" },
     });
-    await awardTokens(
-      r.requesterId,
-      r.bountyTokens,
-      `Refund: expired request for ${r.productName}`,
-    );
+    if (updated.count > 0) {
+      await awardTokens(
+        r.requesterId,
+        r.bountyTokens,
+        `Refund: expired request for ${r.productName}`,
+      );
+    }
   }
 
   const requests = await prisma.priceRequest.findMany({
@@ -130,19 +132,20 @@ router.post("/:id/fulfill", requireAuth, fulfillRequestLimiter, async (req: Auth
     res.status(404).json({ error: "Request not found" });
     return;
   }
-  if (request.status !== "open") {
-    res.status(400).json({ error: "Request is no longer open" });
-    return;
-  }
   if (request.requesterId === req.userId) {
     res.status(400).json({ error: "Cannot fulfill your own request" });
     return;
   }
 
-  await prisma.priceRequest.update({
-    where: { id: req.params.id },
+  const updated = await prisma.priceRequest.updateMany({
+    where: { id: req.params.id, status: "open" },
     data: { status: "fulfilled", fulfilledBy: req.userId },
   });
+
+  if (updated.count === 0) {
+    res.status(400).json({ error: "Request is no longer open" });
+    return;
+  }
 
   await awardTokens(
     req.userId!,
@@ -185,22 +188,21 @@ router.delete("/:id", requireAuth, async (req: AuthRequest, res) => {
     return;
   }
 
-  if (request.status === "open") {
-    await prisma.priceRequest.update({
-      where: { id: req.params.id },
-      data: { status: "refunded" },
-    });
-    await awardTokens(
-      req.userId!,
-      request.bountyTokens,
-      `Refund: cancelled request for ${request.productName}`,
-    );
-  } else {
-    await prisma.priceRequest.update({
-      where: { id: req.params.id },
-      data: { status: "cancelled" },
-    });
+  const updated = await prisma.priceRequest.updateMany({
+    where: { id: req.params.id, requesterId: req.userId!, status: "open" },
+    data: { status: "refunded" },
+  });
+
+  if (updated.count === 0) {
+    res.status(400).json({ error: "Request is no longer open and cannot be cancelled" });
+    return;
   }
+
+  await awardTokens(
+    req.userId!,
+    request.bountyTokens,
+    `Refund: cancelled request for ${request.productName}`,
+  );
 
   res.json({ message: "Request cancelled successfully" });
 });

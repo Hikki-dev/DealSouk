@@ -29,6 +29,24 @@ class StorageService {
     return _upload(photo, folder: 'receipts');
   }
 
+  Future<String?> pickAndUploadAvatar() async {
+    final photo = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+      maxWidth: 900,
+    );
+    if (photo == null) return null;
+
+    return _upload(photo, folder: 'avatars');
+  }
+
+  Future<void> deleteFileByUrl(String url) async {
+    try {
+      final ref = _storage.refFromURL(url);
+      await ref.delete();
+    } catch (_) {}
+  }
+
   Future<String?> _upload(XFile file, {required String folder}) async {
     try {
       final uid = FirebaseAuth.instance.currentUser?.uid;

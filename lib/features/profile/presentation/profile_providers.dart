@@ -20,13 +20,14 @@ class UserProfile {
   UserProfile copyWith({
     String? name,
     String? location,
+    String? avatarUrl,
     int? submissionsToday,
     String? homeArea,
   }) {
     return UserProfile(
       name: name ?? this.name,
       location: location ?? this.location,
-      avatarUrl: avatarUrl,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
       submissionsToday: submissionsToday ?? this.submissionsToday,
       homeArea: homeArea ?? this.homeArea,
     );
@@ -47,7 +48,7 @@ class UserProfileNotifier extends Notifier<UserProfile> {
     state = UserProfile(
       name: data.displayName,
       location: data.homeArea ?? 'Dubai',
-      avatarUrl: '',
+      avatarUrl: data.avatarUrl ?? '',
       submissionsToday: 0,
       homeArea: data.homeArea ?? 'Dubai',
     );
@@ -60,8 +61,27 @@ class UserProfileNotifier extends Notifier<UserProfile> {
     }
   }
 
-  void updateName(String name) => state = state.copyWith(name: name);
-  void updateHomeArea(String area) => state = state.copyWith(homeArea: area);
+  Future<void> updateName(String name) async {
+    final trimmed = name.trim();
+    if (trimmed.length < 2) return;
+    await profileService.updateProfile(displayName: trimmed);
+    state = state.copyWith(name: trimmed);
+  }
+
+  Future<void> updateAvatar(String avatarUrl) async {
+    await profileService.updateProfile(avatarUrl: avatarUrl);
+    state = state.copyWith(avatarUrl: avatarUrl);
+  }
+
+  Future<void> removeAvatar(String oldAvatarUrl) async {
+    await profileService.updateProfile(avatarUrl: '');
+    state = state.copyWith(avatarUrl: '');
+  }
+
+  Future<void> updateHomeArea(String area) async {
+    await profileService.updateProfile(homeArea: area);
+    state = state.copyWith(location: area, homeArea: area);
+  }
 }
 
 final userProfileProvider = NotifierProvider<UserProfileNotifier, UserProfile>(

@@ -11,6 +11,7 @@ import 'package:dealsouk/features/tokens/presentation/tokens_providers.dart';
 import 'package:dealsouk/core/localization/locale_provider.dart';
 import 'package:dealsouk/features/auth/presentation/auth_providers.dart';
 import 'package:dealsouk/core/theme/theme.dart';
+import 'package:dealsouk/core/network/storage_service.dart';
 import 'package:dealsouk/core/widgets/tutorial_overlay.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -253,6 +254,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         ],
       ),
     );
+  }
+
+  Future<void> _changeProfilePhoto() async {
+    final oldUrl = ref.read(userProfileProvider).avatarUrl;
+    final messenger = ScaffoldMessenger.of(context);
+    final newUrl = await storageService.pickAndUploadAvatar();
+    if (!mounted || newUrl == null) return;
+    await ref.read(userProfileProvider.notifier).updateAvatar(newUrl);
+    if (oldUrl.isNotEmpty) {
+      await storageService.deleteFileByUrl(oldUrl);
+    }
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Profile photo updated')),
+    );
+  }
+
+  Future<void> _removeProfilePhoto() async {
+    final oldUrl = ref.read(userProfileProvider).avatarUrl;
+    if (oldUrl.isEmpty) return;
+    await ref.read(userProfileProvider.notifier).removeAvatar(oldUrl);
+    await storageService.deleteFileByUrl(oldUrl);
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Profile photo removed')));
   }
 
   // ── TAB 1: Submissions ──
@@ -907,6 +933,40 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         ),
         const SizedBox(height: 16),
 
+        // Profile photo
+        _settingsTile(
+          icon: Icons.account_circle_outlined,
+          title: 'Profile Photo',
+          subtitle: profile.avatarUrl.isEmpty
+              ? 'Add a friendly photo so shoppers recognise you'
+              : 'Change or remove your current photo',
+          trailing: Wrap(
+            spacing: 4,
+            children: [
+              IconButton(
+                tooltip: 'Change photo',
+                icon: const Icon(
+                  Icons.photo_camera_outlined,
+                  size: 19,
+                  color: AppTheme.forestDeep,
+                ),
+                onPressed: _changeProfilePhoto,
+              ),
+              if (profile.avatarUrl.isNotEmpty)
+                IconButton(
+                  tooltip: 'Remove photo',
+                  icon: Icon(
+                    Icons.delete_outline_rounded,
+                    size: 19,
+                    color: Colors.red.shade700,
+                  ),
+                  onPressed: _removeProfilePhoto,
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+
         // Display name
         _settingsTile(
           icon: Icons.person_outline_rounded,
@@ -934,10 +994,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       child: const Text('Cancel'),
                     ),
                     ElevatedButton(
-                      onPressed: () {
-                        ref
+                      onPressed: () async {
+                        await ref
                             .read(userProfileProvider.notifier)
                             .updateName(_nameController.text.trim());
+                        if (!context.mounted) return;
                         Navigator.pop(context);
                       },
                       child: const Text('Save'),
@@ -973,9 +1034,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   ),
                 )
                 .toList(),
-            onChanged: (val) {
+            onChanged: (val) async {
               if (val != null) {
-                ref.read(userProfileProvider.notifier).updateHomeArea(val);
+                await ref
+                    .read(userProfileProvider.notifier)
+                    .updateHomeArea(val);
               }
             },
           ),

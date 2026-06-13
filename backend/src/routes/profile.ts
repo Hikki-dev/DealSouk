@@ -57,6 +57,7 @@ router.get('/me', requireAuth, async (req: AuthRequest, res) => {
   res.json({
     id: user.id,
     displayName: user.displayName,
+    avatarUrl: user.avatarUrl,
     homeArea: user.homeArea,
     preferredLocale: user.preferredLocale,
     tokenBalance: user.tokenBalance,
@@ -84,22 +85,47 @@ router.get('/me', requireAuth, async (req: AuthRequest, res) => {
 
 // PATCH /profile/me
 router.patch('/me', requireAuth, profileWriteLimiter, async (req: AuthRequest, res) => {
-  const { displayName, homeArea, preferredLocale } = req.body as {
+  const { displayName, avatarUrl, homeArea, preferredLocale } = req.body as {
     displayName?: string;
+    avatarUrl?: string | null;
     homeArea?: string;
     preferredLocale?: string;
   };
 
+  if (displayName != null && (displayName.trim().length < 2 || displayName.trim().length > 40)) {
+    res.status(400).json({ error: 'Display name must be 2 to 40 characters.' });
+    return;
+  }
+  if (avatarUrl != null && avatarUrl !== '' && (avatarUrl.length > 2048 || !avatarUrl.startsWith('https://'))) {
+    res.status(400).json({ error: 'avatarUrl must be a valid HTTPS URL.' });
+    return;
+  }
+  if (homeArea != null && homeArea.length > 80) {
+    res.status(400).json({ error: 'homeArea is too long.' });
+    return;
+  }
+  if (preferredLocale != null && !['en', 'ar'].includes(preferredLocale)) {
+    res.status(400).json({ error: 'Unsupported preferred locale.' });
+    return;
+  }
+
   const updated = await prisma.user.update({
     where: { id: req.userId! },
     data: {
-      ...(displayName && { displayName }),
+      ...(displayName != null && { displayName: displayName.trim() }),
+      ...(avatarUrl !== undefined && { avatarUrl: avatarUrl || null }),
       ...(homeArea && { homeArea }),
       ...(preferredLocale && { preferredLocale }),
     },
   });
 
-  res.json({ id: updated.id, displayName: updated.displayName, homeArea: updated.homeArea, preferredLocale: updated.preferredLocale });
+  res.json({
+    id: updated.id,
+    displayName: updated.displayName,
+    avatarUrl: updated.avatarUrl,
+    homeArea: updated.homeArea,
+    preferredLocale: updated.preferredLocale,
+  });
 });
 
 // GET /profile/me/transactions

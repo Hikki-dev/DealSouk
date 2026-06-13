@@ -36,7 +36,6 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final tokens = ref.watch(userTokensProvider);
-    final transactions = ref.watch(userTransactionsProvider);
     final profile = ref.watch(userProfileProvider);
     final streak = ref.watch(streakProvider);
     final badges = ref.watch(badgesProvider);
@@ -972,79 +971,6 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                       ),
                     );
                   }, childCount: rankedLeaderboard.length),
-                ),
-              ),
-
-              // Token History Section Label
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 8.0),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.receipt_long_outlined,
-                        color: theme.colorScheme.primary,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Token History',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Token transactions list
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 110),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final tx = transactions[index];
-                    final isPositive = tx.amount > 0;
-
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade100),
-                      ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 4,
-                        ),
-                        title: Text(
-                          tx.title,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                        ),
-                        subtitle: Text(
-                          tx.timestampLabel,
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey.shade500,
-                          ),
-                        ),
-                        trailing: Text(
-                          isPositive ? '+${tx.amount}' : '${tx.amount}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w900,
-                            fontSize: 14,
-                            color: isPositive
-                                ? AppTheme.emeraldPrimary
-                                : Colors.red,
-                          ),
-                        ),
-                      ),
-                    );
-                  }, childCount: transactions.length),
                 ),
               ),
 

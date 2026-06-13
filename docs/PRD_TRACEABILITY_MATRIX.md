@@ -16,10 +16,10 @@ This document provides a comprehensive traceability matrix mapping DealSouk's Pr
 
 | Requirement Type | Total | Done | Partial | Mock Only | Missing | Deferred / N/A |
 |---|---|---|---|---|---|---|
-| **Functional (FR)** | 62 | 53 | 8 | 0 | 1 | 0 |
+| **Functional (FR)** | 62 | 54 | 7 | 0 | 1 | 0 |
 | **Non-Functional (NFR)** | 25 | 14 | 9 | 0 | 2 | 0 |
 | **UI Screen (UI)** | 5 | 4 | 1 | 0 | 0 | 0 |
-| **Overall** | **92** | **71** | **18** | **0** | **3** | **0** |
+| **Overall** | **92** | **72** | **17** | **0** | **3** | **0** |
 
 ---
 
@@ -33,7 +33,7 @@ This document provides a comprehensive traceability matrix mapping DealSouk's Pr
 | **FR-02** | Google and Apple login. | **Done** | [welcome_screen.dart](lib/features/auth/presentation/welcome_screen.dart#L34-L46), [auth_service.dart](lib/features/auth/data/auth_service.dart#L54-L84) | None. | Low | Already fully wired. |
 | **FR-03** | Guest browse read-only mode. | **Done** | [welcome_screen.dart](lib/features/auth/presentation/welcome_screen.dart#L370-L375), [router.dart](lib/app/router.dart#L42-L46) | None. Guards block guest access to profile and submissions. | Low | Already fully wired. |
 | **FR-04** | Onboarding flow < 3 screens & GPS permission. | **Done** | [welcome_screen.dart](lib/features/auth/presentation/welcome_screen.dart), [tutorial_overlay.dart](lib/core/widgets/tutorial_overlay.dart), [store_screen.dart](lib/features/stores/presentation/store_screen.dart#L51-L78) | None. | Low | Already fully wired. |
-| **FR-05** | User Profile details: name, photo, language, home area. | **Partial** | [profile_screen.dart](lib/features/profile/presentation/profile_screen.dart#L748-L819), [profile.ts](backend/src/routes/profile.ts#L61-L79), [schema.prisma](backend/prisma/schema.prisma#L10-L28) | Profile photo upload UI and Firebase Storage integration for user profile photos are missing. | Medium | Add an `ImagePicker` trigger on the profile avatar and upload to Firebase Storage under `avatars/$uid/`. |
+| **FR-05** | User Profile details: name, photo, language, home area. | **Done** | [profile_screen.dart](lib/features/profile/presentation/profile_screen.dart), [storage_service.dart](lib/core/network/storage_service.dart), [profile.ts](backend/src/routes/profile.ts), [schema.prisma](backend/prisma/schema.prisma) | None for MVP. Profile photo replacement uploads to Firebase Storage, persists `avatarUrl`, and deletes the old avatar object after a successful replacement/removal. | Low | Keep Firebase upload sanitization and storage lifecycle monitoring in production. |
 | **FR-06** | Skippable / re-runnable tutorial on token economy. | **Done** | [tutorial_overlay.dart](lib/core/widgets/tutorial_overlay.dart), [profile_screen.dart](lib/features/profile/presentation/profile_screen.dart#L870) | None. | Low | Already fully wired. |
 | **FR-07** | First-time 50-token welcome bonus on first approval. | **Done** | [admin.ts](backend/src/routes/admin.ts#L59), [tokenEngine.ts](backend/src/services/tokenEngine.ts#L151-L163) | None. | Low | Already fully wired. |
 

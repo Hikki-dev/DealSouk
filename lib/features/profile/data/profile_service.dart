@@ -6,6 +6,7 @@ import 'package:dealsouk/core/network/api_client.dart';
 class ProfileData {
   final String id;
   final String displayName;
+  final String? avatarUrl;
   final String? homeArea;
   final String preferredLocale;
   final int tokenBalance;
@@ -17,6 +18,7 @@ class ProfileData {
   const ProfileData({
     required this.id,
     required this.displayName,
+    this.avatarUrl,
     this.homeArea,
     required this.preferredLocale,
     required this.tokenBalance,
@@ -29,6 +31,7 @@ class ProfileData {
   factory ProfileData.fromJson(Map<String, dynamic> json) => ProfileData(
     id: json['id'] as String,
     displayName: json['displayName'] as String,
+    avatarUrl: json['avatarUrl'] as String?,
     homeArea: json['homeArea'] as String?,
     preferredLocale: json['preferredLocale'] as String? ?? 'en',
     tokenBalance: json['tokenBalance'] as int? ?? 0,
@@ -133,6 +136,7 @@ class ProfileService {
 
   Future<void> updateProfile({
     String? displayName,
+    String? avatarUrl,
     String? homeArea,
     String? preferredLocale,
   }) async {
@@ -140,6 +144,7 @@ class ProfileService {
       '/profile/me',
       data: {
         'displayName': ?displayName,
+        'avatarUrl': ?avatarUrl,
         'homeArea': ?homeArea,
         'preferredLocale': ?preferredLocale,
       },

@@ -36,6 +36,7 @@ class SubmitPriceScreen extends ConsumerStatefulWidget {
 
 class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _productSearchController = TextEditingController();
   int _currentStep = 0;
   String _productSearchQuery = '';
 
@@ -99,6 +100,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
 
   @override
   void dispose() {
+    _productSearchController.dispose();
     _priceController.dispose();
     super.dispose();
   }
@@ -122,7 +124,8 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
       final query = _productSearchQuery.toLowerCase();
       return p.name.toLowerCase().contains(query) ||
           p.brand.toLowerCase().contains(query) ||
-          p.category.toLowerCase().contains(query);
+          p.category.toLowerCase().contains(query) ||
+          p.barcode.toLowerCase().contains(query);
     }).toList();
 
     return ResponsiveContainer(
@@ -341,9 +344,24 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
             ),
             const SizedBox(height: 16),
             TextField(
+              controller: _productSearchController,
               decoration: InputDecoration(
-                hintText: 'Search product by name or brand...',
+                hintText: 'Search name, brand or scan barcode',
                 prefixIcon: const Icon(Icons.search_rounded),
+                suffixIcon: IconButton(
+                  tooltip: 'Scan barcode',
+                  icon: const Icon(Icons.qr_code_scanner_rounded),
+                  onPressed: () async {
+                    final code = await context.push<String>(
+                      '/scan-barcode?return=1',
+                    );
+                    if (code == null || !mounted) return;
+                    setState(() {
+                      _productSearchQuery = code;
+                      _productSearchController.text = code;
+                    });
+                  },
+                ),
                 fillColor: Colors.white,
                 filled: true,
                 border: OutlineInputBorder(
@@ -364,6 +382,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                 child: Center(
                   child: Text(
                     'No products found matching your search.',
+                    textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                   ),
                 ),

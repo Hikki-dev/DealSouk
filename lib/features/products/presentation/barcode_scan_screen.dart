@@ -6,7 +6,9 @@ import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/features/products/presentation/products_providers.dart';
 
 class BarcodeScanScreen extends ConsumerStatefulWidget {
-  const BarcodeScanScreen({super.key});
+  final bool returnScannedCode;
+
+  const BarcodeScanScreen({super.key, this.returnScannedCode = false});
 
   @override
   ConsumerState<BarcodeScanScreen> createState() => _BarcodeScanScreenState();
@@ -18,7 +20,12 @@ class _BarcodeScanScreenState extends ConsumerState<BarcodeScanScreen> {
   void _handleCode(String code) {
     if (_handled || code.trim().isEmpty) return;
     _handled = true;
-    ref.read(filterProvider.notifier).setSearchQuery(code.trim());
+    final trimmed = code.trim();
+    if (widget.returnScannedCode) {
+      context.pop(trimmed);
+      return;
+    }
+    ref.read(filterProvider.notifier).setSearchQuery(trimmed);
     context.go('/search');
   }
 
@@ -61,7 +68,7 @@ class _BarcodeScanScreenState extends ConsumerState<BarcodeScanScreen> {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: const Text(
-                'Point the camera at the product barcode. If we do not have it yet, you can ask shoppers to check the price.',
+                'Point the camera at the barcode. We will use it to find the product faster.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white,

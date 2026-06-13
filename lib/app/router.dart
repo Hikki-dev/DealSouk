@@ -86,7 +86,9 @@ GoRouter buildRouter(WidgetRef ref) {
       ),
       GoRoute(
         path: '/scan-barcode',
-        builder: (context, state) => const BarcodeScanScreen(),
+        builder: (context, state) => BarcodeScanScreen(
+          returnScannedCode: state.uri.queryParameters['return'] == '1',
+        ),
       ),
       GoRoute(
         path: '/submit-price',
@@ -170,7 +172,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/scan-barcode',
-        builder: (context, state) => const BarcodeScanScreen(),
+        builder: (context, state) => BarcodeScanScreen(
+          returnScannedCode: state.uri.queryParameters['return'] == '1',
+        ),
       ),
       GoRoute(
         path: '/submit-price',

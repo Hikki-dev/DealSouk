@@ -36,6 +36,7 @@ jobs:
             exit 1
           fi
           echo "$FIREBASE_OPTIONS_DART_B64" | base64 --decode > lib/firebase_options.dart
+          dart format lib/firebase_options.dart
           echo "$GOOGLE_SERVICES_JSON_B64" | base64 --decode > android/app/google-services.json
 
       - name: Install dependencies

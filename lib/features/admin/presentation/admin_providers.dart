@@ -77,7 +77,9 @@ class AdminSubmissionsNotifier extends Notifier<List<AdminSubmission>> {
 
   Future<void> banUser(String userId, {required String reason}) async {
     await adminService.banUser(userId, reason: reason);
-    state = state.where((submission) => submission.sourcerId != userId).toList();
+    state = state
+        .where((submission) => submission.sourcerId != userId)
+        .toList();
   }
 
   void addSubmission({

@@ -1746,9 +1746,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         _selectNextAfterRemoval(sub.id);
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sourcer $action action saved.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Sourcer $action action saved.')));
     } catch (err) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

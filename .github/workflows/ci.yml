@@ -43,6 +43,7 @@ jobs:
             exit 1
           fi
           echo "$FIREBASE_OPTIONS_DART_B64" | base64 --decode > lib/firebase_options.dart
+          dart format lib/firebase_options.dart
 
       - name: Install Flutter dependencies
         run: flutter pub get
@@ -59,6 +60,10 @@ jobs:
       - name: Install backend dependencies
         working-directory: backend
         run: npm ci
+
+      - name: Generate Prisma client
+        working-directory: backend
+        run: npx prisma generate
 
       - name: Build backend
         working-directory: backend

@@ -36,6 +36,7 @@ jobs:
             exit 1
           fi
           echo "$FIREBASE_OPTIONS_DART_B64" | base64 --decode > lib/firebase_options.dart
+          dart format lib/firebase_options.dart
           echo "$GOOGLE_SERVICE_INFO_PLIST_B64" | base64 --decode > ios/Runner/GoogleService-Info.plist
 
       - name: Install dependencies

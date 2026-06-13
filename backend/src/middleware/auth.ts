@@ -34,6 +34,10 @@ export async function requireAuth(req: AuthRequest, res: Response, next: NextFun
       res.status(401).json({ error: 'User not registered' });
       return;
     }
+    if (user.bannedAt) {
+      res.status(403).json({ error: 'Account banned', reason: user.banReason });
+      return;
+    }
     if (user.isSuspended && user.suspendedUntil && user.suspendedUntil > new Date()) {
       res.status(403).json({ error: 'Account suspended', suspendedUntil: user.suspendedUntil });
       return;

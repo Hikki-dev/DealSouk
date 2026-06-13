@@ -40,6 +40,25 @@ class AdminService {
     );
   }
 
+  Future<void> warnUser(String userId, {required String reason}) async {
+    await apiClient.post('/admin/users/$userId/warn', data: {'reason': reason});
+  }
+
+  Future<void> suspendUser(
+    String userId, {
+    required String reason,
+    int days = 7,
+  }) async {
+    await apiClient.post(
+      '/admin/users/$userId/suspend',
+      data: {'reason': reason, 'days': days},
+    );
+  }
+
+  Future<void> banUser(String userId, {required String reason}) async {
+    await apiClient.post('/admin/users/$userId/ban', data: {'reason': reason});
+  }
+
   Future<AdminSettings> getSettings() async {
     final res = await apiClient.get('/admin/settings');
     final data = res.data as Map<String, dynamic>;

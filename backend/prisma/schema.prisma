@@ -18,6 +18,10 @@ model User {
   accuracyRating       Float     @default(100.0)
   isSuspended          Boolean   @default(false)
   suspendedUntil       DateTime?
+  suspensionCount      Int       @default(0)
+  warningCount         Int       @default(0)
+  bannedAt             DateTime?
+  banReason            String?
   isAdmin              Boolean   @default(false)
   fcmToken             String?
   currentStreak        Int       @default(0)
@@ -35,6 +39,8 @@ model User {
   flags           SubmissionFlag[]
   cartItems       CartItem[]
   dailyChallenges UserDailyChallenge[]
+  adminActions    AdminUserAction[] @relation("AdminActionTarget")
+  issuedActions   AdminUserAction[] @relation("AdminActionActor")
 }
 
 model Store {
@@ -180,6 +186,22 @@ model AdminSettings {
   dailySubmissionCap Int   @default(30)
   requestCostTokens  Int   @default(10)
   decayFactor        Float @default(0.7) // multiplier when duplicate nearby submission exists
+}
+
+model AdminUserAction {
+  id          String   @id @default(cuid())
+  targetUserId String
+  adminUserId  String
+  action      String   // warn | suspend | ban
+  reason      String
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime?
+
+  targetUser User @relation("AdminActionTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
+  adminUser  User @relation("AdminActionActor", fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@index([targetUserId, createdAt])
+  @@index([action, createdAt])
 }
 
 model CartItem {

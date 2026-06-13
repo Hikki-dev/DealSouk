@@ -1506,6 +1506,8 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               ),
             ),
           ),
+        _buildUserModerationActions(sub),
+        const SizedBox(height: 10),
         Row(
           children: [
             Expanded(
@@ -1542,6 +1544,47 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                   style: GoogleFonts.nunito(fontWeight: FontWeight.bold),
                 ),
               ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUserModerationActions(AdminSubmission sub) {
+    if (sub.sourcerId.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Sourcer controls',
+          style: GoogleFonts.nunito(
+            fontSize: 12,
+            fontWeight: FontWeight.w900,
+            color: Colors.grey.shade700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            OutlinedButton.icon(
+              onPressed: () => _moderateUser(sub, action: 'warn'),
+              icon: const Icon(Icons.notification_important_outlined, size: 16),
+              label: const Text('Warn'),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => _moderateUser(sub, action: 'suspend'),
+              icon: const Icon(Icons.pause_circle_outline, size: 16),
+              label: const Text('Suspend'),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => _moderateUser(sub, action: 'ban'),
+              icon: const Icon(Icons.block, size: 16),
+              label: const Text('Ban'),
+              style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
             ),
           ],
         ),
@@ -1611,6 +1654,107 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         backgroundColor: Colors.redAccent,
       ),
     );
+  }
+
+  Future<void> _moderateUser(
+    AdminSubmission sub, {
+    required String action,
+  }) async {
+    final reasonCtrl = TextEditingController(
+      text: action == 'warn'
+          ? 'Please submit only clear, accurate shelf prices.'
+          : action == 'suspend'
+          ? 'Repeated incorrect or unverifiable submissions.'
+          : 'Repeated policy violations after prior moderation.',
+    );
+    int suspendDays = 7;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(
+            action == 'warn'
+                ? 'Warn Sourcer'
+                : action == 'suspend'
+                ? 'Suspend Sourcer'
+                : 'Ban Sourcer',
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(sub.sourcerName),
+              const SizedBox(height: 12),
+              TextField(
+                controller: reasonCtrl,
+                maxLines: 3,
+                decoration: const InputDecoration(labelText: 'Reason'),
+              ),
+              if (action == 'suspend') ...[
+                const SizedBox(height: 12),
+                DropdownButtonFormField<int>(
+                  initialValue: suspendDays,
+                  decoration: const InputDecoration(labelText: 'Duration'),
+                  items: const [
+                    DropdownMenuItem(value: 1, child: Text('1 day')),
+                    DropdownMenuItem(value: 7, child: Text('7 days')),
+                    DropdownMenuItem(value: 14, child: Text('14 days')),
+                    DropdownMenuItem(value: 30, child: Text('30 days')),
+                  ],
+                  onChanged: (value) =>
+                      setDialogState(() => suspendDays = value ?? 7),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(
+                action == 'warn'
+                    ? 'Send Warning'
+                    : action == 'suspend'
+                    ? 'Suspend'
+                    : 'Ban',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    try {
+      final reason = reasonCtrl.text.trim();
+      final notifier = ref.read(adminSubmissionsProvider.notifier);
+      if (action == 'warn') {
+        await notifier.warnUser(sub.sourcerId, reason: reason);
+      } else if (action == 'suspend') {
+        await notifier.suspendUser(
+          sub.sourcerId,
+          reason: reason,
+          days: suspendDays,
+        );
+      } else {
+        await notifier.banUser(sub.sourcerId, reason: reason);
+        _selectNextAfterRemoval(sub.id);
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Sourcer $action action saved.')),
+      );
+    } catch (err) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not $action sourcer: $err')),
+      );
+    }
   }
 
   void _selectNextAfterRemoval(String removedId) {

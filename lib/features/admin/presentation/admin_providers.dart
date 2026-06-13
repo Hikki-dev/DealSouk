@@ -63,6 +63,23 @@ class AdminSubmissionsNotifier extends Notifier<List<AdminSubmission>> {
     } catch (_) {}
   }
 
+  Future<void> warnUser(String userId, {required String reason}) async {
+    await adminService.warnUser(userId, reason: reason);
+  }
+
+  Future<void> suspendUser(
+    String userId, {
+    required String reason,
+    int days = 7,
+  }) async {
+    await adminService.suspendUser(userId, reason: reason, days: days);
+  }
+
+  Future<void> banUser(String userId, {required String reason}) async {
+    await adminService.banUser(userId, reason: reason);
+    state = state.where((submission) => submission.sourcerId != userId).toList();
+  }
+
   void addSubmission({
     required String productName,
     required String brand,

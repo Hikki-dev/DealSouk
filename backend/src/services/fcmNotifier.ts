@@ -87,3 +87,56 @@ export async function notifyStreakMilestone(
     },
   );
 }
+
+export async function notifySubmissionHidden(
+  fcmToken: string | null | undefined,
+  reason: string,
+): Promise<void> {
+  if (!fcmToken) return;
+  await sendPushNotification(
+    fcmToken,
+    "Price hidden for review",
+    `Your price was reported by shoppers and is waiting for admin review. Reason: ${reason}`,
+    { type: "submission_hidden", reason },
+  );
+}
+
+export async function notifyAdminWarning(
+  fcmToken: string | null | undefined,
+  reason: string,
+): Promise<void> {
+  if (!fcmToken) return;
+  await sendPushNotification(
+    fcmToken,
+    "DealSouk account warning",
+    reason,
+    { type: "admin_warning" },
+  );
+}
+
+export async function notifyAccountSuspended(
+  fcmToken: string | null | undefined,
+  suspendedUntil: Date,
+  reason: string,
+): Promise<void> {
+  if (!fcmToken) return;
+  await sendPushNotification(
+    fcmToken,
+    "DealSouk account suspended",
+    `Your account is suspended until ${suspendedUntil.toISOString()}. ${reason}`,
+    { type: "account_suspended", suspendedUntil: suspendedUntil.toISOString() },
+  );
+}
+
+export async function notifyAccountBanned(
+  fcmToken: string | null | undefined,
+  reason: string,
+): Promise<void> {
+  if (!fcmToken) return;
+  await sendPushNotification(
+    fcmToken,
+    "DealSouk account banned",
+    reason,
+    { type: "account_banned" },
+  );
+}

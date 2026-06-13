@@ -3,7 +3,12 @@ import { prisma } from '../index';
 import { requireAuth, requireAdmin, AuthRequest } from '../middleware/auth';
 import { authenticatedRateLimit } from '../middleware/rateLimits';
 import { awardTokens, checkFirstSubmissionBonus, updateStreakOnApproval, updateChallengeProgress, spendTokens } from '../services/tokenEngine';
-import { notifyRankChange } from '../services/fcmNotifier';
+import {
+  notifyAccountBanned,
+  notifyAccountSuspended,
+  notifyAdminWarning,
+  notifySubmissionHidden,
+} from '../services/fcmNotifier';
 
 const router = Router();
 const adminWriteLimiter = authenticatedRateLimit({
@@ -14,6 +19,48 @@ const adminWriteLimiter = authenticatedRateLimit({
 
 router.use(requireAuth);
 router.use(requireAdmin);
+
+const MAX_ADMIN_REASON_LENGTH = 500;
+
+function cleanReason(value: unknown, fallback: string): string {
+  if (typeof value !== 'string') return fallback;
+  const reason = value.trim();
+  if (!reason) return fallback;
+  return reason.slice(0, MAX_ADMIN_REASON_LENGTH);
+}
+
+async function recalculateAccuracyRating(userId: string): Promise<number> {
+  const [total, rejectedOrHidden] = await Promise.all([
+    prisma.priceSubmission.count({ where: { sourcerId: userId } }),
+    prisma.priceSubmission.count({
+      where: { sourcerId: userId, status: { in: ['rejected', 'hidden'] } },
+    }),
+  ]);
+  const accuracyRating = total === 0 ? 100 : Math.max(0, ((total - rejectedOrHidden) / total) * 100);
+  await prisma.user.update({
+    where: { id: userId },
+    data: { accuracyRating },
+  });
+  return accuracyRating;
+}
+
+async function recordAdminAction(params: {
+  adminUserId: string;
+  targetUserId: string;
+  action: string;
+  reason: string;
+  expiresAt?: Date;
+}) {
+  await prisma.adminUserAction.create({
+    data: {
+      adminUserId: params.adminUserId,
+      targetUserId: params.targetUserId,
+      action: params.action,
+      reason: params.reason,
+      expiresAt: params.expiresAt,
+    },
+  });
+}
 
 // GET /admin/queue — flagged and pending submissions
 router.get('/queue', async (_req, res) => {
@@ -69,13 +116,19 @@ router.post('/submissions/:id/approve', adminWriteLimiter, async (req: AuthReque
 
   // FR-47: Update daily challenge progress
   await updateChallengeProgress(submission.sourcerId);
+  const accuracyRating = await recalculateAccuracyRating(submission.sourcerId);
 
-  res.json({ message: 'Approved', tokensAwarded: submission.tokensAwarded });
+  res.json({ message: 'Approved', tokensAwarded: submission.tokensAwarded, accuracyRating });
 });
 
 // POST /admin/submissions/:id/reject
 router.post('/submissions/:id/reject', adminWriteLimiter, async (req: AuthRequest, res) => {
-  const submission = await prisma.priceSubmission.findUnique({ where: { id: req.params.id } });
+  const { reason: rawReason } = req.body as { reason?: string };
+  const reason = cleanReason(rawReason, 'Submission did not meet DealSouk quality rules.');
+  const submission = await prisma.priceSubmission.findUnique({
+    where: { id: req.params.id },
+    include: { sourcer: true },
+  });
   if (!submission) {
     res.status(404).json({ error: 'Submission not found' });
     return;
@@ -85,6 +138,7 @@ router.post('/submissions/:id/reject', adminWriteLimiter, async (req: AuthReques
     where: { id: req.params.id },
     data: { status: 'rejected' },
   });
+  await recalculateAccuracyRating(submission.sourcerId);
 
   // Check auto-suspension: 3+ rejections in rolling 30 days
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -98,11 +152,39 @@ router.post('/submissions/:id/reject', adminWriteLimiter, async (req: AuthReques
 
   if (recentRejections >= 3) {
     const suspendedUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    await prisma.user.update({
+    const suspendedUser = await prisma.user.update({
       where: { id: submission.sourcerId },
-      data: { isSuspended: true, suspendedUntil },
+      data: {
+        isSuspended: true,
+        suspendedUntil,
+        suspensionCount: { increment: 1 },
+      },
     });
-    console.log(`[AUTO-SUSPEND] User ${submission.sourcerId} suspended until ${suspendedUntil.toISOString()}`);
+    await recordAdminAction({
+      adminUserId: req.userId!,
+      targetUserId: submission.sourcerId,
+      action: 'suspend',
+      reason: 'Automatic suspension after 3 rejected submissions in 30 days.',
+      expiresAt: suspendedUntil,
+    });
+    await notifyAccountSuspended(submission.sourcer.fcmToken, suspendedUntil, reason);
+
+    if (suspendedUser.suspensionCount >= 3) {
+      await prisma.user.update({
+        where: { id: submission.sourcerId },
+        data: {
+          bannedAt: new Date(),
+          banReason: 'Permanent ban after repeated suspensions.',
+        },
+      });
+      await recordAdminAction({
+        adminUserId: req.userId!,
+        targetUserId: submission.sourcerId,
+        action: 'ban',
+        reason: 'Permanent ban after repeated suspensions.',
+      });
+      await notifyAccountBanned(submission.sourcer.fcmToken, 'Permanent ban after repeated suspensions.');
+    }
   }
 
   res.json({ message: 'Rejected' });
@@ -132,6 +214,79 @@ router.patch('/submissions/:id', adminWriteLimiter, async (req, res) => {
   });
 
   res.json({ id: updated.id, priceAed: Number(updated.priceAed), productId: updated.productId, storeId: updated.storeId });
+});
+
+// POST /admin/users/:id/warn — warn a sourcer without blocking access (FR-53)
+router.post('/users/:id/warn', adminWriteLimiter, async (req: AuthRequest, res) => {
+  const reason = cleanReason((req.body as { reason?: string }).reason, 'Please follow DealSouk price submission rules.');
+  const user = await prisma.user.update({
+    where: { id: req.params.id },
+    data: { warningCount: { increment: 1 } },
+  });
+  await recordAdminAction({
+    adminUserId: req.userId!,
+    targetUserId: user.id,
+    action: 'warn',
+    reason,
+  });
+  await notifyAdminWarning(user.fcmToken, reason);
+
+  res.json({ id: user.id, warningCount: user.warningCount, message: 'Warning sent' });
+});
+
+// POST /admin/users/:id/suspend — manually suspend a sourcer (FR-53/FR-54)
+router.post('/users/:id/suspend', adminWriteLimiter, async (req: AuthRequest, res) => {
+  const { days } = req.body as { days?: number };
+  const durationDays = Math.min(30, Math.max(1, Number.isFinite(Number(days)) ? Number(days) : 7));
+  const suspendedUntil = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
+  const reason = cleanReason((req.body as { reason?: string }).reason, 'Account suspended for repeated incorrect submissions.');
+  const user = await prisma.user.update({
+    where: { id: req.params.id },
+    data: {
+      isSuspended: true,
+      suspendedUntil,
+      suspensionCount: { increment: 1 },
+    },
+  });
+  await recordAdminAction({
+    adminUserId: req.userId!,
+    targetUserId: user.id,
+    action: 'suspend',
+    reason,
+    expiresAt: suspendedUntil,
+  });
+  await notifyAccountSuspended(user.fcmToken, suspendedUntil, reason);
+
+  res.json({
+    id: user.id,
+    isSuspended: user.isSuspended,
+    suspendedUntil,
+    suspensionCount: user.suspensionCount,
+    message: 'User suspended',
+  });
+});
+
+// POST /admin/users/:id/ban — permanently ban a sourcer (FR-53/FR-54)
+router.post('/users/:id/ban', adminWriteLimiter, async (req: AuthRequest, res) => {
+  const reason = cleanReason((req.body as { reason?: string }).reason, 'Account permanently banned for repeated policy violations.');
+  const user = await prisma.user.update({
+    where: { id: req.params.id },
+    data: {
+      isSuspended: true,
+      suspendedUntil: null,
+      bannedAt: new Date(),
+      banReason: reason,
+    },
+  });
+  await recordAdminAction({
+    adminUserId: req.userId!,
+    targetUserId: user.id,
+    action: 'ban',
+    reason,
+  });
+  await notifyAccountBanned(user.fcmToken, reason);
+
+  res.json({ id: user.id, bannedAt: user.bannedAt, message: 'User banned' });
 });
 
 // GET /admin/settings

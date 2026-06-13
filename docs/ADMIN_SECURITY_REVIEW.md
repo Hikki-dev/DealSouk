@@ -66,7 +66,14 @@ cd backend
 npm run admin:set -- --email admin@example.com --no-admin
 ```
 
-This updates both the backend `User.isAdmin` field and Firebase custom claims. The backend `requireAdmin` middleware remains the source of truth for admin APIs.
+This upserts the Neon/Postgres `User` row, updates the backend `User.isAdmin` field, and sets Firebase custom claims. The backend `requireAdmin` middleware remains the source of truth for admin APIs.
+
+Current production candidate check on 2026-06-13:
+
+- Neon/Postgres contains 2 users.
+- Neon/Postgres contains 1 admin user.
+- The current admin user is `Yusuf Inam` with Firebase UID `HDdqHwjrlsYAium2FlK21yTdHSv1`.
+- Firebase Auth user listing from CLI failed with insufficient service-account permission. Grant the service account Firebase Authentication admin/list permissions before using CLI audits to compare Firebase custom claims at scale.
 
 No production admin email is hardcoded in the client.
 
@@ -91,3 +98,5 @@ Added `test/app/route_guard_test.dart` covering:
 ## Notes
 
 Frontend route guards are a usability and defense-in-depth layer. The backend `requireAdmin` middleware remains the authority for protecting admin data and mutations.
+
+Admin moderation now supports warning, suspension, and permanent ban actions. These actions are recorded in `AdminUserAction`, and affected users receive FCM notifications when an FCM token exists.

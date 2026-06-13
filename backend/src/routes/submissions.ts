@@ -3,6 +3,7 @@ import { prisma } from '../index';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { authenticatedRateLimit } from '../middleware/rateLimits';
 import { calculateReward, awardTokens } from '../services/tokenEngine';
+import { notifySubmissionHidden } from '../services/fcmNotifier';
 
 const router = Router();
 
@@ -128,7 +129,10 @@ router.post('/:id/flag', requireAuth, flagLimiter, async (req: AuthRequest, res)
     return;
   }
 
-  const submission = await prisma.priceSubmission.findUnique({ where: { id: req.params.id } });
+  const submission = await prisma.priceSubmission.findUnique({
+    where: { id: req.params.id },
+    include: { sourcer: true },
+  });
   if (!submission) {
     res.status(404).json({ error: 'Submission not found' });
     return;
@@ -150,6 +154,9 @@ router.post('/:id/flag', requireAuth, flagLimiter, async (req: AuthRequest, res)
     where: { id: req.params.id },
     data: { flagCount: newFlagCount, status: newStatus },
   });
+  if (newStatus === 'hidden') {
+    await notifySubmissionHidden(submission.sourcer.fcmToken, reason);
+  }
 
   res.json({ flagCount: newFlagCount, hidden: newStatus === 'hidden' });
 });

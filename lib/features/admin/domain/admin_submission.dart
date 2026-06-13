@@ -9,7 +9,9 @@ class AdminSubmission {
   final String promoType;
   final int tokensReward;
   final String timestampLabel;
+  final String sourcerId;
   final String sourcerName;
+  final double sourcerAccuracyRating;
   final String status; // 'pending', 'approved', 'rejected'
 
   AdminSubmission({
@@ -23,7 +25,9 @@ class AdminSubmission {
     required this.promoType,
     required this.tokensReward,
     required this.timestampLabel,
+    this.sourcerId = '',
     this.sourcerName = 'Hessa Al Maktoum',
+    this.sourcerAccuracyRating = 100,
     this.status = 'pending',
   });
 
@@ -42,6 +46,7 @@ class AdminSubmission {
     }
     final product = json['product'] as Map<String, dynamic>? ?? {};
     final store = json['store'] as Map<String, dynamic>? ?? {};
+    final sourcer = json['sourcer'] as Map<String, dynamic>? ?? {};
     return AdminSubmission(
       id: json['id'] as String,
       productName:
@@ -54,7 +59,13 @@ class AdminSubmission {
       promoType: 'Price Submission',
       tokensReward: json['tokensAwarded'] as int? ?? 0,
       timestampLabel: label,
-      sourcerName: json['sourcerName'] as String? ?? 'Sourcer',
+      sourcerId: sourcer['id'] as String? ?? '',
+      sourcerName:
+          sourcer['displayName'] as String? ??
+          json['sourcerName'] as String? ??
+          'Sourcer',
+      sourcerAccuracyRating:
+          (sourcer['accuracyRating'] as num?)?.toDouble() ?? 100,
       status: json['status'] as String? ?? 'pending',
     );
   }
@@ -76,7 +87,9 @@ class AdminSubmission {
       promoType: promoType,
       tokensReward: tokensReward,
       timestampLabel: timestampLabel,
+      sourcerId: sourcerId,
       sourcerName: sourcerName,
+      sourcerAccuracyRating: sourcerAccuracyRating,
       status: status ?? this.status,
     );
   }

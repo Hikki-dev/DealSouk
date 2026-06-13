@@ -106,9 +106,9 @@ This rewrites commit history. Coordinate before doing it if anyone else has clon
 
 ### 6. Enable Firebase Storage
 
-Firebase Storage is not fully set up until it is enabled in the Firebase Console.
+Firebase Storage is enabled for `dealsouk-6e140`, and Storage rules were deployed on 2026-06-13.
 
-After enabling Storage:
+To redeploy rules after future edits:
 
 ```bash
 firebase deploy --only storage:rules --project dealsouk-6e140

@@ -19,7 +19,7 @@ Date: 2026-06-12
 3. Enable Phone, Google, and Apple auth providers.
 4. Configure APNs for iOS notifications.
 5. Configure OAuth client restrictions for Google Sign-In.
-6. Deploy Storage rules from `firebase/storage.rules`.
+6. Deploy Storage rules from `firebase/storage.rules`. Completed for `dealsouk-6e140` on 2026-06-13.
 7. Restrict Google/Firebase API keys by package name, bundle ID, SHA fingerprints, and web referrer.
 8. Generate Flutter config locally:
 
@@ -46,7 +46,7 @@ Production admin access must come from backend/Firebase role claims or a backend
 
 ## Storage Rules
 
-Current Storage rules:
+Current Storage rules are deployed:
 
 - Users can upload only to their own receipt/price-label/avatar folder.
 - Receipt and price-label uploads are image-only and capped at 8 MB.

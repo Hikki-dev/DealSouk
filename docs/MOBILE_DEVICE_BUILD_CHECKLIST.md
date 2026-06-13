@@ -13,14 +13,14 @@ Issues found from the device screenshots:
 - Store map uses static Dubai store fallback data when the backend is unavailable.
 - Static store fallback IDs do not always match backend database IDs, so store price sheets could show "Could not load prices".
 - A device build without `--dart-define=API_BASE_URL=...` used the default API URL.
-- The current Render API URL is not live yet; `/health` returns Render `404 no-server`.
+- The Render API must be live before backend-backed screens can load real data.
 
 ## Fixed In Code
 
 - Removed missing home asset references and replaced them with built-in Flutter icon artwork.
 - Added fallback store prices for static Dubai store IDs.
 - Store price sheets now use fallback prices when backend prices are empty or unreachable.
-- Default API URL now points to the planned HTTPS Render backend:
+- Default API URL now points to the live HTTPS Render backend:
 
 ```text
 https://dealsouk.onrender.com
@@ -30,7 +30,7 @@ https://dealsouk.onrender.com
 
 ### Backend
 
-Render must have a live Web Service for the backend.
+Render has a live Web Service for the backend.
 
 Expected health check:
 
@@ -80,9 +80,7 @@ flutter build apk --debug --dart-define=API_BASE_URL=https://dealsouk.onrender.c
 
 ### Firebase Storage
 
-Firebase Storage must be enabled in the Firebase console before photo uploads can work.
-
-After enabling Storage, deploy rules:
+Firebase Storage is enabled and rules have been deployed. To redeploy rules after future edits:
 
 ```bash
 firebase deploy --only storage:rules --project dealsouk-6e140

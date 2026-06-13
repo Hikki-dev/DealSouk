@@ -13,7 +13,7 @@ Current practical readiness:
 |---|---:|---|
 | Colleague feedback build | 80-90% | Good enough to review core shopper flow, trust, Arabic/English copy, admin moderation, and savings story. |
 | Internal beta | 60-70% | Needs CI, deployment config, seed/demo data boundaries, signing, and Firebase setup. |
-| Public production | 45-55% | Needs security/compliance/ops hardening plus remaining PRD gaps. |
+| Public production | 55-65% | Backend, admin web build path, Firebase Storage rules, and secret guardrails are now live; legal, store signing, app-store review, monitoring, and remaining PRD gaps still need completion. |
 
 ## Definition Of 100%
 
@@ -153,7 +153,7 @@ These cannot be skipped for a real user launch:
 
 - Rotate/purge previously exposed Firebase/service-account files from git history.
 - Configure production Firebase projects, OAuth clients, APNs, FCM, Storage rules, and Maps key restrictions.
-- Configure backend deployment with HTTPS/HSTS, env secrets, database backups, and monitoring.
+- Backend deployment is live on Render with HTTPS. Database backups and monitoring still need confirmation.
 - Complete legal review of the in-app privacy policy draft in English and Arabic.
 - Finish or explicitly defer PRD gaps: barcode scan, Google Maps production wiring, price history, voucher inventory imports, exports, offline cache, admin analytics, and server-side media scanning.
 - Configure Android signing, iOS signing, TestFlight, Play Console, and app-store metadata.
@@ -164,6 +164,7 @@ These cannot be skipped for a real user launch:
 - Production CORS fails closed unless `ALLOWED_ORIGINS` is configured.
 - Backend body size and abuse limits are environment-configurable.
 - Firebase Storage rules now restrict uploads by user, content type, and file size.
+- Firebase Storage has been enabled and rules deployed for `dealsouk-6e140`.
 - Voucher threshold now creates real backend `VoucherRequest` records.
 - Admin can approve/reject vouchers from the web admin queue.
 - Approved vouchers are visible from the user profile.

@@ -9,7 +9,7 @@ Scope: Flutter app, platform manifests, backend auth/admin routes, local config 
 | Severity | Count | Notes |
 |---|---:|---|
 | Critical | 0 | No current client-side admin bypass or plaintext release API default found. |
-| High | 4 | Local secrets exist outside git, Firebase config history risk, PII/privacy gaps, mock/admin affordances. |
+| High | 3 | Local secrets exist outside git, Firebase config history risk, and PII/privacy gaps remain. |
 | Medium | 9 | Permission wording, analytics/crash setup, mock fallbacks, export/monitoring gaps, dependency advisory follow-up. |
 | Low | 2 | Cleanup/readme/documentation polish. |
 | Passed | 6 | Auth token attachment, admin route guard, HTTPS client guard, background location avoidance, `.env` gitignore, backend admin middleware. |
@@ -51,5 +51,5 @@ The highest-risk items before production are:
 3. Finish PII encryption/migration and legal review of privacy-policy copy.
 4. Move remaining mock/demo metrics behind dev-only fixtures.
 5. Keep production env values in secret managers only; do not commit Firebase files, `.env`, private keys, signing keys, or service-account JSON.
-6. Add server-side malware scanning for uploaded receipt/price-label images.
+6. Add server-side malware scanning for uploaded receipt/price-label images before public launch.
 7. Re-check backend dependency advisories before production deployment.

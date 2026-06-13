@@ -1383,34 +1383,37 @@ class _StoreChoiceCard extends StatelessWidget {
 /// Maps a chain name to its publicly available logo URL.
 /// Sourced from Clearbit's logo CDN — no API key required for standard logos.
 /// Maps a store name to its bundled brand-logo asset path.
-/// Logos live in assets/logos/ (see assets/logos/README.txt for filenames).
-/// Returns null for unknown chains; [_LogoAvatar] then shows a letter circle.
-/// If the asset path is returned but the file isn't present yet, the
-/// Image.asset errorBuilder falls back to the letter circle too — nothing breaks.
-String? _chainLogoAsset(String name) {
+/// Resolves a store name to its brand logo, served from Google's favicon CDN
+/// (`s2/favicons`). This pulls each chain's real logo mark by domain, is fast
+/// and reliably reachable, and Flutter caches the image after the first load so
+/// repeat views are instant. Returns null for unknown chains; [_LogoAvatar]
+/// then shows a colored letter circle (also used while loading / on error).
+String? _chainLogoUrl(String name) {
   final n = name.toLowerCase();
+  String? domain;
   if (n.contains('carrefour')) {
-    return 'assets/logos/carrefour.png';
+    domain = 'carrefouruae.com';
   } else if (n.contains('lulu')) {
-    return 'assets/logos/lulu.png';
+    domain = 'luluhypermarket.com';
   } else if (n.contains('spinneys')) {
-    return 'assets/logos/spinneys.png';
+    domain = 'spinneys.com';
   } else if (n.contains('waitrose')) {
-    return 'assets/logos/waitrose.png';
+    domain = 'waitrose.com';
   } else if (n.contains('union')) {
-    return 'assets/logos/union_coop.png';
+    domain = 'unioncoop.ae';
   } else if (n.contains('choithrams')) {
-    return 'assets/logos/choithrams.png';
+    domain = 'choithrams.com';
   } else if (n.contains('geant')) {
-    return 'assets/logos/geant.png';
+    domain = 'geantonline.ae';
   } else if (n.contains('nesto')) {
-    return 'assets/logos/nesto.png';
+    domain = 'nestogroup.com';
   } else if (n.contains('al maya')) {
-    return 'assets/logos/al_maya.png';
+    domain = 'almaya.ae';
   } else if (n.contains('grandiose')) {
-    return 'assets/logos/grandiose.png';
+    domain = 'grandiose.ae';
   }
-  return null;
+  if (domain == null) return null;
+  return 'https://www.google.com/s2/favicons?sz=128&domain=$domain';
 }
 
 // ─── Logo Avatar Widget ───────────────────────────────────────────────────────
@@ -1439,9 +1442,9 @@ class _LogoAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logoAsset = _chainLogoAsset(name);
+    final logoUrl = _chainLogoUrl(name);
     final radius = borderRadius ?? size / 2;
-    final bgColor = logoAsset != null ? Colors.white : color;
+    final bgColor = logoUrl != null ? Colors.white : color;
 
     return Container(
       width: size,
@@ -1458,20 +1461,23 @@ class _LogoAvatar extends StatelessWidget {
           ),
         ],
       ),
-      child: _buildContent(logoAsset, radius),
+      child: _buildContent(logoUrl, radius),
     );
   }
 
-  Widget _buildContent(String? logoAsset, double radius) {
-    if (logoAsset == null) return _fallback(radius);
+  Widget _buildContent(String? logoUrl, double radius) {
+    if (logoUrl == null) return _fallback(radius);
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius - 1.5),
       child: Padding(
         padding: EdgeInsets.all(padding),
-        child: Image.asset(
-          logoAsset,
+        child: Image.network(
+          logoUrl,
           fit: BoxFit.contain,
-          // If the PNG hasn't been dropped in yet, fall back to the letter.
+          // Show the letter while the logo loads (cached after first fetch)...
+          loadingBuilder: (ctx, child, progress) =>
+              progress == null ? child : _fallback(radius),
+          // ...and if the network/logo is unavailable, keep the letter.
           errorBuilder: (ctx, error, stack) => _fallback(radius),
         ),
       ),

@@ -5,20 +5,34 @@ import 'package:dealsouk/features/auth/data/auth_service.dart';
 class ApiClient {
   late final Dio _dio;
 
-  static const String _baseUrl = String.fromEnvironment(
+  static const String _envBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://dealsouk.onrender.com',
+    defaultValue: '',
   );
 
+  static String get _resolvedBaseUrl {
+    if (_envBaseUrl.isEmpty) {
+      if (kReleaseMode) {
+        throw StateError(
+          'API_BASE_URL must be defined via --dart-define in release mode. '
+          'Production builds must not have a hardcoded Render URL fallback.',
+        );
+      }
+      return 'http://localhost:3000';
+    }
+    return _envBaseUrl;
+  }
+
   ApiClient() {
-    if (kReleaseMode && !_baseUrl.startsWith('https://')) {
+    final baseUrl = _resolvedBaseUrl;
+    if (kReleaseMode && !baseUrl.startsWith('https://')) {
       throw StateError(
-        'Release builds must use secure HTTPS connections. Base URL was $_baseUrl',
+        'Release builds must use secure HTTPS connections. Base URL was $baseUrl',
       );
     }
     _dio = Dio(
       BaseOptions(
-        baseUrl: _baseUrl,
+        baseUrl: baseUrl,
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 15),
         headers: {'Content-Type': 'application/json'},
@@ -53,7 +67,7 @@ class ApiClient {
     );
   }
 
-  String get baseUrl => _baseUrl;
+  String get baseUrl => _resolvedBaseUrl;
 
   Future<Response> get(
     String path, {

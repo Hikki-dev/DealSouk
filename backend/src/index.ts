@@ -6,6 +6,10 @@ import rateLimit from "express-rate-limit";
 import { PrismaClient } from "@prisma/client";
 import { requireProductionEnv } from "./config/env";
 
+// TODO: Integrate TimescaleDB for time-series grocery price history data scaling.
+// TODO: Integrate Redis for leaderboard ranking caches, API rate-limiting, and session caching.
+// TODO: Integrate Swagger / OpenAPI UI middleware for live backend endpoint documentation.
+
 import authRoutes from "./routes/auth";
 import productRoutes from "./routes/products";
 import submissionRoutes from "./routes/submissions";

@@ -52,6 +52,10 @@ export async function requireAuth(req: AuthRequest, res: Response, next: NextFun
 }
 
 export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction) {
+  // TODO: Add Admin MFA (Multi-Factor Authentication) check for production security compliance
+  // Verify that the decoded Firebase ID token has multi-factor auth validation claims:
+  // e.g., decodedToken.firebase.sign_in_attributes.mfa_verified === true
+
   if (!req.isAdmin) {
     res.status(403).json({ error: 'Admin access required' });
     return;

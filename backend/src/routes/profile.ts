@@ -241,6 +241,10 @@ router.get('/me/requests', requireAuth, async (req: AuthRequest, res) => {
 
 // DELETE /profile/me — account deletion (PDPL compliance: PII removed within 30 days)
 router.delete('/me', requireAuth, accountDeleteLimiter, async (req: AuthRequest, res) => {
+  // TODO: Add Firebase Auth deletion (NFR-14 / FR-52):
+  // Integrate Firebase Admin SDK to permanently delete the authenticated user record:
+  // await adminFirebase.auth().deleteUser(req.firebaseUid!);
+
   // Anonymise rather than hard-delete to preserve token ledger for analytics
   await prisma.user.update({
     where: { id: req.userId! },

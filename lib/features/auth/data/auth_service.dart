@@ -10,7 +10,9 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     clientId: kIsWeb
-        ? '548247133447-7v4gjkgha488t7v3kc79is8kijb3bog4.apps.googleusercontent.com'
+        ? (const String.fromEnvironment('GOOGLE_WEB_CLIENT_ID').isNotEmpty
+              ? const String.fromEnvironment('GOOGLE_WEB_CLIENT_ID')
+              : null)
         : null,
   );
 

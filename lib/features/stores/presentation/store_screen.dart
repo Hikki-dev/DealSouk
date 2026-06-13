@@ -539,7 +539,9 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                           'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
                                       subdomains: const ['a', 'b', 'c', 'd'],
                                       userAgentPackageName: 'com.dealsouk.app',
-                                      retinaMode: RetinaMode.isHighDensity(context),
+                                      retinaMode: RetinaMode.isHighDensity(
+                                        context,
+                                      ),
                                       maxZoom: 20,
                                     ),
                                     // User location pin (only shown in Dubai)

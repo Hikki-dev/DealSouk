@@ -21,9 +21,7 @@ class AdminService {
   Future<void> rejectSubmission(String id, {String? reason}) async {
     await apiClient.post(
       '/admin/submissions/$id/reject',
-      data: {
-        'reason': ?reason,
-      },
+      data: {'reason': ?reason},
     );
   }
 
@@ -108,19 +106,14 @@ class AdminService {
   }) async {
     await apiClient.post(
       '/admin/vouchers/$id/approve',
-      data: {
-        'voucherCode': voucherCode,
-        'adminNote': ?adminNote,
-      },
+      data: {'voucherCode': voucherCode, 'adminNote': ?adminNote},
     );
   }
 
   Future<void> rejectVoucher(String id, {String? adminNote}) async {
     await apiClient.post(
       '/admin/vouchers/$id/reject',
-      data: {
-        'adminNote': ?adminNote,
-      },
+      data: {'adminNote': ?adminNote},
     );
   }
 

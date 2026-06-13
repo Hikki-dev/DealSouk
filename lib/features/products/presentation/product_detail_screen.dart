@@ -396,10 +396,12 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                           ),
                                         ),
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Row(
-                                              crossAxisAlignment: CrossAxisAlignment.center,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
                                               children: [
                                                 CircleAvatar(
                                                   radius: 16,
@@ -407,12 +409,16 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                                       ? AppTheme.forestDeep
                                                       : Colors.grey.shade200,
                                                   child: Text(
-                                                    sp.storeName.substring(0, 1),
+                                                    sp.storeName.substring(
+                                                      0,
+                                                      1,
+                                                    ),
                                                     style: TextStyle(
                                                       color: isCheapest
                                                           ? Colors.white
                                                           : Colors.black,
-                                                      fontWeight: FontWeight.bold,
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                       fontSize: 12,
                                                     ),
                                                   ),
@@ -421,7 +427,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                                 Expanded(
                                                   child: Column(
                                                     crossAxisAlignment:
-                                                        CrossAxisAlignment.start,
+                                                        CrossAxisAlignment
+                                                            .start,
                                                     children: [
                                                       Text(
                                                         '${sp.storeName} • ${_getStoreDistance(ref, sp.storeId, sp.storeName).toStringAsFixed(1)} km away',
@@ -435,8 +442,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                                       Text(
                                                         '${_formatFreshness(sp.updatedAtLabel)} • Verified with photo',
                                                         style: TextStyle(
-                                                          color:
-                                                              Colors.grey.shade500,
+                                                          color: Colors
+                                                              .grey
+                                                              .shade500,
                                                           fontSize: 10.5,
                                                         ),
                                                       ),
@@ -445,10 +453,15 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                                 ),
                                                 const SizedBox(width: 8),
                                                 Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                                  mainAxisSize: MainAxisSize.min,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.end,
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
                                                   children: [
-                                                    SoukPrice(sp.price, size: 14.5),
+                                                    SoukPrice(
+                                                      sp.price,
+                                                      size: 14.5,
+                                                    ),
                                                     if (isCheapest) ...[
                                                       const SizedBox(height: 4),
                                                       Container(
@@ -458,16 +471,20 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                                               vertical: 2,
                                                             ),
                                                         decoration: BoxDecoration(
-                                                          color: AppTheme.forestDeep,
+                                                          color: AppTheme
+                                                              .forestDeep,
                                                           borderRadius:
-                                                              BorderRadius.circular(6),
+                                                              BorderRadius.circular(
+                                                                6,
+                                                              ),
                                                         ),
                                                         child: const Text(
                                                           'BEST PRICE',
                                                           style: TextStyle(
                                                             color: Colors.white,
                                                             fontSize: 7.5,
-                                                            fontWeight: FontWeight.bold,
+                                                            fontWeight:
+                                                                FontWeight.bold,
                                                           ),
                                                         ),
                                                       ),
@@ -480,7 +497,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                             const Divider(height: 1),
                                             const SizedBox(height: 8),
                                             Row(
-                                              mainAxisAlignment: MainAxisAlignment.end,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
                                               children: [
                                                 ElevatedButton.icon(
                                                   onPressed: () {
@@ -495,7 +513,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                                           product.name,
                                                           sp.price,
                                                         );
-                                                    final newCount = flagCount + 1;
+                                                    final newCount =
+                                                        flagCount + 1;
                                                     ScaffoldMessenger.of(
                                                       context,
                                                     ).showSnackBar(
@@ -505,16 +524,19 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                                               ? 'Thanks. This price is hidden until an admin reviews it.'
                                                               : 'Thanks. We will hide this price after 3 unique reports.',
                                                         ),
-                                                        duration: const Duration(
-                                                          seconds: 2,
-                                                        ),
+                                                        duration:
+                                                            const Duration(
+                                                              seconds: 2,
+                                                            ),
                                                       ),
                                                     );
                                                   },
                                                   icon: Icon(
                                                     flagCount > 0
-                                                        ? Icons.check_circle_rounded
-                                                        : Icons.report_gmailerrorred_rounded,
+                                                        ? Icons
+                                                              .check_circle_rounded
+                                                        : Icons
+                                                              .report_gmailerrorred_rounded,
                                                     size: 13,
                                                     color: Colors.white,
                                                   ),
@@ -524,24 +546,33 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                                         : 'Report wrong price',
                                                     style: const TextStyle(
                                                       fontSize: 10,
-                                                      fontWeight: FontWeight.bold,
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                       color: Colors.white,
                                                     ),
                                                   ),
                                                   style: ElevatedButton.styleFrom(
-                                                    backgroundColor: flagCount > 0
+                                                    backgroundColor:
+                                                        flagCount > 0
                                                         ? Colors.green
                                                         : Colors.red.shade600,
-                                                    foregroundColor: Colors.white,
+                                                    foregroundColor:
+                                                        Colors.white,
                                                     elevation: 0,
-                                                    padding: const EdgeInsets.symmetric(
-                                                      horizontal: 10,
-                                                      vertical: 6,
-                                                    ),
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 10,
+                                                          vertical: 6,
+                                                        ),
                                                     minimumSize: Size.zero,
-                                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                                    tapTargetSize:
+                                                        MaterialTapTargetSize
+                                                            .shrinkWrap,
                                                     shape: RoundedRectangleBorder(
-                                                      borderRadius: BorderRadius.circular(16),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            16,
+                                                          ),
                                                     ),
                                                   ),
                                                 ),

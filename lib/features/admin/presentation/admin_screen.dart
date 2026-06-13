@@ -2167,14 +2167,21 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Downloading CSV...')),
                           );
-                          final res = await apiClient.get('/admin/exports/submissions.csv');
+                          final res = await apiClient.get(
+                            '/admin/exports/submissions.csv',
+                          );
                           final csvContent = res.data as String;
                           final bytes = csvContent.codeUnits;
-                          await FileDownloadHelper.downloadFile(bytes, 'dealsouk-submissions.csv');
+                          await FileDownloadHelper.downloadFile(
+                            bytes,
+                            'dealsouk-submissions.csv',
+                          );
                         } catch (err) {
                           if (!mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Failed to download CSV: $err')),
+                            SnackBar(
+                              content: Text('Failed to download CSV: $err'),
+                            ),
                           );
                         }
                       },
@@ -2196,14 +2203,22 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                       onPressed: () async {
                         try {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Generating Analytics PDF...')),
+                            const SnackBar(
+                              content: Text('Generating Analytics PDF...'),
+                            ),
                           );
-                          final bytes = await adminService.downloadAnalyticsPdf();
-                          await FileDownloadHelper.downloadFile(bytes, 'dealsouk-analytics.pdf');
+                          final bytes = await adminService
+                              .downloadAnalyticsPdf();
+                          await FileDownloadHelper.downloadFile(
+                            bytes,
+                            'dealsouk-analytics.pdf',
+                          );
                         } catch (err) {
                           if (!mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Failed to generate PDF: $err')),
+                            SnackBar(
+                              content: Text('Failed to generate PDF: $err'),
+                            ),
                           );
                         }
                       },
@@ -2313,9 +2328,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(approve ? 'Approve Voucher' : 'Reject Voucher'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -2385,10 +2398,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
       if (approve) {
         await ref
             .read(adminVouchersProvider.notifier)
-            .approveVoucher(
-              voucher.id,
-              adminNote: noteCtrl.text.trim(),
-            );
+            .approveVoucher(voucher.id, adminNote: noteCtrl.text.trim());
       } else {
         await ref
             .read(adminVouchersProvider.notifier)
@@ -2397,7 +2407,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(approve ? 'Voucher approved successfully!' : 'Voucher rejected.'),
+            content: Text(
+              approve ? 'Voucher approved successfully!' : 'Voucher rejected.',
+            ),
             backgroundColor: approve ? Colors.green : Colors.red,
           ),
         );
@@ -2442,12 +2454,16 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         Expanded(
           child: FlutterMap(
             options: MapOptions(
-              initialCenter: const LatLng(25.2048, 55.2708), // Dubai coordinates
+              initialCenter: const LatLng(
+                25.2048,
+                55.2708,
+              ), // Dubai coordinates
               initialZoom: 11.0,
             ),
             children: [
               TileLayer(
-                urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+                urlTemplate:
+                    'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
                 subdomains: const ['a', 'b', 'c', 'd'],
                 userAgentPackageName: 'com.dealsouk.app',
                 retinaMode: RetinaMode.isHighDensity(context),
@@ -2455,14 +2471,19 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               ),
               CircleLayer(
                 circles: mapData.map<CircleMarker>((store) {
-                  final double lat = (store['lat'] is num) ? (store['lat'] as num).toDouble() : 25.2048;
-                  final double lng = (store['lng'] is num) ? (store['lng'] as num).toDouble() : 55.2708;
-                  final int count = store['activeSubmissionsCount'] as int? ?? 0;
+                  final double lat = (store['lat'] is num)
+                      ? (store['lat'] as num).toDouble()
+                      : 25.2048;
+                  final double lng = (store['lng'] is num)
+                      ? (store['lng'] as num).toDouble()
+                      : 55.2708;
+                  final int count =
+                      store['activeSubmissionsCount'] as int? ?? 0;
                   final Color circleColor = count < 3
                       ? Colors.green.withValues(alpha: 0.4)
                       : count < 6
-                          ? Colors.orange.withValues(alpha: 0.4)
-                          : Colors.red.withValues(alpha: 0.4);
+                      ? Colors.orange.withValues(alpha: 0.4)
+                      : Colors.red.withValues(alpha: 0.4);
                   return CircleMarker(
                     point: LatLng(lat, lng),
                     radius: (count * 6.0 + 12.0).clamp(12.0, 48.0),
@@ -2475,11 +2496,17 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               ),
               MarkerLayer(
                 markers: mapData.map<Marker>((store) {
-                  final double lat = (store['lat'] is num) ? (store['lat'] as num).toDouble() : 25.2048;
-                  final double lng = (store['lng'] is num) ? (store['lng'] as num).toDouble() : 55.2708;
+                  final double lat = (store['lat'] is num)
+                      ? (store['lat'] as num).toDouble()
+                      : 25.2048;
+                  final double lng = (store['lng'] is num)
+                      ? (store['lng'] as num).toDouble()
+                      : 55.2708;
                   final String chain = store['chain'] as String? ?? 'Store';
-                  final String branchName = store['branchName'] as String? ?? '';
-                  final int count = store['activeSubmissionsCount'] as int? ?? 0;
+                  final String branchName =
+                      store['branchName'] as String? ?? '';
+                  final int count =
+                      store['activeSubmissionsCount'] as int? ?? 0;
                   return Marker(
                     point: LatLng(lat, lng),
                     width: 40,
@@ -2494,7 +2521,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                             ),
                             title: Text(
                               '$chain $branchName',
-                              style: GoogleFonts.fredoka(fontWeight: FontWeight.bold),
+                              style: GoogleFonts.fredoka(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             content: Column(
                               mainAxisSize: MainAxisSize.min,
@@ -2502,7 +2531,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                               children: [
                                 Text(
                                   'Area: ${store['area'] ?? 'Dubai'}',
-                                  style: GoogleFonts.nunito(fontWeight: FontWeight.bold),
+                                  style: GoogleFonts.nunito(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
@@ -2586,16 +2617,21 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                   )
                 : ListView.separated(
                     itemCount: inventory.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 12),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final item = inventory[index] as Map<String, dynamic>;
-                      final supermarket = item['supermarket'] as String? ?? 'Unknown';
+                      final supermarket =
+                          item['supermarket'] as String? ?? 'Unknown';
                       final denom = item['denominationAed'] as int? ?? 50;
                       final count = item['count'] as int? ?? 0;
                       final isUsed = item['isUsed'] as bool? ?? false;
 
                       return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(16),
@@ -2609,12 +2645,18 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(10),
                                   decoration: BoxDecoration(
-                                    color: (isUsed ? Colors.grey.shade100 : AppTheme.limeAccent.withValues(alpha: 0.2)),
+                                    color: (isUsed
+                                        ? Colors.grey.shade100
+                                        : AppTheme.limeAccent.withValues(
+                                            alpha: 0.2,
+                                          )),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(
                                     Icons.confirmation_num_rounded,
-                                    color: isUsed ? Colors.grey : AppTheme.forestDeep,
+                                    color: isUsed
+                                        ? Colors.grey
+                                        : AppTheme.forestDeep,
                                   ),
                                 ),
                                 const SizedBox(width: 16),
@@ -2631,7 +2673,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      isUsed ? 'Used Vouchers' : 'Available Unused Stock',
+                                      isUsed
+                                          ? 'Used Vouchers'
+                                          : 'Available Unused Stock',
                                       style: GoogleFonts.nunito(
                                         fontSize: 12,
                                         color: Colors.grey.shade600,
@@ -2643,16 +2687,23 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                               ],
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 6,
+                              ),
                               decoration: BoxDecoration(
-                                color: isUsed ? Colors.grey.shade100 : Colors.green.shade50,
+                                color: isUsed
+                                    ? Colors.grey.shade100
+                                    : Colors.green.shade50,
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
                                 '$count codes',
                                 style: GoogleFonts.nunito(
                                   fontWeight: FontWeight.w900,
-                                  color: isUsed ? Colors.grey.shade700 : Colors.green.shade800,
+                                  color: isUsed
+                                      ? Colors.grey.shade700
+                                      : Colors.green.shade800,
                                 ),
                               ),
                             ),
@@ -2690,7 +2741,8 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 TextField(
                   controller: supermarketCtrl,
                   decoration: const InputDecoration(
-                    labelText: 'Supermarket Name (e.g. Carrefour, LuLu, Spinneys)',
+                    labelText:
+                        'Supermarket Name (e.g. Carrefour, LuLu, Spinneys)',
                     prefixIcon: Icon(Icons.store_outlined),
                   ),
                 ),
@@ -2729,12 +2781,17 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 final supermarket = supermarketCtrl.text.trim();
                 final denom = int.tryParse(denomCtrl.text.trim()) ?? 50;
                 final rawCodes = codesCtrl.text.trim().split('\n');
-                final codes = rawCodes.map((c) => c.trim()).where((c) => c.length >= 4).toList();
+                final codes = rawCodes
+                    .map((c) => c.trim())
+                    .where((c) => c.length >= 4)
+                    .toList();
 
                 if (supermarket.isEmpty || codes.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Please fill out supermarket and enter valid codes.'),
+                      content: Text(
+                        'Please fill out supermarket and enter valid codes.',
+                      ),
                       backgroundColor: Colors.redAccent,
                     ),
                   );
@@ -2742,7 +2799,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 }
 
                 try {
-                  await ref.read(adminVoucherInventoryProvider.notifier).importVouchers(
+                  await ref
+                      .read(adminVoucherInventoryProvider.notifier)
+                      .importVouchers(
                         supermarket: supermarket,
                         denominationAed: denom,
                         codes: codes,

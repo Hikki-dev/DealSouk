@@ -118,60 +118,39 @@ class _ShellLayoutBody extends ConsumerWidget {
               ],
             );
 
-            if (isIos) {
-              return Container(
-                margin: EdgeInsets.fromLTRB(24, 0, 24, bottomPad + 16),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(32),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 16.0, sigmaY: 16.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.65),
-                        borderRadius: BorderRadius.circular(32),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.3),
-                          width: 1.5,
+            final double glassOpacity = isIos ? 0.65 : 0.72;
+            final Color glassBorderColor = isIos
+                ? Colors.white.withValues(alpha: 0.35)
+                : Colors.white.withValues(alpha: 0.5);
+
+            return Container(
+              margin: EdgeInsets.fromLTRB(24, 0, 24, bottomPad + 16),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(32),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 16.0, sigmaY: 16.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: glassOpacity),
+                      borderRadius: BorderRadius.circular(32),
+                      border: Border.all(color: glassBorderColor, width: 1.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.03),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 6,
-                        horizontal: 16,
-                      ),
-                      child: navItems,
+                      ],
                     ),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 6,
+                      horizontal: 16,
+                    ),
+                    child: navItems,
                   ),
                 ),
-              );
-            } else {
-              return Container(
-                margin: EdgeInsets.fromLTRB(24, 0, 24, bottomPad + 16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(32),
-                  border: Border.all(color: Colors.grey.shade100, width: 1.5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                padding: const EdgeInsets.symmetric(
-                  vertical: 6,
-                  horizontal: 16,
-                ),
-                child: navItems,
-              );
-            }
+              ),
+            );
           })(),
         ),
       ),

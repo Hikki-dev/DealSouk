@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -378,6 +379,75 @@ class _FallbackProductIcon extends StatelessWidget {
           size: 34,
         ),
       ],
+    );
+  }
+}
+
+/// A premium reusable glassmorphic container that renders a blurred frosted-glass surface.
+class GlassContainer extends StatelessWidget {
+  final Widget child;
+  final double borderRadius;
+  final double blur;
+  final Color color;
+  final Border? border;
+  final List<BoxShadow>? boxShadow;
+  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? margin;
+  final double? width;
+  final double? height;
+
+  const GlassContainer({
+    super.key,
+    required this.child,
+    this.borderRadius = 24.0,
+    this.blur = 15.0,
+    this.color = const Color(0x12FFFFFF), // Semi-transparent glass base
+    this.border,
+    this.boxShadow,
+    this.padding,
+    this.margin,
+    this.width,
+    this.height,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      margin: margin,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(borderRadius),
+        boxShadow:
+            boxShadow ??
+            [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
+              ),
+            ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+          child: Container(
+            padding: padding,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(borderRadius),
+              border:
+                  border ??
+                  Border.all(
+                    color: Colors.white.withValues(alpha: 0.22),
+                    width: 1.5,
+                  ),
+            ),
+            child: child,
+          ),
+        ),
+      ),
     );
   }
 }

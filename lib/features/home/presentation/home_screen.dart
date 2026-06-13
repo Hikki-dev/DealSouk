@@ -250,46 +250,48 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       const _OfferCarousel(),
                       const SizedBox(height: 20),
 
-                      // Search Bar (Capsule shape)
+                      // Search Bar (Glassmorphic)
                       GestureDetector(
                         onTap: () {
                           ref.read(filterProvider.notifier).reset();
                           context.push('/search');
                         },
-                        child: Container(
+                        child: GlassContainer(
                           height: 52,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(26),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.02),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
+                          borderRadius: 26,
+                          color: Colors.white.withValues(alpha: 0.28),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.38),
+                            width: 1.5,
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.04),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                           padding: const EdgeInsets.symmetric(horizontal: 18),
                           child: Row(
                             children: [
                               Icon(
                                 Icons.search_rounded,
-                                color: Colors.grey.shade400,
+                                color: Colors.white.withValues(alpha: 0.95),
                                 size: 22,
                               ),
                               const SizedBox(width: 12),
                               Text(
                                 'Search an item to compare prices nearby',
                                 style: TextStyle(
-                                  color: Colors.grey.shade400,
+                                  color: Colors.white.withValues(alpha: 0.9),
                                   fontSize: 13.5,
-                                  fontWeight: FontWeight.w500,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                               const Spacer(),
                               Icon(
                                 Icons.tune_rounded,
-                                color: AppTheme.forestDeep,
+                                color: Colors.white.withValues(alpha: 0.95),
                                 size: 20,
                               ),
                             ],

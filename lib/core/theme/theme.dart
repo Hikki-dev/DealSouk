@@ -53,6 +53,7 @@ class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
+      splashFactory: InkSparkle.splashFactory,
       colorScheme: ColorScheme.light(
         primary: forestDeep,
         primaryContainer: emeraldLight,

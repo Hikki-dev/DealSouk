@@ -627,7 +627,9 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                                     );
                                   },
                                 ).whenComplete(() {
-                                  ref.read(navbarVisibleProvider.notifier).show();
+                                  ref
+                                      .read(navbarVisibleProvider.notifier)
+                                      .show();
                                 });
                               },
                               icon: const Icon(

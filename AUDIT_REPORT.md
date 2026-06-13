@@ -1,5 +1,9 @@
 # DealSouk Audit Report
 
+> [!NOTE]
+> **Historical Document Notice**: This document represents the initial codebase audit performed on June 12, 2026. Many of the critical issues, missing tests, and router safety gaps identified below have been resolved on the current `stabilize/mvp-audit` branch.
+> For the live operational status and remaining deployment blockers, see the single source of truth: **[STATUS.md](file:///Users/hikki/Desktop/DealSouk/docs/STATUS.md)**.
+
 Date: 2026-06-12
 Workspace branch at audit time: `feature/flutter-api-integration`
 

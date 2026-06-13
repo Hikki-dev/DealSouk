@@ -38,12 +38,20 @@ export async function sendEmail(to: string, subject: string, text: string, html?
       console.error(`[EmailService] Failed to send email to ${to}:`, err);
     }
   } else {
-    console.log('\n=================== MOCK EMAIL ===================');
-    console.log(`TO:      ${to}`);
-    console.log(`FROM:    ${fromEmail}`);
-    console.log(`SUBJECT: ${subject}`);
-    console.log(`BODY:\n${text}`);
-    console.log('==================================================\n');
+    if (process.env.NODE_ENV === 'production') {
+      const emailParts = to.split('@');
+      const maskedEmail = emailParts.length === 2
+        ? `${emailParts[0].slice(0, 3)}...` + `@${emailParts[1]}`
+        : '***';
+      console.warn(`[EmailService] SMTP not configured. Suppressed logging email body to prevent PII leak. Target: ${maskedEmail}, Subject: "${subject}"`);
+    } else {
+      console.log('\n=================== MOCK EMAIL ===================');
+      console.log(`TO:      ${to}`);
+      console.log(`FROM:    ${fromEmail}`);
+      console.log(`SUBJECT: ${subject}`);
+      console.log(`BODY:\n${text}`);
+      console.log('==================================================\n');
+    }
   }
 }
 

@@ -130,7 +130,9 @@ class MyRequestsNotifier extends Notifier<List<PriceRequest>> {
         final req = state[reqIndex];
         if (req.status == 'open') {
           // Refund the tokens
-          ref.read(userTokensProvider.notifier).addTokens(req.requestRewardTokens);
+          ref
+              .read(userTokensProvider.notifier)
+              .addTokens(req.requestRewardTokens);
           ref
               .read(userTransactionsProvider.notifier)
               .addTransaction(

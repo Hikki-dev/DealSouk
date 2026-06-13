@@ -2447,8 +2447,11 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             ),
             children: [
               TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+                subdomains: const ['a', 'b', 'c', 'd'],
                 userAgentPackageName: 'com.dealsouk.app',
+                retinaMode: RetinaMode.isHighDensity(context),
+                maxZoom: 20,
               ),
               CircleLayer(
                 circles: mapData.map<CircleMarker>((store) {

@@ -73,9 +73,19 @@ Current backend limits:
 | Limit | Default | Config |
 |---|---:|---|
 | Global API rate limit | 120 requests/minute | `GLOBAL_RATE_LIMIT_PER_MINUTE` |
+| Auth verification | 30 requests/minute/IP | `AUTH_VERIFY_RATE_LIMIT_PER_MINUTE` |
 | Submission rate limit | 5 submissions/minute/account | `SUBMISSION_RATE_LIMIT_PER_MINUTE` |
+| Flag/report rate limit | 10 reports/minute/account | `FLAG_RATE_LIMIT_PER_MINUTE` |
 | Request creation rate limit | 10 requests/minute/account | `REQUEST_RATE_LIMIT_PER_MINUTE` |
+| Request fulfillment rate limit | 10 fulfillments/minute/account | `REQUEST_FULFILL_RATE_LIMIT_PER_MINUTE` |
+| Admin write action limit | 60 writes/minute/admin | `ADMIN_RATE_LIMIT_PER_MINUTE` |
+| Profile write limit | 20 writes/minute/account | `PROFILE_WRITE_RATE_LIMIT_PER_MINUTE` |
+| FCM token update limit | 10 updates/minute/account | `FCM_TOKEN_RATE_LIMIT_PER_MINUTE` |
+| Cart sync limit | 20 syncs/minute/account | `CART_SYNC_RATE_LIMIT_PER_MINUTE` |
+| Account deletion attempts | 3 attempts/minute/account | `ACCOUNT_DELETE_RATE_LIMIT_PER_MINUTE` |
 | JSON request body size | 1 MB | `JSON_BODY_LIMIT` |
+| Cart item count | Max 100 items | Backend validation |
+| Cart item quantity | 1-99 per item | Backend validation |
 | Daily submissions | 30/day by default | Admin setting |
 | Price request bounty | 1-100 tokens | Backend validation |
 | Product/store request text | 120 characters | Backend validation |

@@ -1,19 +1,23 @@
 import { Router } from "express";
 import { prisma } from "../index";
 import { requireAuth, AuthRequest } from "../middleware/auth";
+import { authenticatedRateLimit } from "../middleware/rateLimits";
 import { spendTokens, awardTokens } from "../services/tokenEngine";
 import { notifyRequestFulfilled } from "../services/fcmNotifier";
-import rateLimit from "express-rate-limit";
 
 const router = Router();
 const MAX_REQUEST_TEXT_LENGTH = 120;
 const MAX_BOUNTY_TOKENS = 100;
 
-const createRequestLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: Number(process.env.REQUEST_RATE_LIMIT_PER_MINUTE ?? 10),
-  keyGenerator: (req: AuthRequest) => req.userId ?? req.ip ?? "anon",
-  message: { error: "Too many price requests. Please try again in a minute." },
+const createRequestLimiter = authenticatedRateLimit({
+  envName: "REQUEST_RATE_LIMIT_PER_MINUTE",
+  fallback: 10,
+  message: "Too many price requests. Please try again in a minute.",
+});
+const fulfillRequestLimiter = authenticatedRateLimit({
+  envName: "REQUEST_FULFILL_RATE_LIMIT_PER_MINUTE",
+  fallback: 10,
+  message: "Too many request updates. Please try again in a minute.",
 });
 
 // GET /requests/board — open requests sorted by bounty, expire stale ones first
@@ -116,7 +120,7 @@ router.post("/", requireAuth, createRequestLimiter, async (req: AuthRequest, res
 });
 
 // POST /requests/:id/fulfill — sourcer fulfills a request (FR-28: notify requester via FCM)
-router.post("/:id/fulfill", requireAuth, async (req: AuthRequest, res) => {
+router.post("/:id/fulfill", requireAuth, fulfillRequestLimiter, async (req: AuthRequest, res) => {
   const request = await prisma.priceRequest.findUnique({
     where: { id: req.params.id },
     include: { requester: true },

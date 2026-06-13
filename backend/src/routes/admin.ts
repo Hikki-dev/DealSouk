@@ -1,16 +1,15 @@
 import { Router } from 'express';
 import { prisma } from '../index';
 import { requireAuth, requireAdmin, AuthRequest } from '../middleware/auth';
+import { authenticatedRateLimit } from '../middleware/rateLimits';
 import { awardTokens, checkFirstSubmissionBonus, updateStreakOnApproval, updateChallengeProgress, spendTokens } from '../services/tokenEngine';
 import { notifyRankChange } from '../services/fcmNotifier';
-import rateLimit from 'express-rate-limit';
 
 const router = Router();
-const adminWriteLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: Number(process.env.ADMIN_RATE_LIMIT_PER_MINUTE ?? 60),
-  keyGenerator: (req: AuthRequest) => req.userId ?? req.ip ?? 'anon',
-  message: { error: 'Too many admin actions. Please try again in a minute.' },
+const adminWriteLimiter = authenticatedRateLimit({
+  envName: 'ADMIN_RATE_LIMIT_PER_MINUTE',
+  fallback: 60,
+  message: 'Too many admin actions. Please try again in a minute.',
 });
 
 router.use(requireAuth);

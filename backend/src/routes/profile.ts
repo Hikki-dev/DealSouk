@@ -1,9 +1,33 @@
 import { Router } from 'express';
 import { prisma } from '../index';
 import { requireAuth, AuthRequest } from '../middleware/auth';
+import { authenticatedRateLimit } from '../middleware/rateLimits';
 import { computeLevel } from '../services/tokenEngine';
 
 const router = Router();
+const profileWriteLimiter = authenticatedRateLimit({
+  envName: 'PROFILE_WRITE_RATE_LIMIT_PER_MINUTE',
+  fallback: 20,
+  message: 'Too many profile updates. Please try again in a minute.',
+});
+const fcmTokenLimiter = authenticatedRateLimit({
+  envName: 'FCM_TOKEN_RATE_LIMIT_PER_MINUTE',
+  fallback: 10,
+  message: 'Too many notification token updates. Please try again in a minute.',
+});
+const cartSyncLimiter = authenticatedRateLimit({
+  envName: 'CART_SYNC_RATE_LIMIT_PER_MINUTE',
+  fallback: 20,
+  message: 'Too many cart updates. Please try again in a minute.',
+});
+const accountDeleteLimiter = authenticatedRateLimit({
+  envName: 'ACCOUNT_DELETE_RATE_LIMIT_PER_MINUTE',
+  fallback: 3,
+  message: 'Too many account deletion attempts. Please try again later.',
+});
+
+const MAX_CART_ITEMS = 100;
+const MAX_CART_QUANTITY = 99;
 
 // GET /profile/me
 router.get('/me', requireAuth, async (req: AuthRequest, res) => {
@@ -59,7 +83,7 @@ router.get('/me', requireAuth, async (req: AuthRequest, res) => {
 });
 
 // PATCH /profile/me
-router.patch('/me', requireAuth, async (req: AuthRequest, res) => {
+router.patch('/me', requireAuth, profileWriteLimiter, async (req: AuthRequest, res) => {
   const { displayName, homeArea, preferredLocale } = req.body as {
     displayName?: string;
     homeArea?: string;
@@ -142,7 +166,7 @@ router.get('/me/submissions', requireAuth, async (req: AuthRequest, res) => {
 });
 
 // POST /profile/me/fcm-token
-router.post('/me/fcm-token', requireAuth, async (req: AuthRequest, res) => {
+router.post('/me/fcm-token', requireAuth, fcmTokenLimiter, async (req: AuthRequest, res) => {
   const { fcmToken } = req.body as { fcmToken: string };
   if (!fcmToken) {
     res.status(400).json({ error: 'fcmToken required' });
@@ -173,10 +197,18 @@ router.get('/me/cart', requireAuth, async (req: AuthRequest, res) => {
 });
 
 // PUT /profile/me/cart — sync cart from device (FR-23)
-router.put('/me/cart', requireAuth, async (req: AuthRequest, res) => {
+router.put('/me/cart', requireAuth, cartSyncLimiter, async (req: AuthRequest, res) => {
   const { items } = req.body as { items: Array<{ productId: string; quantity: number }> };
   if (!Array.isArray(items)) {
     res.status(400).json({ error: 'items array required' });
+    return;
+  }
+  if (items.length > MAX_CART_ITEMS) {
+    res.status(400).json({ error: `Cart cannot contain more than ${MAX_CART_ITEMS} items` });
+    return;
+  }
+  if (items.some((item) => !item.productId || !Number.isFinite(Number(item.quantity)))) {
+    res.status(400).json({ error: 'Each cart item requires productId and quantity' });
     return;
   }
 
@@ -188,7 +220,7 @@ router.put('/me/cart', requireAuth, async (req: AuthRequest, res) => {
       data: items.map((item) => ({
         userId: req.userId!,
         productId: item.productId,
-        quantity: Math.max(1, item.quantity),
+        quantity: Math.min(MAX_CART_QUANTITY, Math.max(1, Math.floor(Number(item.quantity)))),
       })),
       skipDuplicates: true,
     });
@@ -208,7 +240,7 @@ router.get('/me/requests', requireAuth, async (req: AuthRequest, res) => {
 });
 
 // DELETE /profile/me — account deletion (PDPL compliance: PII removed within 30 days)
-router.delete('/me', requireAuth, async (req: AuthRequest, res) => {
+router.delete('/me', requireAuth, accountDeleteLimiter, async (req: AuthRequest, res) => {
   // Anonymise rather than hard-delete to preserve token ledger for analytics
   await prisma.user.update({
     where: { id: req.userId! },

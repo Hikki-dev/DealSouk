@@ -1,17 +1,21 @@
 import { Router } from 'express';
-import rateLimit from 'express-rate-limit';
 import { prisma } from '../index';
 import { requireAuth, AuthRequest } from '../middleware/auth';
+import { authenticatedRateLimit } from '../middleware/rateLimits';
 import { calculateReward, awardTokens } from '../services/tokenEngine';
 
 const router = Router();
 
 // Submission rate limit: max 5 per minute per account (NFR-09)
-const submitLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: Number(process.env.SUBMISSION_RATE_LIMIT_PER_MINUTE ?? 5),
-  keyGenerator: (req: AuthRequest) => req.userId ?? req.ip ?? 'anon',
-  message: { error: 'Too many submissions. Max 5 per minute.' },
+const submitLimiter = authenticatedRateLimit({
+  envName: 'SUBMISSION_RATE_LIMIT_PER_MINUTE',
+  fallback: 5,
+  message: 'Too many submissions. Max 5 per minute.',
+});
+const flagLimiter = authenticatedRateLimit({
+  envName: 'FLAG_RATE_LIMIT_PER_MINUTE',
+  fallback: 10,
+  message: 'Too many reports. Please try again in a minute.',
 });
 
 const MAX_PRICE_AED = 10000;
@@ -116,7 +120,7 @@ router.post('/', requireAuth, submitLimiter, async (req: AuthRequest, res) => {
 });
 
 // POST /submissions/:id/flag
-router.post('/:id/flag', requireAuth, async (req: AuthRequest, res) => {
+router.post('/:id/flag', requireAuth, flagLimiter, async (req: AuthRequest, res) => {
   const { reason } = req.body as { reason: string };
   const validReasons = ['price_wrong', 'product_mismatch', 'store_wrong', 'duplicate'];
   if (!validReasons.includes(reason)) {

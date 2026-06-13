@@ -2,12 +2,18 @@ import { Router } from 'express';
 import * as admin from 'firebase-admin';
 import { prisma } from '../index';
 import { encrypt } from '../services/encryption';
+import { ipRateLimit } from '../middleware/rateLimits';
 
 const router = Router();
+const verifyLimiter = ipRateLimit({
+  envName: 'AUTH_VERIFY_RATE_LIMIT_PER_MINUTE',
+  fallback: 30,
+  message: 'Too many sign-in checks. Please try again in a minute.',
+});
 
 // POST /auth/verify
 // Called on first launch and after token refresh. Creates the User row if it doesn't exist.
-router.post('/verify', async (req, res) => {
+router.post('/verify', verifyLimiter, async (req, res) => {
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith('Bearer ')) {
     res.status(401).json({ error: 'Missing authorization token' });

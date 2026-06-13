@@ -25,10 +25,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
 
   // Dev mode & privacy
   int _logoTaps = 0;
-  bool _showAdminTab = const bool.fromEnvironment(
-    'ADMIN_MODE',
-    defaultValue: false,
-  );
+  bool _showAdminTab = false;
   bool _agreeToPrivacy = false;
 
   // Phone OTP state
@@ -271,6 +268,12 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                       Center(
                         child: GestureDetector(
                           onTap: () {
+                            if (const bool.fromEnvironment(
+                              'ADMIN_MODE',
+                              defaultValue: false,
+                            )) {
+                              return;
+                            }
                             setState(() {
                               _logoTaps++;
                               if (_logoTaps >= 5) {

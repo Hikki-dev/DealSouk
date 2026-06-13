@@ -8,7 +8,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:dealsouk/core/network/api_client.dart';
 import 'package:dealsouk/features/stores/data/stores_service.dart';
 import 'package:dealsouk/features/profile/presentation/profile_providers.dart';
 import 'package:dealsouk/features/stores/domain/store.dart';
@@ -1390,6 +1389,14 @@ class _StoreChoiceCard extends StatelessWidget {
 /// third-party favicon URL fails there for lack of CORS. Cached after first
 /// load, so repeat views are instant. Returns null for unknown chains;
 /// [_LogoAvatar] then shows a colored letter circle (also used while loading).
+
+// Logos are public assets — always served from the real backend even in debug.
+// This matters on real iOS/Android devices where localhost:3000 is unreachable.
+const _kLogoBaseUrl = String.fromEnvironment(
+  'API_BASE_URL',
+  defaultValue: 'https://dealsouk.onrender.com',
+);
+
 String? _chainLogoUrl(String name) {
   final n = name.toLowerCase();
   String? slug;
@@ -1415,7 +1422,7 @@ String? _chainLogoUrl(String name) {
     slug = 'grandiose';
   }
   if (slug == null) return null;
-  return '${apiClient.baseUrl}/logos/$slug';
+  return '$_kLogoBaseUrl/logos/$slug';
 }
 
 // ─── Logo Avatar Widget ───────────────────────────────────────────────────────

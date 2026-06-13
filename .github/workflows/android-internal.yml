@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   build-android:
-    name: Build Android APK
+    name: Build Android APKs
     runs-on: ubuntu-latest
 
     steps:
@@ -47,23 +47,41 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build release APK
-        run: >
-          flutter build apk --release
-          --dart-define=API_BASE_URL=${{ inputs.api_base_url || 'https://dealsouk-api.onrender.com' }}
-          --dart-define=ADMIN_MODE=false
+      - name: Build Shopper APK (User Mode)
+        run: |
+          flutter build apk --release \
+            --dart-define=API_BASE_URL=${{ inputs.api_base_url || 'https://dealsouk-api.onrender.com' }} \
+            --dart-define=ADMIN_MODE=false
+          mkdir -p build/outputs
+          cp build/app/outputs/flutter-apk/app-release.apk build/outputs/DealSouk-Shopper.apk
 
-      - name: Upload APK artifact
+      - name: Build Admin APK (Moderator Mode)
+        run: |
+          flutter build apk --release \
+            --dart-define=API_BASE_URL=${{ inputs.api_base_url || 'https://dealsouk-api.onrender.com' }} \
+            --dart-define=ADMIN_MODE=true
+          cp build/app/outputs/flutter-apk/app-release.apk build/outputs/DealSouk-Admin.apk
+
+      - name: Upload Shopper APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dealsouk-android-internal-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: Dealsouk-Shopper-APK
+          path: build/outputs/DealSouk-Shopper.apk
           if-no-files-found: error
 
-      - name: Upload APK to Release Assets
+      - name: Upload Admin APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Dealsouk-Admin-APK
+          path: build/outputs/DealSouk-Admin.apk
+          if-no-files-found: error
+
+      - name: Upload APKs to Release Assets
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
-          files: build/app/outputs/flutter-apk/app-release.apk
+          files: |
+            build/outputs/DealSouk-Shopper.apk
+            build/outputs/DealSouk-Admin.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

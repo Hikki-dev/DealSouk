@@ -416,6 +416,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeSearchHint => 'ابحث عن منتج لمقارنة الأسعار القريبة';
 
   @override
+  String homeSearchResultsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count نتائج',
+      one: 'نتيجة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get homeHowItWorks =>
       'ببساطة: ابحث عن منتج، تحقق من المتاجر القريبة، ثم قرر أين يستحق الذهاب.';
 
@@ -1178,6 +1189,39 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get profileRemovePhoto => 'إزالة الصورة';
+
+  @override
+  String get profilePhotoTakePhoto => 'التقاط صورة';
+
+  @override
+  String get profilePhotoChooseLibrary => 'اختيار من المعرض';
+
+  @override
+  String get profileEditPhotoTooltip => 'تعديل صورة الملف الشخصي';
+
+  @override
+  String get profileStatTokens => 'النقاط';
+
+  @override
+  String get profileStatAccuracy => 'الدقة';
+
+  @override
+  String get profileStatApproved => 'مقبولة';
+
+  @override
+  String get profileStatStreak => 'التتابع';
+
+  @override
+  String get profileSectionSubmissions => 'مساهماتي';
+
+  @override
+  String get profileSectionTokens => 'سجل النقاط';
+
+  @override
+  String get profileSectionRequests => 'طلباتي';
+
+  @override
+  String get profileSectionSettings => 'الإعدادات والحساب';
 
   @override
   String get profileDisplayName => 'الاسم المعروض';

@@ -23,9 +23,7 @@ class ProfileScreen extends ConsumerStatefulWidget {
   ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends ConsumerState<ProfileScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   late TextEditingController _nameController;
 
   static const List<String> _dubaiAreas = [
@@ -48,7 +46,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
     final profile = ref.read(userProfileProvider);
     _nameController = TextEditingController(text: profile.name);
     Future.microtask(() {
@@ -59,7 +56,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
   @override
   void dispose() {
-    _tabController.dispose();
     _nameController.dispose();
     super.dispose();
   }
@@ -89,181 +85,359 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         : ((approvedCount / mySubmissions.length) * 100).round();
 
     return Scaffold(
-      backgroundColor: AppTheme.forestDeep,
-      body: Column(
+      backgroundColor: AppTheme.background,
+      body: ListView(
+        padding: EdgeInsets.zero,
+        physics: const BouncingScrollPhysics(),
         children: [
-          // Header
-          Padding(
+          // ── Hero: big tappable avatar + name + level/streak + tokens ──
+          Container(
+            decoration: const BoxDecoration(
+              color: AppTheme.forestDeep,
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
+            ),
             padding: EdgeInsets.fromLTRB(
-              16,
-              MediaQuery.of(context).padding.top + 14,
-              16,
-              0,
+              20,
+              MediaQuery.of(context).padding.top + 24,
+              20,
+              26,
             ),
             child: Column(
               children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.4),
-                          width: 2,
-                        ),
-                        image: profile.avatarUrl.isNotEmpty
-                            ? DecorationImage(
-                                image: NetworkImage(profile.avatarUrl),
-                                fit: BoxFit.cover,
-                              )
-                            : null,
-                      ),
-                      child: profile.avatarUrl.isEmpty
-                          ? const Center(
-                              child: Icon(
-                                Icons.person,
-                                color: Colors.white,
-                                size: 28,
-                              ),
-                            )
-                          : null,
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            profile.name,
-                            style: GoogleFonts.fredoka(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.limeAccent.withValues(
-                                    alpha: 0.25,
-                                  ),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  l.profileLevelBadge(level, levelTitle(level)),
-                                  style: const TextStyle(
-                                    color: AppTheme.limeAccent,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              const Icon(
-                                Icons.local_fire_department,
-                                color: Colors.orange,
-                                size: 13,
-                              ),
-                              Text(
-                                l.profileDayStreak(streak.currentStreak),
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    Text(
-                      '$tokens',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 26,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    const Icon(
-                      Icons.bolt,
-                      color: AppTheme.limeAccent,
-                      size: 20,
-                    ),
-                  ],
-                ),
+                _buildHeroAvatar(profile),
                 const SizedBox(height: 14),
-                TabBar(
-                  controller: _tabController,
-                  indicatorColor: AppTheme.limeAccent,
-                  labelColor: AppTheme.limeAccent,
-                  unselectedLabelColor: Colors.white54,
-                  labelStyle: const TextStyle(
-                    fontSize: 11,
+                Text(
+                  profile.name,
+                  style: GoogleFonts.fredoka(
+                    color: Colors.white,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
-                  tabs: [
-                    Tab(text: l.profileTabSubmissions),
-                    Tab(text: l.profileTabTokens),
-                    Tab(text: l.profileTabRequests),
-                    Tab(text: l.profileTabSettings),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.limeAccent.withValues(alpha: 0.25),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        l.profileLevelBadge(level, levelTitle(level)),
+                        style: const TextStyle(
+                          color: AppTheme.limeAccent,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    const Icon(
+                      Icons.local_fire_department,
+                      color: Colors.orange,
+                      size: 15,
+                    ),
+                    const SizedBox(width: 2),
+                    Text(
+                      l.profileDayStreak(streak.currentStreak),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
                 ),
               ],
             ),
           ),
 
-          // Body tabs
-          Expanded(
-            child: Container(
-              decoration: const BoxDecoration(
-                color: AppTheme.background,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-              ),
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  // TAB 1 — Submissions
-                  _buildSubmissionsTab(mySubmissions, accuracyPct),
-
-                  // TAB 2 — Token History
-                  _buildTokenHistoryTab(transactions, tokens),
-
-                  // TAB 3 — Requests
-                  _buildRequestsTab(myRequests),
-
-                  // TAB 4 — Settings
-                  _buildSettingsTab(
-                    context,
-                    profile,
-                    settings,
-                    locale,
-                    tokens,
-                    vouchers,
-                  ),
-                ],
-              ),
+          // ── Quick stats ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 18, 16, 4),
+            child: Row(
+              children: [
+                _statCard(
+                  Icons.bolt,
+                  '$tokens',
+                  l.profileStatTokens,
+                  AppTheme.forestDeep,
+                ),
+                const SizedBox(width: 10),
+                _statCard(
+                  Icons.verified_outlined,
+                  '$accuracyPct%',
+                  l.profileStatAccuracy,
+                  Colors.green.shade600,
+                ),
+                const SizedBox(width: 10),
+                _statCard(
+                  Icons.receipt_long_outlined,
+                  '$approvedCount',
+                  l.profileStatApproved,
+                  Colors.blue.shade600,
+                ),
+                const SizedBox(width: 10),
+                _statCard(
+                  Icons.local_fire_department,
+                  '${streak.currentStreak}',
+                  l.profileStatStreak,
+                  Colors.orange.shade700,
+                ),
+              ],
             ),
           ),
+
+          // ── Plain labeled sections (no tabs) ──
+          _profileSection(
+            icon: Icons.receipt_long_outlined,
+            title: l.profileSectionSubmissions,
+            child: _buildSubmissionsTab(mySubmissions, accuracyPct),
+          ),
+          _profileSection(
+            icon: Icons.bolt,
+            title: l.profileSectionTokens,
+            child: _buildTokenHistoryTab(transactions, tokens),
+          ),
+          _profileSection(
+            icon: Icons.search_rounded,
+            title: l.profileSectionRequests,
+            child: _buildRequestsTab(myRequests),
+          ),
+          _profileSection(
+            icon: Icons.settings_outlined,
+            title: l.profileSectionSettings,
+            initiallyExpanded: true,
+            child: _buildSettingsTab(
+              context,
+              profile,
+              settings,
+              locale,
+              tokens,
+              vouchers,
+            ),
+          ),
+
+          SizedBox(height: 110 + MediaQuery.of(context).padding.bottom),
         ],
       ),
     );
   }
 
-  Future<void> _changeProfilePhoto() async {
+  /// Large circular avatar with a camera badge. Tapping anywhere on it (or the
+  /// badge) opens the photo options sheet — the primary way to change the pic.
+  Widget _buildHeroAvatar(dynamic profile) {
+    final l = AppLocalizations.of(context)!;
+    final hasPhoto = profile.avatarUrl.isNotEmpty;
+    return Semantics(
+      button: true,
+      label: l.profileEditPhotoTooltip,
+      child: GestureDetector(
+        onTap: _showPhotoOptions,
+        child: Stack(
+          children: [
+            Container(
+              width: 96,
+              height: 96,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.1),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  width: 2.5,
+                ),
+                image: hasPhoto
+                    ? DecorationImage(
+                        image: NetworkImage(profile.avatarUrl),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+              ),
+              child: hasPhoto
+                  ? null
+                  : const Center(
+                      child: Icon(Icons.person, color: Colors.white, size: 46),
+                    ),
+            ),
+            PositionedDirectional(
+              end: 0,
+              bottom: 0,
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppTheme.limeAccent,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppTheme.forestDeep, width: 2),
+                ),
+                child: const Icon(
+                  Icons.photo_camera_rounded,
+                  color: AppTheme.forestDeep,
+                  size: 16,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _statCard(IconData icon, String value, String label, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE8EEE4)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(height: 6),
+            Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                color: AppTheme.textDark,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 10.5, color: Colors.grey.shade500),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Collapsible labeled section card used instead of tabs.
+  Widget _profileSection({
+    required IconData icon,
+    required String title,
+    required Widget child,
+    bool initiallyExpanded = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFE8EEE4)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            initiallyExpanded: initiallyExpanded,
+            tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+            childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            leading: Icon(icon, color: AppTheme.forestDeep, size: 20),
+            title: Text(
+              title,
+              style: GoogleFonts.fredoka(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textDark,
+              ),
+            ),
+            children: [child],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Action sheet: take a new photo, choose from library, or remove.
+  void _showPhotoOptions() {
+    final l = AppLocalizations.of(context)!;
+    final hasPhoto = ref.read(userProfileProvider).avatarUrl.isNotEmpty;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 8),
+              ListTile(
+                leading: const Icon(
+                  Icons.photo_camera_rounded,
+                  color: AppTheme.forestDeep,
+                ),
+                title: Text(l.profilePhotoTakePhoto),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _changeProfilePhoto(fromCamera: true);
+                },
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.photo_library_rounded,
+                  color: AppTheme.forestDeep,
+                ),
+                title: Text(l.profilePhotoChooseLibrary),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _changeProfilePhoto(fromCamera: false);
+                },
+              ),
+              if (hasPhoto)
+                ListTile(
+                  leading: Icon(
+                    Icons.delete_outline_rounded,
+                    color: Colors.red.shade700,
+                  ),
+                  title: Text(
+                    l.profileRemovePhoto,
+                    style: TextStyle(color: Colors.red.shade700),
+                  ),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _removeProfilePhoto();
+                  },
+                ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _changeProfilePhoto({bool fromCamera = false}) async {
     final l = AppLocalizations.of(context)!;
     final oldUrl = ref.read(userProfileProvider).avatarUrl;
     final messenger = ScaffoldMessenger.of(context);
-    final newUrl = await storageService.pickAndUploadAvatar();
+    final newUrl = fromCamera
+        ? await storageService.captureAndUploadAvatar()
+        : await storageService.pickAndUploadAvatar();
     if (!mounted || newUrl == null) return;
     await ref.read(userProfileProvider.notifier).updateAvatar(newUrl);
     if (oldUrl.isNotEmpty) {
@@ -287,8 +461,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   // ── TAB 1: Submissions ──
   Widget _buildSubmissionsTab(List<dynamic> mySubmissions, int accuracyPct) {
     final l = AppLocalizations.of(context)!;
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 160),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Accuracy chip
         Container(
@@ -456,8 +630,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   // ── TAB 2: Token History ──
   Widget _buildTokenHistoryTab(List<dynamic> transactions, int tokens) {
     final l = AppLocalizations.of(context)!;
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 160),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
           padding: const EdgeInsets.all(14),
@@ -588,159 +762,154 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
   Widget _buildRequestsTab(List<dynamic> myRequests) {
     final l = AppLocalizations.of(context)!;
-    return RefreshIndicator(
-      onRefresh: () async {
-        await ref.read(myRequestsProvider.notifier).fetchMyRequests();
-      },
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 18, 16, 160),
-        children: [
-          if (myRequests.isEmpty)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 40),
-                child: Text(
-                  l.profileNoPriceRequests,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.grey.shade500,
-                    fontSize: 13.5,
-                    height: 1.45,
-                  ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (myRequests.isEmpty)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              child: Text(
+                l.profileNoPriceRequests,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.grey.shade500,
+                  fontSize: 13.5,
+                  height: 1.45,
                 ),
               ),
-            )
-          else
-            ...myRequests.map((req) {
-              final statusColor = req.status == 'fulfilled'
-                  ? Colors.green
-                  : req.status == 'refunded'
-                  ? Colors.blue
-                  : Colors.orange;
-              return Container(
-                margin: const EdgeInsets.only(bottom: 10),
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE8EEE4)),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.search_rounded,
-                        color: statusColor,
-                        size: 18,
-                      ),
+            ),
+          )
+        else
+          ...myRequests.map((req) {
+            final statusColor = req.status == 'fulfilled'
+                ? Colors.green
+                : req.status == 'refunded'
+                ? Colors.blue
+                : Colors.orange;
+            return Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFE8EEE4)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            req.productName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            '${req.storeName} • ${req.timestampLabel}',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
+                    child: Icon(
+                      Icons.search_rounded,
+                      color: statusColor,
+                      size: 18,
                     ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (req.status == 'open') ...[
-                          IconButton(
-                            tooltip: l.profileCancelRequest,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            icon: const Icon(
-                              Icons.cancel_outlined,
-                              color: AppTheme.redAccent,
-                              size: 20,
-                            ),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  title: Text(l.profileCancelRequestTitle),
-                                  content: Text(
-                                    l.profileCancelRequestBody(req.productName),
-                                    style: const TextStyle(fontSize: 14),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: Text(l.profileNo),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        ref
-                                            .read(myRequestsProvider.notifier)
-                                            .cancelRequest(req.id);
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text(
-                                        l.profileYesCancel,
-                                        style: const TextStyle(
-                                          color: AppTheme.redAccent,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
+                        Text(
+                          req.productName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
                           ),
-                          const SizedBox(width: 8),
-                        ],
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 7,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: statusColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            req.status.toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                              color: statusColor,
-                            ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          '${req.storeName} • ${req.timestampLabel}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey.shade600,
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
-              );
-            }),
-        ],
-      ),
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (req.status == 'open') ...[
+                        IconButton(
+                          tooltip: l.profileCancelRequest,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          icon: const Icon(
+                            Icons.cancel_outlined,
+                            color: AppTheme.redAccent,
+                            size: 20,
+                          ),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                title: Text(l.profileCancelRequestTitle),
+                                content: Text(
+                                  l.profileCancelRequestBody(req.productName),
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: Text(l.profileNo),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      ref
+                                          .read(myRequestsProvider.notifier)
+                                          .cancelRequest(req.id);
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text(
+                                      l.profileYesCancel,
+                                      style: const TextStyle(
+                                        color: AppTheme.redAccent,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: statusColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          req.status.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: statusColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }),
+      ],
     );
   }
 
@@ -766,8 +935,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     final approvedVoucher = findVoucher('approved');
     final pendingVoucher = findVoucher('pending');
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 160),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Voucher section
         Container(

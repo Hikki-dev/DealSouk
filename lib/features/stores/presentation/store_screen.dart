@@ -13,7 +13,6 @@ import 'package:dealsouk/features/profile/presentation/profile_providers.dart';
 import 'package:dealsouk/features/stores/domain/store.dart';
 import 'package:dealsouk/features/stores/presentation/stores_providers.dart';
 import 'package:dealsouk/core/theme/theme.dart';
-import 'package:dealsouk/core/widgets/auto_translate_text.dart';
 import 'package:dealsouk/core/widgets/souk_widgets.dart';
 import 'package:dealsouk/l10n/app_localizations.dart';
 
@@ -943,7 +942,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            AutoTranslateText(
+                            Text(
                               store.name,
                               style: GoogleFonts.fredoka(
                                 fontSize: 20,
@@ -951,7 +950,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                 color: AppTheme.forestDeep,
                               ),
                             ),
-                            AutoTranslateText(
+                            Text(
                               store.branch,
                               style: GoogleFonts.nunito(
                                 color: Colors.grey.shade500,
@@ -1248,7 +1247,7 @@ class _StoreChoiceCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    AutoTranslateText(
+                    Text(
                       store.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -1268,7 +1267,7 @@ class _StoreChoiceCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 3),
                         Expanded(
-                          child: AutoTranslateText(
+                          child: Text(
                             store.branch,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -1383,29 +1382,33 @@ class _StoreChoiceCard extends StatelessWidget {
 
 /// Maps a chain name to its publicly available logo URL.
 /// Sourced from Clearbit's logo CDN — no API key required for standard logos.
-/// Falls back gracefully inside [_LogoAvatar] if the URL fails to load.
-String? _chainLogoUrl(String name) {
+/// Maps a store name to its bundled brand-logo asset path.
+/// Logos live in assets/logos/ (see assets/logos/README.txt for filenames).
+/// Returns null for unknown chains; [_LogoAvatar] then shows a letter circle.
+/// If the asset path is returned but the file isn't present yet, the
+/// Image.asset errorBuilder falls back to the letter circle too — nothing breaks.
+String? _chainLogoAsset(String name) {
   final n = name.toLowerCase();
   if (n.contains('carrefour')) {
-    return 'https://logo.clearbit.com/carrefour.com';
+    return 'assets/logos/carrefour.png';
   } else if (n.contains('lulu')) {
-    return 'https://logo.clearbit.com/luluhypermarket.com';
+    return 'assets/logos/lulu.png';
   } else if (n.contains('spinneys')) {
-    return 'https://logo.clearbit.com/spinneys.com';
+    return 'assets/logos/spinneys.png';
   } else if (n.contains('waitrose')) {
-    return 'https://logo.clearbit.com/waitrose.com';
+    return 'assets/logos/waitrose.png';
   } else if (n.contains('union')) {
-    return 'https://logo.clearbit.com/unioncoop.ae';
+    return 'assets/logos/union_coop.png';
   } else if (n.contains('choithrams')) {
-    return 'https://logo.clearbit.com/choithrams.com';
+    return 'assets/logos/choithrams.png';
   } else if (n.contains('geant')) {
-    return 'https://logo.clearbit.com/geant.com';
+    return 'assets/logos/geant.png';
   } else if (n.contains('nesto')) {
-    return 'https://logo.clearbit.com/nestogroup.com';
+    return 'assets/logos/nesto.png';
   } else if (n.contains('al maya')) {
-    return 'https://logo.clearbit.com/almaya.ae';
+    return 'assets/logos/al_maya.png';
   } else if (n.contains('grandiose')) {
-    return 'https://logo.clearbit.com/grandiose.ae';
+    return 'assets/logos/grandiose.png';
   }
   return null;
 }
@@ -1436,9 +1439,9 @@ class _LogoAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logoUrl = _chainLogoUrl(name);
+    final logoAsset = _chainLogoAsset(name);
     final radius = borderRadius ?? size / 2;
-    final bgColor = logoUrl != null ? Colors.white : color;
+    final bgColor = logoAsset != null ? Colors.white : color;
 
     return Container(
       width: size,
@@ -1455,23 +1458,20 @@ class _LogoAvatar extends StatelessWidget {
           ),
         ],
       ),
-      child: _buildContent(logoUrl, radius),
+      child: _buildContent(logoAsset, radius),
     );
   }
 
-  Widget _buildContent(String? logoUrl, double radius) {
-    if (logoUrl == null) return _fallback(radius);
+  Widget _buildContent(String? logoAsset, double radius) {
+    if (logoAsset == null) return _fallback(radius);
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius - 1.5),
       child: Padding(
         padding: EdgeInsets.all(padding),
-        child: Image.network(
-          logoUrl,
+        child: Image.asset(
+          logoAsset,
           fit: BoxFit.contain,
-          loadingBuilder: (ctx, child, progress) {
-            if (progress == null) return child;
-            return _fallback(radius);
-          },
+          // If the PNG hasn't been dropped in yet, fall back to the letter.
           errorBuilder: (ctx, error, stack) => _fallback(radius),
         ),
       ),

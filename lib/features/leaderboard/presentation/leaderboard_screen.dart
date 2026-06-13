@@ -229,7 +229,11 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             if (_showRequestBoard) ...[
               const SliverToBoxAdapter(child: SizedBox(height: 12)),
               const SliverToBoxAdapter(child: RequestBoardView()),
-              const SliverPadding(padding: EdgeInsets.only(bottom: 120)),
+              SliverPadding(
+                padding: EdgeInsets.only(
+                  bottom: 110 + MediaQuery.of(context).padding.bottom,
+                ),
+              ),
             ] else ...[
               // Top Profile Card Deck
               SliverToBoxAdapter(
@@ -993,7 +997,13 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               if (hallOfFame.isNotEmpty)
                 SliverToBoxAdapter(child: _hallOfFameCard(hallOfFame, theme)),
 
-              const SliverPadding(padding: EdgeInsets.only(bottom: 40)),
+              // Clear the floating glass navbar (height + margin + safe area)
+              // so the last card rests fully visible instead of under the bar.
+              SliverPadding(
+                padding: EdgeInsets.only(
+                  bottom: 110 + MediaQuery.of(context).padding.bottom,
+                ),
+              ),
             ],
           ],
         ),

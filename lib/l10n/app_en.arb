@@ -228,6 +228,14 @@
   },
   "homeFindNearbyPrices": "Find nearby prices before you go",
   "homeSearchHint": "Search an item to compare prices nearby",
+  "homeSearchResultsCount": "{count, plural, =1{1 result} other{{count} results}}",
+  "@homeSearchResultsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "homeHowItWorks": "Simple: search an item, check nearby stores, then decide where it is worth going.",
   "homeBestPricesNearYou": "Best prices near you",
   "homePricesCount": "{count} prices",
@@ -674,6 +682,17 @@
   "profilePhotoSubtitleSet": "Change or remove your current photo",
   "profileChangePhoto": "Change photo",
   "profileRemovePhoto": "Remove photo",
+  "profilePhotoTakePhoto": "Take a photo",
+  "profilePhotoChooseLibrary": "Choose from library",
+  "profileEditPhotoTooltip": "Edit profile photo",
+  "profileStatTokens": "Tokens",
+  "profileStatAccuracy": "Accuracy",
+  "profileStatApproved": "Approved",
+  "profileStatStreak": "Streak",
+  "profileSectionSubmissions": "My Submissions",
+  "profileSectionTokens": "Token History",
+  "profileSectionRequests": "My Requests",
+  "profileSectionSettings": "Settings & Account",
   "profileDisplayName": "Display Name",
   "profileEditDisplayName": "Edit display name",
   "profileNameLabel": "Name",

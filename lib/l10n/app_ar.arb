@@ -222,6 +222,14 @@
   "homeGreetingLine": "{greeting}، {name}",
   "homeFindNearbyPrices": "اعرف الأسعار القريبة قبل أن تذهب",
   "homeSearchHint": "ابحث عن منتج لمقارنة الأسعار القريبة",
+  "homeSearchResultsCount": "{count, plural, =1{نتيجة واحدة} other{{count} نتائج}}",
+  "@homeSearchResultsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "homeHowItWorks": "ببساطة: ابحث عن منتج، تحقق من المتاجر القريبة، ثم قرر أين يستحق الذهاب.",
   "homeBestPricesNearYou": "أفضل الأسعار القريبة منك",
   "homePricesCount": "{count} سعر",
@@ -439,6 +447,17 @@
   "profilePhotoSubtitleSet": "غيّر صورتك الحالية أو أزلها",
   "profileChangePhoto": "تغيير الصورة",
   "profileRemovePhoto": "إزالة الصورة",
+  "profilePhotoTakePhoto": "التقاط صورة",
+  "profilePhotoChooseLibrary": "اختيار من المعرض",
+  "profileEditPhotoTooltip": "تعديل صورة الملف الشخصي",
+  "profileStatTokens": "النقاط",
+  "profileStatAccuracy": "الدقة",
+  "profileStatApproved": "مقبولة",
+  "profileStatStreak": "التتابع",
+  "profileSectionSubmissions": "مساهماتي",
+  "profileSectionTokens": "سجل النقاط",
+  "profileSectionRequests": "طلباتي",
+  "profileSectionSettings": "الإعدادات والحساب",
   "profileDisplayName": "الاسم المعروض",
   "profileEditDisplayName": "تعديل الاسم المعروض",
   "profileNameLabel": "الاسم",

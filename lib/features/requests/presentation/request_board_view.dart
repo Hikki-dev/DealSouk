@@ -7,7 +7,6 @@ import 'package:dealsouk/features/profile/presentation/profile_providers.dart';
 import 'package:dealsouk/features/admin/presentation/admin_providers.dart';
 import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/features/requests/domain/price_request.dart';
-import 'package:dealsouk/core/widgets/auto_translate_text.dart';
 import 'package:dealsouk/l10n/app_localizations.dart';
 
 class RequestBoardView extends ConsumerWidget {
@@ -385,7 +384,7 @@ class _RequestItemCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AutoTranslateText(
+                Text(
                   request.productName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

@@ -29,9 +29,22 @@ class StorageService {
     return _upload(photo, folder: 'receipts');
   }
 
+  /// Opens the gallery to pick an avatar and uploads it.
   Future<String?> pickAndUploadAvatar() async {
     final photo = await _picker.pickImage(
       source: ImageSource.gallery,
+      imageQuality: 80,
+      maxWidth: 900,
+    );
+    if (photo == null) return null;
+
+    return _upload(photo, folder: 'avatars');
+  }
+
+  /// Opens the camera to take a new avatar photo and uploads it.
+  Future<String?> captureAndUploadAvatar() async {
+    final photo = await _picker.pickImage(
+      source: ImageSource.camera,
       imageQuality: 80,
       maxWidth: 900,
     );

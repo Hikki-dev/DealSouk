@@ -418,6 +418,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeSearchHint => 'Search an item to compare prices nearby';
 
   @override
+  String homeSearchResultsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count results',
+      one: '1 result',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get homeHowItWorks =>
       'Simple: search an item, check nearby stores, then decide where it is worth going.';
 
@@ -1183,6 +1194,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileRemovePhoto => 'Remove photo';
+
+  @override
+  String get profilePhotoTakePhoto => 'Take a photo';
+
+  @override
+  String get profilePhotoChooseLibrary => 'Choose from library';
+
+  @override
+  String get profileEditPhotoTooltip => 'Edit profile photo';
+
+  @override
+  String get profileStatTokens => 'Tokens';
+
+  @override
+  String get profileStatAccuracy => 'Accuracy';
+
+  @override
+  String get profileStatApproved => 'Approved';
+
+  @override
+  String get profileStatStreak => 'Streak';
+
+  @override
+  String get profileSectionSubmissions => 'My Submissions';
+
+  @override
+  String get profileSectionTokens => 'Token History';
+
+  @override
+  String get profileSectionRequests => 'My Requests';
+
+  @override
+  String get profileSectionSettings => 'Settings & Account';
 
   @override
   String get profileDisplayName => 'Display Name';

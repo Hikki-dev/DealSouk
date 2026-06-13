@@ -854,6 +854,12 @@ abstract class AppLocalizations {
   /// **'Search an item to compare prices nearby'**
   String get homeSearchHint;
 
+  /// No description provided for @homeSearchResultsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 result} other{{count} results}}'**
+  String homeSearchResultsCount(int count);
+
   /// No description provided for @homeHowItWorks.
   ///
   /// In en, this message translates to:
@@ -2159,6 +2165,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove photo'**
   String get profileRemovePhoto;
+
+  /// No description provided for @profilePhotoTakePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo'**
+  String get profilePhotoTakePhoto;
+
+  /// No description provided for @profilePhotoChooseLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from library'**
+  String get profilePhotoChooseLibrary;
+
+  /// No description provided for @profileEditPhotoTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile photo'**
+  String get profileEditPhotoTooltip;
+
+  /// No description provided for @profileStatTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'Tokens'**
+  String get profileStatTokens;
+
+  /// No description provided for @profileStatAccuracy.
+  ///
+  /// In en, this message translates to:
+  /// **'Accuracy'**
+  String get profileStatAccuracy;
+
+  /// No description provided for @profileStatApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get profileStatApproved;
+
+  /// No description provided for @profileStatStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak'**
+  String get profileStatStreak;
+
+  /// No description provided for @profileSectionSubmissions.
+  ///
+  /// In en, this message translates to:
+  /// **'My Submissions'**
+  String get profileSectionSubmissions;
+
+  /// No description provided for @profileSectionTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'Token History'**
+  String get profileSectionTokens;
+
+  /// No description provided for @profileSectionRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'My Requests'**
+  String get profileSectionRequests;
+
+  /// No description provided for @profileSectionSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings & Account'**
+  String get profileSectionSettings;
 
   /// No description provided for @profileDisplayName.
   ///

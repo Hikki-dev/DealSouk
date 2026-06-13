@@ -19,7 +19,6 @@ import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/core/widgets/souk_widgets.dart';
 import 'package:dealsouk/core/widgets/platform_card.dart';
 import 'package:dealsouk/features/requests/presentation/request_board_view.dart';
-import 'package:dealsouk/core/widgets/auto_translate_text.dart';
 import 'package:dealsouk/l10n/app_localizations.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -30,6 +29,12 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
+  // Live in-place search: typing in the hero bar filters the catalog instantly
+  // and swaps the home content for results — no second screen, no second bar.
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocus = FocusNode();
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
@@ -42,6 +47,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ref.read(dailyChallengeProvider.notifier).fetchToday();
       ref.read(priceRequestsProvider.notifier).fetchBoard();
     });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocus.dispose();
+    super.dispose();
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    _searchFocus.unfocus();
+    setState(() => _searchQuery = '');
   }
 
   @override
@@ -67,6 +85,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     final savedCount = cartItems.length;
+    final bool searching = _searchQuery.trim().isNotEmpty;
     final feedProducts =
         _filterByFreshness(products, filterState.freshnessFilter)..sort(
           (a, b) => _freshnessMinutes(
@@ -263,52 +282,72 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       const _OfferCarousel(),
                       const SizedBox(height: 20),
 
-                      // Search Bar (Glassmorphic)
-                      GestureDetector(
-                        onTap: () {
-                          ref.read(filterProvider.notifier).reset();
-                          context.push('/search');
-                        },
-                        child: GlassContainer(
-                          height: 52,
-                          borderRadius: 26,
-                          color: Colors.white.withValues(alpha: 0.28),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.38),
-                            width: 1.5,
+                      // Live search bar — filters the catalog instantly in place.
+                      GlassContainer(
+                        height: 52,
+                        borderRadius: 26,
+                        color: Colors.white.withValues(alpha: 0.28),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.38),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.04),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
+                        ],
+                        padding: const EdgeInsets.symmetric(horizontal: 18),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.search_rounded,
+                              color: Colors.white.withValues(alpha: 0.95),
+                              size: 22,
                             ),
-                          ],
-                          padding: const EdgeInsets.symmetric(horizontal: 18),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.search_rounded,
-                                color: Colors.white.withValues(alpha: 0.95),
-                                size: 22,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                l.homeSearchHint,
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.9),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: TextField(
+                                controller: _searchController,
+                                focusNode: _searchFocus,
+                                textInputAction: TextInputAction.search,
+                                onChanged: (v) =>
+                                    setState(() => _searchQuery = v),
+                                cursorColor: Colors.white,
+                                style: const TextStyle(
+                                  color: Colors.white,
                                   fontSize: 13.5,
                                   fontWeight: FontWeight.w600,
                                 ),
+                                decoration: InputDecoration(
+                                  isDense: true,
+                                  border: InputBorder.none,
+                                  hintText: l.homeSearchHint,
+                                  hintStyle: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.9),
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                               ),
-                              const Spacer(),
+                            ),
+                            if (searching)
+                              GestureDetector(
+                                onTap: _clearSearch,
+                                child: Icon(
+                                  Icons.close_rounded,
+                                  color: Colors.white.withValues(alpha: 0.95),
+                                  size: 20,
+                                ),
+                              )
+                            else
                               Icon(
                                 Icons.tune_rounded,
                                 color: Colors.white.withValues(alpha: 0.95),
                                 size: 20,
                               ),
-                            ],
-                          ),
+                          ],
                         ),
                       ),
                     ],
@@ -318,163 +357,226 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
 
-          // 2. Categories Row (Static 5 items)
-          SliverToBoxAdapter(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        l.homeCategories,
-                        style: GoogleFonts.fredoka(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          ref.read(filterProvider.notifier).reset();
-                          context.push('/search');
-                        },
-                        child: Text(
-                          l.homeSeeAll,
-                          style: const TextStyle(
-                            fontSize: 12.5,
-                            color: AppTheme.forestDeep,
+          // While searching: replace the whole home feed with live results.
+          if (searching)
+            SliverToBoxAdapter(
+              child: _SearchResultsPanel(
+                query: _searchQuery.trim(),
+                onClose: _clearSearch,
+              ),
+            )
+          else ...[
+            // 2. Categories Row (Static 5 items)
+            SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          l.homeCategories,
+                          style: GoogleFonts.fredoka(
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
+                            color: Colors.black,
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  height: 94,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    itemCount: homeCategories.length,
-                    itemBuilder: (context, index) {
-                      final cat = homeCategories[index];
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: GestureDetector(
+                        GestureDetector(
                           onTap: () {
-                            ref
-                                .read(filterProvider.notifier)
-                                .setCategory(cat.category);
+                            ref.read(filterProvider.notifier).reset();
                             context.push('/search');
                           },
-                          child: Column(
-                            children: [
-                              Container(
-                                width: 58,
-                                height: 58,
-                                decoration: BoxDecoration(
-                                  color: cat.color,
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.02,
-                                      ),
-                                      blurRadius: 6,
-                                      offset: const Offset(0, 3),
-                                    ),
-                                  ],
-                                ),
-                                padding: const EdgeInsets.all(10),
-                                child: Icon(
-                                  cat.icon,
-                                  color: AppTheme.forestDeep.withValues(
-                                    alpha: 0.42,
-                                  ),
-                                  size: 28,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                cat.label,
-                                style: GoogleFonts.nunito(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                            ],
+                          child: Text(
+                            l.homeSeeAll,
+                            style: const TextStyle(
+                              fontSize: 12.5,
+                              color: AppTheme.forestDeep,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                      );
-                    },
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
-
-          // 3. Request section should be visible from the home page.
-          const SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(4, 12, 4, 4),
-              child: RequestBoardView(),
-            ),
-          ),
-
-          // 4. Community points card.
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 10),
-              child: _HomeTokenBalance(
-                tokens: tokens,
-                submissionsToday: profile.submissionsToday,
-                dailyCap: settings.dailySubmissionCap,
+                  SizedBox(
+                    height: 94,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      itemCount: homeCategories.length,
+                      itemBuilder: (context, index) {
+                        final cat = homeCategories[index];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: GestureDetector(
+                            onTap: () {
+                              ref
+                                  .read(filterProvider.notifier)
+                                  .setCategory(cat.category);
+                              context.push('/search');
+                            },
+                            child: Column(
+                              children: [
+                                Container(
+                                  width: 58,
+                                  height: 58,
+                                  decoration: BoxDecoration(
+                                    color: cat.color,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(
+                                          alpha: 0.02,
+                                        ),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 3),
+                                      ),
+                                    ],
+                                  ),
+                                  padding: const EdgeInsets.all(10),
+                                  child: Icon(
+                                    cat.icon,
+                                    color: AppTheme.forestDeep.withValues(
+                                      alpha: 0.42,
+                                    ),
+                                    size: 28,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  cat.label,
+                                  style: GoogleFonts.nunito(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
 
-          // 4b. Daily Challenge Card
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-              child: _DailyChallengeCard(challenge: dailyChallenge),
+            // 3. Request section should be visible from the home page.
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(4, 12, 4, 4),
+                child: RequestBoardView(),
+              ),
             ),
-          ),
 
-          // 5. Quick-Tip concept banner: How it works
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5E9),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: const Color(0xFFC8E6C9),
-                    width: 1.2,
+            // 4. Community points card.
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 10),
+                child: _HomeTokenBalance(
+                  tokens: tokens,
+                  submissionsToday: profile.submissionsToday,
+                  dailyCap: settings.dailySubmissionCap,
+                ),
+              ),
+            ),
+
+            // 4b. Daily Challenge Card
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                child: _DailyChallengeCard(challenge: dailyChallenge),
+              ),
+            ),
+
+            // 5. Quick-Tip concept banner: How it works
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 8,
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE8F5E9),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: const Color(0xFFC8E6C9),
+                      width: 1.2,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.help_outline_rounded,
+                        color: AppTheme.forestDeep,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          l.homeHowItWorks,
+                          style: GoogleFonts.nunito(
+                            fontSize: 12,
+                            color: AppTheme.forestDeep,
+                            fontWeight: FontWeight.bold,
+                            height: 1.3,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+              ),
+            ),
+
+            // 6. Freshness chip filters
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8, bottom: 4),
+                child: _FreshnessChipRow(selected: filterState.freshnessFilter),
+              ),
+            ),
+
+            // 7. Verified prices feed
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Icon(
-                      Icons.help_outline_rounded,
-                      color: AppTheme.forestDeep,
-                      size: 20,
+                    Text(
+                      l.homeBestPricesNearYou,
+                      style: GoogleFonts.fredoka(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      transitionBuilder: (child, animation) => FadeTransition(
+                        opacity: animation,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0, 0.3),
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: child,
+                        ),
+                      ),
                       child: Text(
-                        l.homeHowItWorks,
-                        style: GoogleFonts.nunito(
+                        l.homePricesCount(feedProducts.length),
+                        key: ValueKey<int>(feedProducts.length),
+                        style: const TextStyle(
                           fontSize: 12,
-                          color: AppTheme.forestDeep,
                           fontWeight: FontWeight.bold,
-                          height: 1.3,
+                          color: AppTheme.redAccent,
                         ),
                       ),
                     ),
@@ -482,217 +584,171 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
             ),
-          ),
 
-          // 6. Freshness chip filters
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 8, bottom: 4),
-              child: _FreshnessChipRow(selected: filterState.freshnessFilter),
-            ),
-          ),
-
-          // 7. Verified prices feed
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    l.homeBestPricesNearYou,
-                    style: GoogleFonts.fredoka(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
+            // Verified prices list cards (show up to 8 filtered results)
+            if (feedProducts.isEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 32,
+                  ),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.search_off_rounded,
+                          size: 48,
+                          color: Colors.grey.shade300,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          l.homeNoPricesMatch,
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          l.homeNoPricesHint,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.grey.shade400,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        TextButton.icon(
+                          onPressed: () => context.push('/search'),
+                          icon: const Icon(Icons.search_rounded, size: 18),
+                          label: Text(l.homeFindAnItem),
+                        ),
+                      ],
                     ),
                   ),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 250),
-                    transitionBuilder: (child, animation) => FadeTransition(
-                      opacity: animation,
-                      child: SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(0, 0.3),
-                          end: Offset.zero,
-                        ).animate(animation),
-                        child: child,
-                      ),
-                    ),
-                    child: Text(
-                      l.homePricesCount(feedProducts.length),
-                      key: ValueKey<int>(feedProducts.length),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.redAccent,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
+              )
+            else
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                sliver: SliverList.builder(
+                  itemCount: feedProducts.take(8).length,
+                  itemBuilder: (context, index) =>
+                      _FreshPriceEntryCard(product: feedProducts[index]),
+                ),
               ),
-            ),
-          ),
 
-          // Verified prices list cards (show up to 8 filtered results)
-          if (feedProducts.isEmpty)
+            // 8. Fresh Products Feed
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 32,
-                ),
-                child: Center(
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.search_off_rounded,
-                        size: 48,
-                        color: Colors.grey.shade300,
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      l.homeBrowseItems,
+                      style: GoogleFonts.fredoka(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
                       ),
-                      const SizedBox(height: 12),
-                      Text(
-                        l.homeNoPricesMatch,
-                        style: TextStyle(
-                          color: Colors.grey.shade500,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        ref.read(filterProvider.notifier).reset();
+                        context.push('/search');
+                      },
+                      child: Text(
+                        l.homeSeeAll,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          color: AppTheme.forestDeep,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        l.homeNoPricesHint,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.grey.shade400,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      TextButton.icon(
-                        onPressed: () => context.push('/search'),
-                        icon: const Icon(Icons.search_rounded, size: 18),
-                        label: Text(l.homeFindAnItem),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-            )
-          else
+            ),
+
+            // 2-column grid displaying filtered products
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              sliver: SliverList.builder(
-                itemCount: feedProducts.take(8).length,
-                itemBuilder: (context, index) =>
-                    _FreshPriceEntryCard(product: feedProducts[index]),
+              sliver: SliverGrid(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.75,
+                  crossAxisSpacing: 14,
+                  mainAxisSpacing: 14,
+                ),
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) =>
+                      ProductGridCard(product: feedProducts[index]),
+                  childCount: feedProducts.take(4).length,
+                ),
               ),
             ),
 
-          // 8. Fresh Products Feed
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    l.homeBrowseItems,
-                    style: GoogleFonts.fredoka(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      ref.read(filterProvider.notifier).reset();
-                      context.push('/search');
-                    },
-                    child: Text(
-                      l.homeSeeAll,
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: AppTheme.forestDeep,
+            // 8. Featured stores header
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 22, 20, 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      l.homeFeaturedStores,
+                      style: GoogleFonts.fredoka(
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
+                        color: Colors.black,
                       ),
                     ),
-                  ),
-                ],
+                    GestureDetector(
+                      onTap: () => context.go('/stores'),
+                      child: Text(
+                        l.homeSeeAll,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.forestDeep,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
 
-          // 2-column grid displaying filtered products
+            // Featured stores awning cards row
+            SliverToBoxAdapter(
+              child: Builder(
+                builder: (context) {
+                  final stores = ref.watch(storesProvider);
+                  if (stores.length < 2) return const SizedBox.shrink();
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      children: [
+                        Expanded(child: _FeaturedStoreCard(store: stores[0])),
+                        const SizedBox(width: 14),
+                        Expanded(child: _FeaturedStoreCard(store: stores[1])),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            sliver: SliverGrid(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.75,
-                crossAxisSpacing: 14,
-                mainAxisSpacing: 14,
-              ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) =>
-                    ProductGridCard(product: feedProducts[index]),
-                childCount: feedProducts.take(4).length,
-              ),
+            padding: EdgeInsets.only(
+              bottom: 110 + MediaQuery.of(context).padding.bottom,
             ),
           ),
-
-          // 8. Featured stores header
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 22, 20, 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    l.homeFeaturedStores,
-                    style: GoogleFonts.fredoka(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => context.go('/stores'),
-                    child: Text(
-                      l.homeSeeAll,
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.forestDeep,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Featured stores awning cards row
-          SliverToBoxAdapter(
-            child: Builder(
-              builder: (context) {
-                final stores = ref.watch(storesProvider);
-                if (stores.length < 2) return const SizedBox.shrink();
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    children: [
-                      Expanded(child: _FeaturedStoreCard(store: stores[0])),
-                      const SizedBox(width: 14),
-                      Expanded(child: _FeaturedStoreCard(store: stores[1])),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-
-          const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
         ],
       ),
     );
@@ -1427,7 +1483,7 @@ class _FreshPriceEntryCard extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AutoTranslateText(
+                  Text(
                     product.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -1438,7 +1494,7 @@ class _FreshPriceEntryCard extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  AutoTranslateText(
+                  Text(
                     product.lowestPriceStore,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -1608,7 +1664,7 @@ class _FeaturedStoreCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AutoTranslateText(
+                  Text(
                     store.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -1864,5 +1920,315 @@ class _OfferCardData {
     required this.title,
     required this.subtitle,
     required this.icon,
+  });
+}
+
+/// Live in-place search results shown directly under the home search bar.
+/// Filters the catalog as the user types; if nothing matches, offers a
+/// one-tap "request this item" path so the search never dead-ends.
+class _SearchResultsPanel extends ConsumerWidget {
+  const _SearchResultsPanel({required this.query, required this.onClose});
+
+  final String query;
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
+    final products = ref.watch(productsProvider);
+    final requestCost = ref.watch(adminSettingsProvider).requestCostTokens;
+    final q = query.toLowerCase();
+
+    final matches = products
+        .where(
+          (p) =>
+              p.name.toLowerCase().contains(q) ||
+              p.brand.toLowerCase().contains(q),
+        )
+        .toList();
+
+    if (matches.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+        child: Column(
+          children: [
+            Icon(
+              Icons.search_off_rounded,
+              size: 56,
+              color: Colors.grey.shade300,
+            ),
+            const SizedBox(height: 14),
+            Text(
+              l.searchEmptyQueryTitle(query),
+              textAlign: TextAlign.center,
+              style: GoogleFonts.fredoka(
+                color: AppTheme.textDark,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              l.searchEmptyQuerySubtitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: () => _showItemRequestSheet(
+                context,
+                ref,
+                query,
+                requestCost,
+                onDone: onClose,
+              ),
+              icon: const Icon(Icons.add_comment_rounded, size: 18),
+              label: Text(l.searchAskShoppersToCheck),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.forestDeep,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 22,
+                  vertical: 13,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10, left: 2),
+            child: Text(
+              l.homeSearchResultsCount(matches.length),
+              style: GoogleFonts.fredoka(
+                fontSize: 14.5,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textDark,
+              ),
+            ),
+          ),
+          ...matches.map(
+            (product) => GestureDetector(
+              onTap: () => context.push('/product/${product.id}'),
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE8EEE4)),
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: SoukProductVisual(
+                        product: product,
+                        fit: BoxFit.cover,
+                        borderRadius: 12,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            product.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13.5,
+                              color: Colors.black,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            product.lowestPriceStore,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    SoukPrice(product.lowestPrice, size: 14.5),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          // Always offer the request path, even when results exist.
+          Center(
+            child: TextButton.icon(
+              onPressed: () => _showItemRequestSheet(
+                context,
+                ref,
+                query,
+                requestCost,
+                onDone: onClose,
+              ),
+              icon: const Icon(Icons.add_comment_outlined, size: 16),
+              label: Text(l.searchAskShoppersToCheck),
+              style: TextButton.styleFrom(foregroundColor: AppTheme.forestDeep),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Bottom sheet that lets a shopper ask the community to check a price.
+/// Prefilled with whatever they typed in the search bar.
+void _showItemRequestSheet(
+  BuildContext context,
+  WidgetRef ref,
+  String initialQuery,
+  int requestCost, {
+  VoidCallback? onDone,
+}) {
+  final formKey = GlobalKey<FormState>();
+  String productName = initialQuery;
+  String selectedStore = 'Carrefour';
+
+  const List<String> stores = [
+    'Carrefour',
+    'Lulu Hypermarket',
+    'Spinneys',
+    'Union Coop',
+    'Nesto',
+    'Choithrams',
+    'Grandiose',
+    'Waitrose',
+    'Al Maya',
+    'Geant',
+  ];
+
+  ref.read(navbarVisibleProvider.notifier).hide();
+
+  showModalBottomSheet(
+    context: context,
+    useRootNavigator: true,
+    isScrollControlled: true,
+    backgroundColor: Colors.white,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+    ),
+    builder: (context) {
+      final l = AppLocalizations.of(context)!;
+      return Padding(
+        padding: EdgeInsets.fromLTRB(
+          24,
+          24,
+          24,
+          MediaQuery.of(context).viewInsets.bottom + 32,
+        ),
+        child: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                l.searchRequestPriceCheckTitle,
+                style: GoogleFonts.fredoka(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textDark,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                l.searchRequestPriceCheckDescription(requestCost),
+                style: GoogleFonts.nunito(
+                  fontSize: 13,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              const SizedBox(height: 18),
+              TextFormField(
+                initialValue: productName,
+                decoration: InputDecoration(
+                  labelText: l.searchItemNameLabel,
+                  hintText: l.searchItemNameHint,
+                ),
+                onChanged: (val) => productName = val,
+                validator: (val) => val == null || val.trim().isEmpty
+                    ? l.searchEnterProductName
+                    : null,
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                initialValue: selectedStore,
+                decoration: InputDecoration(
+                  labelText: l.searchChooseSupermarket,
+                ),
+                items: stores.map((s) {
+                  return DropdownMenuItem(value: s, child: Text(s));
+                }).toList(),
+                onChanged: (val) {
+                  if (val != null) selectedStore = val;
+                },
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () {
+                  if (formKey.currentState!.validate()) {
+                    ref
+                        .read(myRequestsProvider.notifier)
+                        .addPriceRequest(
+                          productName: productName.trim(),
+                          storeName: selectedStore,
+                          requestCostTokens: requestCost,
+                        );
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(l.searchRequestPosted),
+                        backgroundColor: AppTheme.forestDeep,
+                      ),
+                    );
+                    onDone?.call();
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.forestDeep,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: Text(
+                  l.searchAskForThisPrice,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  ).whenComplete(() {
+    ref.read(navbarVisibleProvider.notifier).show();
   });
 }

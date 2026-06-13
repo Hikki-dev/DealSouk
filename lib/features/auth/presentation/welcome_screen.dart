@@ -17,7 +17,10 @@ class WelcomeScreen extends ConsumerStatefulWidget {
 }
 
 class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
-  bool _isAdminMode = false;
+  bool _isAdminMode = const bool.fromEnvironment(
+    'ADMIN_MODE',
+    defaultValue: false,
+  );
   bool _loading = false;
 
   // Dev mode & privacy
@@ -265,6 +268,12 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                       Center(
                         child: GestureDetector(
                           onTap: () {
+                            if (const bool.fromEnvironment(
+                              'ADMIN_MODE',
+                              defaultValue: false,
+                            )) {
+                              return;
+                            }
                             setState(() {
                               _logoTaps++;
                               if (_logoTaps >= 5) {
@@ -554,9 +563,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                       // Primary CTA
                       if (!_showPhoneInput && !_showOtpInput) ...[
                         _PrimaryCta(
-                          label: _isAdminMode
-                              ? l.welcomeEnterAdminDashboard
-                              : l.welcomeContinueWithGoogle,
+                          label: l.welcomeContinueWithGoogle,
                           loading: _loading,
                           onTap: _handleGoogle,
                         ),
@@ -982,13 +989,26 @@ class _PrimaryCta extends StatelessWidget {
                     color: AppTheme.forestDeep,
                   ),
                 )
-              : Text(
-                  label,
-                  style: const TextStyle(
-                    color: AppTheme.forestDeep,
-                    fontSize: 16.5,
-                    fontWeight: FontWeight.w800,
-                  ),
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.network(
+                      'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
+                      height: 20,
+                      width: 20,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const SizedBox(width: 20, height: 20),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        color: AppTheme.forestDeep,
+                        fontSize: 16.5,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
                 ),
         ),
       ),

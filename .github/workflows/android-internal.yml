@@ -1,12 +1,17 @@
 name: Android Internal APK
 
 on:
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       api_base_url:
         description: Production or staging API base URL
         required: true
         default: https://dealsouk-api.onrender.com
+
+permissions:
+  contents: write
 
 jobs:
   build-android:
@@ -45,7 +50,7 @@ jobs:
       - name: Build release APK
         run: >
           flutter build apk --release
-          --dart-define=API_BASE_URL=${{ inputs.api_base_url }}
+          --dart-define=API_BASE_URL=${{ inputs.api_base_url || 'https://dealsouk-api.onrender.com' }}
           --dart-define=ADMIN_MODE=false
 
       - name: Upload APK artifact
@@ -54,3 +59,11 @@ jobs:
           name: dealsouk-android-internal-apk
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
+
+      - name: Upload APK to Release Assets
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -19,6 +19,8 @@ import requestRoutes from "./routes/requests";
 import profileRoutes from "./routes/profile";
 import adminRoutes from "./routes/admin";
 import challengeRoutes from "./routes/challenges";
+import translateRoutes from "./routes/translate";
+import { startMaintenanceScheduler } from "./services/maintenance";
 
 export const prisma = new PrismaClient();
 
@@ -92,6 +94,7 @@ app.use("/requests", requestRoutes);
 app.use("/profile", profileRoutes);
 app.use("/admin", adminRoutes);
 app.use("/challenges", challengeRoutes);
+app.use("/translate", translateRoutes);
 
 app.use(
   (
@@ -111,6 +114,8 @@ async function main() {
   app.listen(PORT, () => {
     console.log(`DealSouk API running on port ${PORT}`);
   });
+  // Enforce time-based PRD rules (FR-18 expiry, FR-29 refunds, suspension lift).
+  startMaintenanceScheduler();
 }
 
 main().catch((err) => {

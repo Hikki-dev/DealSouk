@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { prisma } from '../index';
 import { requireAuth, requireAdmin, AuthRequest } from '../middleware/auth';
 import { authenticatedRateLimit } from '../middleware/rateLimits';
-import { awardTokens, checkFirstSubmissionBonus, updateStreakOnApproval, updateChallengeProgress, spendTokens } from '../services/tokenEngine';
+import { spendTokens, recalculateAccuracyRating, runApprovalEffects } from '../services/tokenEngine';
 import {
   notifyAccountBanned,
   notifyAccountSuspended,
@@ -30,21 +30,6 @@ function cleanReason(value: unknown, fallback: string): string {
   const reason = value.trim();
   if (!reason) return fallback;
   return reason.slice(0, MAX_ADMIN_REASON_LENGTH);
-}
-
-async function recalculateAccuracyRating(userId: string): Promise<number> {
-  const [total, rejectedOrHidden] = await Promise.all([
-    prisma.priceSubmission.count({ where: { sourcerId: userId } }),
-    prisma.priceSubmission.count({
-      where: { sourcerId: userId, status: { in: ['rejected', 'hidden'] } },
-    }),
-  ]);
-  const accuracyRating = total === 0 ? 100 : Math.max(0, ((total - rejectedOrHidden) / total) * 100);
-  await prisma.user.update({
-    where: { id: userId },
-    data: { accuracyRating },
-  });
-  return accuracyRating;
 }
 
 async function recordAdminAction(params: {
@@ -106,19 +91,13 @@ router.post('/submissions/:id/approve', adminWriteLimiter, async (req: AuthReque
     return;
   }
 
-  if (submission.tokensAwarded > 0) {
-    await awardTokens(submission.sourcerId, submission.tokensAwarded, `Approved submission: ${req.params.id}`);
-  }
-
-  // FR-07: Welcome bonus on first approved submission
-  await checkFirstSubmissionBonus(submission.sourcerId);
-
-  // FR-46: Update streak
-  await updateStreakOnApproval(submission.sourcerId);
-
-  // FR-47: Update daily challenge progress
-  await updateChallengeProgress(submission.sourcerId);
-  const accuracyRating = await recalculateAccuracyRating(submission.sourcerId);
+  // Award tokens, welcome bonus (FR-07), streak (FR-46), challenge progress
+  // (FR-47), accuracy (FR-55), and rank-change push (FR-50).
+  const accuracyRating = await runApprovalEffects({
+    sourcerId: submission.sourcerId,
+    tokensAwarded: submission.tokensAwarded,
+    submissionId: req.params.id,
+  });
 
   res.json({ message: 'Approved', tokensAwarded: submission.tokensAwarded, accuracyRating });
 });

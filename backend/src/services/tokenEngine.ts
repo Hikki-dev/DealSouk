@@ -1,5 +1,10 @@
 import { prisma } from '../index';
-import { notifyStreakMilestone, notifyBadgeEarned } from './fcmNotifier';
+import { notifyStreakMilestone, notifyBadgeEarned, notifyRankChange } from './fcmNotifier';
+
+// FR-36: minimum approved track record before a sourcer's submissions
+// publish instantly (combined with a 90%+ accuracy rating).
+export const TRUST_MIN_APPROVED = 10;
+export const TRUST_MIN_ACCURACY = 90;
 
 export async function getSettings() {
   let settings = await prisma.adminSettings.findUnique({ where: { id: 1 } });
@@ -212,6 +217,67 @@ export async function updateChallengeProgress(userId: string): Promise<void> {
       data: { bonusAwarded: true },
     });
   }
+}
+
+export async function recalculateAccuracyRating(userId: string): Promise<number> {
+  // FR-55: accuracy = percentage of submissions not rejected or removed.
+  const [total, rejectedOrHidden] = await Promise.all([
+    prisma.priceSubmission.count({ where: { sourcerId: userId } }),
+    prisma.priceSubmission.count({
+      where: { sourcerId: userId, status: { in: ['rejected', 'hidden'] } },
+    }),
+  ]);
+  const accuracyRating =
+    total === 0 ? 100 : Math.max(0, ((total - rejectedOrHidden) / total) * 100);
+  await prisma.user.update({ where: { id: userId }, data: { accuracyRating } });
+  return accuracyRating;
+}
+
+export async function computeMonthlyRank(userId: string): Promise<number> {
+  // FR-44: rank by tokens earned in the current calendar month.
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const rankings = await prisma.tokenTransaction.groupBy({
+    by: ['userId'],
+    where: { createdAt: { gte: startOfMonth }, amount: { gt: 0 } },
+    _sum: { amount: true },
+    orderBy: { _sum: { amount: 'desc' } },
+  });
+  const index = rankings.findIndex((r) => r.userId === userId);
+  return index === -1 ? rankings.length + 1 : index + 1;
+}
+
+// Shared approval pipeline used by both admin approval and trusted auto-approval
+// (FR-36). Awards tokens, applies welcome bonus / streak / challenge progress,
+// recomputes accuracy, and fires the leaderboard rank-change push (FR-50).
+export async function runApprovalEffects(params: {
+  sourcerId: string;
+  tokensAwarded: number;
+  submissionId: string;
+}): Promise<number> {
+  const oldRank = await computeMonthlyRank(params.sourcerId);
+
+  if (params.tokensAwarded > 0) {
+    await awardTokens(
+      params.sourcerId,
+      params.tokensAwarded,
+      `Approved submission: ${params.submissionId}`,
+    );
+  }
+  await checkFirstSubmissionBonus(params.sourcerId);
+  await updateStreakOnApproval(params.sourcerId);
+  await updateChallengeProgress(params.sourcerId);
+  const accuracyRating = await recalculateAccuracyRating(params.sourcerId);
+
+  // FR-50: notify on a leaderboard rank shift of 3+ positions (guarded inside).
+  const newRank = await computeMonthlyRank(params.sourcerId);
+  const user = await prisma.user.findUnique({
+    where: { id: params.sourcerId },
+    select: { fcmToken: true },
+  });
+  await notifyRankChange(user?.fcmToken, newRank, oldRank);
+
+  return accuracyRating;
 }
 
 async function checkAndAwardLevelBadge(userId: string, level: number, fcmToken?: string | null): Promise<void> {

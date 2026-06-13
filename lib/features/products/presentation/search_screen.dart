@@ -10,9 +10,10 @@ import 'package:dealsouk/features/admin/presentation/admin_providers.dart';
 import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/core/widgets/responsive_container.dart';
 import 'package:dealsouk/core/widgets/souk_widgets.dart';
+import 'package:dealsouk/l10n/app_localizations.dart';
 
 class _CatalogCategory {
-  final String title;
+  final String Function(AppLocalizations) title;
   final String filterCategory;
   final IconData icon;
   final Color color;
@@ -25,22 +26,37 @@ class _CatalogCategory {
   );
 }
 
-const _catalogCategories = [
-  _CatalogCategory('Fresh', 'Fresh', Icons.spa_outlined, Color(0xFF2E7D32)),
-  _CatalogCategory('Fruits', 'Fruits', Icons.apple_outlined, Color(0xFFE65100)),
+final _catalogCategories = [
   _CatalogCategory(
-    'Snacks',
+    (l) => l.searchCatFresh,
+    'Fresh',
+    Icons.spa_outlined,
+    const Color(0xFF2E7D32),
+  ),
+  _CatalogCategory(
+    (l) => l.searchCatFruits,
+    'Fruits',
+    Icons.apple_outlined,
+    const Color(0xFFE65100),
+  ),
+  _CatalogCategory(
+    (l) => l.searchCatSnacks,
     'Snacks',
     Icons.cookie_outlined,
-    Color(0xFFD81B60),
+    const Color(0xFFD81B60),
   ),
   _CatalogCategory(
-    'Grocery',
+    (l) => l.searchCatGrocery,
     'Dairy & Sweet',
     Icons.local_grocery_store_outlined,
-    Color(0xFF1E88E5),
+    const Color(0xFF1E88E5),
   ),
-  _CatalogCategory('Oils', 'Bakery', Icons.opacity_outlined, Color(0xFF8D6E63)),
+  _CatalogCategory(
+    (l) => l.searchCatOils,
+    'Bakery',
+    Icons.opacity_outlined,
+    const Color(0xFF8D6E63),
+  ),
 ];
 
 class SearchScreen extends ConsumerWidget {
@@ -48,6 +64,7 @@ class SearchScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final products = ref.watch(productsProvider);
     final filterState = ref.watch(filterProvider);
     final cartItems = ref.watch(cartProvider);
@@ -80,14 +97,15 @@ class SearchScreen extends ConsumerWidget {
           foregroundColor: Colors.black,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(
+            icon: const DirectionalIcon(
               Icons.arrow_back_ios_new_rounded,
               color: Colors.black,
             ),
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
             onPressed: () => context.go('/'),
           ),
           title: Text(
-            'Daily Foods',
+            l.searchDailyFoods,
             style: GoogleFonts.fredoka(
               color: Colors.black,
               fontWeight: FontWeight.bold,
@@ -95,55 +113,59 @@ class SearchScreen extends ConsumerWidget {
             ),
           ),
           actions: [
-            GestureDetector(
-              onTap: () => context.go('/cart'),
-              child: Padding(
-                padding: const EdgeInsets.only(right: 16),
-                child: Stack(
-                  alignment: Alignment.center,
-                  clipBehavior: Clip.none,
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.grey.shade200,
-                          width: 1.2,
+            Semantics(
+              button: true,
+              label: l.searchMyList,
+              child: GestureDetector(
+                onTap: () => context.go('/cart'),
+                child: Padding(
+                  padding: const EdgeInsetsDirectional.only(end: 16),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.grey.shade200,
+                            width: 1.2,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.bookmark_border_rounded,
+                          color: AppTheme.forestDeep,
+                          size: 20,
                         ),
                       ),
-                      child: const Icon(
-                        Icons.bookmark_border_rounded,
-                        color: AppTheme.forestDeep,
-                        size: 20,
-                      ),
-                    ),
-                    if (savedCount > 0)
-                      Positioned(
-                        right: -2,
-                        top: -2,
-                        child: Container(
-                          width: 17,
-                          height: 17,
-                          decoration: const BoxDecoration(
-                            color: AppTheme.redAccent,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Text(
-                              '$savedCount',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
+                      if (savedCount > 0)
+                        Positioned(
+                          right: -2,
+                          top: -2,
+                          child: Container(
+                            width: 17,
+                            height: 17,
+                            decoration: const BoxDecoration(
+                              color: AppTheme.redAccent,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                '$savedCount',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -177,7 +199,7 @@ class SearchScreen extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            cat.title,
+                            cat.title(l),
                             style: TextStyle(
                               color: isSelected
                                   ? AppTheme.forestDeep
@@ -215,7 +237,7 @@ class SearchScreen extends ConsumerWidget {
                   ref.read(filterProvider.notifier).setSearchQuery(query);
                 },
                 decoration: InputDecoration(
-                  hintText: 'Search vegetables, fruits and more',
+                  hintText: l.searchHint,
                   hintStyle: TextStyle(
                     color: Colors.grey.shade400,
                     fontSize: 13.5,
@@ -235,7 +257,7 @@ class SearchScreen extends ConsumerWidget {
                           },
                         )
                       : IconButton(
-                          tooltip: 'Scan barcode',
+                          tooltip: l.searchScanBarcode,
                           icon: Icon(
                             Icons.qr_code_scanner_rounded,
                             color: Colors.grey.shade500,
@@ -283,8 +305,10 @@ class SearchScreen extends ConsumerWidget {
                             const SizedBox(height: 12),
                             Text(
                               filterState.searchQuery.isEmpty
-                                  ? 'No products found in this category'
-                                  : 'We couldn\'t find "${filterState.searchQuery}"',
+                                  ? l.searchEmptyCategoryTitle
+                                  : l.searchEmptyQueryTitle(
+                                      filterState.searchQuery,
+                                    ),
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Colors.grey.shade600,
@@ -295,8 +319,8 @@ class SearchScreen extends ConsumerWidget {
                             const SizedBox(height: 6),
                             Text(
                               filterState.searchQuery.isEmpty
-                                  ? 'Try changing category or check back later.'
-                                  : 'Tap below to ask other shoppers to check the price for you!',
+                                  ? l.searchEmptyCategorySubtitle
+                                  : l.searchEmptyQuerySubtitle,
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Colors.grey.shade500,
@@ -316,7 +340,7 @@ class SearchScreen extends ConsumerWidget {
                                   Icons.add_comment_rounded,
                                   size: 16,
                                 ),
-                                label: const Text('Ask shoppers to check'),
+                                label: Text(l.searchAskShoppersToCheck),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppTheme.forestDeep,
                                   foregroundColor: Colors.white,
@@ -392,6 +416,7 @@ class SearchScreen extends ConsumerWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (context) {
+        final l = AppLocalizations.of(context)!;
         return Padding(
           padding: EdgeInsets.fromLTRB(
             24,
@@ -406,7 +431,7 @@ class SearchScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Request a price check',
+                  l.searchRequestPriceCheckTitle,
                   style: GoogleFonts.fredoka(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -415,7 +440,7 @@ class SearchScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Other shoppers will check the price of this item for you. This uses $requestCost tokens and refunds if it expires.',
+                  l.searchRequestPriceCheckDescription(requestCost),
                   style: GoogleFonts.nunito(
                     fontSize: 13,
                     color: Colors.grey.shade600,
@@ -424,20 +449,20 @@ class SearchScreen extends ConsumerWidget {
                 const SizedBox(height: 18),
                 TextFormField(
                   initialValue: productName,
-                  decoration: const InputDecoration(
-                    labelText: 'Item name',
-                    hintText: 'e.g. Al Rawabi Fresh Milk 2L',
+                  decoration: InputDecoration(
+                    labelText: l.searchItemNameLabel,
+                    hintText: l.searchItemNameHint,
                   ),
                   onChanged: (val) => productName = val,
                   validator: (val) => val == null || val.trim().isEmpty
-                      ? 'Enter product name'
+                      ? l.searchEnterProductName
                       : null,
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   initialValue: selectedStore,
-                  decoration: const InputDecoration(
-                    labelText: 'Choose supermarket',
+                  decoration: InputDecoration(
+                    labelText: l.searchChooseSupermarket,
                   ),
                   items: stores.map((s) {
                     return DropdownMenuItem(value: s, child: Text(s));
@@ -459,10 +484,8 @@ class SearchScreen extends ConsumerWidget {
                           );
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Request posted! Shoppers near that store will be notified.',
-                          ),
+                        SnackBar(
+                          content: Text(l.searchRequestPosted),
                           backgroundColor: AppTheme.forestDeep,
                         ),
                       );
@@ -476,9 +499,9 @@ class SearchScreen extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  child: const Text(
-                    'Ask for this price',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  child: Text(
+                    l.searchAskForThisPrice,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
               ],

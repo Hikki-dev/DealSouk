@@ -1,4 +1,5 @@
 import 'package:dealsouk/core/widgets/souk_widgets.dart';
+import 'package:dealsouk/l10n/app_localizations.dart';
 import 'package:dealsouk/features/admin/domain/admin_settings.dart';
 import 'package:dealsouk/features/products/domain/product.dart';
 import 'package:dealsouk/features/stores/domain/store.dart';
@@ -107,6 +108,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final stores = ref.watch(storesProvider);
     final products = ref.watch(productsProvider);
@@ -133,16 +135,17 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
         appBar: AppBar(
           title: Text(
             _currentStep == 0
-                ? 'Select Supermarket'
+                ? l.submitStepSelectSupermarket
                 : _currentStep == 1
-                ? 'Select Product'
+                ? l.submitStepSelectProduct
                 : _currentStep == 2
-                ? 'Enter Price'
-                : 'Confirm & submit',
+                ? l.submitStepEnterPrice
+                : l.submitStepConfirmSubmit,
             style: GoogleFonts.fredoka(fontWeight: FontWeight.bold),
           ),
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+            icon: const DirectionalIcon(Icons.arrow_back_ios_new_rounded),
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
             onPressed: () {
               if (_currentStep > 0) {
                 setState(() => _currentStep--);
@@ -207,14 +210,15 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
     required AdminSettings settings,
     required ThemeData theme,
   }) {
+    final l = AppLocalizations.of(context)!;
     switch (_currentStep) {
       case 0:
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Where did you see the price?',
-              style: TextStyle(
+            Text(
+              l.submitWhereDidYouSeePrice,
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: AppTheme.textDark,
@@ -222,7 +226,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Select the supermarket from the nearby list.',
+              l.submitSelectSupermarketHint,
               style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
             ),
             const SizedBox(height: 18),
@@ -245,7 +249,10 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      '$remainingToday of ${settings.dailySubmissionCap} submissions left today.',
+                      l.submitSubmissionsLeftToday(
+                        remainingToday,
+                        settings.dailySubmissionCap,
+                      ),
                       style: const TextStyle(
                         color: AppTheme.forestDeep,
                         fontSize: 12,
@@ -329,9 +336,9 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Which product is it?',
-              style: TextStyle(
+            Text(
+              l.submitWhichProduct,
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: AppTheme.textDark,
@@ -339,17 +346,17 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Search or select product and attach proof photo.',
+              l.submitSearchSelectProductHint,
               style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _productSearchController,
               decoration: InputDecoration(
-                hintText: 'Search name, brand or scan barcode',
+                hintText: l.submitSearchBarcodeHint,
                 prefixIcon: const Icon(Icons.search_rounded),
                 suffixIcon: IconButton(
-                  tooltip: 'Scan barcode',
+                  tooltip: l.submitScanBarcodeTooltip,
                   icon: const Icon(Icons.qr_code_scanner_rounded),
                   onPressed: () async {
                     final code = await context.push<String>(
@@ -381,7 +388,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Center(
                   child: Text(
-                    'No products found matching your search.',
+                    l.submitNoProductsFound,
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                   ),
@@ -447,9 +454,9 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                 ),
               ),
             const SizedBox(height: 20),
-            const Text(
-              'Attach Proof (Required)',
-              style: TextStyle(
+            Text(
+              l.submitAttachProofRequired,
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
                 color: AppTheme.textDark,
@@ -460,7 +467,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
               children: [
                 Expanded(
                   child: _photoUploadButton(
-                    title: 'Price Label Photo',
+                    title: l.submitPriceLabelPhoto,
                     isUploaded: uploadedPriceLabel,
                     onTap: () {
                       setState(() {
@@ -472,7 +479,9 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: _photoUploadButton(
-                    title: _uploadingReceipt ? 'Uploading…' : 'Receipt Photo',
+                    title: _uploadingReceipt
+                        ? l.submitUploading
+                        : l.submitReceiptPhoto,
                     isUploaded: uploadedReceipt,
                     onTap: _uploadingReceipt
                         ? null
@@ -500,9 +509,9 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Enter Price details',
-              style: TextStyle(
+            Text(
+              l.submitEnterPriceDetails,
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: AppTheme.textDark,
@@ -510,7 +519,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Enter the shelf price and active promotions.',
+              l.submitEnterShelfPriceHint,
               style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
             ),
             const SizedBox(height: 18),
@@ -524,26 +533,26 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                 fontWeight: FontWeight.bold,
                 color: AppTheme.textDark,
               ),
-              decoration: const InputDecoration(
-                labelText: 'Enter Price (AED)',
-                prefixIcon: Icon(Icons.payments_outlined),
+              decoration: InputDecoration(
+                labelText: l.submitEnterPriceAed,
+                prefixIcon: const Icon(Icons.payments_outlined),
                 suffixText: 'AED',
-                helperText: 'Manual shelf price entry, e.g. 14.75',
+                helperText: l.submitManualShelfPriceHelper,
               ),
               validator: (val) {
                 if (val == null || val.isEmpty) {
-                  return 'Please enter a price';
+                  return l.submitPleaseEnterPrice;
                 }
                 if (double.tryParse(val) == null) {
-                  return 'Please enter a valid number';
+                  return l.submitPleaseEnterValidNumber;
                 }
                 return null;
               },
             ),
             const SizedBox(height: 24),
-            const Text(
-              'Promotion Type',
-              style: TextStyle(
+            Text(
+              l.submitPromotionType,
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 15,
                 color: AppTheme.textDark,
@@ -557,7 +566,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                 final isSelected = selectedPromo == promo;
                 return ChoiceChip(
                   label: Text(
-                    promo,
+                    _promoLabel(l, promo),
                     style: TextStyle(
                       color: isSelected ? Colors.white : AppTheme.textDark,
                       fontWeight: FontWeight.bold,
@@ -593,9 +602,9 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Confirm details',
-              style: TextStyle(
+            Text(
+              l.submitConfirmDetails,
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: AppTheme.textDark,
@@ -603,7 +612,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Please review details before submission.',
+              l.submitReviewBeforeSubmission,
               style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
             ),
             const SizedBox(height: 16),
@@ -616,17 +625,28 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
               ),
               child: Column(
                 children: [
-                  _summaryRow('Supermarket', '${store.name} - ${store.branch}'),
+                  _summaryRow(
+                    l.submitSummarySupermarket,
+                    '${store.name} - ${store.branch}',
+                  ),
                   const Divider(height: 24),
-                  _summaryRow('Product', product.name),
-                  const Divider(height: 24),
-                  _summaryRow('Price', 'AED ${_priceController.text}'),
-                  const Divider(height: 24),
-                  _summaryRow('Promotion', selectedPromo),
+                  _summaryRow(l.submitSummaryProduct, product.name),
                   const Divider(height: 24),
                   _summaryRow(
-                    'Proof',
-                    uploadedPriceLabel ? 'Photo Attached' : 'None',
+                    l.submitSummaryPrice,
+                    'AED ${_priceController.text}',
+                  ),
+                  const Divider(height: 24),
+                  _summaryRow(
+                    l.submitSummaryPromotion,
+                    _promoLabel(l, selectedPromo),
+                  ),
+                  const Divider(height: 24),
+                  _summaryRow(
+                    l.submitSummaryProof,
+                    uploadedPriceLabel
+                        ? l.submitProofPhotoAttached
+                        : l.submitPromoNone,
                   ),
                 ],
               ),
@@ -646,9 +666,9 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Token reward estimate',
-                          style: TextStyle(
+                        Text(
+                          l.submitTokenRewardEstimate,
+                          style: const TextStyle(
                             fontWeight: FontWeight.w900,
                             fontSize: 13,
                             color: AppTheme.forestDeep,
@@ -672,7 +692,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                '+$totalReward Tokens',
+                                l.submitPlusTokens(totalReward),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 12,
@@ -685,39 +705,58 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    _tokenRow('Fresh shelf price', '+10 tokens'),
-                    const SizedBox(height: 8),
-                    _tokenRow('Store selected', '+2 tokens', isEnabled: true),
-                    const SizedBox(height: 8),
-                    _tokenRow('Product selected', '+2 tokens', isEnabled: true),
+                    _tokenRow(
+                      l.submitTokenFreshShelfPrice,
+                      l.submitTokensAmount(10),
+                    ),
                     const SizedBox(height: 8),
                     _tokenRow(
-                      'AED price entered',
-                      '+2 tokens',
+                      l.submitTokenStoreSelected,
+                      l.submitTokensAmount(2),
+                      isEnabled: true,
+                    ),
+                    const SizedBox(height: 8),
+                    _tokenRow(
+                      l.submitTokenProductSelected,
+                      l.submitTokensAmount(2),
+                      isEnabled: true,
+                    ),
+                    const SizedBox(height: 8),
+                    _tokenRow(
+                      l.submitTokenAedPriceEntered,
+                      l.submitTokensAmount(2),
                       isEnabled: true,
                     ),
                     const SizedBox(height: 8),
                     _tokenRow(
                       uploadedPriceLabel
-                          ? 'Price label attached'
-                          : 'Attach price label',
-                      uploadedPriceLabel ? '+4 tokens' : '+0 tokens',
+                          ? l.submitTokenPriceLabelAttached
+                          : l.submitTokenAttachPriceLabel,
+                      uploadedPriceLabel
+                          ? l.submitTokensAmount(4)
+                          : l.submitTokensAmount(0),
                       isEnabled: uploadedPriceLabel,
                     ),
                     const SizedBox(height: 8),
                     _tokenRow(
                       selectedPromo == 'None'
-                          ? 'No promotion selected'
-                          : '$selectedPromo promo noted',
-                      selectedPromo == 'None' ? '+0 tokens' : '+1 token',
+                          ? l.submitTokenNoPromotion
+                          : l.submitTokenPromoNoted(
+                              _promoLabel(l, selectedPromo),
+                            ),
+                      selectedPromo == 'None'
+                          ? l.submitTokensAmount(0)
+                          : l.submitTokenAmount(1),
                       isEnabled: selectedPromo != 'None',
                     ),
                     const SizedBox(height: 8),
                     _tokenRow(
                       uploadedReceipt
-                          ? '1.5× Verified Receipt Multiplier'
-                          : 'Attach Receipt for 1.5× Bonus',
-                      uploadedReceipt ? '×1.5 applied' : 'not applied',
+                          ? l.submitTokenReceiptMultiplier
+                          : l.submitTokenAttachReceiptBonus,
+                      uploadedReceipt
+                          ? l.submitTokenMultiplierApplied
+                          : l.submitTokenNotApplied,
                       isEnabled: uploadedReceipt,
                     ),
                     const SizedBox(height: 12),
@@ -726,12 +765,12 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Total Reward Estimate',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        Text(
+                          l.submitTotalRewardEstimate,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          '$totalReward Tokens',
+                          l.submitTokensTotal(totalReward),
                           style: TextStyle(
                             fontWeight: FontWeight.w900,
                             color: theme.colorScheme.primary,
@@ -787,6 +826,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
     required int totalReward,
     required ThemeData theme,
   }) {
+    final l = AppLocalizations.of(context)!;
     final bool canGoNext;
     if (_currentStep == 0) {
       canGoNext = selectedStoreId != null;
@@ -825,7 +865,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                   vertical: 14,
                 ),
               ),
-              child: const Text('Back'),
+              child: Text(l.submitBack),
             ),
             const SizedBox(width: 12),
           ],
@@ -847,7 +887,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    child: const Text('Next'),
+                    child: Text(l.submitNext),
                   )
                 : GestureDetector(
                     onTap: () async {
@@ -873,11 +913,9 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                         } catch (_) {
                           if (!mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
+                            SnackBar(
                               backgroundColor: AppTheme.forestDeep,
-                              content: Text(
-                                'We could not send this price. Please check your connection and try again.',
-                              ),
+                              content: Text(l.submitCouldNotSendPrice),
                             ),
                           );
                           return;
@@ -891,7 +929,11 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                             .read(userTransactionsProvider.notifier)
                             .addTransaction(
                               awarded,
-                              '+$awarded tokens — submitted ${product.name} @ ${store.name}',
+                              l.submitTransactionDescription(
+                                awarded,
+                                product.name,
+                                store.name,
+                              ),
                             );
                         ref
                             .read(userProfileProvider.notifier)
@@ -926,7 +968,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                       ),
                       child: Center(
                         child: Text(
-                          'Submit a price',
+                          l.submitSubmitAPrice,
                           style: const TextStyle(
                             color: AppTheme.forestDeep,
                             fontSize: 15.5,
@@ -966,6 +1008,20 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
     );
   }
 
+  String _promoLabel(AppLocalizations l, String promo) {
+    switch (promo) {
+      case 'Discount':
+        return l.submitPromoDiscount;
+      case 'BOGO':
+        return l.submitPromoBogo;
+      case 'Bundle':
+        return l.submitPromoBundle;
+      case 'None':
+      default:
+        return l.submitPromoNone;
+    }
+  }
+
   int _tokenEstimateBeforeReceipt(bool priceEntered) {
     var reward = 10;
     if (selectedStoreId != null) reward += 2;
@@ -981,6 +1037,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
     required bool isUploaded,
     VoidCallback? onTap,
   }) {
+    final l = AppLocalizations.of(context)!;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -1022,7 +1079,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
             ),
             const SizedBox(height: 2),
             Text(
-              isUploaded ? 'Photo Uploaded' : 'Tap to Upload',
+              isUploaded ? l.submitPhotoUploaded : l.submitTapToUpload,
               style: TextStyle(
                 fontSize: 9,
                 color: isUploaded
@@ -1037,6 +1094,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
   }
 
   void _showSuccessDialog(BuildContext context, int reward) {
+    final l = AppLocalizations.of(context)!;
     final profile = ref.read(userProfileProvider);
     final firstName = profile.name.split(' ').first;
     final isAdmin = ref.read(authProvider).isAdmin;
@@ -1066,9 +1124,12 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
-                'Price Submitted!',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Text(
+                l.submitPriceSubmitted,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               TweenAnimationBuilder<double>(
@@ -1077,7 +1138,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                 curve: Curves.easeOutBack,
                 builder: (context, value, child) {
                   return Text(
-                    '+${value.round()} tokens',
+                    l.submitTokensGained(value.round()),
                     style: const TextStyle(
                       color: AppTheme.forestDeep,
                       fontSize: 28,
@@ -1088,7 +1149,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Your price submission is pending review.\nTokens will be credited to $firstName after admin approval.',
+                l.submitPendingReviewMessage(firstName),
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 13, height: 1.4),
               ),
@@ -1102,7 +1163,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size.fromHeight(48),
                   ),
-                  child: const Text('Open Admin Review'),
+                  child: Text(l.submitOpenAdminReview),
                 ),
                 const SizedBox(height: 10),
               ],
@@ -1111,7 +1172,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                   Navigator.pop(context);
                   context.go('/leaderboard');
                 },
-                child: const Text('View Token Balance'),
+                child: Text(l.submitViewTokenBalance),
               ),
             ],
           ),

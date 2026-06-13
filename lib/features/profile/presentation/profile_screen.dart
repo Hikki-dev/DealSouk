@@ -13,6 +13,8 @@ import 'package:dealsouk/features/auth/presentation/auth_providers.dart';
 import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/core/network/storage_service.dart';
 import 'package:dealsouk/core/widgets/tutorial_overlay.dart';
+import 'package:dealsouk/core/widgets/souk_widgets.dart';
+import 'package:dealsouk/l10n/app_localizations.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -64,6 +66,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final tokens = ref.watch(userTokensProvider);
     final profile = ref.watch(userProfileProvider);
     final submissions = ref.watch(adminSubmissionsProvider);
@@ -155,7 +158,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
-                                  'Lv.$level ${levelTitle(level)}',
+                                  l.profileLevelBadge(level, levelTitle(level)),
                                   style: const TextStyle(
                                     color: AppTheme.limeAccent,
                                     fontSize: 10,
@@ -170,7 +173,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                                 size: 13,
                               ),
                               Text(
-                                '${streak.currentStreak} day streak',
+                                l.profileDayStreak(streak.currentStreak),
                                 style: const TextStyle(
                                   color: Colors.white70,
                                   fontSize: 11,
@@ -208,11 +211,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                   ),
-                  tabs: const [
-                    Tab(text: 'Submissions'),
-                    Tab(text: 'Tokens'),
-                    Tab(text: 'Requests'),
-                    Tab(text: 'Settings'),
+                  tabs: [
+                    Tab(text: l.profileTabSubmissions),
+                    Tab(text: l.profileTabTokens),
+                    Tab(text: l.profileTabRequests),
+                    Tab(text: l.profileTabSettings),
                   ],
                 ),
               ],
@@ -257,6 +260,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   }
 
   Future<void> _changeProfilePhoto() async {
+    final l = AppLocalizations.of(context)!;
     final oldUrl = ref.read(userProfileProvider).avatarUrl;
     final messenger = ScaffoldMessenger.of(context);
     final newUrl = await storageService.pickAndUploadAvatar();
@@ -265,12 +269,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     if (oldUrl.isNotEmpty) {
       await storageService.deleteFileByUrl(oldUrl);
     }
-    messenger.showSnackBar(
-      const SnackBar(content: Text('Profile photo updated')),
-    );
+    messenger.showSnackBar(SnackBar(content: Text(l.profilePhotoUpdated)));
   }
 
   Future<void> _removeProfilePhoto() async {
+    final l = AppLocalizations.of(context)!;
     final oldUrl = ref.read(userProfileProvider).avatarUrl;
     if (oldUrl.isEmpty) return;
     await ref.read(userProfileProvider.notifier).removeAvatar(oldUrl);
@@ -278,11 +281,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     if (!mounted) return;
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Profile photo removed')));
+    ).showSnackBar(SnackBar(content: Text(l.profilePhotoRemoved)));
   }
 
   // ── TAB 1: Submissions ──
   Widget _buildSubmissionsTab(List<dynamic> mySubmissions, int accuracyPct) {
+    final l = AppLocalizations.of(context)!;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 18, 16, 160),
       children: [
@@ -314,16 +318,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Accuracy Rating',
-                      style: TextStyle(
+                    Text(
+                      l.profileAccuracyRating,
+                      style: const TextStyle(
                         fontWeight: FontWeight.w900,
                         fontSize: 13,
                         color: AppTheme.textDark,
                       ),
                     ),
                     Text(
-                      '$accuracyPct% of your submissions approved',
+                      l.profileAccuracyApproved(accuracyPct),
                       style: TextStyle(
                         fontSize: 11,
                         color: Colors.grey.shade600,
@@ -349,7 +353,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 40),
               child: Text(
-                'No prices shared yet.\nShare a shelf price to help shoppers and earn tokens.',
+                l.profileNoSubmissions,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.grey.shade500,
@@ -451,6 +455,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
   // ── TAB 2: Token History ──
   Widget _buildTokenHistoryTab(List<dynamic> transactions, int tokens) {
+    final l = AppLocalizations.of(context)!;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 18, 16, 160),
       children: [
@@ -473,16 +478,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 child: const Icon(Icons.bolt, color: Colors.white, size: 22),
               ),
               const SizedBox(width: 12),
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Current Balance',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    l.profileCurrentBalance,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
                   ),
                   Text(
-                    'Tap Leaderboard to redeem',
-                    style: TextStyle(fontSize: 11, color: Colors.grey),
+                    l.profileTapLeaderboardRedeem,
+                    style: const TextStyle(fontSize: 11, color: Colors.grey),
                   ),
                 ],
               ),
@@ -512,7 +520,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             padding: const EdgeInsets.symmetric(vertical: 36),
             child: Center(
               child: Text(
-                'No token activity yet.\nShare a price or help with a request to start earning.',
+                l.profileNoTokenActivity,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.grey.shade500,
@@ -579,6 +587,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   }
 
   Widget _buildRequestsTab(List<dynamic> myRequests) {
+    final l = AppLocalizations.of(context)!;
     return RefreshIndicator(
       onRefresh: () async {
         await ref.read(myRequestsProvider.notifier).fetchMyRequests();
@@ -591,7 +600,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 40),
                 child: Text(
-                  'No price requests yet.\nAsk for a price when you cannot find an item.',
+                  l.profileNoPriceRequests,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.grey.shade500,
@@ -660,6 +669,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       children: [
                         if (req.status == 'open') ...[
                           IconButton(
+                            tooltip: l.profileCancelRequest,
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
                             icon: const Icon(
@@ -674,15 +684,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(20),
                                   ),
-                                  title: const Text('Cancel Request?'),
+                                  title: Text(l.profileCancelRequestTitle),
                                   content: Text(
-                                    'Are you sure you want to cancel your price request for "${req.productName}"? Your bounty tokens will be refunded.',
+                                    l.profileCancelRequestBody(req.productName),
                                     style: const TextStyle(fontSize: 14),
                                   ),
                                   actions: [
                                     TextButton(
                                       onPressed: () => Navigator.pop(context),
-                                      child: const Text('No'),
+                                      child: Text(l.profileNo),
                                     ),
                                     TextButton(
                                       onPressed: () {
@@ -691,9 +701,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                                             .cancelRequest(req.id);
                                         Navigator.pop(context);
                                       },
-                                      child: const Text(
-                                        'Yes, Cancel',
-                                        style: TextStyle(
+                                      child: Text(
+                                        l.profileYesCancel,
+                                        style: const TextStyle(
                                           color: AppTheme.redAccent,
                                         ),
                                       ),
@@ -743,6 +753,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     int tokens,
     List<UserVoucher> vouchers,
   ) {
+    final l = AppLocalizations.of(context)!;
     final remaining = settings.voucherThreshold - tokens;
     final auth = ref.watch(authProvider);
     UserVoucher? findVoucher(String status) {
@@ -776,17 +787,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
+                    Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.confirmation_num_rounded,
                           color: AppTheme.forestDeep,
                           size: 22,
                         ),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Text(
-                          'Voucher Approved',
-                          style: TextStyle(
+                          l.profileVoucherApproved,
+                          style: const TextStyle(
                             fontWeight: FontWeight.w900,
                             fontSize: 15,
                             color: AppTheme.forestDeep,
@@ -804,7 +815,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     ),
                     const SizedBox(height: 8),
                     SelectableText(
-                      approvedVoucher.voucherCode ?? 'Code pending',
+                      approvedVoucher.voucherCode ?? l.profileCodePending,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
@@ -818,9 +829,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Voucher Under Review',
-                      style: TextStyle(
+                    Text(
+                      l.profileVoucherUnderReview,
+                      style: const TextStyle(
                         fontWeight: FontWeight.w900,
                         fontSize: 15,
                         color: AppTheme.forestDeep,
@@ -828,7 +839,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Your AED ${pendingVoucher.denominationAed} ${pendingVoucher.supermarket} voucher is waiting for admin approval.',
+                      l.profileVoucherPendingBody(
+                        pendingVoucher.denominationAed,
+                        pendingVoucher.supermarket,
+                      ),
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppTheme.textDark,
@@ -841,17 +855,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
+                    Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.confirmation_num_rounded,
                           color: AppTheme.forestDeep,
                           size: 22,
                         ),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Text(
-                          'Voucher Ready!',
-                          style: TextStyle(
+                          l.profileVoucherReady,
+                          style: const TextStyle(
                             fontWeight: FontWeight.w900,
                             fontSize: 15,
                             color: AppTheme.forestDeep,
@@ -860,9 +874,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       ],
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      'Head to the Leaderboard tab to claim your AED 50 Union Coop voucher.',
-                      style: TextStyle(
+                    Text(
+                      l.profileVoucherReadyBody,
+                      style: const TextStyle(
                         fontSize: 12,
                         color: AppTheme.textDark,
                         height: 1.4,
@@ -878,7 +892,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text('Claim Voucher Now'),
+                      child: Text(l.profileClaimVoucherNow),
                     ),
                   ],
                 )
@@ -888,9 +902,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'AED 50 Union Coop Voucher',
-                          style: TextStyle(
+                        Text(
+                          l.profileVoucherGoalTitle,
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 13,
                           ),
@@ -922,7 +936,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Earn ${remaining > 0 ? remaining : 0} more tokens to unlock your voucher.',
+                      l.profileEarnMoreTokens(remaining > 0 ? remaining : 0),
                       style: TextStyle(
                         fontSize: 11,
                         color: Colors.grey.shade600,
@@ -936,15 +950,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         // Profile photo
         _settingsTile(
           icon: Icons.account_circle_outlined,
-          title: 'Profile Photo',
+          title: l.profilePhotoTitle,
           subtitle: profile.avatarUrl.isEmpty
-              ? 'Add a friendly photo so shoppers recognise you'
-              : 'Change or remove your current photo',
+              ? l.profilePhotoSubtitleEmpty
+              : l.profilePhotoSubtitleSet,
           trailing: Wrap(
             spacing: 4,
             children: [
               IconButton(
-                tooltip: 'Change photo',
+                tooltip: l.profileChangePhoto,
                 icon: const Icon(
                   Icons.photo_camera_outlined,
                   size: 19,
@@ -954,7 +968,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               ),
               if (profile.avatarUrl.isNotEmpty)
                 IconButton(
-                  tooltip: 'Remove photo',
+                  tooltip: l.profileRemovePhoto,
                   icon: Icon(
                     Icons.delete_outline_rounded,
                     size: 19,
@@ -970,9 +984,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         // Display name
         _settingsTile(
           icon: Icons.person_outline_rounded,
-          title: 'Display Name',
+          title: l.profileDisplayName,
           subtitle: profile.name,
           trailing: IconButton(
+            tooltip: l.profileEditDisplayName,
             icon: const Icon(
               Icons.edit_outlined,
               size: 18,
@@ -983,15 +998,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: const Text('Display Name'),
+                  title: Text(l.profileDisplayName),
                   content: TextField(
                     controller: _nameController,
-                    decoration: const InputDecoration(labelText: 'Name'),
+                    decoration: InputDecoration(labelText: l.profileNameLabel),
                   ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancel'),
+                      child: Text(l.profileCancel),
                     ),
                     ElevatedButton(
                       onPressed: () async {
@@ -1001,7 +1016,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                         if (!context.mounted) return;
                         Navigator.pop(context);
                       },
-                      child: const Text('Save'),
+                      child: Text(l.profileSave),
                     ),
                   ],
                 ),
@@ -1014,7 +1029,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         // Home area
         _settingsTile(
           icon: Icons.home_outlined,
-          title: 'Home Area',
+          title: l.profileHomeArea,
           subtitle: profile.homeArea,
           trailing: DropdownButton<String>(
             value: _dubaiAreas.contains(profile.homeArea)
@@ -1061,10 +1076,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 size: 21,
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Language',
-                  style: TextStyle(
+                  l.profileLanguage,
+                  style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w900,
                     color: AppTheme.textDark,
@@ -1096,8 +1111,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           onTap: () => TutorialOverlay.show(context),
           child: _settingsTile(
             icon: Icons.help_outline_rounded,
-            title: 'View App Tutorial',
-            subtitle: 'Re-run the DealSouk intro guide',
+            title: l.profileViewTutorial,
+            subtitle: l.profileViewTutorialSubtitle,
           ),
         ),
         const SizedBox(height: 10),
@@ -1106,9 +1121,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           onTap: () => context.push('/privacy'),
           child: _settingsTile(
             icon: Icons.privacy_tip_outlined,
-            title: 'Privacy & Terms',
-            subtitle:
-                'Location, photos, tokens, vouchers, and account deletion',
+            title: l.profilePrivacyTerms,
+            subtitle: l.profilePrivacyTermsSubtitle,
           ),
         ),
         const SizedBox(height: 10),
@@ -1119,8 +1133,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             onTap: () => context.push('/admin'),
             child: _settingsTile(
               icon: Icons.admin_panel_settings_outlined,
-              title: 'Admin Review Console',
-              subtitle: 'Moderate price submissions',
+              title: l.profileAdminConsole,
+              subtitle: l.profileAdminConsoleSubtitle,
             ),
           ),
           const SizedBox(height: 24),
@@ -1151,7 +1165,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Log Out of Demo',
+                  l.profileLogOut,
                   style: TextStyle(
                     color: Colors.red.shade700,
                     fontWeight: FontWeight.bold,
@@ -1232,7 +1246,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           if (trailing != null)
             trailing
           else
-            const Icon(
+            const DirectionalIcon(
               Icons.chevron_right_rounded,
               color: Colors.grey,
               size: 20,

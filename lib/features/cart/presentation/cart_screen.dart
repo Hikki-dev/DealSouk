@@ -5,22 +5,26 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:dealsouk/features/cart/domain/cart_item.dart';
 import 'package:dealsouk/features/stores/presentation/stores_providers.dart';
 import 'package:dealsouk/features/cart/presentation/cart_providers.dart';
+import 'package:dealsouk/features/products/presentation/products_providers.dart';
 import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/core/widgets/responsive_container.dart';
 import 'package:dealsouk/core/widgets/souk_widgets.dart';
+import 'package:dealsouk/l10n/app_localizations.dart';
 
 class CartScreen extends ConsumerWidget {
   const CartScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final savedItems = ref.watch(cartProvider);
+    final priceDrops = _findPriceDrops(savedItems, ref.watch(productsProvider));
     final storeTotals = _buildStoreTotals(savedItems);
     final sortedStores = storeTotals.entries.toList()
       ..sort((a, b) => a.value.compareTo(b.value));
     final bestStoreName = sortedStores.isNotEmpty
         ? sortedStores.first.key
-        : 'No store yet';
+        : l.cartNoStoreYet;
 
     return ResponsiveContainer(
       child: Scaffold(
@@ -30,11 +34,12 @@ class CartScreen extends ConsumerWidget {
           foregroundColor: AppTheme.textDark,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+            icon: const DirectionalIcon(Icons.arrow_back_ios_new_rounded),
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
             onPressed: () => context.go('/'),
           ),
           title: Text(
-            'My List',
+            l.cartMyList,
             style: GoogleFonts.fredoka(
               color: AppTheme.textDark,
               fontWeight: FontWeight.bold,
@@ -44,7 +49,7 @@ class CartScreen extends ConsumerWidget {
           actions: [
             if (savedItems.isNotEmpty)
               IconButton(
-                tooltip: 'Clear saved prices',
+                tooltip: l.cartClearSavedPrices,
                 icon: const Icon(
                   Icons.delete_outline_rounded,
                   color: AppTheme.redAccent,
@@ -52,7 +57,7 @@ class CartScreen extends ConsumerWidget {
                 onPressed: () {
                   ref.read(cartProvider.notifier).clearCart();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Saved prices cleared')),
+                    SnackBar(content: Text(l.cartSavedPricesCleared)),
                   );
                 },
               ),
@@ -64,11 +69,15 @@ class CartScreen extends ConsumerWidget {
                 physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 110),
                 children: [
+                  if (priceDrops.isNotEmpty) ...[
+                    _PriceDropBanner(drops: priceDrops),
+                    const SizedBox(height: 14),
+                  ],
                   _BestStoreBanner(sortedStores: sortedStores),
                   const SizedBox(height: 18),
                   _SectionTitle(
-                    title: 'Items you are checking',
-                    actionLabel: 'Add more',
+                    title: l.cartItemsYouAreChecking,
+                    actionLabel: l.cartAddMore,
                     onAction: () => context.push('/search'),
                   ),
                   const SizedBox(height: 10),
@@ -90,6 +99,24 @@ class CartScreen extends ConsumerWidget {
     );
   }
 
+  // FR-24: detect cart items whose best available price is now lower than when
+  // the shopper saved them, surfaced as an in-app banner (not a push) on open.
+  List<_PriceDrop> _findPriceDrops(List<CartItem> items, List products) {
+    final drops = <_PriceDrop>[];
+    for (final item in items) {
+      final added = item.priceAtAdd;
+      if (added == null || added <= 0) continue;
+      final match = products.where((p) => p.id == item.product.id);
+      final current = match.isNotEmpty
+          ? match.first.lowestPrice as double
+          : item.product.lowestPrice;
+      if (current > 0 && current < added) {
+        drops.add(_PriceDrop(item: item, oldPrice: added, newPrice: current));
+      }
+    }
+    return drops;
+  }
+
   Map<String, double> _buildStoreTotals(List<CartItem> items) {
     final totals = <String, double>{};
     for (final item in items) {
@@ -107,6 +134,83 @@ class CartScreen extends ConsumerWidget {
   }
 }
 
+class _PriceDrop {
+  final CartItem item;
+  final double oldPrice;
+  final double newPrice;
+
+  const _PriceDrop({
+    required this.item,
+    required this.oldPrice,
+    required this.newPrice,
+  });
+
+  double get saving => oldPrice - newPrice;
+}
+
+class _PriceDropBanner extends StatelessWidget {
+  final List<_PriceDrop> drops;
+
+  const _PriceDropBanner({required this.drops});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final best = drops.reduce((a, b) => a.saving >= b.saving ? a : b);
+    final headline = drops.length == 1
+        ? l.cartPriceDroppedOn(best.item.product.name)
+        : l.cartItemsCheaperNow(drops.length);
+    final detail = l.cartPriceDropDetail(
+      best.newPrice.toStringAsFixed(2),
+      best.item.product.lowestPriceStore,
+      best.oldPrice.toStringAsFixed(2),
+    );
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.limeAccent.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppTheme.forestDeep.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.trending_down_rounded,
+            color: AppTheme.forestDeep,
+            size: 26,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  headline,
+                  style: GoogleFonts.fredoka(
+                    color: AppTheme.forestDeep,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  detail,
+                  style: const TextStyle(
+                    color: AppTheme.textDark,
+                    fontSize: 12.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _EmptySavedPrices extends StatelessWidget {
   final VoidCallback onBrowse;
 
@@ -114,6 +218,7 @@ class _EmptySavedPrices extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -134,7 +239,7 @@ class _EmptySavedPrices extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              'No saved prices yet',
+              l.cartNoSavedPricesYet,
               style: GoogleFonts.fredoka(
                 fontSize: 21,
                 fontWeight: FontWeight.bold,
@@ -143,7 +248,7 @@ class _EmptySavedPrices extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Search an item and save it here to see which nearby store is worth visiting.',
+              l.cartEmptyStateSubtitle,
               textAlign: TextAlign.center,
               style: GoogleFonts.nunito(
                 color: AppTheme.textLight,
@@ -156,7 +261,7 @@ class _EmptySavedPrices extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: onBrowse,
               icon: const Icon(Icons.search_rounded),
-              label: const Text('Find prices nearby'),
+              label: Text(l.cartFindPricesNearby),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.forestDeep,
                 foregroundColor: Colors.white,
@@ -196,6 +301,7 @@ class _BestStoreBanner extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     if (sortedStores.isEmpty) return const SizedBox.shrink();
 
     // Cheapest Basket Option
@@ -242,7 +348,7 @@ class _BestStoreBanner extends ConsumerWidget {
               const Icon(Icons.place_rounded, color: Colors.white, size: 24),
               const SizedBox(width: 8),
               Text(
-                'Shopping List Options',
+                l.cartShoppingListOptions,
                 style: GoogleFonts.fredoka(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -261,7 +367,7 @@ class _BestStoreBanner extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Cheapest Basket',
+                      l.cartCheapestBasket,
                       style: GoogleFonts.nunito(
                         color: Colors.white70,
                         fontWeight: FontWeight.w800,
@@ -269,7 +375,10 @@ class _BestStoreBanner extends ConsumerWidget {
                       ),
                     ),
                     Text(
-                      '$cheapestStoreName (${cheapestDistance.toStringAsFixed(1)} km)',
+                      l.cartStoreWithDistance(
+                        cheapestStoreName,
+                        cheapestDistance.toStringAsFixed(1),
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.fredoka(
@@ -294,7 +403,7 @@ class _BestStoreBanner extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Closest Option',
+                      l.cartClosestOption,
                       style: GoogleFonts.nunito(
                         color: Colors.white70,
                         fontWeight: FontWeight.w800,
@@ -302,7 +411,10 @@ class _BestStoreBanner extends ConsumerWidget {
                       ),
                     ),
                     Text(
-                      '${closest.name} (${closest.distance.toStringAsFixed(1)} km)',
+                      l.cartStoreWithDistance(
+                        closest.name,
+                        closest.distance.toStringAsFixed(1),
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.fredoka(
@@ -330,7 +442,10 @@ class _BestStoreBanner extends ConsumerWidget {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    'Save AED ${savings.toStringAsFixed(2)} at $cheapestStoreName',
+                    l.cartSaveAtStore(
+                      savings.toStringAsFixed(2),
+                      cheapestStoreName,
+                    ),
                     style: GoogleFonts.nunito(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -352,7 +467,7 @@ class _BestStoreBanner extends ConsumerWidget {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    'Your closest store is also the cheapest option!',
+                    l.cartClosestIsCheapest,
                     style: GoogleFonts.nunito(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -407,6 +522,7 @@ class _SavedPriceCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final product = item.product;
     final coreName = product.name.split('(').first.trim();
 
@@ -446,7 +562,7 @@ class _SavedPriceCard extends ConsumerWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  'Best seen at ${product.lowestPriceStore}',
+                  l.cartBestSeenAt(product.lowestPriceStore),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -518,7 +634,7 @@ class _SavedPriceCard extends ConsumerWidget {
             children: [
               SoukPrice(product.lowestPrice * item.quantity, size: 14.5),
               IconButton(
-                tooltip: 'Remove',
+                tooltip: l.cartRemove,
                 visualDensity: VisualDensity.compact,
                 icon: const Icon(Icons.close_rounded, size: 18),
                 color: Colors.grey.shade500,
@@ -552,6 +668,7 @@ class _StoreComparison extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -563,7 +680,7 @@ class _StoreComparison extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Nearby store comparison',
+            l.cartNearbyStoreComparison,
             style: GoogleFonts.fredoka(
               fontSize: 15,
               fontWeight: FontWeight.bold,
@@ -604,7 +721,7 @@ class _StoreComparison extends ConsumerWidget {
                           ),
                         ),
                         Text(
-                          '${distance.toStringAsFixed(1)} km away',
+                          l.cartKmAway(distance.toStringAsFixed(1)),
                           style: TextStyle(
                             fontSize: 11,
                             color: Colors.grey.shade500,
@@ -615,7 +732,9 @@ class _StoreComparison extends ConsumerWidget {
                     ),
                   ),
                   Text(
-                    isBest ? 'Best' : '+AED ${extra.toStringAsFixed(2)}',
+                    isBest
+                        ? l.cartBest
+                        : l.cartExtraAmount(extra.toStringAsFixed(2)),
                     style: TextStyle(
                       fontSize: 11.5,
                       color: isBest ? AppTheme.forestDeep : AppTheme.redAccent,
@@ -641,6 +760,7 @@ class _PlainLanguageNote extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -654,7 +774,7 @@ class _PlainLanguageNote extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'DealSouk does not sell groceries. This list only helps you decide where to check prices nearby.',
+              l.cartPlainLanguageNote,
               style: GoogleFonts.nunito(
                 fontSize: 12.5,
                 color: AppTheme.maroon,

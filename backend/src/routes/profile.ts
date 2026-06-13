@@ -3,6 +3,7 @@ import { prisma } from '../index';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { authenticatedRateLimit } from '../middleware/rateLimits';
 import { computeLevel } from '../services/tokenEngine';
+import * as adminFirebase from 'firebase-admin';
 
 const router = Router();
 const profileWriteLimiter = authenticatedRateLimit({
@@ -267,21 +268,30 @@ router.get('/me/requests', requireAuth, async (req: AuthRequest, res) => {
 
 // DELETE /profile/me — account deletion (PDPL compliance: PII removed within 30 days)
 router.delete('/me', requireAuth, accountDeleteLimiter, async (req: AuthRequest, res) => {
-  // TODO: Add Firebase Auth deletion (NFR-14 / FR-52):
-  // Integrate Firebase Admin SDK to permanently delete the authenticated user record:
-  // await adminFirebase.auth().deleteUser(req.firebaseUid!);
-
-  // Anonymise rather than hard-delete to preserve token ledger for analytics
+  // Anonymise the DB row (PDPL): preserve the token ledger for analytics but
+  // strip all PII. Done first so the account is unusable even if the auth
+  // deletion below fails.
   await prisma.user.update({
     where: { id: req.userId! },
     data: {
       displayName: '[Deleted User]',
       phoneNumber: null,
       homeArea: null,
+      fcmToken: null,
+      avatarUrl: null,
       firebaseUid: `deleted_${req.userId}`,
     },
   });
-  res.json({ message: 'Account deletion requested. PII will be removed within 30 days.' });
+
+  // NFR-14 / FR-52: permanently delete the Firebase Auth record so the login
+  // cannot be reused. Non-fatal if it fails — the DB row is already anonymised.
+  try {
+    await adminFirebase.auth().deleteUser(req.firebaseUid!);
+  } catch (err) {
+    console.warn('[Auth] Failed to delete Firebase user on account deletion:', err);
+  }
+
+  res.json({ message: 'Account deleted. Your personal data has been removed.' });
 });
 
 export default router;

@@ -6,6 +6,24 @@ import 'package:dealsouk/features/products/domain/product.dart';
 import 'package:dealsouk/features/cart/presentation/cart_providers.dart';
 import 'package:dealsouk/core/theme/theme.dart';
 
+/// An [Icon] that mirrors horizontally when the ambient text direction is RTL
+/// (Arabic). Use for directional glyphs — back arrows and disclosure chevrons —
+/// that must point the other way in a right-to-left layout.
+class DirectionalIcon extends StatelessWidget {
+  const DirectionalIcon(this.icon, {super.key, this.color, this.size});
+
+  final IconData icon;
+  final Color? color;
+  final double? size;
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = Icon(this.icon, color: color, size: size);
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    return isRtl ? Transform.flip(flipX: true, child: icon) : icon;
+  }
+}
+
 /// Clips a container so its bottom edge becomes one smooth downward arc —
 /// the curve under the reference design's dark green headers.
 class ArcBottomClipper extends CustomClipper<Path> {

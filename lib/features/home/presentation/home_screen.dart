@@ -19,6 +19,8 @@ import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/core/widgets/souk_widgets.dart';
 import 'package:dealsouk/core/widgets/platform_card.dart';
 import 'package:dealsouk/features/requests/presentation/request_board_view.dart';
+import 'package:dealsouk/core/widgets/auto_translate_text.dart';
+import 'package:dealsouk/l10n/app_localizations.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -44,6 +46,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final products = ref.watch(productsProvider);
     final filterState = ref.watch(filterProvider);
     final tokens = ref.watch(userTokensProvider);
@@ -56,11 +59,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final hour = DateTime.now().hour;
     final String greeting;
     if (hour < 12) {
-      greeting = 'Good Morning';
+      greeting = l.greeting;
     } else if (hour < 17) {
-      greeting = 'Good Afternoon';
+      greeting = l.greetingAfternoon;
     } else {
-      greeting = 'Good Evening';
+      greeting = l.greetingEvening;
     }
 
     final savedCount = cartItems.length;
@@ -73,35 +76,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     // Categories defined for Dribbble layout with premium transparent 3D clay illustrations
     final List<_CategoryInfo> homeCategories = [
-      const _CategoryInfo(
+      _CategoryInfo(
         Icons.eco_rounded,
+        l.homeCategoryFresh,
         'Fresh',
-        'Fresh',
-        Color(0xFFE8F5E9), // Pastel green background
+        const Color(0xFFE8F5E9), // Pastel green background
       ),
-      const _CategoryInfo(
+      _CategoryInfo(
         Icons.apple_rounded,
+        l.homeCategoryFruits,
         'Fruits',
-        'Fruits',
-        Color(0xFFFFEBEE), // Pastel pink background
+        const Color(0xFFFFEBEE), // Pastel pink background
       ),
-      const _CategoryInfo(
+      _CategoryInfo(
         Icons.fastfood_rounded,
-        'Snack',
+        l.homeCategorySnack,
         'Snacks',
-        Color(0xFFFFF8E1), // Pastel yellow background
+        const Color(0xFFFFF8E1), // Pastel yellow background
       ),
-      const _CategoryInfo(
+      _CategoryInfo(
         Icons.local_grocery_store_rounded,
-        'Grocery',
+        l.homeCategoryGrocery,
         'Dairy & Sweet',
-        Color(0xFFE0F2F1), // Pastel teal background
+        const Color(0xFFE0F2F1), // Pastel teal background
       ),
-      const _CategoryInfo(
+      _CategoryInfo(
         Icons.water_drop_rounded,
-        'Oils',
+        l.homeCategoryOils,
         'Bakery',
-        Color(0xFFF3E5F5), // Pastel purple background
+        const Color(0xFFF3E5F5), // Pastel purple background
       ),
     ];
 
@@ -185,7 +188,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    '$greeting, $firstName',
+                                    l.homeGreetingLine(greeting, firstName),
                                     style: GoogleFonts.fredoka(
                                       fontSize: 16.5,
                                       fontWeight: FontWeight.bold,
@@ -194,7 +197,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    'Find nearby prices before you go',
+                                    l.homeFindNearbyPrices,
                                     style: GoogleFonts.nunito(
                                       fontSize: 12.5,
                                       color: Colors.white.withValues(
@@ -291,7 +294,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ),
                               const SizedBox(width: 12),
                               Text(
-                                'Search an item to compare prices nearby',
+                                l.homeSearchHint,
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.9),
                                   fontSize: 13.5,
@@ -326,7 +329,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Categories',
+                        l.homeCategories,
                         style: GoogleFonts.fredoka(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -338,9 +341,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ref.read(filterProvider.notifier).reset();
                           context.push('/search');
                         },
-                        child: const Text(
-                          'See All',
-                          style: TextStyle(
+                        child: Text(
+                          l.homeSeeAll,
+                          style: const TextStyle(
                             fontSize: 12.5,
                             color: AppTheme.forestDeep,
                             fontWeight: FontWeight.bold,
@@ -466,7 +469,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Simple: search an item, check nearby stores, then decide where it is worth going.',
+                        l.homeHowItWorks,
                         style: GoogleFonts.nunito(
                           fontSize: 12,
                           color: AppTheme.forestDeep,
@@ -497,7 +500,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Best prices near you',
+                    l.homeBestPricesNearYou,
                     style: GoogleFonts.fredoka(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -517,7 +520,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
                     child: Text(
-                      '${feedProducts.length} prices',
+                      l.homePricesCount(feedProducts.length),
                       key: ValueKey<int>(feedProducts.length),
                       style: const TextStyle(
                         fontSize: 12,
@@ -549,7 +552,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'No prices match this filter yet',
+                        l.homeNoPricesMatch,
                         style: TextStyle(
                           color: Colors.grey.shade500,
                           fontSize: 14,
@@ -558,7 +561,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Try All prices, search for an item, or ask shoppers to check a price.',
+                        l.homeNoPricesHint,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Colors.grey.shade400,
@@ -569,7 +572,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       TextButton.icon(
                         onPressed: () => context.push('/search'),
                         icon: const Icon(Icons.search_rounded, size: 18),
-                        label: const Text('Find an item'),
+                        label: Text(l.homeFindAnItem),
                       ),
                     ],
                   ),
@@ -594,7 +597,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Browse items',
+                    l.homeBrowseItems,
                     style: GoogleFonts.fredoka(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -606,9 +609,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ref.read(filterProvider.notifier).reset();
                       context.push('/search');
                     },
-                    child: const Text(
-                      'See All',
-                      style: TextStyle(
+                    child: Text(
+                      l.homeSeeAll,
+                      style: const TextStyle(
                         fontSize: 12.5,
                         color: AppTheme.forestDeep,
                         fontWeight: FontWeight.bold,
@@ -646,7 +649,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Featured Stores',
+                    l.homeFeaturedStores,
                     style: GoogleFonts.fredoka(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -655,9 +658,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   GestureDetector(
                     onTap: () => context.go('/stores'),
-                    child: const Text(
-                      'See All',
-                      style: TextStyle(
+                    child: Text(
+                      l.homeSeeAll,
+                      style: const TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.bold,
                         color: AppTheme.forestDeep,
@@ -735,6 +738,7 @@ class _HomeTokenBalance extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return PlatformCard(
       onTap: () => context.go('/leaderboard'),
       padding: const EdgeInsets.all(16),
@@ -767,9 +771,9 @@ class _HomeTokenBalance extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Earn rewards today',
-                  style: TextStyle(
+                Text(
+                  l.homeEarnRewardsToday,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -777,7 +781,7 @@ class _HomeTokenBalance extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${dailyCap - submissionsToday} price shares left to earn tokens',
+                  l.homePriceSharesLeft(dailyCap - submissionsToday),
                   style: const TextStyle(color: Colors.white70, fontSize: 11.5),
                 ),
               ],
@@ -811,6 +815,7 @@ class _DailyChallengeCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     return PlatformCard(
       onTap: () => _showChallengeDetailsSheet(context, ref, challenge),
       padding: const EdgeInsets.all(14),
@@ -851,7 +856,7 @@ class _DailyChallengeCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Daily Challenge',
+                  l.homeDailyChallenge,
                   style: TextStyle(
                     color: Colors.grey.shade500,
                     fontSize: 10,
@@ -896,7 +901,7 @@ class _DailyChallengeCard extends ConsumerWidget {
             ),
             child: Text(
               challenge.completed
-                  ? 'Done! +${challenge.bonusTokens}T'
+                  ? l.homeChallengeDoneBadge(challenge.bonusTokens)
                   : '${challenge.progressCount}/${challenge.targetCount}',
               style: const TextStyle(
                 fontSize: 10.5,
@@ -924,6 +929,7 @@ class _DailyChallengeCard extends ConsumerWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
+        final l = AppLocalizations.of(context)!;
         final progressPercent =
             (challenge.progressCount / challenge.targetCount).clamp(0.0, 1.0);
         final isIos =
@@ -979,7 +985,7 @@ class _DailyChallengeCard extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Daily Challenge Details',
+                          l.homeDailyChallengeDetails,
                           style: GoogleFonts.fredoka(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -988,8 +994,8 @@ class _DailyChallengeCard extends ConsumerWidget {
                         ),
                         Text(
                           challenge.completed
-                              ? 'You have finished this challenge!'
-                              : 'Earn bonus tokens by participating today',
+                              ? l.homeChallengeFinished
+                              : l.homeChallengeEarnBonus,
                           style: GoogleFonts.nunito(
                             color: Colors.grey.shade500,
                             fontSize: 12,
@@ -1031,9 +1037,9 @@ class _DailyChallengeCard extends ConsumerWidget {
               _detailRow(
                 icon: Icons.store_rounded,
                 iconColor: Colors.blue.shade600,
-                title: 'Target Supermarket',
+                title: l.homeTargetSupermarket,
                 value: challenge.targetStore == 'Any'
-                    ? 'Any Supermarket Chain'
+                    ? l.homeAnySupermarketChain
                     : challenge.targetStore,
               ),
               const Divider(height: 24, color: Color(0xFFE8EEE4)),
@@ -1054,7 +1060,7 @@ class _DailyChallengeCard extends ConsumerWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Your Progress',
+                            l.homeYourProgress,
                             style: GoogleFonts.nunito(
                               fontSize: 13.5,
                               fontWeight: FontWeight.bold,
@@ -1064,7 +1070,10 @@ class _DailyChallengeCard extends ConsumerWidget {
                         ],
                       ),
                       Text(
-                        '${challenge.progressCount} / ${challenge.targetCount} prices',
+                        l.homeProgressPrices(
+                          challenge.progressCount,
+                          challenge.targetCount,
+                        ),
                         style: GoogleFonts.nunito(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w900,
@@ -1093,15 +1102,15 @@ class _DailyChallengeCard extends ConsumerWidget {
               _detailRow(
                 icon: Icons.token_rounded,
                 iconColor: AppTheme.amberAccent,
-                title: 'Reward Bonus',
-                value: '+${challenge.bonusTokens} Tokens',
+                title: l.homeRewardBonus,
+                value: l.homeRewardBonusValue(challenge.bonusTokens),
                 valueColor: const Color(0xFFC77C02),
               ),
               const Divider(height: 24, color: Color(0xFFE8EEE4)),
 
               // How to complete section
               Text(
-                'How to complete:',
+                l.homeHowToComplete,
                 style: GoogleFonts.fredoka(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -1111,23 +1120,15 @@ class _DailyChallengeCard extends ConsumerWidget {
               const SizedBox(height: 10),
               _stepItem(
                 number: '1',
-                text:
-                    'Visit any branch of ${challenge.targetStore == 'Any' ? 'a supermarket' : challenge.targetStore}.',
+                text: l.homeStepVisitStore(
+                  challenge.targetStore == 'Any'
+                      ? l.homeAGenericSupermarket
+                      : challenge.targetStore,
+                ),
               ),
-              _stepItem(
-                number: '2',
-                text: 'Find grocery products and verify their shelf prices.',
-              ),
-              _stepItem(
-                number: '3',
-                text:
-                    'Tap "Submit Price" in the app, fill in the price details, and submit.',
-              ),
-              _stepItem(
-                number: '4',
-                text:
-                    'Once approved, your progress will update and you\'ll receive the token bonus!',
-              ),
+              _stepItem(number: '2', text: l.homeStepVerifyPrices),
+              _stepItem(number: '3', text: l.homeStepSubmitPrice),
+              _stepItem(number: '4', text: l.homeStepApproved),
               const SizedBox(height: 28),
 
               // Button
@@ -1153,7 +1154,7 @@ class _DailyChallengeCard extends ConsumerWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Completed! Reward Claimed',
+                            l.homeCompletedRewardClaimed,
                             style: GoogleFonts.fredoka(
                               color: AppTheme.forestDeep,
                               fontSize: 15,
@@ -1177,7 +1178,7 @@ class _DailyChallengeCard extends ConsumerWidget {
                         ),
                       ),
                       child: Text(
-                        'Start Challenge Now',
+                        l.homeStartChallengeNow,
                         style: GoogleFonts.fredoka(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
@@ -1308,7 +1309,21 @@ class _FreshnessChipRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     const filters = ['All', 'Under 6h', 'Under 24h', 'Under 72h'];
+    String labelFor(String filter) {
+      switch (filter) {
+        case 'Under 6h':
+          return l.homeFreshnessUnder6h;
+        case 'Under 24h':
+          return l.homeFreshnessUnder24h;
+        case 'Under 72h':
+          return l.homeFreshnessUnder72h;
+        default:
+          return l.homeFreshnessAll;
+      }
+    }
+
     return SizedBox(
       height: 38,
       child: ListView.separated(
@@ -1334,7 +1349,7 @@ class _FreshnessChipRow extends ConsumerWidget {
                 ),
               ),
               child: Text(
-                filter,
+                labelFor(filter),
                 style: TextStyle(
                   color: isSelected ? Colors.white : AppTheme.forestDeep,
                   fontSize: 12.5,
@@ -1368,16 +1383,16 @@ class _FreshPriceEntryCard extends ConsumerWidget {
     return (storeName.hashCode % 15 + 8) / 10.0; // between 0.8 km and 2.2 km
   }
 
-  String _formatFreshness(String label) {
+  String _formatFreshness(AppLocalizations l, String label) {
     final lower = label.toLowerCase();
-    if (lower.contains('just now')) return 'Updated just now';
+    if (lower.contains('just now')) return l.homeUpdatedJustNow;
     final matches = RegExp(r'(\d+)').firstMatch(lower);
     if (matches != null) {
       final numStr = matches.group(1);
       if (lower.contains('h')) {
-        return 'Updated $numStr hours ago';
+        return l.homeUpdatedHoursAgo(numStr ?? '');
       } else if (lower.contains('d')) {
-        return 'Updated $numStr days ago';
+        return l.homeUpdatedDaysAgo(numStr ?? '');
       }
     }
     return label;
@@ -1385,6 +1400,7 @@ class _FreshPriceEntryCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     return GestureDetector(
       onTap: () => context.push('/product/${product.id}'),
       child: Container(
@@ -1411,7 +1427,7 @@ class _FreshPriceEntryCard extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  AutoTranslateText(
                     product.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -1422,7 +1438,7 @@ class _FreshPriceEntryCard extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
+                  AutoTranslateText(
                     product.lowestPriceStore,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -1437,19 +1453,23 @@ class _FreshPriceEntryCard extends ConsumerWidget {
                     spacing: 5,
                     runSpacing: 5,
                     children: [
-                      const _TrustPill(
-                        label: 'Verified with photo',
+                      _TrustPill(
+                        label: l.homeVerifiedWithPhoto,
                         icon: Icons.camera_alt_outlined,
-                        color: Color(0xFFE8F5E9),
+                        color: const Color(0xFFE8F5E9),
                       ),
                       _TrustPill(
-                        label: _formatFreshness(product.updatedAtLabel),
+                        label: _formatFreshness(l, product.updatedAtLabel),
                         icon: Icons.schedule_rounded,
                         color: const Color(0xFFF3F1EA),
                       ),
                       _TrustPill(
-                        label:
-                            '${_getStoreDistance(ref, product.lowestPriceStore).toStringAsFixed(1)} km away',
+                        label: l.homeKmAway(
+                          _getStoreDistance(
+                            ref,
+                            product.lowestPriceStore,
+                          ).toStringAsFixed(1),
+                        ),
                         icon: Icons.place_rounded,
                         color: const Color(0xFFE3F2FD),
                       ),
@@ -1521,6 +1541,7 @@ class _FeaturedStoreCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return GestureDetector(
       onTap: () => context.go('/stores'),
       child: Container(
@@ -1587,7 +1608,7 @@ class _FeaturedStoreCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  AutoTranslateText(
                     store.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -1607,7 +1628,10 @@ class _FeaturedStoreCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 2),
                       Text(
-                        '${store.distance} km away • ${store.pricesCount} prices',
+                        l.homeStoreDistancePrices(
+                          store.distance,
+                          store.pricesCount,
+                        ),
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.grey.shade600,
@@ -1684,20 +1708,21 @@ class _OfferCarouselState extends State<_OfferCarousel> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final List<_OfferCardData> offers = [
-      const _OfferCardData(
-        title: 'Know The Best Price\nBefore You Leave',
-        subtitle: 'Fresh prices from shoppers near you',
+      _OfferCardData(
+        title: l.homeOffer1Title,
+        subtitle: l.homeOffer1Subtitle,
         icon: Icons.savings_rounded,
       ),
-      const _OfferCardData(
-        title: 'Save The Trip\nAnd The Dirhams',
-        subtitle: 'Compare nearby stores before you go',
+      _OfferCardData(
+        title: l.homeOffer2Title,
+        subtitle: l.homeOffer2Subtitle,
         icon: Icons.route_rounded,
       ),
-      const _OfferCardData(
-        title: 'Need A Price Checked?\nAsk The Community',
-        subtitle: 'A real shopper can check the shelf',
+      _OfferCardData(
+        title: l.homeOffer3Title,
+        subtitle: l.homeOffer3Subtitle,
         icon: Icons.add_a_photo_rounded,
       ),
     ];
@@ -1773,7 +1798,7 @@ class _OfferCarouselState extends State<_OfferCarousel> {
             children: List.generate(
               offers.length,
               (index) => Padding(
-                padding: const EdgeInsets.only(right: 5),
+                padding: const EdgeInsetsDirectional.only(end: 5),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 250),
                   width: _currentIndex == index ? 16 : 6,

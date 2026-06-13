@@ -1,69 +1,71 @@
 import 'package:flutter/material.dart';
 import 'package:dealsouk/core/theme/theme.dart';
+import 'package:dealsouk/l10n/app_localizations.dart';
 
 class PrivacyPolicyScreen extends StatelessWidget {
   const PrivacyPolicyScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text('Privacy & Terms'),
+        title: Text(l.privacyTitle),
         backgroundColor: AppTheme.background,
         foregroundColor: AppTheme.textDark,
         elevation: 0,
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-        children: const [
+        children: [
           _PolicySection(
-            title: 'Plain English Summary',
+            title: l.privacySummaryTitle,
             items: [
-              'DealSouk helps shoppers compare grocery prices using community-submitted prices.',
-              'We ask for only the information needed to run the app: your account, home area, language, submissions, requests, tokens, and moderation history.',
-              'We use your device location only to show nearby supermarket prices. Precise GPS is not stored permanently.',
-              'Tokens are rewards inside DealSouk. They are not cash, cannot be transferred, and cannot be sold.',
-              'Photos are used to verify price labels or receipts. Do not upload photos with personal information.',
-              'You can request account deletion from Profile settings.',
+              l.privacySummaryItem1,
+              l.privacySummaryItem2,
+              l.privacySummaryItem3,
+              l.privacySummaryItem4,
+              l.privacySummaryItem5,
+              l.privacySummaryItem6,
             ],
           ),
           _PolicySection(
-            title: 'What We Collect',
+            title: l.privacyCollectTitle,
             items: [
-              'Account details: Firebase account ID, display name, phone number if you use phone login, and preferred language.',
-              'Shopping area: neighbourhood or area, not a permanent precise GPS record.',
-              'Price data: products, stores, prices, timestamps, optional shelf label or receipt photos, and moderation flags.',
-              'Rewards data: token balance, token history, voucher requests, badges, streaks, and leaderboard totals.',
-              'Device messaging token: used only for DealSouk notifications such as request fulfilment or reward updates.',
+              l.privacyCollectItem1,
+              l.privacyCollectItem2,
+              l.privacyCollectItem3,
+              l.privacyCollectItem4,
+              l.privacyCollectItem5,
             ],
           ),
           _PolicySection(
-            title: 'How We Use Data',
+            title: l.privacyUseTitle,
             items: [
-              'To show fresh prices near you.',
-              'To calculate savings, requests, tokens, and rewards.',
-              'To detect wrong, stale, duplicate, or suspicious submissions.',
-              'To operate admin moderation and voucher approval.',
-              'To improve reliability, security, and Arabic/English usability.',
+              l.privacyUseItem1,
+              l.privacyUseItem2,
+              l.privacyUseItem3,
+              l.privacyUseItem4,
+              l.privacyUseItem5,
             ],
           ),
           _PolicySection(
-            title: 'Your Choices',
+            title: l.privacyChoicesTitle,
             items: [
-              'You may browse as a guest with limited features.',
-              'You can change your display name, home area, and language.',
-              'You can deny location access and still use non-location features.',
-              'You can request account deletion. We anonymise account data needed for fraud prevention and financial/reward audit records.',
+              l.privacyChoicesItem1,
+              l.privacyChoicesItem2,
+              l.privacyChoicesItem3,
+              l.privacyChoicesItem4,
             ],
           ),
           _PolicySection(
-            title: 'Arabic Summary',
+            title: l.privacyArabicTitle,
             items: [
-              'نستخدم موقعك فقط لعرض أسعار المتاجر القريبة، ولا نخزن موقع GPS الدقيق بشكل دائم.',
-              'الرموز مكافآت داخل التطبيق وليست نقوداً ولا يمكن بيعها أو تحويلها.',
-              'صور الأسعار أو الإيصالات تستخدم للتحقق فقط. لا ترفع صوراً تحتوي على معلومات شخصية.',
-              'يمكنك طلب حذف الحساب من الإعدادات.',
+              l.privacyArabicItem1,
+              l.privacyArabicItem2,
+              l.privacyArabicItem3,
+              l.privacyArabicItem4,
             ],
           ),
         ],

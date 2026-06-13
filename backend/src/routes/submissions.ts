@@ -2,7 +2,12 @@ import { Router } from 'express';
 import { prisma } from '../index';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { authenticatedRateLimit } from '../middleware/rateLimits';
-import { calculateReward, awardTokens } from '../services/tokenEngine';
+import {
+  calculateReward,
+  runApprovalEffects,
+  TRUST_MIN_APPROVED,
+  TRUST_MIN_ACCURACY,
+} from '../services/tokenEngine';
 import { notifySubmissionHidden } from '../services/fcmNotifier';
 
 const router = Router();
@@ -102,6 +107,20 @@ router.post('/', requireAuth, submitLimiter, async (req: AuthRequest, res) => {
 
   const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000);
 
+  // FR-36: trusted sourcers (verified track record + 90%+ accuracy) publish
+  // instantly so prices appear in the live feed within 60s. Everyone else stays
+  // pending for admin review.
+  const sourcer = await prisma.user.findUnique({
+    where: { id: req.userId! },
+    select: { accuracyRating: true },
+  });
+  const priorApproved = await prisma.priceSubmission.count({
+    where: { sourcerId: req.userId!, status: 'approved' },
+  });
+  const autoApprove =
+    priorApproved >= TRUST_MIN_APPROVED &&
+    (sourcer?.accuracyRating ?? 0) >= TRUST_MIN_ACCURACY;
+
   const submission = await prisma.priceSubmission.create({
     data: {
       productId,
@@ -110,11 +129,19 @@ router.post('/', requireAuth, submitLimiter, async (req: AuthRequest, res) => {
       priceAed,
       hasReceipt,
       receiptUrl: receiptUrl ?? null,
-      status: 'pending',
+      status: autoApprove ? 'approved' : 'pending',
       tokensAwarded,
       expiresAt,
     },
   });
+
+  if (autoApprove) {
+    await runApprovalEffects({
+      sourcerId: req.userId!,
+      tokensAwarded,
+      submissionId: submission.id,
+    });
+  }
 
   res.status(201).json({
     id: submission.id,

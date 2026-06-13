@@ -8,6 +8,7 @@ import 'package:dealsouk/features/profile/presentation/profile_providers.dart';
 import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/core/widgets/responsive_container.dart';
 import 'package:dealsouk/core/widgets/tutorial_overlay.dart';
+import 'package:dealsouk/l10n/app_localizations.dart';
 
 class ShellLayout extends StatefulWidget {
   final Widget child;
@@ -81,24 +82,28 @@ class _ShellLayoutBody extends ConsumerWidget {
                 defaultTargetPlatform == TargetPlatform.iOS ||
                 defaultTargetPlatform == TargetPlatform.macOS;
 
+            final l = AppLocalizations.of(context)!;
             final navItems = Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _SoukNavItem(
                   icon: Icons.home_outlined,
                   selectedIcon: Icons.home_rounded,
+                  label: l.home,
                   selected: selectedIndex == 0,
                   onTap: () => context.go('/'),
                 ),
                 _SoukNavItem(
                   icon: Icons.map_outlined,
                   selectedIcon: Icons.map_rounded,
+                  label: l.map,
                   selected: selectedIndex == 1,
                   onTap: () => context.go('/stores'),
                 ),
                 _SoukNavItem(
                   icon: Icons.bookmark_border_rounded,
                   selectedIcon: Icons.bookmark_rounded,
+                  label: l.cart,
                   selected: selectedIndex == 2,
                   badge: savedCount,
                   onTap: () => context.go('/cart'),
@@ -106,12 +111,14 @@ class _ShellLayoutBody extends ConsumerWidget {
                 _SoukNavItem(
                   icon: Icons.emoji_events_outlined,
                   selectedIcon: Icons.emoji_events_rounded,
+                  label: l.leaderboard,
                   selected: selectedIndex == 3,
                   onTap: () => context.go('/leaderboard'),
                 ),
                 _SoukNavItem(
                   icon: Icons.person_outline_rounded,
                   selectedIcon: Icons.person_rounded,
+                  label: l.profile,
                   selected: selectedIndex == 4,
                   onTap: () => context.go('/profile'),
                 ),
@@ -162,6 +169,7 @@ class _ShellLayoutBody extends ConsumerWidget {
 class _SoukNavItem extends StatelessWidget {
   final IconData icon;
   final IconData selectedIcon;
+  final String label;
   final bool selected;
   final int badge;
   final VoidCallback onTap;
@@ -169,6 +177,7 @@ class _SoukNavItem extends StatelessWidget {
   const _SoukNavItem({
     required this.icon,
     required this.selectedIcon,
+    required this.label,
     required this.selected,
     this.badge = 0,
     required this.onTap,
@@ -176,56 +185,61 @@ class _SoukNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        width: 46,
-        height: 46,
-        alignment: Alignment.center,
-        child: Stack(
-          clipBehavior: Clip.none,
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          width: 46,
+          height: 46,
           alignment: Alignment.center,
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: selected ? 40 : 0,
-              height: selected ? 40 : 0,
-              decoration: const BoxDecoration(
-                color: AppTheme.cream,
-                shape: BoxShape.circle,
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: selected ? 40 : 0,
+                height: selected ? 40 : 0,
+                decoration: const BoxDecoration(
+                  color: AppTheme.cream,
+                  shape: BoxShape.circle,
+                ),
               ),
-            ),
-            Icon(
-              selected ? selectedIcon : icon,
-              color: selected ? AppTheme.forestDeep : Colors.grey.shade400,
-              size: 22,
-            ),
-            if (badge > 0)
-              Positioned(
-                right: -4,
-                top: -4,
-                child: Container(
-                  width: 16,
-                  height: 16,
-                  decoration: BoxDecoration(
-                    color: AppTheme.redAccent,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 1.5),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '$badge',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 8,
-                        fontWeight: FontWeight.bold,
+              Icon(
+                selected ? selectedIcon : icon,
+                color: selected ? AppTheme.forestDeep : Colors.grey.shade400,
+                size: 22,
+              ),
+              if (badge > 0)
+                Positioned(
+                  right: -4,
+                  top: -4,
+                  child: Container(
+                    width: 16,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: AppTheme.redAccent,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 1.5),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '$badge',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

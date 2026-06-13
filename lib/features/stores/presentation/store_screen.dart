@@ -13,7 +13,9 @@ import 'package:dealsouk/features/profile/presentation/profile_providers.dart';
 import 'package:dealsouk/features/stores/domain/store.dart';
 import 'package:dealsouk/features/stores/presentation/stores_providers.dart';
 import 'package:dealsouk/core/theme/theme.dart';
+import 'package:dealsouk/core/widgets/auto_translate_text.dart';
 import 'package:dealsouk/core/widgets/souk_widgets.dart';
+import 'package:dealsouk/l10n/app_localizations.dart';
 
 /// Dubai city centre — map always defaults here
 const _dubaiCenter = LatLng(25.2048, 55.2708);
@@ -174,6 +176,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
           context: context,
           barrierDismissible: false,
           builder: (context) {
+            final l = AppLocalizations.of(context)!;
             return AlertDialog(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
@@ -187,7 +190,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Find Supermarkets Near You',
+                      l.storeLocationPromptTitle,
                       style: GoogleFonts.fredoka(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -198,7 +201,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                 ],
               ),
               content: Text(
-                'DealSouk uses your location to show how far each Dubai supermarket is from you.',
+                l.storeLocationPromptBody,
                 style: GoogleFonts.nunito(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
@@ -207,9 +210,9 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context, false),
-                  child: const Text(
-                    'Skip',
-                    style: TextStyle(color: Colors.grey),
+                  child: Text(
+                    l.storeLocationPromptSkip,
+                    style: const TextStyle(color: Colors.grey),
                   ),
                 ),
                 ElevatedButton(
@@ -220,9 +223,9 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Allow',
-                    style: TextStyle(color: Colors.white),
+                  child: Text(
+                    l.storeLocationPromptAllow,
+                    style: const TextStyle(color: Colors.white),
                   ),
                 ),
               ],
@@ -273,6 +276,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final stores = ref.watch(storesProvider);
     final filtered = _applyFilters(stores);
 
@@ -289,12 +293,13 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                 children: [
                   _CircleButton(
                     icon: Icons.arrow_back_ios_new_rounded,
+                    mirrorInRtl: true,
                     onTap: () =>
                         context.canPop() ? context.pop() : context.go('/'),
                   ),
                   Expanded(
                     child: Text(
-                      'Store Map — Dubai',
+                      l.storeMapTitle,
                       textAlign: TextAlign.center,
                       style: GoogleFonts.fredoka(
                         color: AppTheme.forestDeep,
@@ -415,7 +420,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                               fontWeight: FontWeight.w500,
                             ),
                             decoration: InputDecoration(
-                              hintText: 'Search store name or area…',
+                              hintText: l.storeSearchHint,
                               hintStyle: TextStyle(
                                 color: Colors.grey.shade400,
                                 fontSize: 13.5,
@@ -491,8 +496,10 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                 children: [
                                   Text(
                                     filtered.isEmpty
-                                        ? 'No stores found'
-                                        : '${filtered.length} Dubai stores',
+                                        ? l.storeNoStoresFound
+                                        : l.storeDubaiStoresCount(
+                                            filtered.length,
+                                          ),
                                     style: GoogleFonts.fredoka(
                                       color: Colors.white,
                                       fontSize: 14.5,
@@ -501,7 +508,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    'Tap a pin to see branch details',
+                                    l.storeTapPinHint,
                                     style: GoogleFonts.nunito(
                                       color: Colors.white70,
                                       fontSize: 11,
@@ -595,8 +602,15 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                             ),
                                             child: Tooltip(
                                               message: dist != null
-                                                  ? '${store.name} · ${store.branch}\n${dist.toStringAsFixed(1)} km away'
-                                                  : '${store.name}\n${store.branch}',
+                                                  ? l.storeMarkerTooltipWithDistance(
+                                                      store.name,
+                                                      store.branch,
+                                                      dist.toStringAsFixed(1),
+                                                    )
+                                                  : l.storeMarkerTooltip(
+                                                      store.name,
+                                                      store.branch,
+                                                    ),
                                               child: Container(
                                                 decoration: BoxDecoration(
                                                   color: _chainColor(
@@ -735,8 +749,8 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
-                                            'Dubai',
-                                            style: TextStyle(
+                                            l.storeResetDubai,
+                                            style: const TextStyle(
                                               fontSize: 11,
                                               fontWeight: FontWeight.bold,
                                               color: AppTheme.forestDeep,
@@ -766,8 +780,8 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                           children: [
                             Text(
                               _userIsInDubai
-                                  ? 'Near You in Dubai'
-                                  : 'All Dubai Stores',
+                                  ? l.storeNearYouTitle
+                                  : l.storeAllStoresTitle,
                               style: GoogleFonts.fredoka(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -776,7 +790,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                             ),
                             if (_userIsInDubai)
                               Text(
-                                'Within ${_maxRadiusKm.toInt()} km · sorted by distance',
+                                l.storeWithinRadiusSorted(_maxRadiusKm.toInt()),
                                 style: GoogleFonts.nunito(
                                   fontSize: 10.5,
                                   color: Colors.grey.shade500,
@@ -796,7 +810,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            '${filtered.length} stores',
+                            l.storeStoresCount(filtered.length),
                             style: GoogleFonts.nunito(
                               color: AppTheme.forestDeep,
                               fontSize: 11,
@@ -821,7 +835,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              'No stores match "$_searchQuery"',
+                              l.storeNoStoresMatch(_searchQuery),
                               style: GoogleFonts.nunito(
                                 color: Colors.grey.shade500,
                                 fontWeight: FontWeight.bold,
@@ -892,6 +906,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
       ),
       isScrollControlled: true,
       builder: (context) {
+        final l = AppLocalizations.of(context)!;
         return DraggableScrollableSheet(
           expand: false,
           initialChildSize: 0.6,
@@ -928,7 +943,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            AutoTranslateText(
                               store.name,
                               style: GoogleFonts.fredoka(
                                 fontSize: 20,
@@ -936,7 +951,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                 color: AppTheme.forestDeep,
                               ),
                             ),
-                            Text(
+                            AutoTranslateText(
                               store.branch,
                               style: GoogleFonts.nunito(
                                 color: Colors.grey.shade500,
@@ -967,7 +982,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                'Stale',
+                                l.storeStaleBadge,
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
@@ -993,19 +1008,17 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                         if (snapshot.hasError) {
                           return _StorePricesEmptyState(
                             icon: Icons.wifi_off_rounded,
-                            title: 'Could not load prices',
-                            subtitle:
-                                'Check your connection or submit a fresh price for this branch.',
+                            title: l.storePricesLoadErrorTitle,
+                            subtitle: l.storePricesLoadErrorSubtitle,
                           );
                         }
 
                         final prices = snapshot.data ?? [];
                         if (prices.isEmpty) {
-                          return const _StorePricesEmptyState(
+                          return _StorePricesEmptyState(
                             icon: Icons.price_change_outlined,
-                            title: 'No fresh prices yet',
-                            subtitle:
-                                'Be the first to share a shelf price at this branch.',
+                            title: l.storeNoPricesTitle,
+                            subtitle: l.storeNoPricesSubtitle,
                           );
                         }
 
@@ -1036,7 +1049,9 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                               ),
                               subtitle: Text(
                                 price.verifiedWithPhoto
-                                    ? '${price.updatedAtLabel} · Verified with photo'
+                                    ? l.storePriceVerifiedWithPhoto(
+                                        price.updatedAtLabel,
+                                      )
                                     : price.updatedAtLabel,
                                 style: GoogleFonts.nunito(
                                   fontSize: 11,
@@ -1062,18 +1077,18 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                         color: AppTheme.forestDeep,
                         borderRadius: BorderRadius.circular(25),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.add_a_photo_outlined,
                             color: Colors.white,
                             size: 18,
                           ),
-                          SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           Text(
-                            'Submit Price Here',
-                            style: TextStyle(
+                            l.storeSubmitPriceHere,
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 14.5,
                               fontWeight: FontWeight.bold,
@@ -1141,15 +1156,22 @@ class _CircleButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
 
-  const _CircleButton({required this.icon, required this.onTap});
+  /// Set for directional glyphs (back arrows) that must flip in RTL.
+  final bool mirrorInRtl;
+
+  const _CircleButton({
+    required this.icon,
+    required this.onTap,
+    this.mirrorInRtl = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 40,
-        height: 40,
+        width: 44,
+        height: 44,
         decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
@@ -1162,7 +1184,9 @@ class _CircleButton extends StatelessWidget {
             ),
           ],
         ),
-        child: Icon(icon, color: AppTheme.forestDeep, size: 18),
+        child: mirrorInRtl
+            ? DirectionalIcon(icon, color: AppTheme.forestDeep, size: 18)
+            : Icon(icon, color: AppTheme.forestDeep, size: 18),
       ),
     );
   }
@@ -1183,6 +1207,7 @@ class _StoreChoiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final isStale = store.lastUpdatedHoursAgo > 48;
     final chainColor = _chainColorStatic(store.name);
 
@@ -1223,7 +1248,7 @@ class _StoreChoiceCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    AutoTranslateText(
                       store.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -1243,7 +1268,7 @@ class _StoreChoiceCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 3),
                         Expanded(
-                          child: Text(
+                          child: AutoTranslateText(
                             store.branch,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -1290,7 +1315,7 @@ class _StoreChoiceCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 3),
                           Text(
-                            '${distanceKm!.toStringAsFixed(1)} km',
+                            l.storeDistanceKm(distanceKm!.toStringAsFixed(1)),
                             style: GoogleFonts.nunito(
                               color: distanceKm! <= 3
                                   ? const Color(0xFF2A9D8F)
@@ -1315,7 +1340,7 @@ class _StoreChoiceCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        'View Prices',
+                        l.storeViewPrices,
                         style: GoogleFonts.nunito(
                           color: chainColor,
                           fontSize: 9.5,
@@ -1326,7 +1351,10 @@ class _StoreChoiceCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(width: 8),
-              Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
+              DirectionalIcon(
+                Icons.chevron_right_rounded,
+                color: Colors.grey.shade400,
+              ),
             ],
           ),
         ),

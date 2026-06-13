@@ -7,12 +7,15 @@ import 'package:dealsouk/features/profile/presentation/profile_providers.dart';
 import 'package:dealsouk/features/admin/presentation/admin_providers.dart';
 import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/features/requests/domain/price_request.dart';
+import 'package:dealsouk/core/widgets/auto_translate_text.dart';
+import 'package:dealsouk/l10n/app_localizations.dart';
 
 class RequestBoardView extends ConsumerWidget {
   const RequestBoardView({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final requests = ref.watch(priceRequestsProvider);
     final requestCost = ref.watch(adminSettingsProvider).requestCostTokens;
     final activeRequests = requests
@@ -42,7 +45,7 @@ class RequestBoardView extends ConsumerWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Need a price checked? Ask nearby shoppers. If someone is already at that store, they can send back the shelf price.',
+                    l.requestBannerExplanation,
                     style: GoogleFonts.nunito(
                       fontSize: 12,
                       color: const Color(0xFF5D4037),
@@ -61,7 +64,7 @@ class RequestBoardView extends ConsumerWidget {
             children: [
               Expanded(
                 child: Text(
-                  'Price checks people need (${activeRequests.length})',
+                  l.requestBoardTitle(activeRequests.length),
                   style: GoogleFonts.fredoka(
                     fontSize: 16.5,
                     fontWeight: FontWeight.bold,
@@ -74,7 +77,7 @@ class RequestBoardView extends ConsumerWidget {
                 onPressed: () =>
                     _showRequestFormSheet(context, ref, requestCost),
                 icon: const Icon(Icons.add_comment_rounded, size: 16),
-                label: const Text('Ask for a price'),
+                label: Text(l.requestAskForPrice),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.forestDeep,
                   foregroundColor: Colors.white,
@@ -113,7 +116,7 @@ class RequestBoardView extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'All price requests are completed!',
+                    l.requestEmptyTitle,
                     style: GoogleFonts.fredoka(
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
@@ -121,7 +124,7 @@ class RequestBoardView extends ConsumerWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Need a price? Tap \'Ask for a price\' to request a price check.',
+                    l.requestEmptySubtitle,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.nunito(
                       color: Colors.grey,
@@ -153,6 +156,7 @@ class RequestBoardView extends ConsumerWidget {
     WidgetRef ref,
     int requestCost,
   ) {
+    final l = AppLocalizations.of(context)!;
     final formKey = GlobalKey<FormState>();
     String productName = '';
     String selectedStore = 'Carrefour';
@@ -207,7 +211,7 @@ class RequestBoardView extends ConsumerWidget {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'Ask for a price check',
+                  l.requestFormTitle,
                   style: GoogleFonts.fredoka(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -216,7 +220,7 @@ class RequestBoardView extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Tell us the item and store. This uses $requestCost tokens and refunds automatically if it expires.',
+                  l.requestFormSubtitle(requestCost),
                   style: GoogleFonts.nunito(
                     color: Colors.grey.shade500,
                     fontSize: 12.5,
@@ -227,8 +231,8 @@ class RequestBoardView extends ConsumerWidget {
                 // Product Name Field
                 TextFormField(
                   decoration: InputDecoration(
-                    labelText: 'Item name',
-                    hintText: 'e.g. milk, rice, apples',
+                    labelText: l.requestItemNameLabel,
+                    hintText: l.requestItemNameHint,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
@@ -239,7 +243,7 @@ class RequestBoardView extends ConsumerWidget {
                   ),
                   validator: (val) {
                     if (val == null || val.trim().isEmpty) {
-                      return 'Please enter the item name';
+                      return l.requestItemNameValidation;
                     }
                     return null;
                   },
@@ -251,7 +255,7 @@ class RequestBoardView extends ConsumerWidget {
                 DropdownButtonFormField<String>(
                   initialValue: selectedStore,
                   decoration: InputDecoration(
-                    labelText: 'Supermarket Chain',
+                    labelText: l.requestStoreLabel,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
@@ -284,18 +288,22 @@ class RequestBoardView extends ConsumerWidget {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(24),
                           ),
-                          title: const Row(
+                          title: Row(
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.check_circle_rounded,
                                 color: Colors.green,
                               ),
-                              SizedBox(width: 8),
-                              Text('Price request sent'),
+                              const SizedBox(width: 8),
+                              Text(l.requestSentTitle),
                             ],
                           ),
                           content: Text(
-                            'Nearby shoppers can check $productName at $selectedStore. $requestCost tokens were reserved and will refund if the request expires.',
+                            l.requestSentBody(
+                              productName,
+                              selectedStore,
+                              requestCost,
+                            ),
                             style: GoogleFonts.nunito(
                               fontSize: 13,
                               height: 1.4,
@@ -305,7 +313,7 @@ class RequestBoardView extends ConsumerWidget {
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context),
-                              child: const Text('Great'),
+                              child: Text(l.requestSentConfirm),
                             ),
                           ],
                         ),
@@ -320,7 +328,7 @@ class RequestBoardView extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  child: const Text('Ask for this price'),
+                  child: Text(l.requestSubmitButton),
                 ),
               ],
             ),
@@ -341,6 +349,7 @@ class _RequestItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
@@ -376,7 +385,7 @@ class _RequestItemCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                AutoTranslateText(
                   request.productName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -388,7 +397,11 @@ class _RequestItemCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  '${request.storeName} • ${request.distance} km • Posted by ${request.requesterName}',
+                  l.requestCardSubtitle(
+                    request.storeName,
+                    request.distance,
+                    request.requesterName,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.nunito(
@@ -419,9 +432,9 @@ class _RequestItemCard extends StatelessWidget {
                 color: AppTheme.forestDeep,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Text(
-                'Check price (+15 Tokens)',
-                style: TextStyle(
+              child: Text(
+                l.requestCheckPriceButton(15),
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 10,
                   fontWeight: FontWeight.bold,

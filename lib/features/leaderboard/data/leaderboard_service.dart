@@ -32,6 +32,16 @@ class LeaderboardService {
     }
     return top10;
   }
+
+  // FR-45: previous calendar month's top 3 sourcers (Hall of Fame).
+  Future<List<LeaderboardUser>> getHallOfFame() async {
+    final res = await apiClient.get('/leaderboard/monthly');
+    final data = res.data as Map<String, dynamic>;
+    final hof = (data['hallOfFame'] as List<dynamic>? ?? [])
+        .map((e) => LeaderboardUser.fromJson(e as Map<String, dynamic>))
+        .toList();
+    return hof;
+  }
 }
 
 final leaderboardService = LeaderboardService();

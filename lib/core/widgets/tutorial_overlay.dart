@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dealsouk/core/theme/theme.dart';
+import 'package:dealsouk/l10n/app_localizations.dart';
 
 class TutorialOverlay extends StatefulWidget {
   const TutorialOverlay({super.key});
@@ -22,21 +23,18 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  final List<_TutorialSlide> _slides = [
-    const _TutorialSlide(
-      title: "Compare Grocery Prices",
-      description:
-          "Find nearby prices for fruits, vegetables, dairy, and snacks in Dubai supermarkets before you leave home.",
+  List<_TutorialSlide> _buildSlides(AppLocalizations l) => [
+    _TutorialSlide(
+      title: l.tutorialCompareTitle,
+      description: l.tutorialCompareDescription,
     ),
-    const _TutorialSlide(
-      title: "Ask For Price Checks",
-      description:
-          "Need a price you cannot see? Ask the community to check it, or help others by sharing a shelf price.",
+    _TutorialSlide(
+      title: l.tutorialAskTitle,
+      description: l.tutorialAskDescription,
     ),
-    const _TutorialSlide(
-      title: "Earn Shopping Rewards",
-      description:
-          "Share prices or check shelves to earn tokens, then swap them for real supermarket vouchers.",
+    _TutorialSlide(
+      title: l.tutorialEarnTitle,
+      description: l.tutorialEarnDescription,
     ),
   ];
 
@@ -438,6 +436,8 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final slides = _buildSlides(l);
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       elevation: 16,
@@ -447,12 +447,13 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
         constraints: const BoxConstraints(maxWidth: 420, maxHeight: 540),
         child: Column(
           children: [
-            // Close button in top-right
+            // Close button in top-right (top-end mirrors in RTL)
             Align(
-              alignment: Alignment.topRight,
+              alignment: AlignmentDirectional.topEnd,
               child: Padding(
-                padding: const EdgeInsets.only(top: 12, right: 12),
+                padding: const EdgeInsetsDirectional.only(top: 12, end: 12),
                 child: IconButton(
+                  tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                   icon: const Icon(Icons.close_rounded, color: Colors.grey),
                   onPressed: () => Navigator.pop(context),
                 ),
@@ -463,14 +464,14 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
-                itemCount: _slides.length,
+                itemCount: slides.length,
                 onPageChanged: (page) {
                   setState(() {
                     _currentPage = page;
                   });
                 },
                 itemBuilder: (context, index) {
-                  final slide = _slides[index];
+                  final slide = slides[index];
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24.0),
                     child: Column(
@@ -520,7 +521,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                   TextButton(
                     onPressed: () => Navigator.pop(context),
                     child: Text(
-                      'Skip',
+                      l.tutorialSkip,
                       style: TextStyle(
                         color: Colors.grey.shade500,
                         fontWeight: FontWeight.bold,
@@ -531,7 +532,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
 
                   // Dots Indicator
                   Row(
-                    children: List.generate(_slides.length, (index) {
+                    children: List.generate(slides.length, (index) {
                       final isSelected = index == _currentPage;
                       return AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
@@ -551,7 +552,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                   // Next / Done button
                   ElevatedButton(
                     onPressed: () {
-                      if (_currentPage < _slides.length - 1) {
+                      if (_currentPage < slides.length - 1) {
                         _pageController.nextPage(
                           duration: const Duration(milliseconds: 300),
                           curve: Curves.easeInOut,
@@ -572,7 +573,9 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                       ),
                     ),
                     child: Text(
-                      _currentPage == _slides.length - 1 ? 'Start' : 'Next',
+                      _currentPage == slides.length - 1
+                          ? l.tutorialGetStarted
+                          : l.tutorialNext,
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),

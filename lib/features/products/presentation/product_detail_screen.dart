@@ -15,6 +15,7 @@ import 'package:dealsouk/features/products/data/products_service.dart';
 import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/core/widgets/responsive_container.dart';
 import 'package:dealsouk/core/widgets/souk_widgets.dart';
+import 'package:dealsouk/l10n/app_localizations.dart';
 
 class ProductDetailScreen extends ConsumerStatefulWidget {
   final String productId;
@@ -45,19 +46,19 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     return (storeName.hashCode % 15 + 8) / 10.0;
   }
 
-  String _formatFreshness(String label) {
+  String _formatFreshness(AppLocalizations l, String label) {
     final lower = label.toLowerCase();
-    if (lower.contains('now')) return 'Updated just now';
+    if (lower.contains('now')) return l.productUpdatedJustNow;
     final matches = RegExp(r'(\d+)').firstMatch(lower);
     if (matches != null) {
       final numStr = matches.group(1);
       if (lower.contains('h')) {
-        return 'Updated $numStr hours ago';
+        return l.productUpdatedHoursAgo(numStr!);
       } else if (lower.contains('d')) {
-        return 'Updated $numStr days ago';
+        return l.productUpdatedDaysAgo(numStr!);
       }
     }
-    return 'Updated $label';
+    return l.productUpdatedLabel(label);
   }
 
   @override
@@ -79,6 +80,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final products = ref.watch(productsProvider);
     final auth = ref.watch(authProvider);
     final requestCost = ref.watch(adminSettingsProvider).requestCostTokens;
@@ -119,14 +121,15 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           foregroundColor: Colors.black,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(
+            icon: const DirectionalIcon(
               Icons.arrow_back_ios_new_rounded,
               color: Colors.black,
             ),
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
             onPressed: () => context.pop(),
           ),
           title: Text(
-            'Details',
+            l.productDetailsTitle,
             style: GoogleFonts.fredoka(
               color: Colors.black,
               fontWeight: FontWeight.bold,
@@ -135,6 +138,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           ),
           actions: [
             IconButton(
+              tooltip: _isFavorite
+                  ? l.productRemoveFromFavourites
+                  : l.productAddToFavourites,
               icon: Icon(
                 _isFavorite
                     ? Icons.favorite_rounded
@@ -236,7 +242,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      'Best price seen at ${product.lowestPriceStore}',
+                                      l.productBestPriceSeenAt(
+                                        product.lowestPriceStore,
+                                      ),
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: Colors.grey.shade600,
@@ -263,9 +271,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                       ScaffoldMessenger.of(
                                         context,
                                       ).showSnackBar(
-                                        const SnackBar(
+                                        SnackBar(
                                           content: Text(
-                                            'Request this price! Other shoppers will check it soon.',
+                                            l.productRequestPriceConfirmation,
                                           ),
                                           backgroundColor: AppTheme.forestDeep,
                                         ),
@@ -275,7 +283,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                       Icons.refresh_rounded,
                                       size: 14,
                                     ),
-                                    label: const Text('Request this price'),
+                                    label: Text(l.productRequestThisPrice),
                                     style: TextButton.styleFrom(
                                       foregroundColor: AppTheme.forestDeep,
                                       visualDensity: VisualDensity.compact,
@@ -293,7 +301,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
 
                           // 4. Crowdsourced Price Comparison (Collapsible)
                           _buildCollapsibleCard(
-                            title: 'Compare Store Prices',
+                            title: l.productCompareStorePrices,
                             icon: Icons.storefront_rounded,
                             isExpanded: _compareExpanded,
                             onToggle: () => setState(
@@ -306,15 +314,15 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        const Text(
-                                          'No fresh prices yet.',
-                                          style: TextStyle(
+                                        Text(
+                                          l.productNoFreshPrices,
+                                          style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          'Ask another shopper to check this item before you make the trip.',
+                                          l.productNoFreshPricesHint,
                                           style: TextStyle(
                                             color: Colors.grey.shade600,
                                             fontSize: 12,
@@ -357,10 +365,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                                 size: 20,
                                               ),
                                               const SizedBox(width: 12),
-                                              const Expanded(
+                                              Expanded(
                                                 child: Text(
-                                                  'Price flagged & hidden (Pending admin audit)',
-                                                  style: TextStyle(
+                                                  l.productPriceFlaggedHidden,
+                                                  style: const TextStyle(
                                                     color: Colors.black54,
                                                     fontSize: 12.5,
                                                     fontWeight: FontWeight.bold,
@@ -430,7 +438,14 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                                             .start,
                                                     children: [
                                                       Text(
-                                                        '${sp.storeName} • ${_getStoreDistance(ref, sp.storeId, sp.storeName).toStringAsFixed(1)} km away',
+                                                        l.productStoreDistance(
+                                                          sp.storeName,
+                                                          _getStoreDistance(
+                                                            ref,
+                                                            sp.storeId,
+                                                            sp.storeName,
+                                                          ).toStringAsFixed(1),
+                                                        ),
                                                         style: const TextStyle(
                                                           fontWeight:
                                                               FontWeight.bold,
@@ -439,7 +454,12 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                                       ),
                                                       const SizedBox(height: 2),
                                                       Text(
-                                                        '${_formatFreshness(sp.updatedAtLabel)} • Verified with photo',
+                                                        l.productFreshnessVerified(
+                                                          _formatFreshness(
+                                                            l,
+                                                            sp.updatedAtLabel,
+                                                          ),
+                                                        ),
                                                         style: TextStyle(
                                                           color: Colors
                                                               .grey
@@ -477,14 +497,17 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                                                 6,
                                                               ),
                                                         ),
-                                                        child: const Text(
-                                                          'BEST PRICE',
-                                                          style: TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: 7.5,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                          ),
+                                                        child: Text(
+                                                          l.productBestPriceBadge,
+                                                          style:
+                                                              const TextStyle(
+                                                                color: Colors
+                                                                    .white,
+                                                                fontSize: 7.5,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                              ),
                                                         ),
                                                       ),
                                                     ],
@@ -520,8 +543,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                                       SnackBar(
                                                         content: Text(
                                                           newCount >= 3
-                                                              ? 'Thanks. This price is hidden until an admin reviews it.'
-                                                              : 'Thanks. We will hide this price after 3 unique reports.',
+                                                              ? l.productReportHiddenMessage
+                                                              : l.productReportPendingMessage,
                                                         ),
                                                         duration:
                                                             const Duration(
@@ -541,8 +564,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                                   ),
                                                   label: Text(
                                                     flagCount > 0
-                                                        ? 'Reported'
-                                                        : 'Report wrong price',
+                                                        ? l.productReported
+                                                        : l.productReportWrongPrice,
                                                     style: const TextStyle(
                                                       fontSize: 10,
                                                       fontWeight:
@@ -586,7 +609,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           const SizedBox(height: 24),
 
                           _buildCollapsibleCard(
-                            title: '90-Day Price History',
+                            title: l.productPriceHistory90Day,
                             icon: Icons.show_chart_rounded,
                             isExpanded: true,
                             onToggle: () {},
@@ -596,7 +619,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
 
                           // 6. Recommended Products Slider
                           Text(
-                            'You may also like',
+                            l.productYouMayAlsoLike,
                             style: GoogleFonts.fredoka(
                               fontSize: 16.5,
                               fontWeight: FontWeight.bold,
@@ -614,7 +637,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                 final item = recommended[index];
                                 return Container(
                                   width: 140,
-                                  margin: const EdgeInsets.only(right: 14),
+                                  margin: const EdgeInsetsDirectional.only(
+                                    end: 14,
+                                  ),
                                   child: ProductGridCard(product: item),
                                 );
                               },
@@ -654,9 +679,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text(
-                        'Best seen price',
-                        style: TextStyle(
+                      Text(
+                        l.productBestSeenPrice,
+                        style: const TextStyle(
                           fontSize: 11,
                           color: Colors.grey,
                           fontWeight: FontWeight.bold,
@@ -672,11 +697,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                       if (auth.isGuest) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: const Text(
-                              'Please sign in to save prices and compare grocery baskets.',
-                            ),
+                            content: Text(l.productSignInToSavePrices),
                             action: SnackBarAction(
-                              label: 'SIGN IN',
+                              label: l.productSignInAction,
                               textColor: Colors.white,
                               onPressed: () {
                                 ref.read(authProvider.notifier).signOut();
@@ -693,11 +716,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         SnackBar(
                           backgroundColor: AppTheme.forestDeep,
                           content: Text(
-                            '$coreName saved for price comparison',
+                            l.productSavedForComparison(coreName),
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           action: SnackBarAction(
-                            label: 'VIEW',
+                            label: l.productViewAction,
                             textColor: Colors.white,
                             onPressed: () => context.go('/cart'),
                           ),
@@ -718,18 +741,18 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           ),
                         ],
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.bookmark_border_rounded,
                             color: Colors.white,
                             size: 18,
                           ),
-                          SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           Text(
-                            'Save Price',
-                            style: TextStyle(
+                            l.productSavePrice,
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
@@ -810,6 +833,7 @@ class _PriceHistoryPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     if (history.isEmpty) {
       return Container(
         width: double.infinity,
@@ -819,7 +843,7 @@ class _PriceHistoryPanel extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
         ),
         child: Text(
-          'No approved price history yet. Once shoppers submit fresh prices, you will see the trend here.',
+          l.productNoPriceHistory,
           style: TextStyle(
             color: Colors.grey.shade700,
             fontSize: 12.5,
@@ -857,7 +881,10 @@ class _PriceHistoryPanel extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                'Lowest AED ${minPrice.toStringAsFixed(2)} • Highest AED ${maxPrice.toStringAsFixed(2)}',
+                l.productPriceRange(
+                  'AED ${minPrice.toStringAsFixed(2)}',
+                  'AED ${maxPrice.toStringAsFixed(2)}',
+                ),
                 style: const TextStyle(
                   color: AppTheme.textDark,
                   fontSize: 12,
@@ -866,7 +893,7 @@ class _PriceHistoryPanel extends StatelessWidget {
               ),
             ),
             Text(
-              'Latest AED ${latest.priceAed.toStringAsFixed(2)}',
+              l.productLatestPrice('AED ${latest.priceAed.toStringAsFixed(2)}'),
               style: const TextStyle(
                 color: AppTheme.forestDeep,
                 fontSize: 12,

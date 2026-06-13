@@ -57,7 +57,31 @@ router.get('/monthly', requireAuth, async (req: AuthRequest, res) => {
     };
   }
 
-  res.json({ top10, currentUser: existingEntry ?? currentUserRank });
+  // FR-45: Hall of Fame — previous calendar month's top 3 sourcers.
+  const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const prevRankings = await prisma.tokenTransaction.groupBy({
+    by: ['userId'],
+    where: {
+      createdAt: { gte: startOfPrevMonth, lt: startOfMonth },
+      amount: { gt: 0 },
+    },
+    _sum: { amount: true },
+    orderBy: { _sum: { amount: 'desc' } },
+    take: 3,
+  });
+  const hallOfFame = await Promise.all(
+    prevRankings.map(async (r, idx) => {
+      const user = await prisma.user.findUnique({ where: { id: r.userId } });
+      return {
+        rank: idx + 1,
+        userId: r.userId,
+        displayName: user?.displayName ?? 'Unknown',
+        tokensThisMonth: r._sum.amount ?? 0,
+      };
+    })
+  );
+
+  res.json({ top10, currentUser: existingEntry ?? currentUserRank, hallOfFame });
 });
 
 export default router;

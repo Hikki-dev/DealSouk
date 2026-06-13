@@ -7,6 +7,7 @@ import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/core/widgets/responsive_container.dart';
 import 'package:dealsouk/core/widgets/souk_widgets.dart';
 import 'package:dealsouk/core/widgets/tutorial_overlay.dart';
+import 'package:dealsouk/l10n/app_localizations.dart';
 
 class WelcomeScreen extends ConsumerStatefulWidget {
   const WelcomeScreen({super.key});
@@ -40,12 +41,11 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   }
 
   Future<void> _handleGoogle() async {
+    final l = AppLocalizations.of(context)!;
     if (!_isAdminMode && !_agreeToPrivacy) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please agree to the Privacy Policy to continue.'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l.welcomePrivacyConsentRequired)));
       return;
     }
     setState(() => _loading = true);
@@ -55,12 +55,11 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   }
 
   Future<void> _handleApple() async {
+    final l = AppLocalizations.of(context)!;
     if (!_isAdminMode && !_agreeToPrivacy) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please agree to the Privacy Policy to continue.'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l.welcomePrivacyConsentRequired)));
       return;
     }
     setState(() => _loading = true);
@@ -78,10 +77,14 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
 
     if (cleanPhone.length < _selectedCountry.minLength ||
         cleanPhone.length > _selectedCountry.maxLength) {
+      final l = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Please enter a valid ${_selectedCountry.minLength}-digit phone number for ${_selectedCountry.name}.',
+            l.welcomeInvalidPhoneNumber(
+              _selectedCountry.minLength,
+              _selectedCountry.name,
+            ),
           ),
           backgroundColor: Colors.red.shade700,
         ),
@@ -113,6 +116,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
+        final l = AppLocalizations.of(context)!;
         return SafeArea(
           child: Container(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
@@ -131,9 +135,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Select Country',
-                  style: TextStyle(
+                Text(
+                  l.welcomeSelectCountry,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: AppTheme.textDark,
@@ -204,6 +208,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return ResponsiveContainer(
       child: Container(
         decoration: const BoxDecoration(
@@ -265,12 +270,13 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                               if (_logoTaps >= 5) {
                                 _showAdminTab = !_showAdminTab;
                                 _logoTaps = 0;
-                                final mode = _showAdminTab
-                                    ? 'enabled'
-                                    : 'disabled';
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('Moderator toggle $mode'),
+                                    content: Text(
+                                      _showAdminTab
+                                          ? l.welcomeModeratorToggleEnabled
+                                          : l.welcomeModeratorToggleDisabled,
+                                    ),
                                     duration: const Duration(seconds: 1),
                                   ),
                                 );
@@ -322,8 +328,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                         duration: const Duration(milliseconds: 200),
                         child: Text(
                           _isAdminMode
-                              ? 'Review supermarket prices shared by shoppers'
-                              : 'Prices shared by shoppers near you',
+                              ? l.welcomeTaglineAdmin
+                              : l.welcomeTaglineCustomer,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.65),
@@ -348,7 +354,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                           child: Row(
                             children: [
                               _modeTab(
-                                'Customer Mode',
+                                l.welcomeCustomerModeTab,
                                 !_isAdminMode,
                                 () => setState(() {
                                   _isAdminMode = false;
@@ -357,7 +363,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                 }),
                               ),
                               _modeTab(
-                                'Admin Moderator',
+                                l.welcomeAdminModeratorTab,
                                 _isAdminMode,
                                 () => setState(() {
                                   _isAdminMode = true;
@@ -375,36 +381,36 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: _isAdminMode
-                            ? const [
+                            ? [
                                 _ValuePillar(
                                   icon: Icons.rate_review_rounded,
-                                  label: 'Audit\nQueue',
+                                  label: l.welcomePillarAuditQueue,
                                 ),
-                                SizedBox(width: 20),
+                                const SizedBox(width: 20),
                                 _ValuePillar(
                                   icon: Icons.security_rounded,
-                                  label: 'Fraud\nFilter',
+                                  label: l.welcomePillarFraudFilter,
                                 ),
-                                SizedBox(width: 20),
+                                const SizedBox(width: 20),
                                 _ValuePillar(
                                   icon: Icons.token_rounded,
-                                  label: 'Issue\nTokens',
+                                  label: l.welcomePillarIssueTokens,
                                 ),
                               ]
-                            : const [
+                            : [
                                 _ValuePillar(
                                   icon: Icons.compare_arrows_rounded,
-                                  label: 'Compare\nPrices',
+                                  label: l.welcomePillarComparePrices,
                                 ),
-                                SizedBox(width: 20),
+                                const SizedBox(width: 20),
                                 _ValuePillar(
                                   icon: Icons.place_rounded,
-                                  label: 'Find\nNearby',
+                                  label: l.welcomePillarFindNearby,
                                 ),
-                                SizedBox(width: 20),
+                                const SizedBox(width: 20),
                                 _ValuePillar(
                                   icon: Icons.help_outline_rounded,
-                                  label: 'Request\nPrice',
+                                  label: l.welcomePillarRequestPrice,
                                 ),
                               ],
                       ),
@@ -441,8 +447,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                               Expanded(
                                 child: Text(
                                   _isAdminMode
-                                      ? 'Moderator Panel: Verify receipts and shelf prices.'
-                                      : 'No ordering here. Just check prices before you go.',
+                                      ? l.welcomeInfoBannerAdmin
+                                      : l.welcomeInfoBannerCustomer,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
@@ -510,18 +516,18 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                               child: Wrap(
                                 crossAxisAlignment: WrapCrossAlignment.center,
                                 children: [
-                                  const Text(
-                                    'I agree to the ',
-                                    style: TextStyle(
+                                  Text(
+                                    l.welcomePrivacyConsentPrefix,
+                                    style: const TextStyle(
                                       color: Colors.white70,
                                       fontSize: 11.5,
                                     ),
                                   ),
                                   GestureDetector(
                                     onTap: () => context.push('/privacy'),
-                                    child: const Text(
-                                      'Privacy Policy',
-                                      style: TextStyle(
+                                    child: Text(
+                                      l.welcomePrivacyPolicyLink,
+                                      style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 11.5,
                                         fontWeight: FontWeight.w900,
@@ -530,9 +536,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                       ),
                                     ),
                                   ),
-                                  const Text(
-                                    ' and consent to neighbourhood-level location processing.',
-                                    style: TextStyle(
+                                  Text(
+                                    l.welcomePrivacyConsentSuffix,
+                                    style: const TextStyle(
                                       color: Colors.white70,
                                       fontSize: 11.5,
                                     ),
@@ -549,8 +555,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                       if (!_showPhoneInput && !_showOtpInput) ...[
                         _PrimaryCta(
                           label: _isAdminMode
-                              ? 'Enter Admin Dashboard'
-                              : 'Continue with Google',
+                              ? l.welcomeEnterAdminDashboard
+                              : l.welcomeContinueWithGoogle,
                           loading: _loading,
                           onTap: _handleGoogle,
                         ),
@@ -559,13 +565,13 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                         if (!_isAdminMode) ...[
                           _SignInButton(
                             icon: Icons.phone_iphone_rounded,
-                            label: 'Sign in with Phone',
+                            label: l.welcomeSignInWithPhone,
                             onTap: () {
                               if (!_agreeToPrivacy) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
+                                  SnackBar(
                                     content: Text(
-                                      'Please agree to the Privacy Policy to continue.',
+                                      l.welcomePrivacyConsentRequired,
                                     ),
                                   ),
                                 );
@@ -578,19 +584,19 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                           _SignInButton(
                             icon: Icons.apple,
                             iconSize: 22,
-                            label: 'Sign in with Apple',
+                            label: l.welcomeSignInWithApple,
                             onTap: _handleApple,
                           ),
                           const SizedBox(height: 10),
                           _SignInButton(
                             icon: Icons.visibility_outlined,
-                            label: 'Browse as Guest',
+                            label: l.welcomeBrowseAsGuest,
                             onTap: () {
                               if (!_agreeToPrivacy) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
+                                  SnackBar(
                                     content: Text(
-                                      'Please agree to the Privacy Policy to continue.',
+                                      l.welcomePrivacyConsentRequired,
                                     ),
                                   ),
                                 );
@@ -602,14 +608,14 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                         ] else ...[
                           _SignInButton(
                             icon: Icons.phone_iphone_rounded,
-                            label: 'Sign in with Phone',
+                            label: l.welcomeSignInWithPhone,
                             onTap: () => setState(() => _showPhoneInput = true),
                           ),
                           const SizedBox(height: 10),
                           _SignInButton(
                             icon: Icons.apple,
                             iconSize: 22,
-                            label: 'Sign in with Apple',
+                            label: l.welcomeSignInWithApple,
                             onTap: _handleApple,
                           ),
                         ],
@@ -618,8 +624,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                       const SizedBox(height: 20),
                       Text(
                         _isAdminMode
-                            ? 'Moderator console permissions apply.'
-                            : 'Supermarket prices shared by shoppers in Dubai.',
+                            ? l.welcomeFooterAdmin
+                            : l.welcomeFooterCustomer,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.4),
@@ -697,6 +703,7 @@ class _PhoneInputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -787,10 +794,13 @@ class _PhoneInputField extends StatelessWidget {
                       color: Colors.white.withValues(alpha: 0.25),
                     ),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Text(
-                      'Cancel',
-                      style: TextStyle(color: Colors.white70, fontSize: 15),
+                      l.welcomeCancel,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 15,
+                      ),
                     ),
                   ),
                 ),
@@ -800,7 +810,7 @@ class _PhoneInputField extends StatelessWidget {
             Expanded(
               flex: 2,
               child: _PrimaryCta(
-                label: 'Send Code',
+                label: l.welcomeSendCode,
                 loading: loading,
                 onTap: onSend,
               ),
@@ -833,11 +843,12 @@ class _OtpInputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Enter the 6-digit code sent to $phone',
+          l.welcomeOtpPrompt(phone),
           textAlign: TextAlign.center,
           style: TextStyle(
             color: Colors.white.withValues(alpha: 0.7),
@@ -889,10 +900,13 @@ class _OtpInputField extends StatelessWidget {
                       color: Colors.white.withValues(alpha: 0.25),
                     ),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Text(
-                      'Cancel',
-                      style: TextStyle(color: Colors.white70, fontSize: 15),
+                      l.welcomeCancel,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 15,
+                      ),
                     ),
                   ),
                 ),
@@ -902,7 +916,7 @@ class _OtpInputField extends StatelessWidget {
             Expanded(
               flex: 2,
               child: _PrimaryCta(
-                label: 'Verify',
+                label: l.welcomeVerify,
                 loading: loading,
                 onTap: onVerify,
               ),
@@ -913,7 +927,7 @@ class _OtpInputField extends StatelessWidget {
         GestureDetector(
           onTap: onResend,
           child: Text(
-            'Resend code',
+            l.welcomeResendCode,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.5),

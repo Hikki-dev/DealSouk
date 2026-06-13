@@ -18,3 +18,12 @@ final leaderboardProvider =
     NotifierProvider<LeaderboardNotifier, List<LeaderboardUser>>(
       LeaderboardNotifier.new,
     );
+
+// FR-45: previous month's top 3 (Hall of Fame).
+final hallOfFameProvider = FutureProvider<List<LeaderboardUser>>((ref) async {
+  try {
+    return await leaderboardService.getHallOfFame();
+  } catch (_) {
+    return <LeaderboardUser>[];
+  }
+});

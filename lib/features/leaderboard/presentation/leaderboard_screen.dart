@@ -10,6 +10,8 @@ import 'package:dealsouk/features/leaderboard/domain/leaderboard_user.dart';
 import 'package:dealsouk/features/tokens/domain/user_badge.dart';
 import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/features/requests/presentation/request_board_view.dart';
+import 'package:dealsouk/core/widgets/souk_widgets.dart';
+import 'package:dealsouk/l10n/app_localizations.dart';
 
 class LeaderboardScreen extends ConsumerStatefulWidget {
   const LeaderboardScreen({super.key});
@@ -35,11 +37,17 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     final tokens = ref.watch(userTokensProvider);
     final profile = ref.watch(userProfileProvider);
     final streak = ref.watch(streakProvider);
     final badges = ref.watch(badgesProvider);
     final dailyChallenge = ref.watch(dailyChallengeProvider);
+
+    // FR-45: previous month's top 3 (Hall of Fame).
+    final hallOfFame =
+        ref.watch(hallOfFameProvider).asData?.value ??
+        const <LeaderboardUser>[];
 
     // Use real leaderboard data; inject current user row if available
     final apiLeaderboard = ref.watch(leaderboardProvider);
@@ -49,7 +57,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             if (user.isCurrentUser) {
               return LeaderboardUser(
                 rank: user.rank,
-                name: '${profile.name} (You)',
+                name: l.leaderYouMarker(profile.name),
                 tokens: tokens > 0 ? tokens : user.tokens,
                 isCurrentUser: true,
                 streak: streak.currentStreak,
@@ -115,7 +123,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                             ),
                           ],
                         ),
-                        child: const Icon(
+                        child: const DirectionalIcon(
                           Icons.arrow_back_ios_new_rounded,
                           color: AppTheme.forestDeep,
                           size: 18,
@@ -124,7 +132,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                     ),
                     Expanded(
                       child: Text(
-                        'Rewards & Leaderboard',
+                        l.leaderRewardsTitle,
                         textAlign: TextAlign.center,
                         style: GoogleFonts.fredoka(
                           color: AppTheme.forestDeep,
@@ -172,7 +180,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                             ),
                             child: Center(
                               child: Text(
-                                'Leaderboard & Streaks',
+                                l.leaderToggleStreaks,
                                 style: TextStyle(
                                   color: !_showRequestBoard
                                       ? Colors.white
@@ -199,7 +207,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                             ),
                             child: Center(
                               child: Text(
-                                'Active Request Board',
+                                l.leaderToggleRequestBoard,
                                 style: TextStyle(
                                   color: _showRequestBoard
                                       ? Colors.white
@@ -358,8 +366,10 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                                               const SizedBox(width: 4),
                                               Text(
                                                 userRank > 0
-                                                    ? 'Rank #$userRank'
-                                                    : 'Rank —',
+                                                    ? l.leaderRankNumber(
+                                                        userRank,
+                                                      )
+                                                    : l.leaderRankUnknown,
                                                 style: const TextStyle(
                                                   fontSize: 10,
                                                   fontWeight: FontWeight.bold,
@@ -390,7 +400,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                                               ),
                                               const SizedBox(width: 4),
                                               Text(
-                                                '5 Day Streak',
+                                                l.leaderDayStreak(5),
                                                 style: TextStyle(
                                                   fontSize: 10,
                                                   fontWeight: FontWeight.bold,
@@ -417,9 +427,9 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                                       height: 1.1,
                                     ),
                                   ),
-                                  const Text(
-                                    'Tokens',
-                                    style: TextStyle(
+                                  Text(
+                                    l.leaderTokensLabel,
+                                    style: const TextStyle(
                                       fontSize: 11,
                                       color: Colors.grey,
                                       fontWeight: FontWeight.bold,
@@ -437,16 +447,16 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
-                                'AED 50 Union Coop Voucher',
-                                style: TextStyle(
+                              Text(
+                                l.leaderVoucherName,
+                                style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 13,
                                   color: AppTheme.textDark,
                                 ),
                               ),
                               Text(
-                                '$tokens / 500 T',
+                                l.leaderTokenProgress(tokens, 500),
                                 style: TextStyle(
                                   color: theme.colorScheme.primary,
                                   fontWeight: FontWeight.bold,
@@ -479,7 +489,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                                     .read(userTransactionsProvider.notifier)
                                     .addTransaction(
                                       -500,
-                                      'Redeemed AED 50 Union Coop Voucher',
+                                      l.leaderVoucherRedeemed,
                                     );
 
                                 // Show claimed code popup
@@ -495,6 +505,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                                     ),
                                   ),
                                   builder: (context) {
+                                    final l = AppLocalizations.of(context)!;
                                     return Padding(
                                       padding: EdgeInsets.fromLTRB(
                                         24.0,
@@ -531,19 +542,19 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                                             ),
                                           ),
                                           const SizedBox(height: 16),
-                                          const Text(
-                                            'Voucher Claimed!',
-                                            style: TextStyle(
+                                          Text(
+                                            l.leaderVoucherClaimedTitle,
+                                            style: const TextStyle(
                                               fontSize: 22,
                                               fontWeight: FontWeight.w900,
                                               color: AppTheme.textDark,
                                             ),
                                           ),
                                           const SizedBox(height: 8),
-                                          const Text(
-                                            'Show the barcode or code below to the cashier at any Union Coop checkout in Dubai.',
+                                          Text(
+                                            l.leaderVoucherClaimedBody,
                                             textAlign: TextAlign.center,
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               color: Colors.grey,
                                               fontSize: 13,
                                             ),
@@ -617,9 +628,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                                                 50,
                                               ),
                                             ),
-                                            child: const Text(
-                                              'Back to Rewards',
-                                            ),
+                                            child: Text(l.leaderBackToRewards),
                                           ),
                                         ],
                                       ),
@@ -635,7 +644,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                                 Icons.confirmation_num_outlined,
                                 size: 18,
                               ),
-                              label: const Text('Claim Voucher Now'),
+                              label: Text(l.leaderClaimVoucher),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppTheme.amberAccent,
                                 foregroundColor: Colors.white,
@@ -656,7 +665,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
-                                    'Earn ${500 - tokens} more tokens to redeem your voucher.',
+                                    l.leaderEarnMoreTokens(500 - tokens),
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: Colors.grey.shade600,
@@ -687,7 +696,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Shopper Badges',
+                        l.leaderShopperBadges,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -722,7 +731,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Today\'s Challenges',
+                        l.leaderTodaysChallenges,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -797,8 +806,12 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                                 ),
                                 child: Text(
                                   dailyChallenge.completed
-                                      ? 'Done! +${dailyChallenge.bonusTokens}T'
-                                      : '+${dailyChallenge.bonusTokens} bonus tokens',
+                                      ? l.leaderChallengeDone(
+                                          dailyChallenge.bonusTokens,
+                                        )
+                                      : l.leaderChallengeBonus(
+                                          dailyChallenge.bonusTokens,
+                                        ),
                                   style: const TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
@@ -826,7 +839,10 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '${dailyChallenge.progressCount}/${dailyChallenge.targetCount} done • Tap to submit a price',
+                              l.leaderChallengeProgress(
+                                dailyChallenge.progressCount,
+                                dailyChallenge.targetCount,
+                              ),
                               style: TextStyle(
                                 fontSize: 10.5,
                                 color: Colors.grey.shade600,
@@ -854,7 +870,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Dubai Leaderboard',
+                        l.leaderDubaiLeaderboard,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -974,10 +990,86 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                 ),
               ),
 
+              if (hallOfFame.isNotEmpty)
+                SliverToBoxAdapter(child: _hallOfFameCard(hallOfFame, theme)),
+
               const SliverPadding(padding: EdgeInsets.only(bottom: 40)),
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  // FR-45: Hall of Fame — previous month's top 3 sourcers.
+  Widget _hallOfFameCard(List<LeaderboardUser> hof, ThemeData theme) {
+    final l = AppLocalizations.of(context)!;
+    const medals = ['🥇', '🥈', '🥉'];
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.amberLight,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.amberAccent.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text('🏆', style: TextStyle(fontSize: 20)),
+              const SizedBox(width: 8),
+              Text(
+                l.leaderHallOfFame,
+                style: GoogleFonts.fredoka(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 17,
+                  color: AppTheme.textDark,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            l.leaderTopChampions,
+            style: TextStyle(fontSize: 12.5, color: Colors.grey.shade700),
+          ),
+          const SizedBox(height: 12),
+          ...List.generate(hof.length, (i) {
+            final user = hof[i];
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 5),
+              child: Row(
+                children: [
+                  Text(
+                    i < medals.length ? medals[i] : '${i + 1}',
+                    style: const TextStyle(fontSize: 18),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      user.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: AppTheme.textDark,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${user.tokens} 🪙',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: AppTheme.forestDeep,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
@@ -987,7 +1079,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
       opacity: badge.unlocked ? 1.0 : 0.45,
       child: Card(
         elevation: 0,
-        margin: const EdgeInsets.only(right: 12),
+        margin: const EdgeInsetsDirectional.only(end: 12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(
@@ -1002,7 +1094,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
           child: Column(
             children: [
               Stack(
-                alignment: Alignment.topRight,
+                alignment: AlignmentDirectional.topEnd,
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),

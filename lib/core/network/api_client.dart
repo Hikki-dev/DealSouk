@@ -7,7 +7,7 @@ class ApiClient {
 
   static const String _baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://dealsouk-api.onrender.com',
+    defaultValue: 'https://dealsouk.onrender.com',
   );
 
   ApiClient() {

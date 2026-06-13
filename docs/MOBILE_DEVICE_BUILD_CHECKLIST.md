@@ -23,7 +23,7 @@ Issues found from the device screenshots:
 - Default API URL now points to the planned HTTPS Render backend:
 
 ```text
-https://dealsouk-api.onrender.com
+https://dealsouk.onrender.com
 ```
 
 ## Required Before Real Device Testing
@@ -35,7 +35,7 @@ Render must have a live Web Service for the backend.
 Expected health check:
 
 ```bash
-curl https://dealsouk-api.onrender.com/health
+curl https://dealsouk.onrender.com/health
 ```
 
 Expected response:
@@ -56,13 +56,13 @@ Required local files:
 Build command for local testing:
 
 ```bash
-flutter build ios --debug --no-codesign --dart-define=API_BASE_URL=https://dealsouk-api.onrender.com
+flutter build ios --debug --no-codesign --dart-define=API_BASE_URL=https://dealsouk.onrender.com
 ```
 
 For physical device deployment through Xcode, pass the same Dart define in the Flutter build settings or use Flutter CLI to run:
 
 ```bash
-flutter run -d <device-id> --dart-define=API_BASE_URL=https://dealsouk-api.onrender.com
+flutter run -d <device-id> --dart-define=API_BASE_URL=https://dealsouk.onrender.com
 ```
 
 ### Android
@@ -75,7 +75,7 @@ Required local files:
 Build command for local testing:
 
 ```bash
-flutter build apk --debug --dart-define=API_BASE_URL=https://dealsouk-api.onrender.com
+flutter build apk --debug --dart-define=API_BASE_URL=https://dealsouk.onrender.com
 ```
 
 ### Firebase Storage

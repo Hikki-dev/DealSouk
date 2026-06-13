@@ -15,7 +15,7 @@ Set these in Vercel Project Settings, not in git:
 | Variable | Example | Notes |
 |---|---|---|
 | `FIREBASE_OPTIONS_DART_B64` | base64 text | Base64-encoded contents of `lib/firebase_options.dart`. |
-| `API_BASE_URL` | `https://api.dealsouk.ae` | Must be HTTPS for release builds. |
+| `API_BASE_URL` | `https://dealsouk.onrender.com` | Must be HTTPS for release builds. |
 
 Optional:
 

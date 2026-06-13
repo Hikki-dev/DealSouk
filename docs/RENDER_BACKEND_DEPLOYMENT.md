@@ -90,13 +90,13 @@ Reference: https://neon.com/docs/connect/choose-connection
 ## After First Deploy
 
 1. Open the Render service URL and verify `/health`.
-2. Copy the API base URL, for example `https://dealsouk-api.onrender.com`.
+2. Copy the API base URL, for example `https://dealsouk.onrender.com`.
 3. Set Vercel `API_BASE_URL` to that URL.
 4. Build mobile apps with:
 
 ```bash
-flutter build ios --release --dart-define=API_BASE_URL=https://dealsouk-api.onrender.com
-flutter build apk --release --dart-define=API_BASE_URL=https://dealsouk-api.onrender.com
+flutter build ios --release --dart-define=API_BASE_URL=https://dealsouk.onrender.com
+flutter build apk --release --dart-define=API_BASE_URL=https://dealsouk.onrender.com
 ```
 
 5. Run an authenticated smoke test from the app.

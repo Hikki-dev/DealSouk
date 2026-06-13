@@ -242,7 +242,7 @@ This document provides a comprehensive traceability matrix mapping DealSouk's Pr
    
 2. **Hardcoded Unsecured HTTP Endpoint (NFR-06)**  
    > [!WARNING]  
-   > Current status: client-side release guard is fixed. [api_client.dart](lib/core/network/api_client.dart) defaults to `https://api.dealsouk.ae` and rejects non-HTTPS URLs in release. Remaining work is deployment-side TLS/HSTS verification. **Priority: High**.
+   > Current status: client-side release guard is fixed. [api_client.dart](lib/core/network/api_client.dart) defaults to `https://dealsouk.onrender.com` and rejects non-HTTPS URLs in release. Remaining work is deployment-side TLS/HSTS verification. **Priority: High**.
 
 3. **Floating Navbar Overlay Blocks Taps (UI-02 / NFR-24)**  
    > [!WARNING]  

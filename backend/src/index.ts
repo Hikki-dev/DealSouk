@@ -131,6 +131,11 @@ async function main() {
   console.log("Database connected");
   app.listen(PORT, () => {
     console.log(`DealSouk API running on port ${PORT}`);
+    if (isRedisEnabled) {
+      console.log("[redis] client initialised — rate limiters and cache are Redis-backed");
+    } else {
+      console.log("[redis] no REDIS_URL — using in-memory fallbacks");
+    }
   });
   // Enforce time-based PRD rules (FR-18 expiry, FR-29 refunds, suspension lift).
   startMaintenanceScheduler();

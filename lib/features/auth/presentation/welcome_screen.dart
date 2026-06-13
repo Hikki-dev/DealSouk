@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dealsouk/features/auth/presentation/auth_providers.dart';
@@ -29,6 +30,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   String _verificationId = '';
   final _phoneController = TextEditingController();
   final _otpController = TextEditingController();
+  CountryInfo _selectedCountry = _supportedCountries.first;
 
   @override
   void dispose() {
@@ -68,10 +70,29 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   }
 
   Future<void> _sendOtp() async {
-    final phone = _phoneController.text.trim();
-    if (phone.isEmpty) return;
+    String cleanPhone = _phoneController.text.trim();
+    while (cleanPhone.startsWith('0')) {
+      cleanPhone = cleanPhone.substring(1);
+    }
+    if (cleanPhone.isEmpty) return;
+
+    if (cleanPhone.length < _selectedCountry.minLength ||
+        cleanPhone.length > _selectedCountry.maxLength) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Please enter a valid ${_selectedCountry.minLength}-digit phone number for ${_selectedCountry.name}.',
+          ),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+      return;
+    }
+
+    final finalPhoneNumber = _selectedCountry.code + cleanPhone;
+
     setState(() => _loading = true);
-    final id = await ref.read(authProvider.notifier).sendOtp(phone);
+    final id = await ref.read(authProvider.notifier).sendOtp(finalPhoneNumber);
     if (mounted) {
       setState(() {
         _loading = false;
@@ -82,6 +103,86 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       });
       _showError();
     }
+  }
+
+  void _showCountryPicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 38,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Select Country',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textDark,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: _supportedCountries.length,
+                    itemBuilder: (context, index) {
+                      final country = _supportedCountries[index];
+                      return ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Text(
+                          country.flag,
+                          style: const TextStyle(fontSize: 22),
+                        ),
+                        title: Text(
+                          country.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textDark,
+                          ),
+                        ),
+                        trailing: Text(
+                          country.code,
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        onTap: () {
+                          setState(() {
+                            _selectedCountry = country;
+                          });
+                          Navigator.pop(context);
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _verifyOtp() async {
@@ -364,6 +465,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                           loading: _loading,
                           onCancel: () =>
                               setState(() => _showPhoneInput = false),
+                          selectedCountry: _selectedCountry,
+                          onCountryTap: _showCountryPicker,
                         ),
                         const SizedBox(height: 12),
                       ],
@@ -580,12 +683,16 @@ class _PhoneInputField extends StatelessWidget {
   final VoidCallback onSend;
   final VoidCallback onCancel;
   final bool loading;
+  final CountryInfo selectedCountry;
+  final VoidCallback onCountryTap;
 
   const _PhoneInputField({
     required this.controller,
     required this.onSend,
     required this.onCancel,
     required this.loading,
+    required this.selectedCountry,
+    required this.onCountryTap,
   });
 
   @override
@@ -593,26 +700,78 @@ class _PhoneInputField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        TextField(
-          controller: controller,
-          keyboardType: TextInputType.phone,
-          autofocus: true,
-          style: const TextStyle(color: Colors.white, fontSize: 16),
-          decoration: InputDecoration(
-            hintText: '+971 50 000 0000',
-            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
-            prefixIcon: const Icon(Icons.phone, color: Colors.white54),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(
-                color: Colors.white.withValues(alpha: 0.3),
+        Row(
+          children: [
+            GestureDetector(
+              onTap: onCountryTap,
+              child: Container(
+                height: 56,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      selectedCountry.flag,
+                      style: const TextStyle(fontSize: 20),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      selectedCountry.code,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                    const Icon(Icons.arrow_drop_down, color: Colors.white70),
+                  ],
+                ),
               ),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Colors.white, width: 1.5),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextField(
+                controller: controller,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(selectedCountry.maxLength),
+                ],
+                autofocus: true,
+                style: const TextStyle(color: Colors.white, fontSize: 16),
+                decoration: InputDecoration(
+                  hintText: selectedCountry.formatHint,
+                  hintStyle: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.4),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 18,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(
+                      color: Colors.white,
+                      width: 1.5,
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ),
+          ],
         ),
         const SizedBox(height: 10),
         Row(
@@ -923,3 +1082,88 @@ class WelcomeGridPatternPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+
+class CountryInfo {
+  final String name;
+  final String flag;
+  final String code;
+  final int minLength;
+  final int maxLength;
+  final String formatHint;
+
+  const CountryInfo({
+    required this.name,
+    required this.flag,
+    required this.code,
+    required this.minLength,
+    required this.maxLength,
+    required this.formatHint,
+  });
+}
+
+const List<CountryInfo> _supportedCountries = [
+  CountryInfo(
+    name: 'United Arab Emirates',
+    flag: '🇦🇪',
+    code: '+971',
+    minLength: 9,
+    maxLength: 9,
+    formatHint: '50 123 4567',
+  ),
+  CountryInfo(
+    name: 'Saudi Arabia',
+    flag: '🇸🇦',
+    code: '+966',
+    minLength: 9,
+    maxLength: 9,
+    formatHint: '50 123 4567',
+  ),
+  CountryInfo(
+    name: 'Oman',
+    flag: '🇴🇲',
+    code: '+968',
+    minLength: 8,
+    maxLength: 8,
+    formatHint: '9123 4567',
+  ),
+  CountryInfo(
+    name: 'Kuwait',
+    flag: '🇰🇼',
+    code: '+965',
+    minLength: 8,
+    maxLength: 8,
+    formatHint: '5123 4567',
+  ),
+  CountryInfo(
+    name: 'Bahrain',
+    flag: '🇧🇭',
+    code: '+973',
+    minLength: 8,
+    maxLength: 8,
+    formatHint: '3123 4567',
+  ),
+  CountryInfo(
+    name: 'India',
+    flag: '🇮🇳',
+    code: '+91',
+    minLength: 10,
+    maxLength: 10,
+    formatHint: '98765 43210',
+  ),
+  CountryInfo(
+    name: 'United Kingdom',
+    flag: '🇬🇧',
+    code: '+44',
+    minLength: 10,
+    maxLength: 10,
+    formatHint: '7123 456789',
+  ),
+  CountryInfo(
+    name: 'United States',
+    flag: '🇺🇸',
+    code: '+1',
+    minLength: 10,
+    maxLength: 10,
+    formatHint: '201 555 0123',
+  ),
+];

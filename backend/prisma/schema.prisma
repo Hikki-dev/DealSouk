@@ -173,6 +173,7 @@ model PriceRequest {
   requester User @relation(fields: [requesterId], references: [id])
 
   @@index([status, bountyTokens])
+  @@index([requesterId])
 }
 
 model Badge {

@@ -165,7 +165,7 @@ class AdminVouchersNotifier extends Notifier<List<VoucherRequest>> {
 
   Future<void> approveVoucher(
     String id, {
-    required String voucherCode,
+    String voucherCode = '',
     String? adminNote,
   }) async {
     await adminService.approveVoucher(
@@ -174,6 +174,8 @@ class AdminVouchersNotifier extends Notifier<List<VoucherRequest>> {
       adminNote: adminNote,
     );
     state = state.where((voucher) => voucher.id != id).toList();
+    // Refresh inventory status after approval
+    ref.read(adminVoucherInventoryProvider.notifier).fetchInventoryStatus();
   }
 
   Future<void> rejectVoucher(String id, {String? adminNote}) async {
@@ -185,6 +187,51 @@ class AdminVouchersNotifier extends Notifier<List<VoucherRequest>> {
 final adminVouchersProvider =
     NotifierProvider<AdminVouchersNotifier, List<VoucherRequest>>(
       AdminVouchersNotifier.new,
+    );
+
+class AdminVoucherInventoryNotifier extends Notifier<List<dynamic>> {
+  @override
+  List<dynamic> build() => [];
+
+  Future<void> fetchInventoryStatus() async {
+    try {
+      state = await adminService.getVoucherInventoryStatus();
+    } catch (_) {}
+  }
+
+  Future<void> importVouchers({
+    required String supermarket,
+    required int denominationAed,
+    required List<String> codes,
+  }) async {
+    await adminService.importVouchers(
+      supermarket: supermarket,
+      denominationAed: denominationAed,
+      codes: codes,
+    );
+    await fetchInventoryStatus();
+  }
+}
+
+final adminVoucherInventoryProvider =
+    NotifierProvider<AdminVoucherInventoryNotifier, List<dynamic>>(
+      AdminVoucherInventoryNotifier.new,
+    );
+
+class AdminMapDataNotifier extends Notifier<List<dynamic>> {
+  @override
+  List<dynamic> build() => [];
+
+  Future<void> fetchMapData() async {
+    try {
+      state = await adminService.getMapData();
+    } catch (_) {}
+  }
+}
+
+final adminMapDataProvider =
+    NotifierProvider<AdminMapDataNotifier, List<dynamic>>(
+      AdminMapDataNotifier.new,
     );
 
 class AdminAnalyticsNotifier extends Notifier<AdminAnalytics> {

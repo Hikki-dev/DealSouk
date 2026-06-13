@@ -9,6 +9,9 @@ import {
   notifyAdminWarning,
   notifySubmissionHidden,
 } from '../services/fcmNotifier';
+import * as adminFirebase from 'firebase-admin';
+import { sendWarningEmail, sendSuspensionEmail, sendBanEmail } from '../services/emailService';
+import { generateAnalyticsReport } from '../services/pdfService';
 
 const router = Router();
 const adminWriteLimiter = authenticatedRateLimit({
@@ -168,6 +171,14 @@ router.post('/submissions/:id/reject', adminWriteLimiter, async (req: AuthReques
       expiresAt: suspendedUntil,
     });
     await notifyAccountSuspended(submission.sourcer.fcmToken, suspendedUntil, reason);
+    try {
+      const firebaseUser = await adminFirebase.auth().getUser(submission.sourcer.firebaseUid);
+      if (firebaseUser.email) {
+        await sendSuspensionEmail(firebaseUser.email, suspendedUntil, reason);
+      }
+    } catch (err) {
+      console.warn('[Email] Failed to send auto-suspension email:', err);
+    }
 
     if (suspendedUser.suspensionCount >= 3) {
       await prisma.user.update({
@@ -184,6 +195,14 @@ router.post('/submissions/:id/reject', adminWriteLimiter, async (req: AuthReques
         reason: 'Permanent ban after repeated suspensions.',
       });
       await notifyAccountBanned(submission.sourcer.fcmToken, 'Permanent ban after repeated suspensions.');
+      try {
+        const firebaseUser = await adminFirebase.auth().getUser(submission.sourcer.firebaseUid);
+        if (firebaseUser.email) {
+          await sendBanEmail(firebaseUser.email, 'Permanent ban after repeated suspensions.');
+        }
+      } catch (err) {
+        console.warn('[Email] Failed to send auto-ban email:', err);
+      }
     }
   }
 
@@ -230,6 +249,14 @@ router.post('/users/:id/warn', adminWriteLimiter, async (req: AuthRequest, res) 
     reason,
   });
   await notifyAdminWarning(user.fcmToken, reason);
+  try {
+    const firebaseUser = await adminFirebase.auth().getUser(user.firebaseUid);
+    if (firebaseUser.email) {
+      await sendWarningEmail(firebaseUser.email, reason);
+    }
+  } catch (err) {
+    console.warn('[Email] Failed to send warning email:', err);
+  }
 
   res.json({ id: user.id, warningCount: user.warningCount, message: 'Warning sent' });
 });
@@ -256,6 +283,14 @@ router.post('/users/:id/suspend', adminWriteLimiter, async (req: AuthRequest, re
     expiresAt: suspendedUntil,
   });
   await notifyAccountSuspended(user.fcmToken, suspendedUntil, reason);
+  try {
+    const firebaseUser = await adminFirebase.auth().getUser(user.firebaseUid);
+    if (firebaseUser.email) {
+      await sendSuspensionEmail(firebaseUser.email, suspendedUntil, reason);
+    }
+  } catch (err) {
+    console.warn('[Email] Failed to send suspension email:', err);
+  }
 
   res.json({
     id: user.id,
@@ -285,6 +320,14 @@ router.post('/users/:id/ban', adminWriteLimiter, async (req: AuthRequest, res) =
     reason,
   });
   await notifyAccountBanned(user.fcmToken, reason);
+  try {
+    const firebaseUser = await adminFirebase.auth().getUser(user.firebaseUid);
+    if (firebaseUser.email) {
+      await sendBanEmail(firebaseUser.email, reason);
+    }
+  } catch (err) {
+    console.warn('[Email] Failed to send ban email:', err);
+  }
 
   res.json({ id: user.id, bannedAt: user.bannedAt, message: 'User banned' });
 });
@@ -467,15 +510,9 @@ router.get('/exports/submissions.csv', async (_req, res) => {
   res.send(rows.map((row) => row.map(escapeCsv).join(',')).join('\n'));
 });
 
-// POST /admin/vouchers/:id/approve — admin enters real voucher code before delivery
+// POST /admin/vouchers/:id/approve — approve voucher by auto-allocating from inventory
 router.post('/vouchers/:id/approve', adminWriteLimiter, async (req: AuthRequest, res) => {
-  const { voucherCode, adminNote } = req.body as { voucherCode?: string; adminNote?: string };
-  const cleanCode = voucherCode?.trim();
-
-  if (!cleanCode || cleanCode.length < 4 || cleanCode.length > 120) {
-    res.status(400).json({ error: 'voucherCode must be 4-120 characters' });
-    return;
-  }
+  const { adminNote } = req.body as { adminNote?: string };
 
   const voucher = await prisma.voucherRequest.findUnique({
     where: { id: req.params.id },
@@ -494,12 +531,40 @@ router.post('/vouchers/:id/approve', adminWriteLimiter, async (req: AuthRequest,
     return;
   }
 
+  // Find an unused voucher code in inventory for the correct supermarket and denomination
+  const inventoryItem = await prisma.voucherInventory.findFirst({
+    where: {
+      supermarket: { equals: voucher.supermarket, mode: 'insensitive' },
+      denominationAed: voucher.denominationAed,
+      isUsed: false,
+    },
+  });
+
+  if (!inventoryItem) {
+    res.status(400).json({
+      error: `No voucher inventory available for ${voucher.supermarket} (AED ${voucher.denominationAed}). Please import more voucher stock.`,
+    });
+    return;
+  }
+
+  // Deduct tokens from user
   await spendTokens(voucher.userId, voucher.tokenCost, `Voucher approved: AED ${voucher.denominationAed} ${voucher.supermarket}`);
+
+  // Mark the inventory item as used
+  await prisma.voucherInventory.update({
+    where: { id: inventoryItem.id },
+    data: {
+      isUsed: true,
+      usedAt: new Date(),
+      voucherRequestId: voucher.id,
+    },
+  });
+
   const updated = await prisma.voucherRequest.update({
     where: { id: voucher.id },
     data: {
       status: 'approved',
-      voucherCode: cleanCode,
+      voucherCode: inventoryItem.code,
       adminNote: adminNote?.trim() || null,
       reviewedAt: new Date(),
       deliveredAt: new Date(),
@@ -511,6 +576,7 @@ router.post('/vouchers/:id/approve', adminWriteLimiter, async (req: AuthRequest,
     status: updated.status,
     denominationAed: updated.denominationAed,
     supermarket: updated.supermarket,
+    voucherCode: updated.voucherCode,
     deliveredAt: updated.deliveredAt,
   });
 });
@@ -538,6 +604,200 @@ router.post('/vouchers/:id/reject', adminWriteLimiter, async (req, res) => {
   });
 
   res.json({ id: updated.id, status: updated.status });
+});
+
+// POST /admin/vouchers/inventory/import — bulk import voucher codes
+router.post('/vouchers/inventory/import', adminWriteLimiter, async (req, res) => {
+  const { supermarket, denominationAed, codes } = req.body as {
+    supermarket: string;
+    denominationAed: number;
+    codes: string[];
+  };
+
+  if (!supermarket?.trim()) {
+    res.status(400).json({ error: 'supermarket is required' });
+    return;
+  }
+  const denom = Number(denominationAed);
+  if (!denom || denom <= 0) {
+    res.status(400).json({ error: 'denominationAed must be a positive number' });
+    return;
+  }
+  if (!Array.isArray(codes) || codes.length === 0) {
+    res.status(400).json({ error: 'codes must be a non-empty array' });
+    return;
+  }
+
+  const validCodes = codes.map((c) => String(c).trim()).filter((c) => c.length >= 4);
+  if (validCodes.length === 0) {
+    res.status(400).json({ error: 'No valid codes provided (must be at least 4 characters)' });
+    return;
+  }
+
+  try {
+    let createdCount = 0;
+    for (const code of validCodes) {
+      try {
+        await prisma.voucherInventory.create({
+          data: {
+            supermarket: supermarket.trim(),
+            denominationAed: denom,
+            code,
+          },
+        });
+        createdCount++;
+      } catch (err) {
+        console.warn(`[Inventory] Skipping import of duplicate code: ${code}`);
+      }
+    }
+
+    res.json({
+      message: `Successfully imported ${createdCount} of ${validCodes.length} voucher codes.`,
+      importedCount: createdCount,
+    });
+  } catch (err) {
+    console.error('[Inventory] Bulk import failed:', err);
+    res.status(500).json({ error: 'Failed to import voucher inventory' });
+  }
+});
+
+// GET /admin/vouchers/inventory/status — view stock levels
+router.get('/vouchers/inventory/status', async (_req, res) => {
+  try {
+    const summary = await prisma.voucherInventory.groupBy({
+      by: ['supermarket', 'denominationAed', 'isUsed'],
+      _count: {
+        id: true,
+      },
+    });
+
+    res.json(
+      summary.map((item) => ({
+        supermarket: item.supermarket,
+        denominationAed: item.denominationAed,
+        isUsed: item.isUsed,
+        count: item._count.id,
+      }))
+    );
+  } catch (err) {
+    console.error('[Inventory] Failed to get status:', err);
+    res.status(500).json({ error: 'Failed to get inventory status' });
+  }
+});
+
+// GET /admin/map-data — return coordinates and active submission counts for heatmap
+router.get('/map-data', async (_req, res) => {
+  try {
+    const storesWithSubmissions = await prisma.store.findMany({
+      include: {
+        submissions: {
+          where: { status: 'approved' },
+          select: { id: true },
+        },
+      },
+    });
+
+    res.json(
+      storesWithSubmissions.map((store) => ({
+        id: store.id,
+        chain: store.chain,
+        branchName: store.branchName,
+        lat: store.lat,
+        lng: store.lng,
+        area: store.area,
+        activeSubmissionsCount: store.submissions.length,
+      }))
+    );
+  } catch (err) {
+    console.error('[MapData] Failed to get map data:', err);
+    res.status(500).json({ error: 'Failed to get map data' });
+  }
+});
+
+// GET /admin/exports/analytics.pdf — operational analytics report in PDF format
+router.get('/exports/analytics.pdf', async (_req, res) => {
+  try {
+    const now = new Date();
+    const dayStart = new Date(now);
+    dayStart.setHours(0, 0, 0, 0);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [
+      submissionsToday,
+      submissionsThisMonth,
+      activeUsers,
+      pendingVouchers,
+      issuedVouchers,
+      tokenAggregate,
+      trendingProducts,
+      coverageAreas,
+    ] = await Promise.all([
+      prisma.priceSubmission.count({ where: { submittedAt: { gte: dayStart } } }),
+      prisma.priceSubmission.count({ where: { submittedAt: { gte: monthStart } } }),
+      prisma.user.count({ where: { createdAt: { gte: monthStart } } }),
+      prisma.voucherRequest.count({ where: { status: 'pending' } }),
+      prisma.voucherRequest.count({ where: { status: 'approved' } }),
+      prisma.tokenTransaction.aggregate({ _sum: { amount: true } }),
+      prisma.priceSubmission.groupBy({
+        by: ['productId'],
+        where: { submittedAt: { gte: monthStart } },
+        _count: { productId: true },
+        orderBy: { _count: { productId: 'desc' } },
+        take: 10,
+      }),
+      prisma.priceSubmission.groupBy({
+        by: ['storeId'],
+        where: { submittedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } },
+        _count: { storeId: true },
+        orderBy: { _count: { storeId: 'desc' } },
+        take: 10,
+      }),
+    ]);
+
+    const productIds = trendingProducts.map((item) => item.productId);
+    const storeIds = coverageAreas.map((item) => item.storeId);
+    const [products, stores] = await Promise.all([
+      prisma.product.findMany({ where: { id: { in: productIds } } }),
+      prisma.store.findMany({ where: { id: { in: storeIds } } }),
+    ]);
+
+    const analyticsData = {
+      submissionsToday,
+      submissionsThisMonth,
+      activeUsers,
+      tokensNet: tokenAggregate._sum.amount ?? 0,
+      pendingVouchers,
+      issuedVouchers,
+      trendingProducts: trendingProducts.map((item) => {
+        const product = products.find((p) => p.id === item.productId);
+        return {
+          productId: item.productId,
+          name: product?.name ?? 'Unknown product',
+          category: product?.category ?? 'Unknown',
+          submissions: item._count.productId,
+        };
+      }),
+      coverageAreas: coverageAreas.map((item) => {
+        const store = stores.find((s) => s.id === item.storeId);
+        return {
+          storeId: item.storeId,
+          chain: store?.chain ?? 'Unknown',
+          branchName: store?.branchName ?? '',
+          area: store?.area ?? 'Unknown',
+          recentSubmissions: item._count.storeId,
+        };
+      }),
+    };
+
+    const pdfBuffer = await generateAnalyticsReport(analyticsData);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename="dealsouk-analytics.pdf"');
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error('[PDF Export] Failed to generate PDF:', err);
+    res.status(500).json({ error: 'Failed to generate PDF report' });
+  }
 });
 
 export default router;

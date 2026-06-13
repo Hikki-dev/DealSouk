@@ -7,6 +7,11 @@ import 'package:dealsouk/features/auth/presentation/auth_providers.dart';
 import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/features/admin/domain/admin_submission.dart';
 import 'package:dealsouk/features/admin/domain/voucher_request.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:dealsouk/core/network/file_download_helper.dart';
+import 'package:dealsouk/features/admin/data/admin_service.dart';
+import 'package:dealsouk/core/network/api_client.dart';
 
 class AdminScreen extends ConsumerStatefulWidget {
   const AdminScreen({super.key});
@@ -27,6 +32,8 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
       ref.read(adminSettingsProvider.notifier).fetchSettings();
       ref.read(adminVouchersProvider.notifier).fetchVouchers();
       ref.read(adminAnalyticsProvider.notifier).fetchAnalytics();
+      ref.read(adminVoucherInventoryProvider.notifier).fetchInventoryStatus();
+      ref.read(adminMapDataProvider.notifier).fetchMapData();
     });
   }
 
@@ -160,6 +167,12 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 onTap: () => setState(() => _activeTab = 'moderation'),
               ),
               _sidebarMenuItem(
+                icon: Icons.map_rounded,
+                label: 'Map Density',
+                isActive: _activeTab == 'map',
+                onTap: () => setState(() => _activeTab = 'map'),
+              ),
+              _sidebarMenuItem(
                 icon: Icons.bar_chart_rounded,
                 label: 'Analytics',
                 isActive: _activeTab == 'analytics',
@@ -173,10 +186,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 onTap: () => setState(() => _activeTab = 'vouchers'),
               ),
               _sidebarMenuItem(
-                icon: Icons.people_rounded,
-                label: 'Sourcers Index',
-                isActive: _activeTab == 'sourcers',
-                onTap: () => setState(() => _activeTab = 'sourcers'),
+                icon: Icons.inventory_2_rounded,
+                label: 'Voucher Stock',
+                isActive: _activeTab == 'stock',
+                onTap: () => setState(() => _activeTab = 'stock'),
               ),
               _sidebarMenuItem(
                 icon: Icons.settings_rounded,
@@ -345,6 +358,14 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                               ref
                                   .read(adminSubmissionsProvider.notifier)
                                   .fetchQueue();
+                            } else if (_activeTab == 'map') {
+                              ref
+                                  .read(adminMapDataProvider.notifier)
+                                  .fetchMapData();
+                            } else if (_activeTab == 'stock') {
+                              ref
+                                  .read(adminVoucherInventoryProvider.notifier)
+                                  .fetchInventoryStatus();
                             }
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -495,10 +516,14 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                           ),
                         ],
                       )
+                    : _activeTab == 'map'
+                    ? _buildMapDensityPanel()
                     : _activeTab == 'analytics'
                     ? _buildAnalyticsPanel()
                     : _activeTab == 'vouchers'
                     ? _buildVoucherQueuePanel(vouchers)
+                    : _activeTab == 'stock'
+                    ? _buildVoucherStockPanel()
                     : _buildMockPanelContent(),
               ),
             ],
@@ -2115,24 +2140,86 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         ),
         const SizedBox(height: 18),
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: const Color(0xFFE8EEE4)),
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.download_rounded, color: AppTheme.forestDeep),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'CSV export is available at /admin/exports/submissions.csv for reporting.',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textDark,
-                  ),
+              Text(
+                'Data Exports & Reports',
+                style: GoogleFonts.fredoka(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textDark,
                 ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        try {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Downloading CSV...')),
+                          );
+                          final res = await apiClient.get('/admin/exports/submissions.csv');
+                          final csvContent = res.data as String;
+                          final bytes = csvContent.codeUnits;
+                          await FileDownloadHelper.downloadFile(bytes, 'dealsouk-submissions.csv');
+                        } catch (err) {
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Failed to download CSV: $err')),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.table_view_rounded),
+                      label: const Text('Download CSV Report'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.forestDeep,
+                        side: const BorderSide(color: AppTheme.forestDeep),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        try {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Generating Analytics PDF...')),
+                          );
+                          final bytes = await adminService.downloadAnalyticsPdf();
+                          await FileDownloadHelper.downloadFile(bytes, 'dealsouk-analytics.pdf');
+                        } catch (err) {
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Failed to generate PDF: $err')),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.picture_as_pdf_rounded),
+                      label: const Text('Export PDF Report'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.forestDeep,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -2221,30 +2308,51 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     VoucherRequest voucher, {
     required bool approve,
   }) async {
-    final codeCtrl = TextEditingController();
     final noteCtrl = TextEditingController();
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
         title: Text(approve ? 'Approve Voucher' : 'Reject Voucher'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               '${voucher.userName} - AED ${voucher.denominationAed} ${voucher.supermarket}',
+              style: GoogleFonts.nunito(fontWeight: FontWeight.bold),
             ),
+            const SizedBox(height: 12),
             if (approve) ...[
-              const SizedBox(height: 12),
-              TextField(
-                controller: codeCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Real voucher code',
-                  prefixIcon: Icon(Icons.confirmation_num_outlined),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.green.shade100),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline, color: Colors.green),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'A voucher code will be automatically selected and assigned from the active ${voucher.supermarket} (AED ${voucher.denominationAed}) inventory stock.',
+                        style: GoogleFonts.nunito(
+                          fontSize: 11,
+                          color: Colors.green.shade900,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              const SizedBox(height: 12),
             ],
-            const SizedBox(height: 12),
             TextField(
               controller: noteCtrl,
               decoration: const InputDecoration(
@@ -2261,6 +2369,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: approve ? AppTheme.forestDeep : Colors.red,
+              foregroundColor: Colors.white,
+            ),
             child: Text(approve ? 'Approve' : 'Reject'),
           ),
         ],
@@ -2275,7 +2387,6 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             .read(adminVouchersProvider.notifier)
             .approveVoucher(
               voucher.id,
-              voucherCode: codeCtrl.text.trim(),
               adminNote: noteCtrl.text.trim(),
             );
       } else {
@@ -2286,17 +2397,383 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(approve ? 'Voucher approved.' : 'Voucher rejected.'),
+            content: Text(approve ? 'Voucher approved successfully!' : 'Voucher rejected.'),
+            backgroundColor: approve ? Colors.green : Colors.red,
           ),
         );
       }
     } catch (err) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not review voucher: $err')),
+          SnackBar(
+            content: Text('Could not review voucher: $err'),
+            backgroundColor: Colors.redAccent,
+          ),
         );
       }
     }
+  }
+
+  Widget _buildMapDensityPanel() {
+    final mapData = ref.watch(adminMapDataProvider);
+
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          color: Colors.white,
+          child: Row(
+            children: [
+              const Icon(Icons.info_outline, color: AppTheme.forestDeep),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Visualizing active grocery price submissions across Dubai. Circles show submission density. Tap any marker pin to inspect store details.',
+                  style: GoogleFonts.nunito(
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textDark,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: FlutterMap(
+            options: MapOptions(
+              initialCenter: const LatLng(25.2048, 55.2708), // Dubai coordinates
+              initialZoom: 11.0,
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.dealsouk.app',
+              ),
+              CircleLayer(
+                circles: mapData.map<CircleMarker>((store) {
+                  final double lat = (store['lat'] is num) ? (store['lat'] as num).toDouble() : 25.2048;
+                  final double lng = (store['lng'] is num) ? (store['lng'] as num).toDouble() : 55.2708;
+                  final int count = store['activeSubmissionsCount'] as int? ?? 0;
+                  final Color circleColor = count < 3
+                      ? Colors.green.withValues(alpha: 0.4)
+                      : count < 6
+                          ? Colors.orange.withValues(alpha: 0.4)
+                          : Colors.red.withValues(alpha: 0.4);
+                  return CircleMarker(
+                    point: LatLng(lat, lng),
+                    radius: (count * 6.0 + 12.0).clamp(12.0, 48.0),
+                    useRadiusInMeter: false,
+                    color: circleColor,
+                    borderColor: circleColor.withValues(alpha: 0.7),
+                    borderStrokeWidth: 2,
+                  );
+                }).toList(),
+              ),
+              MarkerLayer(
+                markers: mapData.map<Marker>((store) {
+                  final double lat = (store['lat'] is num) ? (store['lat'] as num).toDouble() : 25.2048;
+                  final double lng = (store['lng'] is num) ? (store['lng'] as num).toDouble() : 55.2708;
+                  final String chain = store['chain'] as String? ?? 'Store';
+                  final String branchName = store['branchName'] as String? ?? '';
+                  final int count = store['activeSubmissionsCount'] as int? ?? 0;
+                  return Marker(
+                    point: LatLng(lat, lng),
+                    width: 40,
+                    height: 40,
+                    child: GestureDetector(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            title: Text(
+                              '$chain $branchName',
+                              style: GoogleFonts.fredoka(fontWeight: FontWeight.bold),
+                            ),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Area: ${store['area'] ?? 'Dubai'}',
+                                  style: GoogleFonts.nunito(fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Approved submissions count: $count',
+                                  style: GoogleFonts.nunito(
+                                    color: AppTheme.forestDeep,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('Close'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      child: const Icon(
+                        Icons.location_on_rounded,
+                        color: AppTheme.forestDeep,
+                        size: 32,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVoucherStockPanel() {
+    final inventory = ref.watch(adminVoucherInventoryProvider);
+
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Voucher Stock Levels',
+                style: GoogleFonts.fredoka(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textDark,
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: () => _showImportVouchersDialog(context),
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('Import Voucher Codes'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.forestDeep,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Expanded(
+            child: inventory.isEmpty
+                ? Center(
+                    child: Text(
+                      'No voucher stock records. Click import to add voucher codes.',
+                      style: GoogleFonts.nunito(
+                        color: Colors.grey.shade500,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  )
+                : ListView.separated(
+                    itemCount: inventory.length,
+                    separatorBuilder: (context, index) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final item = inventory[index] as Map<String, dynamic>;
+                      final supermarket = item['supermarket'] as String? ?? 'Unknown';
+                      final denom = item['denominationAed'] as int? ?? 50;
+                      final count = item['count'] as int? ?? 0;
+                      final isUsed = item['isUsed'] as bool? ?? false;
+
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFE8EEE4)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: (isUsed ? Colors.grey.shade100 : AppTheme.limeAccent.withValues(alpha: 0.2)),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.confirmation_num_rounded,
+                                    color: isUsed ? Colors.grey : AppTheme.forestDeep,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '$supermarket (AED $denom)',
+                                      style: GoogleFonts.fredoka(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppTheme.textDark,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      isUsed ? 'Used Vouchers' : 'Available Unused Stock',
+                                      style: GoogleFonts.nunito(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade600,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: isUsed ? Colors.grey.shade100 : Colors.green.shade50,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                '$count codes',
+                                style: GoogleFonts.nunito(
+                                  fontWeight: FontWeight.w900,
+                                  color: isUsed ? Colors.grey.shade700 : Colors.green.shade800,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showImportVouchersDialog(BuildContext context) {
+    final supermarketCtrl = TextEditingController();
+    final denomCtrl = TextEditingController(text: '50');
+    final codesCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            'Import Voucher Codes',
+            style: GoogleFonts.fredoka(fontWeight: FontWeight.bold),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: supermarketCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Supermarket Name (e.g. Carrefour, LuLu, Spinneys)',
+                    prefixIcon: Icon(Icons.store_outlined),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: denomCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Denomination (AED)',
+                    prefixIcon: Icon(Icons.money_outlined),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: codesCtrl,
+                  maxLines: 5,
+                  decoration: const InputDecoration(
+                    labelText: 'Voucher Codes (one per line, min 4 chars)',
+                    hintText: 'CODE123\nCODE456\nCODE789',
+                    prefixIcon: Icon(Icons.confirmation_num_outlined),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Colors.grey.shade600),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final supermarket = supermarketCtrl.text.trim();
+                final denom = int.tryParse(denomCtrl.text.trim()) ?? 50;
+                final rawCodes = codesCtrl.text.trim().split('\n');
+                final codes = rawCodes.map((c) => c.trim()).where((c) => c.length >= 4).toList();
+
+                if (supermarket.isEmpty || codes.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please fill out supermarket and enter valid codes.'),
+                      backgroundColor: Colors.redAccent,
+                    ),
+                  );
+                  return;
+                }
+
+                try {
+                  await ref.read(adminVoucherInventoryProvider.notifier).importVouchers(
+                        supermarket: supermarket,
+                        denominationAed: denom,
+                        codes: codes,
+                      );
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Vouchers imported successfully.'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                } catch (err) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to import vouchers: $err'),
+                        backgroundColor: Colors.redAccent,
+                      ),
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.forestDeep,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Import'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildMockPanelContent() {

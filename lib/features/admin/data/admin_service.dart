@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:dealsouk/features/admin/domain/admin_submission.dart';
 import 'package:dealsouk/features/admin/domain/admin_analytics.dart';
 import 'package:dealsouk/features/admin/domain/admin_settings.dart';
@@ -20,7 +21,9 @@ class AdminService {
   Future<void> rejectSubmission(String id, {String? reason}) async {
     await apiClient.post(
       '/admin/submissions/$id/reject',
-      data: {'reason': ?reason},
+      data: {
+        'reason': ?reason,
+      },
     );
   }
 
@@ -105,15 +108,56 @@ class AdminService {
   }) async {
     await apiClient.post(
       '/admin/vouchers/$id/approve',
-      data: {'voucherCode': voucherCode, 'adminNote': ?adminNote},
+      data: {
+        'voucherCode': voucherCode,
+        'adminNote': ?adminNote,
+      },
     );
   }
 
   Future<void> rejectVoucher(String id, {String? adminNote}) async {
     await apiClient.post(
       '/admin/vouchers/$id/reject',
-      data: {'adminNote': ?adminNote},
+      data: {
+        'adminNote': ?adminNote,
+      },
     );
+  }
+
+  // New Voucher Stock management methods
+  Future<void> importVouchers({
+    required String supermarket,
+    required int denominationAed,
+    required List<String> codes,
+  }) async {
+    await apiClient.post(
+      '/admin/vouchers/inventory/import',
+      data: {
+        'supermarket': supermarket,
+        'denominationAed': denominationAed,
+        'codes': codes,
+      },
+    );
+  }
+
+  Future<List<dynamic>> getVoucherInventoryStatus() async {
+    final res = await apiClient.get('/admin/vouchers/inventory/status');
+    return res.data as List<dynamic>;
+  }
+
+  // New map density endpoint
+  Future<List<dynamic>> getMapData() async {
+    final res = await apiClient.get('/admin/map-data');
+    return res.data as List<dynamic>;
+  }
+
+  // PDF Download endpoint
+  Future<List<int>> downloadAnalyticsPdf() async {
+    final res = await apiClient.get(
+      '/admin/exports/analytics.pdf',
+      options: Options(responseType: ResponseType.bytes),
+    );
+    return List<int>.from(res.data as List<dynamic>);
   }
 }
 

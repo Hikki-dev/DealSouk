@@ -138,9 +138,25 @@ model VoucherRequest {
   deliveredAt    DateTime?
 
   user User @relation(fields: [userId], references: [id])
+  voucherInventory VoucherInventory?
 
   @@index([status, requestedAt])
   @@index([userId, status])
+}
+
+model VoucherInventory {
+  id               String    @id @default(cuid())
+  supermarket      String    // e.g. "Carrefour", "Lulu", "Spinneys"
+  denominationAed  Int       @default(50)
+  code             String    @unique
+  isUsed           Boolean   @default(false)
+  importedAt       DateTime  @default(now())
+  usedAt           DateTime?
+  voucherRequestId String?   @unique
+
+  voucherRequest   VoucherRequest? @relation(fields: [voucherRequestId], references: [id])
+
+  @@index([supermarket, denominationAed, isUsed])
 }
 
 model PriceRequest {

@@ -395,122 +395,158 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                             width: 1.2,
                                           ),
                                         ),
-                                        child: Row(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            CircleAvatar(
-                                              radius: 16,
-                                              backgroundColor: isCheapest
-                                                  ? AppTheme.forestDeep
-                                                  : Colors.grey.shade200,
-                                              child: Text(
-                                                sp.storeName.substring(0, 1),
-                                                style: TextStyle(
-                                                  color: isCheapest
-                                                      ? Colors.white
-                                                      : Colors.black,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    '${sp.storeName} • ${_getStoreDistance(ref, sp.storeId, sp.storeName).toStringAsFixed(1)} km away',
-                                                    style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 13,
-                                                    ),
-                                                  ),
-                                                  Text(
-                                                    '${_formatFreshness(sp.updatedAtLabel)} • Verified with photo',
+                                            Row(
+                                              crossAxisAlignment: CrossAxisAlignment.center,
+                                              children: [
+                                                CircleAvatar(
+                                                  radius: 16,
+                                                  backgroundColor: isCheapest
+                                                      ? AppTheme.forestDeep
+                                                      : Colors.grey.shade200,
+                                                  child: Text(
+                                                    sp.storeName.substring(0, 1),
                                                     style: TextStyle(
-                                                      color:
-                                                          Colors.grey.shade500,
-                                                      fontSize: 10.5,
+                                                      color: isCheapest
+                                                          ? Colors.white
+                                                          : Colors.black,
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 12,
                                                     ),
                                                   ),
-                                                ],
-                                              ),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment.start,
+                                                    children: [
+                                                      Text(
+                                                        '${sp.storeName} • ${_getStoreDistance(ref, sp.storeId, sp.storeName).toStringAsFixed(1)} km away',
+                                                        style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 13,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 2),
+                                                      Text(
+                                                        '${_formatFreshness(sp.updatedAtLabel)} • Verified with photo',
+                                                        style: TextStyle(
+                                                          color:
+                                                              Colors.grey.shade500,
+                                                          fontSize: 10.5,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    SoukPrice(sp.price, size: 14.5),
+                                                    if (isCheapest) ...[
+                                                      const SizedBox(height: 4),
+                                                      Container(
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              horizontal: 6,
+                                                              vertical: 2,
+                                                            ),
+                                                        decoration: BoxDecoration(
+                                                          color: AppTheme.forestDeep,
+                                                          borderRadius:
+                                                              BorderRadius.circular(6),
+                                                        ),
+                                                        child: const Text(
+                                                          'BEST PRICE',
+                                                          style: TextStyle(
+                                                            color: Colors.white,
+                                                            fontSize: 7.5,
+                                                            fontWeight: FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ],
+                                                ),
+                                              ],
                                             ),
-                                            if (isCheapest)
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 8,
-                                                      vertical: 4,
-                                                    ),
-                                                margin: const EdgeInsets.only(
-                                                  right: 10,
-                                                ),
-                                                decoration: BoxDecoration(
-                                                  color: AppTheme.forestDeep,
-                                                  borderRadius:
-                                                      BorderRadius.circular(8),
-                                                ),
-                                                child: const Text(
-                                                  'BEST PRICE',
-                                                  style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 8.5,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ),
-                                            TextButton(
-                                              style: TextButton.styleFrom(
-                                                visualDensity:
-                                                    VisualDensity.compact,
-                                                padding: EdgeInsets.zero,
-                                              ),
-                                              onPressed: () {
-                                                ref
-                                                    .read(
-                                                      flaggedPricesProvider
-                                                          .notifier,
-                                                    )
-                                                    .flagPrice(
-                                                      product.id,
-                                                      sp.storeName,
-                                                      product.name,
-                                                      sp.price,
+                                            const SizedBox(height: 8),
+                                            const Divider(height: 1),
+                                            const SizedBox(height: 8),
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.end,
+                                              children: [
+                                                ElevatedButton.icon(
+                                                  onPressed: () {
+                                                    ref
+                                                        .read(
+                                                          flaggedPricesProvider
+                                                              .notifier,
+                                                        )
+                                                        .flagPrice(
+                                                          product.id,
+                                                          sp.storeName,
+                                                          product.name,
+                                                          sp.price,
+                                                        );
+                                                    final newCount = flagCount + 1;
+                                                    ScaffoldMessenger.of(
+                                                      context,
+                                                    ).showSnackBar(
+                                                      SnackBar(
+                                                        content: Text(
+                                                          newCount >= 3
+                                                              ? 'Thanks. This price is hidden until an admin reviews it.'
+                                                              : 'Thanks. We will hide this price after 3 unique reports.',
+                                                        ),
+                                                        duration: const Duration(
+                                                          seconds: 2,
+                                                        ),
+                                                      ),
                                                     );
-                                                final newCount = flagCount + 1;
-                                                ScaffoldMessenger.of(
-                                                  context,
-                                                ).showSnackBar(
-                                                  SnackBar(
-                                                    content: Text(
-                                                      newCount >= 3
-                                                          ? 'Thanks. This price is hidden until an admin reviews it.'
-                                                          : 'Thanks. We will hide this price after 3 unique reports.',
-                                                    ),
-                                                    duration: const Duration(
-                                                      seconds: 2,
+                                                  },
+                                                  icon: Icon(
+                                                    flagCount > 0
+                                                        ? Icons.check_circle_rounded
+                                                        : Icons.report_gmailerrorred_rounded,
+                                                    size: 13,
+                                                    color: Colors.white,
+                                                  ),
+                                                  label: Text(
+                                                    flagCount > 0
+                                                        ? 'Reported'
+                                                        : 'Report wrong price',
+                                                    style: const TextStyle(
+                                                      fontSize: 10,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: Colors.white,
                                                     ),
                                                   ),
-                                                );
-                                              },
-                                              child: Text(
-                                                flagCount > 0
-                                                    ? 'Reported'
-                                                    : 'Report wrong price',
-                                                style: TextStyle(
-                                                  color: flagCount > 0
-                                                      ? Colors.redAccent
-                                                      : Colors.grey.shade500,
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.bold,
+                                                  style: ElevatedButton.styleFrom(
+                                                    backgroundColor: flagCount > 0
+                                                        ? Colors.green
+                                                        : Colors.red.shade600,
+                                                    foregroundColor: Colors.white,
+                                                    elevation: 0,
+                                                    padding: const EdgeInsets.symmetric(
+                                                      horizontal: 10,
+                                                      vertical: 6,
+                                                    ),
+                                                    minimumSize: Size.zero,
+                                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(16),
+                                                    ),
+                                                  ),
                                                 ),
-                                              ),
+                                              ],
                                             ),
-                                            const SizedBox(width: 4),
-                                            SoukPrice(sp.price, size: 14.5),
                                           ],
                                         ),
                                       );

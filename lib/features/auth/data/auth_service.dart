@@ -12,13 +12,14 @@ class AuthService {
 
   Future<void> _ensureGoogleSignInInitialized() async {
     if (_googleSignInInitialized) return;
-    await GoogleSignIn.instance.initialize(
-      clientId: kIsWeb
-          ? (const String.fromEnvironment('GOOGLE_WEB_CLIENT_ID').isNotEmpty
-                ? const String.fromEnvironment('GOOGLE_WEB_CLIENT_ID')
-                : '548247133447-mockclientid.apps.googleusercontent.com')
-          : null,
-    );
+    // Web signs in via Firebase's popup flow (see signInWithGoogle), so the
+    // google_sign_in package is only initialized on native platforms, where
+    // the client ID comes from google-services.json / GoogleService-Info.plist.
+    if (kIsWeb) {
+      _googleSignInInitialized = true;
+      return;
+    }
+    await GoogleSignIn.instance.initialize();
     _googleSignInInitialized = true;
   }
 
@@ -60,6 +61,12 @@ class AuthService {
   // --- Google Sign-In ---
 
   Future<UserCredential> signInWithGoogle() async {
+    if (kIsWeb) {
+      // Firebase popup flow. No OAuth client ID needed in code — it works as
+      // long as the deploy origin (e.g. deal-souk.vercel.app) is listed under
+      // Firebase Console → Authentication → Settings → Authorized domains.
+      return _auth.signInWithPopup(GoogleAuthProvider());
+    }
     await _ensureGoogleSignInInitialized();
     final googleUser = await GoogleSignIn.instance.authenticate();
     final googleAuth = googleUser.authentication;
@@ -93,6 +100,10 @@ class AuthService {
   // --- Sign Out ---
 
   Future<void> signOut() async {
+    if (kIsWeb) {
+      await _auth.signOut();
+      return;
+    }
     await _ensureGoogleSignInInitialized();
     await Future.wait([_auth.signOut(), GoogleSignIn.instance.signOut()]);
   }

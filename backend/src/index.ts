@@ -60,12 +60,25 @@ app.set("trust proxy", 1);
 app.use(helmet());
 app.use(
   cors({
-    origin: isProduction
-      ? allowedOrigins
-      : (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-          // Allow all origins in development (e.g. dynamic Flutter web ports)
-          callback(null, true);
-        },
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      if (!isProduction) {
+        callback(null, true);
+        return;
+      }
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+      if (origin === "http://localhost" || origin.startsWith("http://localhost:")) {
+        callback(null, true);
+        return;
+      }
+      if (allowedOrigins && allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(null, false);
+    },
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,

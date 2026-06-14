@@ -2331,8 +2331,14 @@ abstract class AppLocalizations {
   /// No description provided for @profileLogOut.
   ///
   /// In en, this message translates to:
-  /// **'Log Out of Demo'**
+  /// **'Log Out'**
   String get profileLogOut;
+
+  /// No description provided for @profileLogOutDemo.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Out of Demo'**
+  String get profileLogOutDemo;
 
   /// No description provided for @welcomePrivacyConsentRequired.
   ///

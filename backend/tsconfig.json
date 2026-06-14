@@ -7,7 +7,7 @@
     // production installs). Module types (express, cors, …) resolve on import.
     // Tests get jest globals via tsconfig.test.json. Restricting the list also
     // stops TS implicitly loading every @types/* and erroring on phantom ones.
-    "types": ["node", "cors", "express"],
+    "types": ["node"],
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,

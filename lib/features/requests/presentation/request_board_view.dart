@@ -267,56 +267,67 @@ class RequestBoardView extends ConsumerWidget {
                 const SizedBox(height: 24),
 
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (formKey.currentState!.validate()) {
                       formKey.currentState!.save();
 
-                      ref
-                          .read(myRequestsProvider.notifier)
-                          .addPriceRequest(
-                            productName: productName,
-                            storeName: selectedStore,
-                            requestCostTokens: requestCost,
-                          );
+                      final notifier = ref.read(myRequestsProvider.notifier);
+                      final messenger = ScaffoldMessenger.of(context);
+                      await notifier.addPriceRequest(
+                        productName: productName,
+                        storeName: selectedStore,
+                        requestCostTokens: requestCost,
+                      );
 
+                      if (!context.mounted) return;
                       Navigator.pop(context);
 
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
+                      final err = notifier.lastError;
+                      if (err != null) {
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text(err),
+                            backgroundColor: Colors.red.shade700,
                           ),
-                          title: Row(
-                            children: [
-                              const Icon(
-                                Icons.check_circle_rounded,
-                                color: Colors.green,
+                        );
+                      } else {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            title: Row(
+                              children: [
+                                const Icon(
+                                  Icons.check_circle_rounded,
+                                  color: Colors.green,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(l.requestSentTitle),
+                              ],
+                            ),
+                            content: Text(
+                              l.requestSentBody(
+                                productName,
+                                selectedStore,
+                                requestCost,
                               ),
-                              const SizedBox(width: 8),
-                              Text(l.requestSentTitle),
+                              style: GoogleFonts.nunito(
+                                fontSize: 13,
+                                height: 1.4,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text(l.requestSentConfirm),
+                              ),
                             ],
                           ),
-                          content: Text(
-                            l.requestSentBody(
-                              productName,
-                              selectedStore,
-                              requestCost,
-                            ),
-                            style: GoogleFonts.nunito(
-                              fontSize: 13,
-                              height: 1.4,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: Text(l.requestSentConfirm),
-                            ),
-                          ],
-                        ),
-                      );
+                        );
+                      }
                     }
                   },
                   style: ElevatedButton.styleFrom(

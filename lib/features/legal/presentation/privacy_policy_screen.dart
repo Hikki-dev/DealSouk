@@ -11,9 +11,16 @@ class PrivacyPolicyScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: Text(l.privacyTitle),
+        title: Text(
+          l.privacyTitle,
+          style: const TextStyle(
+            color: AppTheme.textDark,
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         backgroundColor: AppTheme.background,
-        foregroundColor: AppTheme.textDark,
+        iconTheme: const IconThemeData(color: AppTheme.textDark),
         elevation: 0,
       ),
       body: ListView(

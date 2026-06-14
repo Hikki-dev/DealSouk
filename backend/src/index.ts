@@ -62,7 +62,7 @@ app.use(
   cors({
     origin: isProduction
       ? allowedOrigins
-      : (origin, callback) => {
+      : (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
           // Allow all origins in development (e.g. dynamic Flutter web ports)
           callback(null, true);
         },

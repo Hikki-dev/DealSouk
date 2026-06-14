@@ -85,7 +85,7 @@ class AuthNotifier extends Notifier<AuthState> {
         displayName: data['displayName'] as String?,
         roles: _effectiveRoles(AuthRole.fromClaims(data)),
       );
-      _syncProfileProviders(data);
+      _syncProfileProviders(data, firebaseUser: user);
     } catch (_) {
       state = AuthState(
         status: AuthStatus.authenticated,
@@ -103,11 +103,19 @@ class AuthNotifier extends Notifier<AuthState> {
     return backendRoles;
   }
 
-  void _syncProfileProviders(Map<String, dynamic> data) {
+  void _syncProfileProviders(Map<String, dynamic> data, {User? firebaseUser}) {
     try {
       final profileData = ProfileData.fromJson(data);
       ref.read(userTokensProvider.notifier).sync(profileData.tokenBalance);
-      ref.read(userProfileProvider.notifier).syncFromProfile(profileData);
+      ref
+          .read(userProfileProvider.notifier)
+          .syncFromProfile(
+            profileData,
+            // Default to the Google/Apple account's name + photo when the
+            // backend has none, so the greeting and avatar populate instantly.
+            fallbackName: firebaseUser?.displayName,
+            fallbackAvatarUrl: firebaseUser?.photoURL,
+          );
       ref.read(userTransactionsProvider.notifier).fetch();
     } catch (_) {}
   }
@@ -169,7 +177,9 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   void continueAsGuest() {
-    state = const AuthState(status: AuthStatus.guest, displayName: 'Guest');
+    state = const AuthState(status: AuthStatus.guest, displayName: 'Demo');
+    // Restore any on-device demo profile (name/avatar/area saved locally).
+    ref.read(userProfileProvider.notifier).loadGuestProfile();
   }
 
   Future<void> signOut() async {

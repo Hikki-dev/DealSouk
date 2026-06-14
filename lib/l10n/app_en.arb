@@ -716,7 +716,8 @@
   "profilePrivacyTermsSubtitle": "Location, photos, tokens, vouchers, and account deletion",
   "profileAdminConsole": "Admin Review Console",
   "profileAdminConsoleSubtitle": "Moderate price submissions",
-  "profileLogOut": "Log Out of Demo",
+  "profileLogOut": "Log Out",
+  "profileLogOutDemo": "Log Out of Demo",
   "welcomePrivacyConsentRequired": "Please agree to the Privacy Policy to continue.",
   "welcomeInvalidPhoneNumber": "Please enter a valid {digits}-digit phone number for {country}.",
   "@welcomeInvalidPhoneNumber": {

@@ -1288,7 +1288,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileAdminConsoleSubtitle => 'Moderate price submissions';
 
   @override
-  String get profileLogOut => 'Log Out of Demo';
+  String get profileLogOut => 'Log Out';
+
+  @override
+  String get profileLogOutDemo => 'Log Out of Demo';
 
   @override
   String get welcomePrivacyConsentRequired =>

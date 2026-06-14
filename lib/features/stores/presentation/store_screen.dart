@@ -91,6 +91,18 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
     _searchController.addListener(() {
       setState(() => _searchQuery = _searchController.text.toLowerCase());
     });
+    // Load Dubai stores from the backend immediately, independent of location
+    // permission (there is no hardcoded fallback). _tryGetLocation refines the
+    // view only if the user grants location and is physically in Dubai.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref
+          .read(storesProvider.notifier)
+          .fetchNearby(
+            lat: _dubaiCenter.latitude,
+            lng: _dubaiCenter.longitude,
+            radiusKm: 40,
+          );
+    });
     // Attempt to get location but never move the map away from Dubai
     _tryGetLocation();
   }
@@ -140,9 +152,9 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
         _isLocating = false;
       });
 
-      // If the user IS in Dubai, pan the map to their live location
-      // and fetch stores around them. If they're abroad (testing),
-      // the map stays centred on Dubai and shows all static stores.
+      // If the user IS in Dubai, pan the map to their live location and refetch
+      // stores around them. If they're abroad (testing), the Dubai-center fetch
+      // started in initState already populated the list — no refetch needed.
       final lat = position.latitude;
       final lng = position.longitude;
       final isInDubai =
@@ -151,20 +163,16 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
           lng >= _dubaiMinLng &&
           lng <= _dubaiMaxLng;
 
-      if (isInDubai && _mapReady) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _mapController.move(LatLng(lat, lng), 13.5);
-        });
+      if (isInDubai) {
+        if (_mapReady) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _mapController.move(LatLng(lat, lng), 13.5);
+          });
+        }
+        ref
+            .read(storesProvider.notifier)
+            .fetchNearby(lat: lat, lng: lng, radiusKm: 40);
       }
-
-      // Always try to fetch live stores from backend around Dubai
-      ref
-          .read(storesProvider.notifier)
-          .fetchNearby(
-            lat: isInDubai ? lat : 25.2048,
-            lng: isInDubai ? lng : 55.2708,
-            radiusKm: 40,
-          );
     } catch (_) {
       setState(() => _isLocating = false);
     }
@@ -1397,30 +1405,29 @@ const _kLogoBaseUrl = String.fromEnvironment(
   defaultValue: 'https://dealsouk.onrender.com',
 );
 
-String? _chainLogoUrl(String name) {
+/// Resolves a chain name to its bundled asset slug (e.g. 'carrefour'), or null
+/// for unknown chains. The slug maps to `assets/logos/<slug>.png` and to the
+/// backend proxy route `/logos/<slug>`.
+String? _chainSlug(String name) {
   final n = name.toLowerCase();
-  String? slug;
-  if (n.contains('carrefour')) {
-    slug = 'carrefour';
-  } else if (n.contains('lulu')) {
-    slug = 'lulu';
-  } else if (n.contains('spinneys')) {
-    slug = 'spinneys';
-  } else if (n.contains('waitrose')) {
-    slug = 'waitrose';
-  } else if (n.contains('union')) {
-    slug = 'union_coop';
-  } else if (n.contains('choithrams')) {
-    slug = 'choithrams';
-  } else if (n.contains('geant')) {
-    slug = 'geant';
-  } else if (n.contains('nesto')) {
-    slug = 'nesto';
-  } else if (n.contains('al maya')) {
-    slug = 'al_maya';
-  } else if (n.contains('grandiose')) {
-    slug = 'grandiose';
-  }
+  if (n.contains('carrefour')) return 'carrefour';
+  if (n.contains('lulu')) return 'lulu';
+  if (n.contains('spinneys')) return 'spinneys';
+  if (n.contains('waitrose')) return 'waitrose';
+  if (n.contains('union')) return 'union_coop';
+  if (n.contains('choithrams')) return 'choithrams';
+  if (n.contains('geant')) return 'geant';
+  if (n.contains('nesto')) return 'nesto';
+  if (n.contains('al maya')) return 'al_maya';
+  if (n.contains('grandiose')) return 'grandiose';
+  return null;
+}
+
+/// Network fallback for a chain logo when no bundled asset is present.
+/// Served through our own backend (`/logos/:slug`) so it carries CORS + cache
+/// headers and renders on Flutter Web too. Returns null for unknown chains.
+String? _chainLogoUrl(String name) {
+  final slug = _chainSlug(name);
   if (slug == null) return null;
   return '$_kLogoBaseUrl/logos/$slug';
 }
@@ -1451,9 +1458,9 @@ class _LogoAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logoUrl = _chainLogoUrl(name);
+    final slug = _chainSlug(name);
     final radius = borderRadius ?? size / 2;
-    final bgColor = logoUrl != null ? Colors.white : color;
+    final bgColor = slug != null ? Colors.white : color;
 
     return Container(
       width: size,
@@ -1470,26 +1477,55 @@ class _LogoAvatar extends StatelessWidget {
           ),
         ],
       ),
-      child: _buildContent(logoUrl, radius),
+      child: _buildContent(slug, radius),
     );
   }
 
-  Widget _buildContent(String? logoUrl, double radius) {
-    if (logoUrl == null) return _fallback(radius);
+  /// Logo resolution order:
+  ///   1. Bundled asset `assets/logos/<slug>.png` (instant, offline, no flicker)
+  ///   2. Backend proxy `/logos/<slug>` (if the asset isn't present)
+  ///   3. Polished brand-colored initial (always renders)
+  Widget _buildContent(String? slug, double radius) {
+    if (slug == null) return _fallback(radius);
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius - 1.5),
-      child: Padding(
-        padding: EdgeInsets.all(padding),
-        child: Image.network(
-          logoUrl,
-          fit: BoxFit.contain,
-          // Show the letter while the logo loads (cached after first fetch)...
-          loadingBuilder: (ctx, child, progress) =>
-              progress == null ? child : _fallback(radius),
-          // ...and if the network/logo is unavailable, keep the letter.
-          errorBuilder: (ctx, error, stack) => _fallback(radius),
-        ),
+      child: Image.asset(
+        'assets/logos/$slug.png',
+        fit: BoxFit.contain,
+        // Pad the bundled mark so it sits cleanly inside the circle.
+        frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+          if (wasSynchronouslyLoaded || frame != null) {
+            return Container(
+              color: Colors.white,
+              padding: EdgeInsets.all(padding),
+              child: child,
+            );
+          }
+          return _fallback(radius);
+        },
+        // No bundled asset yet → try the backend proxy, then the initial.
+        errorBuilder: (ctx, assetErr, assetStack) => _networkOrFallback(radius),
       ),
+    );
+  }
+
+  Widget _networkOrFallback(double radius) {
+    final url = _chainLogoUrl(name);
+    if (url == null) return _fallback(radius);
+    return Image.network(
+      url,
+      fit: BoxFit.contain,
+      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+        if (wasSynchronouslyLoaded || frame != null) {
+          return Container(
+            color: Colors.white,
+            padding: EdgeInsets.all(padding),
+            child: child,
+          );
+        }
+        return _fallback(radius);
+      },
+      errorBuilder: (ctx, error, stack) => _fallback(radius),
     );
   }
 

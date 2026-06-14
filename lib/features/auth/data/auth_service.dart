@@ -8,13 +8,20 @@ import 'package:flutter/foundation.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    clientId: kIsWeb
-        ? (const String.fromEnvironment('GOOGLE_WEB_CLIENT_ID').isNotEmpty
-              ? const String.fromEnvironment('GOOGLE_WEB_CLIENT_ID')
-              : '548247133447-mockclientid.apps.googleusercontent.com')
-        : null,
-  );
+  bool _googleSignInInitialized = false;
+
+  Future<void> _ensureGoogleSignInInitialized() async {
+    if (_googleSignInInitialized) return;
+    // Web signs in via Firebase's popup flow (see signInWithGoogle), so the
+    // google_sign_in package is only initialized on native platforms, where
+    // the client ID comes from google-services.json / GoogleService-Info.plist.
+    if (kIsWeb) {
+      _googleSignInInitialized = true;
+      return;
+    }
+    await GoogleSignIn.instance.initialize();
+    _googleSignInInitialized = true;
+  }
 
   User? get currentUser => _auth.currentUser;
   Stream<User?> get authStateChanges => _auth.authStateChanges();
@@ -54,11 +61,16 @@ class AuthService {
   // --- Google Sign-In ---
 
   Future<UserCredential> signInWithGoogle() async {
-    final googleUser = await _googleSignIn.signIn();
-    if (googleUser == null) throw Exception('Google sign-in cancelled');
-    final googleAuth = await googleUser.authentication;
+    if (kIsWeb) {
+      // Firebase popup flow. No OAuth client ID needed in code — it works as
+      // long as the deploy origin (e.g. deal-souk.vercel.app) is listed under
+      // Firebase Console → Authentication → Settings → Authorized domains.
+      return _auth.signInWithPopup(GoogleAuthProvider());
+    }
+    await _ensureGoogleSignInInitialized();
+    final googleUser = await GoogleSignIn.instance.authenticate();
+    final googleAuth = googleUser.authentication;
     final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
     );
     return _auth.signInWithCredential(credential);
@@ -88,7 +100,12 @@ class AuthService {
   // --- Sign Out ---
 
   Future<void> signOut() async {
-    await Future.wait([_auth.signOut(), _googleSignIn.signOut()]);
+    if (kIsWeb) {
+      await _auth.signOut();
+      return;
+    }
+    await _ensureGoogleSignInInitialized();
+    await Future.wait([_auth.signOut(), GoogleSignIn.instance.signOut()]);
   }
 
   // --- Get ID Token (for backend calls) ---

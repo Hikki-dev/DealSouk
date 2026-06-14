@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dealsouk/features/profile/data/profile_service.dart';
 import 'package:dealsouk/features/admin/presentation/admin_providers.dart';
+import 'package:dealsouk/features/auth/presentation/auth_providers.dart';
 
 class UserProfile {
   final String name;
@@ -44,13 +48,77 @@ class UserProfileNotifier extends Notifier<UserProfile> {
     homeArea: 'Dubai',
   );
 
-  void syncFromProfile(ProfileData data) {
+  static const _guestPrefsKey = 'guest_profile_v1';
+
+  /// Syncs from the backend profile. [fallbackName]/[fallbackAvatarUrl] come
+  /// from the Firebase account (e.g. the Google display name + photo) and are
+  /// used when the backend has no value of its own — so a Google user sees
+  /// their name and photo immediately without having to set anything.
+  void syncFromProfile(
+    ProfileData data, {
+    String? fallbackName,
+    String? fallbackAvatarUrl,
+  }) {
+    final name = data.displayName.isNotEmpty
+        ? data.displayName
+        : (fallbackName ?? 'Shopper');
+    final avatar = (data.avatarUrl != null && data.avatarUrl!.isNotEmpty)
+        ? data.avatarUrl!
+        : (fallbackAvatarUrl ?? '');
     state = UserProfile(
-      name: data.displayName,
+      name: name,
       location: data.homeArea ?? 'Dubai',
-      avatarUrl: data.avatarUrl ?? '',
+      avatarUrl: avatar,
       submissionsToday: 0,
       homeArea: data.homeArea ?? 'Dubai',
+    );
+  }
+
+  bool get _isGuest => ref.read(authProvider).isGuest;
+
+  /// Restores a guest/demo profile from on-device storage (or seeds defaults).
+  /// Demo users never touch the backend — everything stays on the device.
+  Future<void> loadGuestProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_guestPrefsKey);
+    if (raw == null) {
+      state = UserProfile(
+        name: 'Demo',
+        location: 'Dubai',
+        avatarUrl: '',
+        submissionsToday: 0,
+        homeArea: 'Dubai',
+      );
+      return;
+    }
+    try {
+      final m = jsonDecode(raw) as Map<String, dynamic>;
+      state = UserProfile(
+        name: (m['name'] as String?) ?? 'Demo',
+        location: (m['homeArea'] as String?) ?? 'Dubai',
+        avatarUrl: (m['avatarUrl'] as String?) ?? '',
+        submissionsToday: 0,
+        homeArea: (m['homeArea'] as String?) ?? 'Dubai',
+      );
+    } catch (_) {
+      state = UserProfile(
+        name: 'Demo',
+        location: 'Dubai',
+        avatarUrl: '',
+        homeArea: 'Dubai',
+      );
+    }
+  }
+
+  Future<void> _persistGuest() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _guestPrefsKey,
+      jsonEncode({
+        'name': state.name,
+        'avatarUrl': state.avatarUrl,
+        'homeArea': state.homeArea,
+      }),
     );
   }
 
@@ -64,23 +132,40 @@ class UserProfileNotifier extends Notifier<UserProfile> {
   Future<void> updateName(String name) async {
     final trimmed = name.trim();
     if (trimmed.length < 2) return;
-    await profileService.updateProfile(displayName: trimmed);
     state = state.copyWith(name: trimmed);
+    if (_isGuest) {
+      await _persistGuest();
+    } else {
+      await profileService.updateProfile(displayName: trimmed);
+    }
   }
 
   Future<void> updateAvatar(String avatarUrl) async {
-    await profileService.updateProfile(avatarUrl: avatarUrl);
     state = state.copyWith(avatarUrl: avatarUrl);
+    if (_isGuest) {
+      // Demo avatar is a local file path saved on-device — never uploaded.
+      await _persistGuest();
+    } else {
+      await profileService.updateProfile(avatarUrl: avatarUrl);
+    }
   }
 
   Future<void> removeAvatar(String oldAvatarUrl) async {
-    await profileService.updateProfile(avatarUrl: '');
     state = state.copyWith(avatarUrl: '');
+    if (_isGuest) {
+      await _persistGuest();
+    } else {
+      await profileService.updateProfile(avatarUrl: '');
+    }
   }
 
   Future<void> updateHomeArea(String area) async {
-    await profileService.updateProfile(homeArea: area);
     state = state.copyWith(location: area, homeArea: area);
+    if (_isGuest) {
+      await _persistGuest();
+    } else {
+      await profileService.updateProfile(homeArea: area);
+    }
   }
 }
 

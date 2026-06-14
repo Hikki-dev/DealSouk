@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
+import 'package:dealsouk/core/widgets/avatar_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -173,34 +174,42 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         children: [
                           Row(
                             children: [
-                              // Active User Avatar
-                              Container(
-                                width: 48,
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.6),
-                                    width: 1.5,
-                                  ),
-                                  image: profile.avatarUrl.isNotEmpty
-                                      ? DecorationImage(
-                                          image: NetworkImage(
-                                            profile.avatarUrl,
-                                          ),
-                                          fit: BoxFit.cover,
-                                        )
-                                      : null,
-                                ),
-                                child: profile.avatarUrl.isEmpty
-                                    ? const Center(
-                                        child: Icon(
-                                          Icons.person,
-                                          color: Colors.white,
-                                          size: 24,
+                              // Active User Avatar (Google photo / uploaded /
+                              // on-device demo avatar, else a person icon).
+                              Builder(
+                                builder: (context) {
+                                  final photo = avatarImageProvider(
+                                    profile.avatarUrl,
+                                  );
+                                  return Container(
+                                    width: 48,
+                                    height: 48,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.6,
                                         ),
-                                      )
-                                    : null,
+                                        width: 1.5,
+                                      ),
+                                      image: photo != null
+                                          ? DecorationImage(
+                                              image: photo,
+                                              fit: BoxFit.cover,
+                                            )
+                                          : null,
+                                    ),
+                                    child: photo == null
+                                        ? const Center(
+                                            child: Icon(
+                                              Icons.person,
+                                              color: Colors.white,
+                                              size: 24,
+                                            ),
+                                          )
+                                        : null,
+                                  );
+                                },
                               ),
                               const SizedBox(width: 12),
                               Column(

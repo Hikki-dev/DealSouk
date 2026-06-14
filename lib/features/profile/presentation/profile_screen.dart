@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dealsouk/core/widgets/avatar_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dealsouk/features/admin/domain/admin_settings.dart';
 import 'package:dealsouk/features/requests/presentation/requests_providers.dart';
@@ -233,7 +234,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   /// badge) opens the photo options sheet — the primary way to change the pic.
   Widget _buildHeroAvatar(dynamic profile) {
     final l = AppLocalizations.of(context)!;
-    final hasPhoto = profile.avatarUrl.isNotEmpty;
+    final photo = avatarImageProvider(profile.avatarUrl as String);
+    final hasPhoto = photo != null;
     return Semantics(
       button: true,
       label: l.profileEditPhotoTooltip,
@@ -252,10 +254,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   width: 2.5,
                 ),
                 image: hasPhoto
-                    ? DecorationImage(
-                        image: NetworkImage(profile.avatarUrl),
-                        fit: BoxFit.cover,
-                      )
+                    ? DecorationImage(image: photo, fit: BoxFit.cover)
                     : null,
               ),
               child: hasPhoto
@@ -433,14 +432,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Future<void> _changeProfilePhoto({bool fromCamera = false}) async {
     final l = AppLocalizations.of(context)!;
+    final isGuest = ref.read(authProvider).isGuest;
     final oldUrl = ref.read(userProfileProvider).avatarUrl;
     final messenger = ScaffoldMessenger.of(context);
-    final newUrl = fromCamera
-        ? await storageService.captureAndUploadAvatar()
-        : await storageService.pickAndUploadAvatar();
+
+    // Demo/guest: keep the photo on-device (local path). Real accounts upload
+    // to Firebase Storage and store the download URL.
+    final newUrl = isGuest
+        ? await storageService.pickLocalAvatarPath(fromCamera: fromCamera)
+        : (fromCamera
+              ? await storageService.captureAndUploadAvatar()
+              : await storageService.pickAndUploadAvatar());
     if (!mounted || newUrl == null) return;
     await ref.read(userProfileProvider.notifier).updateAvatar(newUrl);
-    if (oldUrl.isNotEmpty) {
+    // Only remote (http) avatars need server-side cleanup.
+    if (!isGuest && oldUrl.startsWith('http')) {
       await storageService.deleteFileByUrl(oldUrl);
     }
     messenger.showSnackBar(SnackBar(content: Text(l.profilePhotoUpdated)));
@@ -448,10 +454,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Future<void> _removeProfilePhoto() async {
     final l = AppLocalizations.of(context)!;
+    final isGuest = ref.read(authProvider).isGuest;
     final oldUrl = ref.read(userProfileProvider).avatarUrl;
     if (oldUrl.isEmpty) return;
     await ref.read(userProfileProvider.notifier).removeAvatar(oldUrl);
-    await storageService.deleteFileByUrl(oldUrl);
+    if (!isGuest && oldUrl.startsWith('http')) {
+      await storageService.deleteFileByUrl(oldUrl);
+    }
     if (!mounted) return;
     ScaffoldMessenger.of(
       context,
@@ -1334,7 +1343,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  l.profileLogOut,
+                  // Real accounts (Google/Apple/Phone) just say "Log Out";
+                  // only the demo/guest session says "Log Out of Demo".
+                  ref.read(authProvider).isGuest
+                      ? l.profileLogOutDemo
+                      : l.profileLogOut,
                   style: TextStyle(
                     color: Colors.red.shade700,
                     fontWeight: FontWeight.bold,

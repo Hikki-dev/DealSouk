@@ -53,6 +53,18 @@ class StorageService {
     return _upload(photo, folder: 'avatars');
   }
 
+  /// Picks an avatar image and returns its **local file path** without
+  /// uploading anywhere. Used for the demo/guest session, whose profile photo
+  /// is kept on-device only. Returns null if the user cancelled.
+  Future<String?> pickLocalAvatarPath({bool fromCamera = false}) async {
+    final photo = await _picker.pickImage(
+      source: fromCamera ? ImageSource.camera : ImageSource.gallery,
+      imageQuality: 80,
+      maxWidth: 900,
+    );
+    return photo?.path;
+  }
+
   Future<void> deleteFileByUrl(String url) async {
     try {
       final ref = _storage.refFromURL(url);

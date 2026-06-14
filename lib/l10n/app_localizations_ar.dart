@@ -1283,7 +1283,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get profileAdminConsoleSubtitle => 'مراجعة مساهمات الأسعار';
 
   @override
-  String get profileLogOut => 'تسجيل الخروج من النسخة التجريبية';
+  String get profileLogOut => 'تسجيل الخروج';
+
+  @override
+  String get profileLogOutDemo => 'تسجيل الخروج من النسخة التجريبية';
 
   @override
   String get welcomePrivacyConsentRequired =>

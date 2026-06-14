@@ -16,7 +16,7 @@ const PRIVATE_UPLOAD_PREFIXES = ["receipts/", "price-labels/"];
 const PUBLIC_UPLOAD_PREFIXES = ["avatars/"];
 const ALL_UPLOAD_PREFIXES = [...PRIVATE_UPLOAD_PREFIXES, ...PUBLIC_UPLOAD_PREFIXES];
 
-type MalwareScanResult = "clean" | "infected" | "not_configured";
+type MalwareScanResult = "clean" | "infected" | "not_configured" | "scanner_failed";
 
 function isManagedUploadPath(name: string): boolean {
   return ALL_UPLOAD_PREFIXES.some((prefix) => name.startsWith(prefix));
@@ -34,15 +34,20 @@ async function scanForMalware(bucket: string, objectName: string): Promise<Malwa
   const scanUrl = malwareScanUrl.value();
   if (!scanUrl) return "not_configured";
 
-  const client = await googleAuth.getIdTokenClient(scanUrl);
-  const response = await client.request<{ status?: string }>({
-    url: scanUrl,
-    method: "POST",
-    data: { bucket, objectName },
-  });
+  try {
+    const client = await googleAuth.getIdTokenClient(scanUrl);
+    const response = await client.request<{ status?: string }>({
+      url: scanUrl,
+      method: "POST",
+      data: { bucket, objectName },
+    });
 
-  const result = response.data;
-  return result.status === "clean" ? "clean" : "infected";
+    const result = response.data;
+    return result.status === "clean" ? "clean" : "infected";
+  } catch (err) {
+    logger.error("Malware scanner request failed", { objectName, err });
+    return "scanner_failed";
+  }
 }
 
 async function quarantineObject(bucketName: string, objectName: string, reason: string): Promise<void> {
@@ -90,7 +95,7 @@ export const sanitizeUploadedImage = onObjectFinalized(
     }
 
     const scanStatus = await scanForMalware(bucketName, objectName);
-    if (scanStatus === "infected") {
+    if (scanStatus === "infected" || scanStatus === "scanner_failed") {
       await quarantineObject(bucketName, objectName, "malware_scan_failed");
       return;
     }

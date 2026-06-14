@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { prisma } from '../index';
 import { requireAuth, requireAdmin, AuthRequest } from '../middleware/auth';
 import { authenticatedRateLimit } from '../middleware/rateLimits';
-import { spendTokens, recalculateAccuracyRating, runApprovalEffects } from '../services/tokenEngine';
+import { spendTokens, recalculateAccuracyRating, runApprovalEffects, createTokenLedgerEntry } from '../services/tokenEngine';
 import {
   notifyAccountBanned,
   notifyAccountSuspended,
@@ -12,6 +12,7 @@ import {
 import * as adminFirebase from 'firebase-admin';
 import { sendWarningEmail, sendSuspensionEmail, sendBanEmail } from '../services/emailService';
 import { generateAnalyticsReport } from '../services/pdfService';
+import { recordAdminAction } from '../services/adminAudit';
 
 const router = Router();
 const adminWriteLimiter = authenticatedRateLimit({
@@ -30,24 +31,6 @@ function cleanReason(value: unknown, fallback: string): string {
   const reason = value.trim();
   if (!reason) return fallback;
   return reason.slice(0, MAX_ADMIN_REASON_LENGTH);
-}
-
-async function recordAdminAction(params: {
-  adminUserId: string;
-  targetUserId: string;
-  action: string;
-  reason: string;
-  expiresAt?: Date;
-}) {
-  await prisma.adminUserAction.create({
-    data: {
-      adminUserId: params.adminUserId,
-      targetUserId: params.targetUserId,
-      action: params.action,
-      reason: params.reason,
-      expiresAt: params.expiresAt,
-    },
-  });
 }
 
 // GET /admin/queue — flagged and pending submissions
@@ -99,6 +82,12 @@ router.post('/submissions/:id/approve', adminWriteLimiter, async (req: AuthReque
     tokensAwarded: submission.tokensAwarded,
     submissionId: req.params.id,
   });
+  await recordAdminAction({
+    adminUserId: req.userId!,
+    targetUserId: submission.sourcerId,
+    action: 'approve_submission',
+    reason: `Approved submission ${req.params.id}`,
+  });
 
   res.json({ message: 'Approved', tokensAwarded: submission.tokensAwarded, accuracyRating });
 });
@@ -119,6 +108,12 @@ router.post('/submissions/:id/reject', adminWriteLimiter, async (req: AuthReques
   await prisma.priceSubmission.update({
     where: { id: req.params.id },
     data: { status: 'rejected' },
+  });
+  await recordAdminAction({
+    adminUserId: req.userId!,
+    targetUserId: submission.sourcerId,
+    action: 'reject_submission',
+    reason,
   });
   await recalculateAccuracyRating(submission.sourcerId);
 
@@ -189,7 +184,7 @@ router.post('/submissions/:id/reject', adminWriteLimiter, async (req: AuthReques
 });
 
 // PATCH /admin/submissions/:id — edit price, product, or store (FR-56)
-router.patch('/submissions/:id', adminWriteLimiter, async (req, res) => {
+router.patch('/submissions/:id', adminWriteLimiter, async (req: AuthRequest, res) => {
   const { priceAed, productId, storeId } = req.body as {
     priceAed?: number;
     productId?: string;
@@ -209,6 +204,12 @@ router.patch('/submissions/:id', adminWriteLimiter, async (req, res) => {
       ...(productId && { productId }),
       ...(storeId && { storeId }),
     },
+  });
+  await recordAdminAction({
+    adminUserId: req.userId!,
+    targetUserId: submission.sourcerId,
+    action: 'edit_submission',
+    reason: `Edited submission ${req.params.id}`,
   });
 
   res.json({ id: updated.id, priceAed: Number(updated.priceAed), productId: updated.productId, storeId: updated.storeId });
@@ -322,7 +323,7 @@ router.get('/settings', async (_req, res) => {
 });
 
 // PATCH /admin/settings
-router.patch('/settings', adminWriteLimiter, async (req, res) => {
+router.patch('/settings', adminWriteLimiter, async (req: AuthRequest, res) => {
   const { tokenEarnRate, voucherThreshold, dailySubmissionCap, requestCostTokens, decayFactor } = req.body as {
     tokenEarnRate?: number;
     voucherThreshold?: number;
@@ -341,6 +342,12 @@ router.patch('/settings', adminWriteLimiter, async (req, res) => {
       ...(decayFactor != null && { decayFactor }),
     },
     create: { id: 1 },
+  });
+  await recordAdminAction({
+    adminUserId: req.userId!,
+    targetUserId: req.userId!,
+    action: 'update_settings',
+    reason: 'Updated admin settings',
   });
 
   res.json(updated);
@@ -533,12 +540,10 @@ router.post('/vouchers/:id/approve', adminWriteLimiter, async (req: AuthRequest,
       });
 
       // 4. Deduct tokens from user
-      await tx.tokenTransaction.create({
-        data: {
-          userId: voucher.userId,
-          amount: -voucher.tokenCost,
-          reason: `Voucher approved: AED ${voucher.denominationAed} ${voucher.supermarket}`,
-        },
+      await createTokenLedgerEntry(tx, {
+        userId: voucher.userId,
+        amount: -voucher.tokenCost,
+        reason: `Voucher approved: AED ${voucher.denominationAed} ${voucher.supermarket}`,
       });
       await tx.user.update({
         where: { id: voucher.userId },
@@ -556,6 +561,12 @@ router.post('/vouchers/:id/approve', adminWriteLimiter, async (req: AuthRequest,
           deliveredAt: new Date(),
         },
       });
+    });
+    await recordAdminAction({
+      adminUserId: req.userId!,
+      targetUserId: result.userId,
+      action: 'approve_voucher',
+      reason: `Approved voucher request ${result.id}`,
     });
 
     res.json({
@@ -585,7 +596,7 @@ router.post('/vouchers/:id/approve', adminWriteLimiter, async (req: AuthRequest,
 });
 
 // POST /admin/vouchers/:id/reject — reject without deducting tokens
-router.post('/vouchers/:id/reject', adminWriteLimiter, async (req, res) => {
+router.post('/vouchers/:id/reject', adminWriteLimiter, async (req: AuthRequest, res) => {
   const { adminNote } = req.body as { adminNote?: string };
   const voucher = await prisma.voucherRequest.findUnique({ where: { id: req.params.id } });
   if (!voucher) {
@@ -604,6 +615,12 @@ router.post('/vouchers/:id/reject', adminWriteLimiter, async (req, res) => {
       adminNote: adminNote?.trim() || null,
       reviewedAt: new Date(),
     },
+  });
+  await recordAdminAction({
+    adminUserId: req.userId!,
+    targetUserId: voucher.userId,
+    action: 'reject_voucher',
+    reason: adminNote?.trim() || `Rejected voucher request ${voucher.id}`,
   });
 
   res.json({ id: updated.id, status: updated.status });

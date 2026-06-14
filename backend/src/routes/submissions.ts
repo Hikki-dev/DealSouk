@@ -77,10 +77,6 @@ router.post('/', requireAuth, submitLimiter, async (req: AuthRequest, res) => {
     return;
   }
 
-  // TODO: Add upload security for Firebase Storage signed upload flow (NFR-10):
-  // Instead of allowing client direct upload, generate a cryptographic signed URL
-  // on the backend, enforce file size limits, file type checks (JPEG/PNG only),
-  // and strip image EXIF metadata server-side before persisting in storage.
   if (receiptUrl && (receiptUrl.length > MAX_URL_LENGTH || !isHttpsUrl(receiptUrl))) {
     res.status(400).json({ error: 'receiptUrl must be a valid HTTPS URL' });
     return;

@@ -30,6 +30,8 @@ model User {
   lastSubmissionDate   DateTime?
   lifetimeTokensEarned Int       @default(0)
   level                Int       @default(1)
+  lastActiveAt         DateTime  @default(now())
+  sessionStartedAt     DateTime  @default(now())
   createdAt            DateTime  @default(now())
 
   submissions     PriceSubmission[]
@@ -114,11 +116,13 @@ model SubmissionFlag {
 }
 
 model TokenTransaction {
-  id        String   @id @default(cuid())
-  userId    String
-  amount    Int // positive = earn, negative = spend
-  reason    String
-  createdAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  userId       String
+  amount       Int // positive = earn, negative = spend
+  reason       String
+  previousHash String?
+  hash         String   @unique
+  createdAt    DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
 

@@ -62,7 +62,10 @@ jobs:
 
       - name: Install backend dependencies
         working-directory: backend
-        run: npm ci
+        # Use `npm install` (not `npm ci`): jest pulls optional native deps
+        # (@emnapi/*) that resolve per-platform, so a Mac-generated lockfile can
+        # be missing the Linux variants and trip `npm ci`'s strict check.
+        run: npm install --no-audit --no-fund
 
       - name: Generate Prisma client
         working-directory: backend

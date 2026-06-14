@@ -649,7 +649,8 @@ router.post('/vouchers/inventory/import', adminWriteLimiter, async (req, res) =>
         });
         createdCount++;
       } catch (err) {
-        console.warn(`[Inventory] Skipping import of duplicate code: ${code}`);
+        // Never log the raw voucher code (sensitive value, AGENTS.md log-safety).
+        console.warn('[Inventory] Skipping import of a duplicate voucher code');
       }
     }
 

@@ -1572,18 +1572,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get requestSubmitButton => 'اطلب هذا السعر';
 
   @override
-  String requestCardSubtitle(
-    Object storeName,
-    Object distance,
-    Object requesterName,
-  ) {
-    return '$storeName • $distance كم • نشره $requesterName';
+  String requestCardSubtitle(Object storeName, Object requesterName) {
+    return '$storeName • نشره $requesterName';
   }
 
   @override
   String requestCheckPriceButton(Object tokens) {
     return 'تحقق من السعر (+$tokens رمزًا)';
   }
+
+  @override
+  String get storeLoadErrorTitle => 'تعذّر تحميل المتاجر';
+
+  @override
+  String get storeLoadErrorSubtitle => 'تحقق من اتصالك وحاول مرة أخرى.';
+
+  @override
+  String get storeRetryButton => 'إعادة المحاولة';
 
   @override
   String get leaderRewardsTitle => 'المكافآت ولوحة المتصدرين';

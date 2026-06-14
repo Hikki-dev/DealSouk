@@ -398,7 +398,6 @@ class _RequestItemCard extends StatelessWidget {
                 Text(
                   l.requestCardSubtitle(
                     request.storeName,
-                    request.distance,
                     request.requesterName,
                   ),
                   maxLines: 1,
@@ -432,7 +431,7 @@ class _RequestItemCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
-                l.requestCheckPriceButton(15),
+                l.requestCheckPriceButton(request.requestRewardTokens),
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 10,

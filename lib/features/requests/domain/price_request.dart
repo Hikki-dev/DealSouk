@@ -6,7 +6,6 @@ class PriceRequest {
   final String requesterName;
   final String status; // 'pending', 'fulfilled'
   final String timestampLabel;
-  final double distance;
 
   PriceRequest({
     required this.id,
@@ -16,7 +15,6 @@ class PriceRequest {
     required this.requesterName,
     this.status = 'pending',
     required this.timestampLabel,
-    required this.distance,
   });
 
   factory PriceRequest.fromJson(Map<String, dynamic> json) {
@@ -40,7 +38,6 @@ class PriceRequest {
       requesterName: json['requesterName'] as String? ?? 'Sourcer',
       status: json['status'] as String? ?? 'open',
       timestampLabel: label,
-      distance: (json['distanceKm'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
@@ -53,7 +50,6 @@ class PriceRequest {
       requesterName: requesterName,
       status: status ?? this.status,
       timestampLabel: timestampLabel ?? this.timestampLabel,
-      distance: distance,
     );
   }
 }

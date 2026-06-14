@@ -47,6 +47,18 @@ router.post('/verify', verifyLimiter, async (req, res) => {
       });
     }
 
+    // Mirror requireAuth's gating: banned/suspended users must not get a session,
+    // even though /verify only reads their profile. Keeps behaviour consistent
+    // across every route rather than letting verify hand back a usable profile.
+    if (user.bannedAt) {
+      res.status(403).json({ error: 'Account banned', reason: user.banReason });
+      return;
+    }
+    if (user.isSuspended && user.suspendedUntil && user.suspendedUntil > new Date()) {
+      res.status(403).json({ error: 'Account suspended', suspendedUntil: user.suspendedUntil });
+      return;
+    }
+
     const roles = user.isAdmin ? ['user', 'admin'] : ['user'];
 
     res.json({

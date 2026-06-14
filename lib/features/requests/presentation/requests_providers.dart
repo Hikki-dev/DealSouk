@@ -17,31 +17,6 @@ class PriceRequestsNotifier extends Notifier<List<PriceRequest>> {
     } catch (_) {}
   }
 
-  Future<void> addPriceRequest({
-    required String productName,
-    required String storeName,
-    required int requestCostTokens,
-    required String requesterName,
-  }) async {
-    try {
-      final created = await requestsService.create(
-        productName: productName,
-        storeName: storeName,
-        requestCostTokens: requestCostTokens,
-      );
-      if (requestCostTokens > 0) {
-        ref.read(userTokensProvider.notifier).deductTokens(requestCostTokens);
-        ref
-            .read(userTransactionsProvider.notifier)
-            .addTransaction(
-              -requestCostTokens,
-              'Requested price check: $productName at $storeName',
-            );
-      }
-      state = [created, ...state];
-    } catch (_) {}
-  }
-
   Future<void> fulfillPriceRequest(String requestId) async {
     try {
       final earned = await requestsService.fulfill(requestId);

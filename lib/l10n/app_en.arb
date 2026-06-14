@@ -873,11 +873,10 @@
   },
   "requestSentConfirm": "Great",
   "requestSubmitButton": "Ask for this price",
-  "requestCardSubtitle": "{storeName} • {distance} km • Posted by {requesterName}",
+  "requestCardSubtitle": "{storeName} • Posted by {requesterName}",
   "@requestCardSubtitle": {
     "placeholders": {
       "storeName": {},
-      "distance": {},
       "requesterName": {}
     }
   },
@@ -887,6 +886,9 @@
       "tokens": {}
     }
   },
+  "storeLoadErrorTitle": "Couldn't load stores",
+  "storeLoadErrorSubtitle": "Check your connection and try again.",
+  "storeRetryButton": "Retry",
   "leaderRewardsTitle": "Rewards & Leaderboard",
   "leaderToggleStreaks": "Leaderboard & Streaks",
   "leaderToggleRequestBoard": "Active Request Board",

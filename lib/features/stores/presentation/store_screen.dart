@@ -100,18 +100,23 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
     // Load Dubai stores from the backend immediately, independent of location
     // permission (there is no hardcoded fallback). _tryGetLocation refines the
     // view only if the user grants location and is physically in Dubai.
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await ref
-          .read(storesProvider.notifier)
-          .fetchNearby(
-            lat: _dubaiCenter.latitude,
-            lng: _dubaiCenter.longitude,
-            radiusKm: 40,
-          );
-      if (mounted) setState(() => _loadingStores = false);
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _reloadStores());
     // Attempt to get location but never move the map away from Dubai
     _tryGetLocation();
+  }
+
+  /// Fetch the Dubai-area stores and toggle the loading flag. Reused by the
+  /// initial load and the Retry button shown when a fetch fails.
+  Future<void> _reloadStores() async {
+    if (mounted) setState(() => _loadingStores = true);
+    await ref
+        .read(storesProvider.notifier)
+        .fetchNearby(
+          lat: _dubaiCenter.latitude,
+          lng: _dubaiCenter.longitude,
+          radiusKm: 40,
+        );
+    if (mounted) setState(() => _loadingStores = false);
   }
 
   @override
@@ -856,6 +861,49 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                               style: GoogleFonts.nunito(
                                 color: Colors.grey.shade600,
                                 fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else if (ref.read(storesProvider.notifier).hadError &&
+                      _searchQuery.isEmpty)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 32),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.cloud_off_rounded,
+                              size: 48,
+                              color: Colors.grey.shade300,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              l.storeLoadErrorTitle,
+                              style: GoogleFonts.nunito(
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              l.storeLoadErrorSubtitle,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.nunito(
+                                color: Colors.grey.shade500,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            ElevatedButton.icon(
+                              onPressed: _loadingStores ? null : _reloadStores,
+                              icon: const Icon(Icons.refresh_rounded, size: 18),
+                              label: Text(l.storeRetryButton),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.forestDeep,
+                                foregroundColor: Colors.white,
                               ),
                             ),
                           ],

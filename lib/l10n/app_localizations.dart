@@ -2823,18 +2823,32 @@ abstract class AppLocalizations {
   /// No description provided for @requestCardSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'{storeName} • {distance} km • Posted by {requesterName}'**
-  String requestCardSubtitle(
-    Object storeName,
-    Object distance,
-    Object requesterName,
-  );
+  /// **'{storeName} • Posted by {requesterName}'**
+  String requestCardSubtitle(Object storeName, Object requesterName);
 
   /// No description provided for @requestCheckPriceButton.
   ///
   /// In en, this message translates to:
   /// **'Check price (+{tokens} Tokens)'**
   String requestCheckPriceButton(Object tokens);
+
+  /// No description provided for @storeLoadErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load stores'**
+  String get storeLoadErrorTitle;
+
+  /// No description provided for @storeLoadErrorSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and try again.'**
+  String get storeLoadErrorSubtitle;
+
+  /// No description provided for @storeRetryButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get storeRetryButton;
 
   /// No description provided for @leaderRewardsTitle.
   ///

@@ -10,6 +10,11 @@ class StoresNotifier extends Notifier<List<Store>> {
   bool isLoading = false;
   bool hasFetched = false;
 
+  /// Non-null when the last fetch failed (backend unreachable, cold-start
+  /// timeout, etc.). The UI reads this to show an error + Retry instead of a
+  /// misleading "no stores" empty state. Cleared on a successful fetch.
+  bool hadError = false;
+
   @override
   List<Store> build() => const [];
 
@@ -26,9 +31,12 @@ class StoresNotifier extends Notifier<List<Store>> {
         radiusKm: radiusKm,
       );
       state = results;
+      hadError = false;
     } catch (_) {
-      // Backend unreachable: surface an empty list (the UI shows a retry/empty
-      // state) rather than masking the failure with fake stores.
+      // Backend unreachable / timed out. Don't fabricate stores — record the
+      // failure so the UI can surface it (and offer Retry) rather than showing
+      // a silent empty list that looks like "there are no stores".
+      hadError = true;
       state = const [];
     } finally {
       isLoading = false;

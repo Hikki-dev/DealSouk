@@ -1577,18 +1577,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get requestSubmitButton => 'Ask for this price';
 
   @override
-  String requestCardSubtitle(
-    Object storeName,
-    Object distance,
-    Object requesterName,
-  ) {
-    return '$storeName • $distance km • Posted by $requesterName';
+  String requestCardSubtitle(Object storeName, Object requesterName) {
+    return '$storeName • Posted by $requesterName';
   }
 
   @override
   String requestCheckPriceButton(Object tokens) {
     return 'Check price (+$tokens Tokens)';
   }
+
+  @override
+  String get storeLoadErrorTitle => 'Couldn\'t load stores';
+
+  @override
+  String get storeLoadErrorSubtitle => 'Check your connection and try again.';
+
+  @override
+  String get storeRetryButton => 'Retry';
 
   @override
   String get leaderRewardsTitle => 'Rewards & Leaderboard';

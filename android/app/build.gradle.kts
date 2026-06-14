@@ -27,7 +27,10 @@ android {
         applicationId = "com.dealsouk.dealsouk"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 33
+        // minSdk 23 (Android 6) covers the Firebase/geolocator/flutter_map floor
+        // while still supporting users on Android 11/12 — a higher floor (e.g. 33)
+        // silently makes the app uninstallable for a large share of real devices.
+        minSdk = 23
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

@@ -25,6 +25,13 @@ import translateRoutes from "./routes/translate";
 import logoRoutes from "./routes/logos";
 import { startMaintenanceScheduler } from "./services/maintenance";
 
+// Safety net: a stray async rejection (e.g. a flaky/misconfigured cache) must
+// never crash the API and trigger a Render deploy crash-loop. Log loudly and
+// keep serving.
+process.on("unhandledRejection", (reason) => {
+  console.error("[unhandledRejection]", reason);
+});
+
 export const prisma = new PrismaClient();
 
 export const app = express();
@@ -64,11 +71,15 @@ app.use(
 );
 app.use(express.json({ limit: process.env.JSON_BODY_LIMIT ?? "1mb" }));
 
-// When Redis is configured, share the rate-limit counters across all API
-// instances so the limit holds under horizontal scaling (NFR-05). Otherwise
-// fall back to the default per-instance in-memory store.
+// Rate-limit store. A Redis-backed store only matters under horizontal scaling
+// (multiple instances sharing counters, NFR-05). On a single instance it adds
+// no benefit but DOES add failure modes: a bad/again-unreachable Redis makes
+// rate-limit-redis reject every check (500s) and can crash the process at boot.
+// So we only opt into RedisStore when explicitly asked (RATE_LIMIT_REDIS=true);
+// otherwise the safe in-memory store is used and Redis is reserved for caching
+// (which degrades gracefully on its own).
 let rateLimitStore: Store | undefined;
-if (isRedisEnabled && redis) {
+if (isRedisEnabled && redis && process.env.RATE_LIMIT_REDIS === "true") {
   const r = redis;
   try {
     rateLimitStore = new RedisStore({
@@ -77,7 +88,6 @@ if (isRedisEnabled && redis) {
       prefix: "rl:global:",
     });
   } catch (err) {
-    // Never let a Redis hiccup crash the API — degrade to the in-memory store.
     console.error(
       "[redis] rate-limit store init failed, using in-memory:",
       (err as Error).message,

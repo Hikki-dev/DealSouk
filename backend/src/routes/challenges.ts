@@ -37,7 +37,7 @@ const CHALLENGE_TEMPLATES = [
   },
   {
     title: "Submit 5 prices from any store today",
-    description: "Any supermarket counts — just keep the data fresh!",
+    description: "Any supermarket counts. Just keep the data fresh!",
     chainTarget: null,
     targetCount: 5,
     bonusTokens: 75,
@@ -45,7 +45,7 @@ const CHALLENGE_TEMPLATES = [
   {
     title: "Submit 3 Dairy & Eggs prices",
     description:
-      "Dairy prices change frequently — help shoppers find the best deals",
+      "Dairy prices change frequently. Help shoppers find the best deals.",
     chainTarget: null,
     targetCount: 3,
     bonusTokens: 60,
@@ -53,7 +53,7 @@ const CHALLENGE_TEMPLATES = [
   {
     title: "Submit 3 Fresh Produce prices",
     description:
-      "Fresh fruit and vegetable prices vary widely — submit 3 today",
+      "Fresh fruit and vegetable prices vary widely. Submit 3 today.",
     chainTarget: null,
     targetCount: 3,
     bonusTokens: 60,

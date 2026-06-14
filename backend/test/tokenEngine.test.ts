@@ -18,6 +18,9 @@ import { mockPrisma, resetMocks } from "./mocks";
 import {
   computeLevel,
   calculateReward,
+  createTokenLedgerEntry,
+  hashTokenTransaction,
+  verifyTokenLedgerChain,
 } from "../src/services/tokenEngine";
 
 beforeEach(() => resetMocks());
@@ -120,5 +123,74 @@ describe("calculateReward (FR-35 receipt 1.5x, FR-48 level mult, FR-33 decay)", 
     mockPrisma.user.findUnique.mockResolvedValue(null);
 
     await expect(calculateReward(baseParams)).resolves.toBe(0);
+  });
+});
+
+describe("token ledger hash chain", () => {
+  it("creates a chained hash entry using the previous ledger hash", async () => {
+    const createdRows: any[] = [];
+    const tx = {
+      tokenTransaction: {
+        findFirst: jest.fn().mockResolvedValue({ hash: "previous-hash" }),
+        create: jest.fn(async (args) => {
+          createdRows.push(args.data);
+          return args.data;
+        }),
+      },
+    };
+
+    await createTokenLedgerEntry(tx, {
+      userId: "u1",
+      amount: 25,
+      reason: "Test award",
+    });
+
+    expect(createdRows).toHaveLength(1);
+    expect(createdRows[0].previousHash).toBe("previous-hash");
+    expect(createdRows[0].hash).toBe(
+      hashTokenTransaction({
+        userId: "u1",
+        amount: 25,
+        reason: "Test award",
+        createdAt: createdRows[0].createdAt,
+        previousHash: "previous-hash",
+      }),
+    );
+  });
+
+  it("detects tampered chained ledger rows", async () => {
+    const firstCreatedAt = new Date("2026-06-14T00:00:00.000Z");
+    const firstHash = hashTokenTransaction({
+      userId: "u1",
+      amount: 10,
+      reason: "Initial award",
+      createdAt: firstCreatedAt,
+      previousHash: null,
+    });
+    mockPrisma.tokenTransaction.findMany.mockResolvedValue([
+      {
+        id: "tx1",
+        userId: "u1",
+        amount: 10,
+        reason: "Initial award",
+        createdAt: firstCreatedAt,
+        previousHash: null,
+        hash: firstHash,
+      },
+      {
+        id: "tx2",
+        userId: "u1",
+        amount: 999,
+        reason: "Tampered",
+        createdAt: new Date("2026-06-14T00:01:00.000Z"),
+        previousHash: firstHash,
+        hash: "bad-hash",
+      },
+    ] as any);
+
+    await expect(verifyTokenLedgerChain()).resolves.toEqual({
+      ok: false,
+      invalidTransactionId: "tx2",
+    });
   });
 });

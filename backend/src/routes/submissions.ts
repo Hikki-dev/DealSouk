@@ -63,12 +63,13 @@ router.get('/feed', async (req, res) => {
 
 // POST /submissions
 router.post('/', requireAuth, submitLimiter, async (req: AuthRequest, res) => {
-  const { productId, storeId, priceAed, hasReceipt = false, receiptUrl } = req.body as {
+  const { productId, storeId, priceAed, hasReceipt = false, receiptUrl, priceLabelUrl } = req.body as {
     productId: string;
     storeId: string;
     priceAed: number;
     hasReceipt: boolean;
     receiptUrl?: string;
+    priceLabelUrl?: string;
   };
 
   if (!productId || !storeId || priceAed == null || priceAed <= 0 || priceAed > MAX_PRICE_AED) {
@@ -76,12 +77,12 @@ router.post('/', requireAuth, submitLimiter, async (req: AuthRequest, res) => {
     return;
   }
 
-  // TODO: Add upload security for Firebase Storage signed upload flow (NFR-10):
-  // Instead of allowing client direct upload, generate a cryptographic signed URL
-  // on the backend, enforce file size limits, file type checks (JPEG/PNG only),
-  // and strip image EXIF metadata server-side before persisting in storage.
   if (receiptUrl && (receiptUrl.length > MAX_URL_LENGTH || !isHttpsUrl(receiptUrl))) {
     res.status(400).json({ error: 'receiptUrl must be a valid HTTPS URL' });
+    return;
+  }
+  if (priceLabelUrl && (priceLabelUrl.length > MAX_URL_LENGTH || !isHttpsUrl(priceLabelUrl))) {
+    res.status(400).json({ error: 'priceLabelUrl must be a valid HTTPS URL' });
     return;
   }
 
@@ -129,6 +130,7 @@ router.post('/', requireAuth, submitLimiter, async (req: AuthRequest, res) => {
       priceAed,
       hasReceipt,
       receiptUrl: receiptUrl ?? null,
+      priceLabelUrl: priceLabelUrl ?? null,
       status: autoApprove ? 'approved' : 'pending',
       tokensAwarded,
       expiresAt,

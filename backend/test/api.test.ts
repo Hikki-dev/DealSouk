@@ -4,25 +4,39 @@ jest.mock("@prisma/client", () => {
   return { PrismaClient: jest.fn(() => mockPrisma), Prisma: {} };
 });
 jest.mock("firebase-admin", () => {
-  const { mockVerifyIdToken } = require("./mocks");
+  const { mockVerifyIdToken, mockRevokeRefreshTokens, mockGetSignedUrl } = require("./mocks");
   return {
     apps: [{}],
     initializeApp: jest.fn(),
     credential: { cert: jest.fn() },
-    auth: () => ({ verifyIdToken: mockVerifyIdToken }),
+    auth: () => ({
+      verifyIdToken: mockVerifyIdToken,
+      revokeRefreshTokens: mockRevokeRefreshTokens,
+    }),
     messaging: () => ({ send: jest.fn(), sendEachForMulticast: jest.fn() }),
+    storage: () => ({
+      bucket: () => ({
+        file: () => ({
+          getSignedUrl: mockGetSignedUrl,
+        }),
+      }),
+    }),
   };
 });
 
 import request from "supertest";
 import { app } from "../src/index";
-import { mockPrisma, mockVerifyIdToken, resetMocks } from "./mocks";
+import { mockGetSignedUrl, mockPrisma, mockRevokeRefreshTokens, mockVerifyIdToken, resetMocks } from "./mocks";
 
 beforeEach(() => resetMocks());
 
 /** Signs requests as a given user by wiring the token verifier + user lookup. */
 function signInAs(user: Partial<any>) {
-  mockVerifyIdToken.mockResolvedValue({ uid: user.firebaseUid ?? "fb-uid" });
+  mockVerifyIdToken.mockResolvedValue({
+    uid: user.firebaseUid ?? "fb-uid",
+    auth_time: Math.floor(Date.now() / 1000),
+    ...(user.decodedToken ?? {}),
+  });
   mockPrisma.user.findUnique.mockResolvedValue({
     id: "u1",
     firebaseUid: "fb-uid",
@@ -30,8 +44,11 @@ function signInAs(user: Partial<any>) {
     bannedAt: null,
     isSuspended: false,
     suspendedUntil: null,
+    lastActiveAt: new Date(),
+    sessionStartedAt: new Date(),
     ...user,
   } as any);
+  mockPrisma.user.update.mockResolvedValue({} as any);
 }
 
 describe("health", () => {
@@ -80,6 +97,16 @@ describe("auth gate (NFR-06/08, requireAuth)", () => {
 });
 
 describe("admin gate (FR-57, requireAdmin)", () => {
+  const originalAdminMfaRequired = process.env.ADMIN_MFA_REQUIRED;
+
+  afterEach(() => {
+    if (originalAdminMfaRequired == null) {
+      delete process.env.ADMIN_MFA_REQUIRED;
+    } else {
+      process.env.ADMIN_MFA_REQUIRED = originalAdminMfaRequired;
+    }
+  });
+
   it("GET /admin/queue with no token → 401", async () => {
     const res = await request(app).get("/admin/queue");
     expect(res.status).toBe(401);
@@ -92,6 +119,87 @@ describe("admin gate (FR-57, requireAdmin)", () => {
       .set("Authorization", "Bearer good-token");
     expect(res.status).toBe(403);
     expect(res.body.error).toMatch(/admin access required/i);
+  });
+
+  it("GET /admin/queue as admin without MFA is blocked when MFA enforcement is enabled", async () => {
+    process.env.ADMIN_MFA_REQUIRED = "true";
+    signInAs({ isAdmin: true });
+    const res = await request(app)
+      .get("/admin/queue")
+      .set("Authorization", "Bearer good-token");
+    expect(res.status).toBe(403);
+    expect(res.body.code).toBe("ADMIN_MFA_REQUIRED");
+  });
+
+  it("GET /admin/queue as admin with MFA passes the auth gate", async () => {
+    process.env.ADMIN_MFA_REQUIRED = "true";
+    signInAs({
+      isAdmin: true,
+      decodedToken: {
+        firebase: { sign_in_attributes: { mfa_verified: true } },
+      },
+    });
+    mockPrisma.priceSubmission.findMany.mockResolvedValue([]);
+    const res = await request(app)
+      .get("/admin/queue")
+      .set("Authorization", "Bearer good-token");
+    expect(res.status).toBe(200);
+  });
+});
+
+describe("session expiry (NFR-08)", () => {
+  it("rejects sessions inactive for more than 30 days and revokes refresh tokens", async () => {
+    mockVerifyIdToken.mockResolvedValue({
+      uid: "fb-uid",
+      auth_time: Math.floor(Date.now() / 1000),
+    });
+    mockPrisma.user.findUnique.mockResolvedValue({
+      id: "u1",
+      firebaseUid: "fb-uid",
+      isAdmin: false,
+      bannedAt: null,
+      isSuspended: false,
+      suspendedUntil: null,
+      lastActiveAt: new Date(Date.now() - 31 * 24 * 60 * 60 * 1000),
+      sessionStartedAt: new Date(),
+    } as any);
+
+    const res = await request(app)
+      .get("/leaderboard/monthly")
+      .set("Authorization", "Bearer good-token");
+
+    expect(res.status).toBe(401);
+    expect(res.body.code).toBe("SESSION_EXPIRED");
+    expect(mockRevokeRefreshTokens).toHaveBeenCalledWith("fb-uid");
+  });
+});
+
+describe("signed uploads", () => {
+  it("rejects unsupported upload content types before signing", async () => {
+    signInAs({ isAdmin: false });
+    const res = await request(app)
+      .post("/uploads/signed-url")
+      .set("Authorization", "Bearer good-token")
+      .send({ kind: "receipt", contentType: "application/pdf", sizeBytes: 100 });
+
+    expect(res.status).toBe(400);
+    expect(mockGetSignedUrl).not.toHaveBeenCalled();
+  });
+
+  it("returns a constrained signed upload URL for a valid receipt image", async () => {
+    signInAs({ isAdmin: false });
+    mockGetSignedUrl.mockResolvedValue(["https://storage.example/upload"]);
+
+    const res = await request(app)
+      .post("/uploads/signed-url")
+      .set("Authorization", "Bearer good-token")
+      .send({ kind: "receipt", contentType: "image/jpeg", sizeBytes: 1024 });
+
+    expect(res.status).toBe(201);
+    expect(res.body.uploadUrl).toBe("https://storage.example/upload");
+    expect(res.body.objectPath).toMatch(/^receipts\/fb-uid\//);
+    expect(res.body.requiredHeaders["Content-Type"]).toBe("image/jpeg");
+    expect(res.body.requiredHeaders["x-goog-meta-firebasestoragedownloadtokens"]).toBeTruthy();
   });
 });
 

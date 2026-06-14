@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:dio/dio.dart';
+import 'package:dealsouk/core/network/api_client.dart';
 
 class StorageService {
   final _storage = FirebaseStorage.instance;
@@ -15,7 +17,7 @@ class StorageService {
       maxWidth: 1200,
     );
     if (photo == null) return null;
-    return _upload(photo, folder: 'receipts');
+    return _upload(photo, directFolder: 'receipts', signedKind: 'receipt');
   }
 
   /// Opens gallery and uploads the image.
@@ -26,7 +28,7 @@ class StorageService {
       maxWidth: 1200,
     );
     if (photo == null) return null;
-    return _upload(photo, folder: 'receipts');
+    return _upload(photo, directFolder: 'receipts', signedKind: 'receipt');
   }
 
   /// Opens the gallery to pick an avatar and uploads it.
@@ -38,7 +40,7 @@ class StorageService {
     );
     if (photo == null) return null;
 
-    return _upload(photo, folder: 'avatars');
+    return _upload(photo, directFolder: 'avatars', signedKind: 'avatar');
   }
 
   /// Opens the camera to take a new avatar photo and uploads it.
@@ -50,7 +52,7 @@ class StorageService {
     );
     if (photo == null) return null;
 
-    return _upload(photo, folder: 'avatars');
+    return _upload(photo, directFolder: 'avatars', signedKind: 'avatar');
   }
 
   /// Picks an avatar image and returns its **local file path** without
@@ -72,19 +74,67 @@ class StorageService {
     } catch (_) {}
   }
 
-  Future<String?> _upload(XFile file, {required String folder}) async {
+  Future<String?> _upload(
+    XFile file, {
+    required String directFolder,
+    required String signedKind,
+  }) async {
     try {
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid == null) return null;
 
-      final ts = DateTime.now().millisecondsSinceEpoch;
       final ext = _normalizedExtension(file.name);
       final contentType = _contentTypeForExtension(ext);
-      final ref = _storage.ref('$folder/$uid/$ts.$ext');
-
       final bytes = await file.readAsBytes();
+
+      final signedUrl = await _signedUpload(
+        bytes,
+        kind: signedKind,
+        contentType: contentType,
+      );
+      if (signedUrl != null) return signedUrl;
+
+      final ts = DateTime.now().millisecondsSinceEpoch;
+      final ref = _storage.ref('$directFolder/$uid/$ts.$ext');
       await ref.putData(bytes, SettableMetadata(contentType: contentType));
       return await ref.getDownloadURL();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<String?> _signedUpload(
+    List<int> bytes, {
+    required String kind,
+    required String contentType,
+  }) async {
+    try {
+      final res = await apiClient.post(
+        '/uploads/signed-url',
+        data: {
+          'kind': kind,
+          'contentType': contentType,
+          'sizeBytes': bytes.length,
+        },
+      );
+      final data = res.data as Map<String, dynamic>;
+      final uploadUrl = data['uploadUrl'] as String?;
+      final downloadUrl = data['downloadUrl'] as String?;
+      final headers = Map<String, dynamic>.from(
+        data['requiredHeaders'] as Map? ?? const {},
+      );
+      if (uploadUrl == null || downloadUrl == null) return null;
+
+      await Dio().put<List<int>>(
+        uploadUrl,
+        data: bytes,
+        options: Options(
+          headers: headers,
+          contentType: contentType,
+          responseType: ResponseType.plain,
+        ),
+      );
+      return downloadUrl;
     } catch (_) {
       return null;
     }

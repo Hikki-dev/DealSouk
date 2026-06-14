@@ -75,10 +75,39 @@ jobs:
           dart format lib/firebase_options.dart
           echo "$GOOGLE_SERVICES_JSON_B64" | base64 --decode > android/app/google-services.json
 
+      - name: Restore Android release keystore from secrets
+        env:
+          ANDROID_UPLOAD_KEYSTORE_B64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_B64 }}
+          ANDROID_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_STORE_PASSWORD }}
+          ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
+          ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+        run: |
+          if [ -z "$ANDROID_UPLOAD_KEYSTORE_B64" ] || \
+             [ -z "$ANDROID_UPLOAD_STORE_PASSWORD" ] || \
+             [ -z "$ANDROID_UPLOAD_KEY_ALIAS" ] || \
+             [ -z "$ANDROID_UPLOAD_KEY_PASSWORD" ]; then
+            echo "Missing Android signing secrets. Configure ANDROID_UPLOAD_KEYSTORE_B64, ANDROID_UPLOAD_STORE_PASSWORD, ANDROID_UPLOAD_KEY_ALIAS, and ANDROID_UPLOAD_KEY_PASSWORD."
+            exit 1
+          fi
+          echo "$ANDROID_UPLOAD_KEYSTORE_B64" | base64 --decode > android/app/upload-keystore.jks
+
+      - name: Show Android release signing fingerprint
+        env:
+          ANDROID_UPLOAD_KEYSTORE: ${{ github.workspace }}/android/app/upload-keystore.jks
+          ANDROID_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_STORE_PASSWORD }}
+          ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
+          ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+        run: cd android && ./gradlew :app:signingReport
+
       - name: Install dependencies
         run: flutter pub get
 
       - name: Build Shopper APKs (split-per-abi + universal)
+        env:
+          ANDROID_UPLOAD_KEYSTORE: ${{ github.workspace }}/android/app/upload-keystore.jks
+          ANDROID_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_STORE_PASSWORD }}
+          ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
+          ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
         run: |
           flutter build apk --release --split-per-abi \
             --build-name="${{ steps.version.outputs.name }}" \
@@ -93,6 +122,11 @@ jobs:
           cp build/app/outputs/flutter-apk/app-x86_64-release.apk build/outputs/DealSouk-Shopper-x86_64.apk
 
       - name: Build Admin APK (Moderator Mode)
+        env:
+          ANDROID_UPLOAD_KEYSTORE: ${{ github.workspace }}/android/app/upload-keystore.jks
+          ANDROID_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_STORE_PASSWORD }}
+          ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
+          ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
         run: |
           flutter build apk --release --split-per-abi \
             --build-name="${{ steps.version.outputs.name }}" \

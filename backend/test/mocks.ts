@@ -7,8 +7,12 @@ export const mockPrisma: DeepMockProxy<PrismaClient> = mockDeep<PrismaClient>();
 
 // Controllable Firebase ID-token verifier used by the auth middleware.
 export const mockVerifyIdToken = jest.fn();
+export const mockRevokeRefreshTokens = jest.fn();
+export const mockGetSignedUrl = jest.fn();
 
 export function resetMocks(): void {
   mockReset(mockPrisma);
   mockVerifyIdToken.mockReset();
+  mockRevokeRefreshTokens.mockReset();
+  mockGetSignedUrl.mockReset();
 }

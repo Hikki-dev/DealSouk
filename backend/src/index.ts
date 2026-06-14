@@ -23,6 +23,7 @@ import adminRoutes from "./routes/admin";
 import challengeRoutes from "./routes/challenges";
 import translateRoutes from "./routes/translate";
 import logoRoutes from "./routes/logos";
+import uploadRoutes from "./routes/uploads";
 import { startMaintenanceScheduler } from "./services/maintenance";
 
 // Safety net: a stray async rejection (e.g. a flaky/misconfigured cache) must
@@ -150,6 +151,7 @@ app.use("/stores", storeRoutes);
 app.use("/leaderboard", leaderboardRoutes);
 app.use("/requests", requestRoutes);
 app.use("/profile", profileRoutes);
+app.use("/uploads", uploadRoutes);
 app.use("/admin", adminRoutes);
 app.use("/challenges", challengeRoutes);
 app.use("/translate", translateRoutes);

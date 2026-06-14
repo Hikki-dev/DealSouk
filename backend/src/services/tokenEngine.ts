@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { prisma } from '../index';
 import { notifyStreakMilestone, notifyBadgeEarned, notifyRankChange } from './fcmNotifier';
 
@@ -17,6 +18,97 @@ export async function getSettings() {
 export function computeLevel(lifetimeTokensEarned: number): number {
   // Level 1-20 based on cumulative lifetime tokens earned (every 500 tokens = 1 level)
   return Math.min(20, Math.floor(lifetimeTokensEarned / 500) + 1);
+}
+
+function canonicalLedgerPayload(params: {
+  userId: string;
+  amount: number;
+  reason: string;
+  createdAt: Date;
+  previousHash: string | null;
+}): string {
+  return [
+    params.userId,
+    params.amount,
+    params.reason,
+    params.createdAt.toISOString(),
+    params.previousHash ?? 'GENESIS',
+  ].join('|');
+}
+
+export function hashTokenTransaction(params: {
+  userId: string;
+  amount: number;
+  reason: string;
+  createdAt: Date;
+  previousHash: string | null;
+}): string {
+  return crypto.createHash('sha256').update(canonicalLedgerPayload(params)).digest('hex');
+}
+
+export async function createTokenLedgerEntry(
+  tx: any,
+  params: { userId: string; amount: number; reason: string },
+) {
+  const previous = await tx.tokenTransaction.findFirst({
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    select: { hash: true },
+  });
+  const createdAt = new Date();
+  const previousHash = previous?.hash ?? null;
+  const hash = hashTokenTransaction({
+    userId: params.userId,
+    amount: params.amount,
+    reason: params.reason,
+    createdAt,
+    previousHash,
+  });
+
+  return tx.tokenTransaction.create({
+    data: {
+      userId: params.userId,
+      amount: params.amount,
+      reason: params.reason,
+      previousHash,
+      hash,
+      createdAt,
+    },
+  });
+}
+
+export async function verifyTokenLedgerChain(): Promise<{ ok: boolean; invalidTransactionId?: string }> {
+  const rows = await prisma.tokenTransaction.findMany({
+    orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+    select: {
+      id: true,
+      userId: true,
+      amount: true,
+      reason: true,
+      previousHash: true,
+      hash: true,
+      createdAt: true,
+    },
+  });
+
+  let previousHash: string | null = null;
+  for (const row of rows) {
+    if (row.previousHash !== previousHash) {
+      return { ok: false, invalidTransactionId: row.id };
+    }
+    const expectedHash = hashTokenTransaction({
+      userId: row.userId,
+      amount: row.amount,
+      reason: row.reason,
+      createdAt: row.createdAt,
+      previousHash,
+    });
+    if (row.hash !== expectedHash) {
+      return { ok: false, invalidTransactionId: row.id };
+    }
+    previousHash = row.hash;
+  }
+
+  return { ok: true };
 }
 
 export async function calculateReward(params: {
@@ -58,16 +150,16 @@ export async function calculateReward(params: {
 }
 
 export async function awardTokens(userId: string, amount: number, reason: string) {
-  await prisma.$transaction([
-    prisma.tokenTransaction.create({ data: { userId, amount, reason } }),
-    prisma.user.update({
+  await prisma.$transaction(async (tx) => {
+    await createTokenLedgerEntry(tx, { userId, amount, reason });
+    await tx.user.update({
       where: { id: userId },
       data: {
         tokenBalance: { increment: amount },
         lifetimeTokensEarned: { increment: amount },
       },
-    }),
-  ]);
+    });
+  });
 
   // Recompute level and persist it
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { lifetimeTokensEarned: true, level: true, fcmToken: true } });
@@ -88,13 +180,13 @@ export async function spendTokens(userId: string, amount: number, reason: string
   if (!user || user.tokenBalance < amount) {
     throw new Error('Insufficient token balance');
   }
-  await prisma.$transaction([
-    prisma.tokenTransaction.create({ data: { userId, amount: -amount, reason } }),
-    prisma.user.update({
+  await prisma.$transaction(async (tx) => {
+    await createTokenLedgerEntry(tx, { userId, amount: -amount, reason });
+    await tx.user.update({
       where: { id: userId },
       data: { tokenBalance: { decrement: amount } },
-    }),
-  ]);
+    });
+  });
 }
 
 export async function updateStreakOnApproval(userId: string): Promise<number> {

@@ -33,6 +33,11 @@ router.get("/:slug", async (req, res) => {
   }
 
   res.setHeader("Access-Control-Allow-Origin", "*");
+  // helmet stamps a global Cross-Origin-Resource-Policy: same-origin, which makes
+  // browsers refuse to *display* this logo when it's embedded by the Flutter Web
+  // app on a different origin (localhost / the web host) — even though CORS passes.
+  // Logos are public assets, so opt this route into cross-origin embedding.
+  res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
   res.setHeader("Cache-Control", "public, max-age=604800, immutable");
 
   const hit = cache.get(slug);

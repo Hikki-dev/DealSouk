@@ -759,26 +759,28 @@ class _PhoneInputField extends StatelessWidget {
                   LengthLimitingTextInputFormatter(selectedCountry.maxLength),
                 ],
                 autofocus: true,
-                style: const TextStyle(color: Colors.white, fontSize: 16),
+                style: const TextStyle(
+                  color: AppTheme.textDark,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
                 decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.white,
                   hintText: selectedCountry.formatHint,
-                  hintStyle: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.4),
-                  ),
+                  hintStyle: TextStyle(color: Colors.grey.shade400),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 18,
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.3),
-                    ),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
                     borderSide: const BorderSide(
-                      color: Colors.white,
+                      color: AppTheme.forestDeep,
                       width: 1.5,
                     ),
                   ),
@@ -870,26 +872,30 @@ class _OtpInputField extends StatelessWidget {
           autofocus: true,
           textAlign: TextAlign.center,
           style: const TextStyle(
-            color: Colors.white,
+            color: AppTheme.textDark,
             fontSize: 24,
             letterSpacing: 8,
+            fontWeight: FontWeight.w700,
           ),
           decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.white,
             counterText: '',
             hintText: '------',
             hintStyle: TextStyle(
-              color: Colors.white.withValues(alpha: 0.3),
+              color: Colors.grey.shade400,
               letterSpacing: 8,
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(
-                color: Colors.white.withValues(alpha: 0.3),
-              ),
+              borderSide: BorderSide(color: Colors.grey.shade300),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Colors.white, width: 1.5),
+              borderSide: const BorderSide(
+                color: AppTheme.forestDeep,
+                width: 1.5,
+              ),
             ),
           ),
         ),

@@ -8,13 +8,19 @@ import 'package:flutter/foundation.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    clientId: kIsWeb
-        ? (const String.fromEnvironment('GOOGLE_WEB_CLIENT_ID').isNotEmpty
-              ? const String.fromEnvironment('GOOGLE_WEB_CLIENT_ID')
-              : '548247133447-mockclientid.apps.googleusercontent.com')
-        : null,
-  );
+  bool _googleSignInInitialized = false;
+
+  Future<void> _ensureGoogleSignInInitialized() async {
+    if (_googleSignInInitialized) return;
+    await GoogleSignIn.instance.initialize(
+      clientId: kIsWeb
+          ? (const String.fromEnvironment('GOOGLE_WEB_CLIENT_ID').isNotEmpty
+                ? const String.fromEnvironment('GOOGLE_WEB_CLIENT_ID')
+                : '548247133447-mockclientid.apps.googleusercontent.com')
+          : null,
+    );
+    _googleSignInInitialized = true;
+  }
 
   User? get currentUser => _auth.currentUser;
   Stream<User?> get authStateChanges => _auth.authStateChanges();
@@ -54,11 +60,10 @@ class AuthService {
   // --- Google Sign-In ---
 
   Future<UserCredential> signInWithGoogle() async {
-    final googleUser = await _googleSignIn.signIn();
-    if (googleUser == null) throw Exception('Google sign-in cancelled');
-    final googleAuth = await googleUser.authentication;
+    await _ensureGoogleSignInInitialized();
+    final googleUser = await GoogleSignIn.instance.authenticate();
+    final googleAuth = googleUser.authentication;
     final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
     );
     return _auth.signInWithCredential(credential);
@@ -88,7 +93,8 @@ class AuthService {
   // --- Sign Out ---
 
   Future<void> signOut() async {
-    await Future.wait([_auth.signOut(), _googleSignIn.signOut()]);
+    await _ensureGoogleSignInInitialized();
+    await Future.wait([_auth.signOut(), GoogleSignIn.instance.signOut()]);
   }
 
   // --- Get ID Token (for backend calls) ---

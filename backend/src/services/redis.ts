@@ -13,9 +13,11 @@ let client: Redis | null = null;
 
 if (process.env.REDIS_URL) {
   client = new Redis(process.env.REDIS_URL, {
-    // Don't crash the process if Redis is briefly unreachable; degrade instead.
     maxRetriesPerRequest: 2,
-    enableOfflineQueue: false,
+    // Queue commands issued before the TLS connection is ready (the rate-limit
+    // store loads a Lua script synchronously at boot). With this false the boot
+    // command throws "Stream isn't writeable" and crashes the process.
+    enableOfflineQueue: true,
     lazyConnect: false,
     // Upstash and most managed providers require TLS on rediss:// URLs;
     // ioredis infers this from the scheme, so no extra config needed.

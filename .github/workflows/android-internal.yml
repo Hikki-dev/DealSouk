@@ -91,6 +91,13 @@ jobs:
           fi
           echo "$ANDROID_UPLOAD_KEYSTORE_B64" | tr -d '\r\n ' | base64 --decode > android/app/upload-keystore.jks
 
+      # Must run before any raw Gradle invocation: `flutter pub get` generates
+      # android/local.properties (flutter.sdk + sdk.dir), which settings.gradle.kts
+      # reads at configuration time. Without it, `./gradlew :app:signingReport`
+      # fails with "android/local.properties (No such file or directory)".
+      - name: Install dependencies
+        run: flutter pub get
+
       - name: Show Android release signing fingerprint
         env:
           ANDROID_UPLOAD_KEYSTORE: ${{ github.workspace }}/android/app/upload-keystore.jks
@@ -98,9 +105,6 @@ jobs:
           ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
           ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
         run: cd android && ./gradlew :app:signingReport
-
-      - name: Install dependencies
-        run: flutter pub get
 
       - name: Build Shopper APKs (split-per-abi + universal)
         env:

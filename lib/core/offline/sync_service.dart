@@ -58,6 +58,7 @@ class SyncController extends Notifier<int> {
     required double priceAed,
     bool hasReceipt = false,
     String? receiptUrl,
+    String? priceLabelUrl,
   }) async {
     await offlineQueue.enqueue(
       PendingOp(
@@ -69,6 +70,7 @@ class SyncController extends Notifier<int> {
           'priceAed': priceAed,
           'hasReceipt': hasReceipt,
           'receiptUrl': ?receiptUrl,
+          'priceLabelUrl': ?priceLabelUrl,
         },
         createdAt: DateTime.now(),
       ),
@@ -116,6 +118,7 @@ class SyncController extends Notifier<int> {
               priceAed: (op.payload['priceAed'] as num).toDouble(),
               hasReceipt: op.payload['hasReceipt'] as bool? ?? false,
               receiptUrl: op.payload['receiptUrl'] as String?,
+              priceLabelUrl: op.payload['priceLabelUrl'] as String?,
             );
           } else if (op.type == 'request') {
             await requestsService.create(

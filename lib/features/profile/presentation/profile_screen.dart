@@ -1267,14 +1267,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 children: [
                   _langButton('EN', locale.languageCode == 'en', () {
                     ref
-                        .read(localeProvider.notifier)
-                        .setLocale(const Locale('en'));
+                        .read(userProfileProvider.notifier)
+                        .updatePreferredLocale('en');
                   }),
                   const SizedBox(width: 8),
                   _langButton('عر', locale.languageCode == 'ar', () {
                     ref
-                        .read(localeProvider.notifier)
-                        .setLocale(const Locale('ar'));
+                        .read(userProfileProvider.notifier)
+                        .updatePreferredLocale('ar');
                   }),
                 ],
               ),

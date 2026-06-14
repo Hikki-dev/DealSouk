@@ -13,6 +13,8 @@ class AdminSubmission {
   final String sourcerName;
   final double sourcerAccuracyRating;
   final String status; // 'pending', 'approved', 'rejected'
+  final String? receiptUrl;
+  final String? priceLabelUrl;
 
   AdminSubmission({
     required this.id,
@@ -29,6 +31,8 @@ class AdminSubmission {
     this.sourcerName = 'Hessa Al Maktoum',
     this.sourcerAccuracyRating = 100,
     this.status = 'pending',
+    this.receiptUrl,
+    this.priceLabelUrl,
   });
 
   factory AdminSubmission.fromJson(Map<String, dynamic> json) {
@@ -47,6 +51,9 @@ class AdminSubmission {
     final product = json['product'] as Map<String, dynamic>? ?? {};
     final store = json['store'] as Map<String, dynamic>? ?? {};
     final sourcer = json['sourcer'] as Map<String, dynamic>? ?? {};
+    final receiptUrl = json['receiptUrl'] as String?;
+    final priceLabelUrl = json['priceLabelUrl'] as String?;
+
     return AdminSubmission(
       id: json['id'] as String,
       productName:
@@ -55,7 +62,7 @@ class AdminSubmission {
       storeName: '${store['chain'] ?? ''} ${store['branchName'] ?? ''}'.trim(),
       price: (json['priceAed'] as num?)?.toDouble() ?? 0.0,
       hasReceipt: json['hasReceipt'] as bool? ?? false,
-      hasPhoto: false,
+      hasPhoto: priceLabelUrl != null && priceLabelUrl.isNotEmpty,
       promoType: 'Price Submission',
       tokensReward: json['tokensAwarded'] as int? ?? 0,
       timestampLabel: label,
@@ -67,6 +74,8 @@ class AdminSubmission {
       sourcerAccuracyRating:
           (sourcer['accuracyRating'] as num?)?.toDouble() ?? 100,
       status: json['status'] as String? ?? 'pending',
+      receiptUrl: receiptUrl,
+      priceLabelUrl: priceLabelUrl,
     );
   }
 
@@ -75,6 +84,8 @@ class AdminSubmission {
     String? storeName,
     double? price,
     String? status,
+    String? receiptUrl,
+    String? priceLabelUrl,
   }) {
     return AdminSubmission(
       id: id,
@@ -83,7 +94,7 @@ class AdminSubmission {
       storeName: storeName ?? this.storeName,
       price: price ?? this.price,
       hasReceipt: hasReceipt,
-      hasPhoto: hasPhoto,
+      hasPhoto: priceLabelUrl != null ? priceLabelUrl.isNotEmpty : hasPhoto,
       promoType: promoType,
       tokensReward: tokensReward,
       timestampLabel: timestampLabel,
@@ -91,6 +102,8 @@ class AdminSubmission {
       sourcerName: sourcerName,
       sourcerAccuracyRating: sourcerAccuracyRating,
       status: status ?? this.status,
+      receiptUrl: receiptUrl ?? this.receiptUrl,
+      priceLabelUrl: priceLabelUrl ?? this.priceLabelUrl,
     );
   }
 }

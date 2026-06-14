@@ -83,6 +83,7 @@ model PriceSubmission {
   priceAed      Decimal  @db.Decimal(10, 2)
   hasReceipt    Boolean  @default(false)
   receiptUrl    String?
+  priceLabelUrl String?
   status        String   @default("pending") // pending | approved | rejected | hidden
   flagCount     Int      @default(0)
   tokensAwarded Int      @default(0)

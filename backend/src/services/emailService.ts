@@ -20,7 +20,11 @@ if (smtpHost && smtpUser && smtpPass) {
   });
   console.log('[EmailService] SMTP transporter configured.');
 } else {
-  console.log('[EmailService] SMTP not configured. Falling back to console logging for emails.');
+  if (process.env.NODE_ENV === 'production') {
+    console.warn('[EmailService] SMTP not configured. Email bodies will be suppressed and recipients masked.');
+  } else {
+    console.log('[EmailService] SMTP not configured. Falling back to console logging for emails.');
+  }
 }
 
 export async function sendEmail(to: string, subject: string, text: string, html?: string): Promise<void> {

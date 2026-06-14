@@ -15,7 +15,7 @@ jest.mock("firebase-admin", () => {
 });
 
 import request from "supertest";
-import { app } from "../src/index";
+import { app, isCorsOriginAllowed } from "../src/index";
 import { mockPrisma, mockVerifyIdToken, resetMocks } from "./mocks";
 
 beforeEach(() => resetMocks());
@@ -38,6 +38,32 @@ describe("health", () => {
   it("GET /health → 200", async () => {
     const res = await request(app).get("/health");
     expect(res.status).toBe(200);
+  });
+});
+
+describe("cors", () => {
+  it("allows Flutter web localhost origins even when production CORS is locked down", () => {
+    expect(
+      isCorsOriginAllowed("http://localhost:51191", true, [
+        "https://deal-souk.vercel.app",
+      ]),
+    ).toBe(true);
+  });
+
+  it("adds CORS headers to localhost preflight requests", async () => {
+    const res = await request(app)
+      .options("/system/status")
+      .set("Origin", "http://localhost:51191")
+      .set("Access-Control-Request-Method", "GET")
+      .set("Access-Control-Request-Headers", "authorization,content-type");
+
+    expect(res.status).toBe(204);
+    expect(res.headers["access-control-allow-origin"]).toBe(
+      "http://localhost:51191",
+    );
+    expect(res.headers["access-control-allow-headers"]).toBe(
+      "Content-Type,Authorization",
+    );
   });
 });
 

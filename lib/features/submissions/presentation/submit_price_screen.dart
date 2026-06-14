@@ -51,6 +51,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
   bool uploadedPriceLabel = false;
   bool uploadedReceipt = false;
   String? _receiptUrl;
+  String? _priceLabelUrl;
   bool _uploadingReceipt = false;
   bool _uploadingPriceLabel = false;
   String selectedPromo = 'None';
@@ -903,6 +904,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                                 priceAed: price,
                                 hasReceipt: uploadedReceipt,
                                 receiptUrl: _receiptUrl,
+                                priceLabelUrl: _priceLabelUrl,
                               );
                           if (!mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -923,6 +925,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                             priceAed: price,
                             hasReceipt: uploadedReceipt,
                             receiptUrl: _receiptUrl,
+                            priceLabelUrl: _priceLabelUrl,
                           );
                           awarded = result.tokensAwarded;
                         } catch (_) {
@@ -1083,6 +1086,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
       } else {
         _uploadingPriceLabel = false;
         if (url != null) {
+          _priceLabelUrl = url;
           uploadedPriceLabel = true;
         }
       }

@@ -36,6 +36,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocus = FocusNode();
   String _searchQuery = '';
+  String _sortBy = 'freshness'; // 'freshness', 'name', 'price'
 
   @override
   void initState() {
@@ -84,12 +85,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     final savedCount = cartItems.length;
     final bool searching = _searchQuery.trim().isNotEmpty;
+    final filtered = products.where((p) {
+      if (filterState.selectedCategory != 'All' &&
+          p.category.toLowerCase() !=
+              filterState.selectedCategory.toLowerCase()) {
+        return false;
+      }
+      return true;
+    }).toList();
+
     final feedProducts =
-        _filterByFreshness(products, filterState.freshnessFilter)..sort(
-          (a, b) => _freshnessMinutes(
-            a.updatedAtLabel,
-          ).compareTo(_freshnessMinutes(b.updatedAtLabel)),
-        );
+        _filterByFreshness(filtered, filterState.freshnessFilter)..sort((a, b) {
+          if (_sortBy == 'name') {
+            return a.name.compareTo(b.name);
+          } else if (_sortBy == 'price') {
+            return a.lowestPrice.compareTo(b.lowestPrice);
+          } else {
+            return _freshnessMinutes(
+              a.updatedAtLabel,
+            ).compareTo(_freshnessMinutes(b.updatedAtLabel));
+          }
+        });
 
     // Categories defined for Dribbble layout with premium transparent 3D clay illustrations
     final List<_CategoryInfo> homeCategories = [
@@ -352,10 +368,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 ),
                               )
                             else
-                              Icon(
-                                Icons.tune_rounded,
-                                color: AppTheme.forestDeep,
-                                size: 20,
+                              GestureDetector(
+                                onTap: () => _showFilterBottomSheet(context),
+                                child: Icon(
+                                  Icons.tune_rounded,
+                                  color: AppTheme.forestDeep,
+                                  size: 20,
+                                ),
                               ),
                           ],
                         ),
@@ -762,6 +781,223 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ],
       ),
     );
+  }
+
+  void _showFilterBottomSheet(BuildContext context) {
+    ref.read(navbarVisibleProvider.notifier).hide();
+    showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setBottomSheetState) {
+            final filterState = ref.watch(filterProvider);
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2.5),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Filter & Sort Products',
+                      style: GoogleFonts.fredoka(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Category',
+                      style: GoogleFonts.nunito(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: AppTheme.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      initialValue: filterState.selectedCategory,
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: AppTheme.forestDeep,
+                          ),
+                        ),
+                      ),
+                      items:
+                          [
+                            'All',
+                            'Fresh',
+                            'Fruits',
+                            'Snacks',
+                            'Dairy & Sweet',
+                            'Bakery',
+                          ].map((cat) {
+                            return DropdownMenuItem(
+                              value: cat,
+                              child: Text(cat),
+                            );
+                          }).toList(),
+                      onChanged: (val) {
+                        if (val != null) {
+                          ref.read(filterProvider.notifier).setCategory(val);
+                          setBottomSheetState(() {});
+                          setState(() {});
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Freshness Filter',
+                      style: GoogleFonts.nunito(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: AppTheme.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      initialValue: filterState.freshnessFilter,
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: AppTheme.forestDeep,
+                          ),
+                        ),
+                      ),
+                      items: ['All', 'Under 6h', 'Under 24h', 'Under 72h'].map((
+                        fresh,
+                      ) {
+                        return DropdownMenuItem(
+                          value: fresh,
+                          child: Text(fresh),
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        if (val != null) {
+                          ref
+                              .read(filterProvider.notifier)
+                              .setFreshnessFilter(val);
+                          setBottomSheetState(() {});
+                          setState(() {});
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Sort Products By',
+                      style: GoogleFonts.nunito(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: AppTheme.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    RadioListTile<String>(
+                      title: const Text('Recently Updated'),
+                      value: 'freshness',
+                      groupValue: _sortBy,
+                      activeColor: AppTheme.forestDeep,
+                      onChanged: (val) {
+                        if (val != null) {
+                          setBottomSheetState(() => _sortBy = val);
+                          setState(() {});
+                        }
+                      },
+                    ),
+                    RadioListTile<String>(
+                      title: const Text('Alphabetical (A-Z)'),
+                      value: 'name',
+                      groupValue: _sortBy,
+                      activeColor: AppTheme.forestDeep,
+                      onChanged: (val) {
+                        if (val != null) {
+                          setBottomSheetState(() => _sortBy = val);
+                          setState(() {});
+                        }
+                      },
+                    ),
+                    RadioListTile<String>(
+                      title: const Text('Lowest Price'),
+                      value: 'price',
+                      groupValue: _sortBy,
+                      activeColor: AppTheme.forestDeep,
+                      onChanged: (val) {
+                        if (val != null) {
+                          setBottomSheetState(() => _sortBy = val);
+                          setState(() {});
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.forestDeep,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size.fromHeight(50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Text(
+                        'Apply Filters',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    ).whenComplete(() {
+      ref.read(navbarVisibleProvider.notifier).show();
+    });
   }
 }
 

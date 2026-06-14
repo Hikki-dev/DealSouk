@@ -31,6 +31,7 @@ class SubmissionsService {
     required double priceAed,
     bool hasReceipt = false,
     String? receiptUrl,
+    String? priceLabelUrl,
   }) async {
     // Offline queueing is owned by SyncController (sync_service.dart). This
     // method just performs the call and throws on failure, so the replay loop
@@ -43,6 +44,7 @@ class SubmissionsService {
         'priceAed': priceAed,
         'hasReceipt': hasReceipt,
         'receiptUrl': ?receiptUrl,
+        'priceLabelUrl': ?priceLabelUrl,
       },
     );
     final data = res.data as Map<String, dynamic>;

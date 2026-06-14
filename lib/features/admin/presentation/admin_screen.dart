@@ -12,6 +12,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:dealsouk/core/network/file_download_helper.dart';
 import 'package:dealsouk/features/admin/data/admin_service.dart';
 import 'package:dealsouk/core/network/api_client.dart';
+import 'package:dealsouk/features/products/domain/product.dart';
+import 'package:dealsouk/features/profile/data/profile_service.dart';
 
 class AdminScreen extends ConsumerStatefulWidget {
   const AdminScreen({super.key});
@@ -23,6 +25,9 @@ class AdminScreen extends ConsumerStatefulWidget {
 class _AdminScreenState extends ConsumerState<AdminScreen> {
   String? _selectedSubId;
   String _activeTab = 'moderation'; // 'moderation', 'analytics', 'settings'
+  String _mapSearchQuery = '';
+  String _mapSelectedChain = 'All';
+  final MapController _mapController = MapController();
 
   @override
   void initState() {
@@ -197,6 +202,24 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 isActive: _activeTab == 'settings',
                 onTap: () => setState(() => _activeTab = 'settings'),
               ),
+              _sidebarMenuItem(
+                icon: Icons.shopping_bag_rounded,
+                label: 'Manage Products',
+                isActive: _activeTab == 'products_crud',
+                onTap: () {
+                  setState(() => _activeTab = 'products_crud');
+                  ref.read(adminProductsProvider.notifier).fetch();
+                },
+              ),
+              _sidebarMenuItem(
+                icon: Icons.people_rounded,
+                label: 'Manage Users',
+                isActive: _activeTab == 'users_crud',
+                onTap: () {
+                  setState(() => _activeTab = 'users_crud');
+                  ref.read(adminUsersProvider.notifier).fetch();
+                },
+              ),
 
               const Spacer(),
 
@@ -305,6 +328,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                           ? 'System Settings'
                           : _activeTab == 'vouchers'
                           ? 'Voucher Queue'
+                          : _activeTab == 'products_crud'
+                          ? 'Products Catalog Management'
+                          : _activeTab == 'users_crud'
+                          ? 'Users Directory Management'
                           : 'Sourcers Index',
                       style: GoogleFonts.fredoka(
                         fontSize: 20,
@@ -366,6 +393,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                               ref
                                   .read(adminVoucherInventoryProvider.notifier)
                                   .fetchInventoryStatus();
+                            } else if (_activeTab == 'products_crud') {
+                              ref.read(adminProductsProvider.notifier).fetch();
+                            } else if (_activeTab == 'users_crud') {
+                              ref.read(adminUsersProvider.notifier).fetch();
                             }
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -524,6 +555,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                     ? _buildVoucherQueuePanel(vouchers)
                     : _activeTab == 'stock'
                     ? _buildVoucherStockPanel()
+                    : _activeTab == 'products_crud'
+                    ? _buildProductsCrudPanel()
+                    : _activeTab == 'users_crud'
+                    ? _buildUsersCrudPanel()
                     : _buildMockPanelContent(),
               ),
             ],
@@ -2429,139 +2464,298 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
   Widget _buildMapDensityPanel() {
     final mapData = ref.watch(adminMapDataProvider);
 
+    final chainsSet = mapData
+        .map((e) => e['chain'] as String? ?? '')
+        .where((c) => c.isNotEmpty)
+        .toSet();
+    final chains = ['All', ...chainsSet];
+    if (!chains.contains(_mapSelectedChain)) {
+      _mapSelectedChain = 'All';
+    }
+
+    final filteredStores = mapData.where((store) {
+      final String chain = store['chain'] as String? ?? '';
+      final String branchName = store['branchName'] as String? ?? '';
+      final String area = store['area'] as String? ?? '';
+      final matchesQuery =
+          _mapSearchQuery.isEmpty ||
+          chain.toLowerCase().contains(_mapSearchQuery.toLowerCase()) ||
+          branchName.toLowerCase().contains(_mapSearchQuery.toLowerCase()) ||
+          area.toLowerCase().contains(_mapSearchQuery.toLowerCase());
+      final matchesChain =
+          _mapSelectedChain == 'All' ||
+          chain.toLowerCase() == _mapSelectedChain.toLowerCase();
+      return matchesQuery && matchesChain;
+    }).toList();
+
     return Column(
       children: [
         Container(
           padding: const EdgeInsets.all(16),
           color: Colors.white,
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.info_outline, color: AppTheme.forestDeep),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Visualizing active grocery price submissions across Dubai. Circles show submission density. Tap any marker pin to inspect store details.',
-                  style: GoogleFonts.nunito(
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textDark,
-                    fontSize: 13,
+              Row(
+                children: [
+                  const Icon(Icons.info_outline, color: AppTheme.forestDeep),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Visualizing active grocery price submissions across Dubai. Circles show submission density. Tap any marker pin to inspect store details.',
+                      style: GoogleFonts.nunito(
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textDark,
+                        fontSize: 13,
+                      ),
+                    ),
                   ),
-                ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Search stores by name, branch, or area...',
+                        prefixIcon: const Icon(Icons.search, size: 20),
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                      ),
+                      onChanged: (val) {
+                        setState(() {
+                          _mapSearchQuery = val;
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: _mapSelectedChain,
+                        isDense: true,
+                        items: chains.map((String c) {
+                          return DropdownMenuItem<String>(
+                            value: c,
+                            child: Text(
+                              c,
+                              style: GoogleFonts.nunito(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          if (val != null) {
+                            setState(() {
+                              _mapSelectedChain = val;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ),
         Expanded(
-          child: FlutterMap(
-            options: MapOptions(
-              initialCenter: const LatLng(
-                25.2048,
-                55.2708,
-              ), // Dubai coordinates
-              initialZoom: 11.0,
-            ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TileLayer(
-                urlTemplate:
-                    'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-                subdomains: const ['a', 'b', 'c', 'd'],
-                userAgentPackageName: 'com.dealsouk.app',
-                retinaMode: RetinaMode.isHighDensity(context),
-                maxZoom: 20,
-              ),
-              CircleLayer(
-                circles: mapData.map<CircleMarker>((store) {
-                  final double lat = (store['lat'] is num)
-                      ? (store['lat'] as num).toDouble()
-                      : 25.2048;
-                  final double lng = (store['lng'] is num)
-                      ? (store['lng'] as num).toDouble()
-                      : 55.2708;
-                  final int count =
-                      store['activeSubmissionsCount'] as int? ?? 0;
-                  final Color circleColor = count < 3
-                      ? Colors.green.withValues(alpha: 0.4)
-                      : count < 6
-                      ? Colors.orange.withValues(alpha: 0.4)
-                      : Colors.red.withValues(alpha: 0.4);
-                  return CircleMarker(
-                    point: LatLng(lat, lng),
-                    radius: (count * 6.0 + 12.0).clamp(12.0, 48.0),
-                    useRadiusInMeter: false,
-                    color: circleColor,
-                    borderColor: circleColor.withValues(alpha: 0.7),
-                    borderStrokeWidth: 2,
-                  );
-                }).toList(),
-              ),
-              MarkerLayer(
-                markers: mapData.map<Marker>((store) {
-                  final double lat = (store['lat'] is num)
-                      ? (store['lat'] as num).toDouble()
-                      : 25.2048;
-                  final double lng = (store['lng'] is num)
-                      ? (store['lng'] as num).toDouble()
-                      : 55.2708;
-                  final String chain = store['chain'] as String? ?? 'Store';
-                  final String branchName =
-                      store['branchName'] as String? ?? '';
-                  final int count =
-                      store['activeSubmissionsCount'] as int? ?? 0;
-                  return Marker(
-                    point: LatLng(lat, lng),
-                    width: 40,
-                    height: 40,
-                    child: GestureDetector(
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
+              // Store List Panel (Desktop Sidebar)
+              Container(
+                width: 300,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                    right: BorderSide(color: Colors.grey.shade200),
+                  ),
+                ),
+                child: filteredStores.isEmpty
+                    ? Center(
+                        child: Text(
+                          'No stores match filters.',
+                          style: GoogleFonts.nunito(color: Colors.grey),
+                        ),
+                      )
+                    : ListView.separated(
+                        itemCount: filteredStores.length,
+                        separatorBuilder: (context, index) =>
+                            Divider(color: Colors.grey.shade100, height: 1),
+                        itemBuilder: (context, index) {
+                          final store = filteredStores[index];
+                          final String chain =
+                              store['chain'] as String? ?? 'Store';
+                          final String branchName =
+                              store['branchName'] as String? ?? '';
+                          final String area = store['area'] as String? ?? '';
+                          final int count =
+                              store['activeSubmissionsCount'] as int? ?? 0;
+                          final double lat = (store['lat'] is num)
+                              ? (store['lat'] as num).toDouble()
+                              : 25.2048;
+                          final double lng = (store['lng'] is num)
+                              ? (store['lng'] as num).toDouble()
+                              : 55.2708;
+
+                          return ListTile(
                             title: Text(
                               '$chain $branchName',
-                              style: GoogleFonts.fredoka(
+                              style: GoogleFonts.nunito(
                                 fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                color: AppTheme.textDark,
                               ),
                             ),
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Area: ${store['area'] ?? 'Dubai'}',
-                                  style: GoogleFonts.nunito(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Approved submissions count: $count',
-                                  style: GoogleFonts.nunito(
-                                    color: AppTheme.forestDeep,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: const Text('Close'),
+                            subtitle: Text(
+                              'Area: $area • Approved: $count',
+                              style: GoogleFonts.nunito(
+                                fontSize: 11,
+                                color: Colors.grey.shade600,
                               ),
-                            ],
+                            ),
+                            trailing: const Icon(Icons.chevron_right, size: 14),
+                            onTap: () {
+                              _mapController.move(LatLng(lat, lng), 14.0);
+                            },
+                          );
+                        },
+                      ),
+              ),
+              Expanded(
+                child: FlutterMap(
+                  mapController: _mapController,
+                  options: MapOptions(
+                    initialCenter: const LatLng(
+                      25.2048,
+                      55.2708,
+                    ), // Dubai coordinates
+                    initialZoom: 11.0,
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate:
+                          'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+                      subdomains: const ['a', 'b', 'c', 'd'],
+                      userAgentPackageName: 'com.dealsouk.app',
+                      retinaMode: RetinaMode.isHighDensity(context),
+                      maxZoom: 20,
+                    ),
+                    CircleLayer(
+                      circles: filteredStores.map<CircleMarker>((store) {
+                        final double lat = (store['lat'] is num)
+                            ? (store['lat'] as num).toDouble()
+                            : 25.2048;
+                        final double lng = (store['lng'] is num)
+                            ? (store['lng'] as num).toDouble()
+                            : 55.2708;
+                        final int count =
+                            store['activeSubmissionsCount'] as int? ?? 0;
+                        final Color circleColor = count < 3
+                            ? Colors.green.withValues(alpha: 0.4)
+                            : count < 6
+                            ? Colors.orange.withValues(alpha: 0.4)
+                            : Colors.red.withValues(alpha: 0.4);
+                        return CircleMarker(
+                          point: LatLng(lat, lng),
+                          radius: (count * 6.0 + 12.0).clamp(12.0, 48.0),
+                          useRadiusInMeter: false,
+                          color: circleColor,
+                          borderColor: circleColor.withValues(alpha: 0.7),
+                          borderStrokeWidth: 2,
+                        );
+                      }).toList(),
+                    ),
+                    MarkerLayer(
+                      markers: filteredStores.map<Marker>((store) {
+                        final double lat = (store['lat'] is num)
+                            ? (store['lat'] as num).toDouble()
+                            : 25.2048;
+                        final double lng = (store['lng'] is num)
+                            ? (store['lng'] as num).toDouble()
+                            : 55.2708;
+                        final String chain =
+                            store['chain'] as String? ?? 'Store';
+                        final String branchName =
+                            store['branchName'] as String? ?? '';
+                        final int count =
+                            store['activeSubmissionsCount'] as int? ?? 0;
+                        return Marker(
+                          point: LatLng(lat, lng),
+                          width: 40,
+                          height: 40,
+                          child: GestureDetector(
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  title: Text(
+                                    '$chain $branchName',
+                                    style: GoogleFonts.fredoka(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Area: ${store['area'] ?? 'Dubai'}',
+                                        style: GoogleFonts.nunito(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Approved submissions count: $count',
+                                        style: GoogleFonts.nunito(
+                                          color: AppTheme.forestDeep,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Close'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            child: const Icon(
+                              Icons.location_on_rounded,
+                              color: AppTheme.forestDeep,
+                              size: 32,
+                            ),
                           ),
                         );
-                      },
-                      child: const Icon(
-                        Icons.location_on_rounded,
-                        color: AppTheme.forestDeep,
-                        size: 32,
-                      ),
+                      }).toList(),
                     ),
-                  );
-                }).toList(),
+                  ],
+                ),
               ),
             ],
           ),
@@ -3023,7 +3217,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     );
   }
 
-  // --- HIGH FIDELITY MOCK DIALOGS ---
+  // --- HIGH FIDELITY REAL PREVIEWS & MOCK DIALOGS ---
   void _showReceiptDialog(BuildContext context, AdminSubmission sub) {
     showDialog(
       context: context,
@@ -3036,11 +3230,14 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             children: [
               // Receipt Container
               Container(
-                width: 300,
+                width: 400,
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.7,
+                ),
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(8),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.3),
@@ -3049,153 +3246,197 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                     ),
                   ],
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Receipt Jagged Edge Accent
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(
-                        15,
-                        (index) => Container(
-                          width: 12,
-                          height: 6,
-                          margin: const EdgeInsets.symmetric(horizontal: 1),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(2),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (sub.receiptUrl != null &&
+                          sub.receiptUrl!.startsWith('http')) ...[
+                        Text(
+                          'Receipt Evidence',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.fredoka(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: AppTheme.textDark,
                           ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
+                        const SizedBox(height: 12),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            sub.receiptUrl!,
+                            fit: BoxFit.contain,
+                            loadingBuilder: (context, child, progress) {
+                              if (progress == null) return child;
+                              return const SizedBox(
+                                height: 200,
+                                child: Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                              return const SizedBox(
+                                height: 100,
+                                child: Center(
+                                  child: Text('Failed to load receipt photo.'),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ] else ...[
+                        // Receipt Jagged Edge Accent
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(
+                            15,
+                            (index) => Container(
+                              width: 12,
+                              height: 6,
+                              margin: const EdgeInsets.symmetric(horizontal: 1),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
 
-                    // Receipt Content
-                    Text(
-                      sub.storeName.toUpperCase(),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontFamily: 'monospace',
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        letterSpacing: 1.5,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const Text(
-                      'DUBAI BR., UAE\nTRN: 1003482910003\nTEL: 04-2983742',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: 'monospace',
-                        fontSize: 10,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      '--------------------------------',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: 'monospace',
-                        color: Colors.grey,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
+                        // Receipt Content
+                        Text(
+                          sub.storeName.toUpperCase(),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontFamily: 'monospace',
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            letterSpacing: 1.5,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const Text(
+                          'DUBAI BR., UAE\nTRN: 1003482910003\nTEL: 04-2983742',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'monospace',
+                            fontSize: 10,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          '--------------------------------',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'monospace',
+                            color: Colors.grey,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
 
-                    // Products List
-                    _receiptRow(sub.productName.toUpperCase(), sub.price),
-                    if (sub.promoType == 'Discount')
-                      _receiptRow('  PROMO DISCOUNT', -1.50, isDiscount: true),
-                    _receiptRow('AL AIN WATER 6X1.5L', 8.50),
-                    _receiptRow('AL BAKER CHAKKI ATTA 5K', 12.95),
-                    const SizedBox(height: 8),
-                    const Text(
-                      '--------------------------------',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: 'monospace',
-                        color: Colors.grey,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
+                        // Products List
+                        _receiptRow(sub.productName.toUpperCase(), sub.price),
+                        if (sub.promoType == 'Discount')
+                          _receiptRow(
+                            '  PROMO DISCOUNT',
+                            -1.50,
+                            isDiscount: true,
+                          ),
+                        _receiptRow('AL AIN WATER 6X1.5L', 8.50),
+                        _receiptRow('AL BAKER CHAKKI ATTA 5K', 12.95),
+                        const SizedBox(height: 8),
+                        const Text(
+                          '--------------------------------',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'monospace',
+                            color: Colors.grey,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
 
-                    // Totals
-                    _receiptRow(
-                      'SUBTOTAL',
-                      sub.price +
-                          8.50 +
-                          12.95 +
-                          (sub.promoType == 'Discount' ? -1.50 : 0),
-                      isBold: true,
-                    ),
-                    _receiptRow(
-                      '5% VAT INCL.',
-                      (sub.price +
+                        // Totals
+                        _receiptRow(
+                          'SUBTOTAL',
+                          sub.price +
                               8.50 +
                               12.95 +
-                              (sub.promoType == 'Discount' ? -1.50 : 0)) *
-                          0.05,
-                    ),
-                    const SizedBox(height: 4),
-                    _receiptRow(
-                      'TOTAL',
-                      sub.price +
-                          8.50 +
-                          12.95 +
-                          (sub.promoType == 'Discount' ? -1.50 : 0),
-                      isBold: true,
-                      isLarge: true,
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      '--------------------------------',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: 'monospace',
-                        color: Colors.grey,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'DATE: 2026-06-11 11:24\nCASHIER: AMIN\nOPID: 98324\nMODE: CASH',
-                      style: TextStyle(
-                        fontFamily: 'monospace',
-                        fontSize: 10,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
+                              (sub.promoType == 'Discount' ? -1.50 : 0),
+                          isBold: true,
+                        ),
+                        _receiptRow(
+                          '5% VAT INCL.',
+                          (sub.price +
+                                  8.50 +
+                                  12.95 +
+                                  (sub.promoType == 'Discount' ? -1.50 : 0)) *
+                              0.05,
+                        ),
+                        const SizedBox(height: 4),
+                        _receiptRow(
+                          'TOTAL',
+                          sub.price +
+                              8.50 +
+                              12.95 +
+                              (sub.promoType == 'Discount' ? -1.50 : 0),
+                          isBold: true,
+                          isLarge: true,
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          '--------------------------------',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'monospace',
+                            color: Colors.grey,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'DATE: 2026-06-11 11:24\nCASHIER: AMIN\nOPID: 98324\nMODE: CASH',
+                          style: TextStyle(
+                            fontFamily: 'monospace',
+                            fontSize: 10,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
 
-                    // Barcode Lines
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(24, (index) {
-                        final double width = (index % 4 == 0)
-                            ? 3.0
-                            : (index % 2 == 0)
-                            ? 1.5
-                            : 0.8;
-                        return Container(
-                          width: width,
-                          height: 30,
-                          margin: const EdgeInsets.only(right: 1.5),
-                          color: Colors.black87,
-                        );
-                      }),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      '*** THANK YOU FOR SHOPPING ***',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: 'monospace',
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black54,
-                      ),
-                    ),
-                  ],
+                        // Barcode Lines
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(24, (index) {
+                            final double width = (index % 4 == 0)
+                                ? 3.0
+                                : (index % 2 == 0)
+                                ? 1.5
+                                : 0.8;
+                            return Container(
+                              width: width,
+                              height: 30,
+                              margin: const EdgeInsets.only(right: 1.5),
+                              color: Colors.black87,
+                            );
+                          }),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          '*** THANK YOU FOR SHOPPING ***',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'monospace',
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black54,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -3262,12 +3503,13 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Simulated Supermarket Shelf Photo Container
               Container(
-                width: 320,
-                height: 240,
+                width: 400,
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.7,
+                ),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
@@ -3279,214 +3521,1294 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
-                  child: Stack(
-                    children: [
-                      // Shelf Visuals (Wood/Metal pattern)
-                      Column(
-                        children: [
-                          Expanded(
-                            flex: 3,
-                            child: Container(
-                              color: Colors.grey.shade300,
+                  child:
+                      sub.priceLabelUrl != null &&
+                          sub.priceLabelUrl!.startsWith('http')
+                      ? Image.network(
+                          sub.priceLabelUrl!,
+                          fit: BoxFit.contain,
+                          loadingBuilder: (context, child, progress) {
+                            if (progress == null) return child;
+                            return const SizedBox(
+                              height: 240,
+                              child: Center(child: CircularProgressIndicator()),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return const SizedBox(
+                              height: 240,
                               child: Center(
-                                child: Icon(
-                                  sub.productName.contains('Milk')
-                                      ? Icons.local_cafe
-                                      : sub.productName.contains('Eggs')
-                                      ? Icons.egg
-                                      : Icons.breakfast_dining,
-                                  size: 84,
-                                  color: Colors.grey.shade400,
+                                child: Text(
+                                  'Failed to load price label photo.',
                                 ),
                               ),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 1,
-                            child: Container(color: Colors.blueGrey.shade800),
-                          ),
-                        ],
-                      ),
-
-                      // Product packaging model sitting on shelf
-                      Positioned(
-                        bottom: 45,
-                        left: 110,
-                        child: Container(
-                          width: 100,
-                          height: 120,
+                            );
+                          },
+                        )
+                      : Container(
+                          width: 320,
+                          height: 240,
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Colors.black38,
-                                blurRadius: 8,
-                                offset: Offset(0, 4),
-                              ),
-                            ],
-                            border: Border.all(color: Colors.grey.shade300),
+                            color: Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                          child: Stack(
                             children: [
-                              Icon(
-                                sub.productName.contains('Milk')
-                                    ? Icons.local_cafe
-                                    : sub.productName.contains('Eggs')
-                                    ? Icons.egg
-                                    : Icons.breakfast_dining,
-                                color: AppTheme.emeraldPrimary,
-                                size: 40,
+                              // Shelf Visuals (Wood/Metal pattern)
+                              Column(
+                                children: [
+                                  Expanded(
+                                    flex: 3,
+                                    child: Container(
+                                      color: Colors.grey.shade300,
+                                      child: Center(
+                                        child: Icon(
+                                          sub.productName.contains('Milk')
+                                              ? Icons.local_cafe
+                                              : sub.productName.contains('Eggs')
+                                              ? Icons.egg
+                                              : Icons.breakfast_dining,
+                                          size: 84,
+                                          color: Colors.grey.shade400,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 1,
+                                    child: Container(
+                                      color: Colors.blueGrey.shade800,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                sub.brand,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 11,
-                                  color: AppTheme.textDark,
-                                ),
-                              ),
-                              Text(
-                                sub.productName.split(' ').first,
-                                style: const TextStyle(
-                                  fontSize: 8,
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
 
-                      // Price Tag sticker stuck to shelf strip
-                      Positioned(
-                        bottom: 8,
-                        left: 60,
-                        child: Container(
-                          width: 200,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFFDE7), // Yellow tag
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(
-                              color: Colors.amber.shade400,
-                              width: 1.5,
-                            ),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Colors.black26,
-                                blurRadius: 3,
-                                offset: Offset(0, 1),
+                              // Product packaging model sitting on shelf
+                              Positioned(
+                                bottom: 45,
+                                left: 110,
+                                child: Container(
+                                  width: 100,
+                                  height: 120,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: AppTheme.emeraldPrimary.withValues(
+                                        alpha: 0.3,
+                                      ),
+                                      width: 2,
+                                    ),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Colors.black12,
+                                        blurRadius: 8,
+                                        offset: Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        sub.productName.contains('Milk')
+                                            ? Icons.local_cafe
+                                            : sub.productName.contains('Eggs')
+                                            ? Icons.egg
+                                            : Icons.breakfast_dining,
+                                        color: AppTheme.emeraldPrimary,
+                                        size: 40,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        sub.brand,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 11,
+                                          color: AppTheme.textDark,
+                                        ),
+                                      ),
+                                      Text(
+                                        sub.productName.split(' ').first,
+                                        style: const TextStyle(
+                                          fontSize: 8,
+                                          color: Colors.grey,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      sub.productName.toUpperCase(),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+
+                              // Price Tag sticker stuck to shelf strip
+                              Positioned(
+                                bottom: 8,
+                                left: 60,
+                                child: Container(
+                                  width: 200,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(
+                                      0xFFFFFDE7,
+                                    ), // Yellow tag
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                      color: Colors.amber.shade400,
+                                      width: 1.5,
+                                    ),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Colors.black26,
+                                        blurRadius: 3,
+                                        offset: Offset(0, 1),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              sub.productName.toUpperCase(),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontSize: 7,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.black87,
+                                              ),
+                                            ),
+                                            Text(
+                                              'BARCODE: 62911000${sub.id.hashCode.abs().toString().substring(0, 4)}',
+                                              style: const TextStyle(
+                                                fontSize: 5,
+                                                fontFamily: 'monospace',
+                                                color: Colors.black54,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Text(
+                                        'AED ${sub.price.toStringAsFixed(2)}',
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w900,
+                                          color: Colors.red,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+
+                              // Shelf Label Overlay (e.g. Lulu / Carrefour)
+                              Positioned(
+                                top: 12,
+                                right: 12,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.6),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    sub.storeName,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              // Promo Indicator badge
+                              if (sub.promoType != 'None')
+                                Positioned(
+                                  top: 12,
+                                  left: 12,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      sub.promoType.toUpperCase(),
                                       style: const TextStyle(
-                                        fontSize: 7,
+                                        color: Colors.white,
+                                        fontSize: 9,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.black87,
                                       ),
                                     ),
-                                    Text(
-                                      'BARCODE: 62911000${sub.id.hashCode.abs().toString().substring(0, 4)}',
-                                      style: const TextStyle(
-                                        fontSize: 5,
-                                        fontFamily: 'monospace',
-                                        color: Colors.black54,
-                                      ),
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                'AED ${sub.price.toStringAsFixed(2)}',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.red,
-                                ),
-                              ),
                             ],
                           ),
                         ),
-                      ),
-
-                      // Shelf Label Overlay (e.g. Lulu / Carrefour)
-                      Positioned(
-                        top: 12,
-                        right: 12,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.6),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            sub.storeName,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // Promo Indicator badge
-                      if (sub.promoType != 'None')
-                        Positioned(
-                          top: 12,
-                          left: 12,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              sub.promoType.toUpperCase(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
                 ),
               ),
               const SizedBox(height: 16),
-              // Close Button
               IconButton(
                 icon: const Icon(Icons.cancel, color: Colors.white, size: 40),
                 onPressed: () => Navigator.pop(context),
               ),
             ],
           ),
+        );
+      },
+    );
+  }
+
+  // --- PRODUCTS CRUD PANEL ---
+  Widget _buildProductsCrudPanel() {
+    final state = ref.watch(adminProductsProvider);
+    final notifier = ref.read(adminProductsProvider.notifier);
+    final categories = [
+      'All',
+      'Beverages',
+      'Bakery',
+      'Dairy & Eggs',
+      'Pantry',
+      'Fresh Produce',
+      'Meat & Seafood',
+      'Household',
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Products Catalog Management',
+                style: GoogleFonts.fredoka(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textDark,
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: () => _showProductFormDialog(context, null),
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('Add Product'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.forestDeep,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Search products by name, brand, or barcode...',
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                  ),
+                  onChanged: (val) {
+                    notifier.setSearchQuery(val);
+                  },
+                ),
+              ),
+              const SizedBox(width: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: state.selectedCategory ?? 'All',
+                    items: categories.map((c) {
+                      return DropdownMenuItem<String>(
+                        value: c,
+                        child: Text(
+                          c,
+                          style: GoogleFonts.nunito(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      notifier.setCategory(val);
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: state.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : state.products.isEmpty
+                ? Center(
+                    child: Text(
+                      'No products found matching filters.',
+                      style: GoogleFonts.nunito(
+                        color: Colors.grey,
+                        fontSize: 15,
+                      ),
+                    ),
+                  )
+                : Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: ListView.separated(
+                            itemCount: state.products.length,
+                            separatorBuilder: (context, index) =>
+                                Divider(color: Colors.grey.shade100, height: 1),
+                            itemBuilder: (context, index) {
+                              final p = state.products[index];
+                              return ListTile(
+                                leading: p.imageUrl.isNotEmpty
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(6),
+                                        child: Image.network(
+                                          p.imageUrl,
+                                          width: 40,
+                                          height: 40,
+                                          fit: BoxFit.cover,
+                                          errorBuilder:
+                                              (
+                                                context,
+                                                error,
+                                                stackTrace,
+                                              ) => Container(
+                                                width: 40,
+                                                height: 40,
+                                                color: Colors.grey.shade100,
+                                                child: const Icon(
+                                                  Icons.shopping_bag_outlined,
+                                                  color: Colors.grey,
+                                                ),
+                                              ),
+                                        ),
+                                      )
+                                    : Container(
+                                        width: 40,
+                                        height: 40,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.shade100,
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                        ),
+                                        child: const Icon(
+                                          Icons.shopping_bag_outlined,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                title: Text(
+                                  p.name,
+                                  style: GoogleFonts.nunito(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.textDark,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  'Brand: ${p.brand.isNotEmpty ? p.brand : "—"} • Size: ${p.packSize.isNotEmpty ? p.packSize : "—"} • Category: ${p.category} • Barcode: ${p.barcode.isNotEmpty ? p.barcode : "—"}',
+                                  style: GoogleFonts.nunito(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.edit_rounded,
+                                        color: Colors.blueAccent,
+                                      ),
+                                      onPressed: () =>
+                                          _showProductFormDialog(context, p),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.delete_outline_rounded,
+                                        color: Colors.redAccent,
+                                      ),
+                                      onPressed: () =>
+                                          _confirmDeleteProduct(context, p),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              top: BorderSide(color: Colors.grey.shade200),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Total Products: ${state.total}',
+                                style: GoogleFonts.nunito(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.chevron_left),
+                                    onPressed: state.currentPage > 0
+                                        ? () => notifier.setPage(
+                                            state.currentPage - 1,
+                                          )
+                                        : null,
+                                  ),
+                                  Text(
+                                    'Page ${state.currentPage + 1}',
+                                    style: GoogleFonts.nunito(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.chevron_right),
+                                    onPressed:
+                                        (state.currentPage + 1) * 20 <
+                                            state.total
+                                        ? () => notifier.setPage(
+                                            state.currentPage + 1,
+                                          )
+                                        : null,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showProductFormDialog(BuildContext context, Product? product) {
+    final isEdit = product != null;
+    final nameCtrl = TextEditingController(text: product?.name ?? '');
+    final brandCtrl = TextEditingController(text: product?.brand ?? '');
+    final sizeCtrl = TextEditingController(text: product?.packSize ?? '');
+    final barcodeCtrl = TextEditingController(text: product?.barcode ?? '');
+    final imageCtrl = TextEditingController(text: product?.imageUrl ?? '');
+    String category = product?.category ?? 'Beverages';
+    final categories = [
+      'Beverages',
+      'Bakery',
+      'Dairy & Eggs',
+      'Pantry',
+      'Fresh Produce',
+      'Meat & Seafood',
+      'Household',
+    ];
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: Text(
+                isEdit ? 'Edit Product' : 'Add New Product',
+                style: GoogleFonts.fredoka(fontWeight: FontWeight.bold),
+              ),
+              content: SingleChildScrollView(
+                child: SizedBox(
+                  width: 450,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextField(
+                        controller: nameCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Product Name *',
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: brandCtrl,
+                        decoration: const InputDecoration(labelText: 'Brand'),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: sizeCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Pack Size (e.g. 500g, 6x1.5L)',
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        initialValue: category,
+                        decoration: const InputDecoration(
+                          labelText: 'Category *',
+                        ),
+                        items: categories.map((c) {
+                          return DropdownMenuItem<String>(
+                            value: c,
+                            child: Text(c),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          if (val != null) {
+                            setDialogState(() {
+                              category = val;
+                            });
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: barcodeCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Barcode / UPC',
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: imageCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Image URL',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.forestDeep,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () async {
+                    if (nameCtrl.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Name is required')),
+                      );
+                      return;
+                    }
+                    final payload = {
+                      'name': nameCtrl.text.trim(),
+                      'brand': brandCtrl.text.trim(),
+                      'packSize': sizeCtrl.text.trim(),
+                      'category': category,
+                      'barcode': barcodeCtrl.text.trim(),
+                      'imageUrl': imageCtrl.text.trim(),
+                    };
+                    try {
+                      if (isEdit) {
+                        await ref
+                            .read(adminProductsProvider.notifier)
+                            .updateProduct(product.id, payload);
+                      } else {
+                        await ref
+                            .read(adminProductsProvider.notifier)
+                            .createProduct(payload);
+                      }
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              isEdit
+                                  ? 'Product updated successfully'
+                                  : 'Product created successfully',
+                            ),
+                          ),
+                        );
+                      }
+                    } catch (err) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Error saving product: $err')),
+                        );
+                      }
+                    }
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _confirmDeleteProduct(BuildContext context, Product product) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              const Icon(Icons.warning_rounded, color: Colors.red, size: 28),
+              const SizedBox(width: 10),
+              Text(
+                'Are you sure?',
+                style: GoogleFonts.fredoka(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red.shade900,
+                ),
+              ),
+            ],
+          ),
+          content: SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'You are about to delete: ${product.name}',
+                  style: GoogleFonts.nunito(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Explanation of Permanent Consequences:',
+                  style: GoogleFonts.nunito(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: Colors.red.shade800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '• This product will be completely deleted from the catalog.\n'
+                  '• All price submissions submitted by shoppers for this product will be permanently deleted.\n'
+                  '• Shoppers will no longer be able to find this product or see its price history.\n'
+                  '• This product will be removed from any active user carts.\n\n'
+                  'This action is destructive, final, and cannot be undone.',
+                  style: GoogleFonts.nunito(
+                    fontSize: 13,
+                    color: Colors.grey.shade700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () async {
+                try {
+                  await ref
+                      .read(adminProductsProvider.notifier)
+                      .deleteProduct(product.id);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Product deleted successfully'),
+                      ),
+                    );
+                  }
+                } catch (err) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error deleting product: $err')),
+                    );
+                  }
+                }
+              },
+              child: const Text('Delete Permanently'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // --- USERS CRUD PANEL ---
+  Widget _buildUsersCrudPanel() {
+    final state = ref.watch(adminUsersProvider);
+    final notifier = ref.read(adminUsersProvider.notifier);
+
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Users Directory Management',
+                style: GoogleFonts.fredoka(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textDark,
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: () => _showUserFormDialog(context, null),
+                icon: const Icon(Icons.person_add_rounded),
+                label: const Text('Add User'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.forestDeep,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Search users by name, phone, or UID...',
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                  ),
+                  onChanged: (val) {
+                    notifier.setSearchQuery(val);
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: state.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : state.users.isEmpty
+                ? Center(
+                    child: Text(
+                      'No users found matching search.',
+                      style: GoogleFonts.nunito(
+                        color: Colors.grey,
+                        fontSize: 15,
+                      ),
+                    ),
+                  )
+                : Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: ListView.separated(
+                            itemCount: state.users.length,
+                            separatorBuilder: (context, index) =>
+                                Divider(color: Colors.grey.shade100, height: 1),
+                            itemBuilder: (context, index) {
+                              final u = state.users[index];
+                              return ListTile(
+                                leading:
+                                    u.avatarUrl != null &&
+                                        u.avatarUrl!.isNotEmpty
+                                    ? CircleAvatar(
+                                        backgroundImage: NetworkImage(
+                                          u.avatarUrl!,
+                                        ),
+                                        radius: 20,
+                                      )
+                                    : const CircleAvatar(
+                                        radius: 20,
+                                        child: Icon(Icons.person_outline),
+                                      ),
+                                title: Row(
+                                  children: [
+                                    Text(
+                                      u.displayName,
+                                      style: GoogleFonts.nunito(
+                                        fontWeight: FontWeight.bold,
+                                        color: AppTheme.textDark,
+                                      ),
+                                    ),
+                                    if (u.isAdmin) ...[
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 6,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.red.shade100,
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          'Admin',
+                                          style: TextStyle(
+                                            color: Colors.red.shade900,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                subtitle: Text(
+                                  'ID: ${u.id} • Locale: ${u.preferredLocale} • Home Area: ${u.homeArea ?? "—"} • Tokens: ${u.tokenBalance} • Accuracy: ${u.accuracyRating.toStringAsFixed(1)}%',
+                                  style: GoogleFonts.nunito(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.edit_rounded,
+                                        color: Colors.blueAccent,
+                                      ),
+                                      onPressed: () =>
+                                          _showUserFormDialog(context, u),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.delete_outline_rounded,
+                                        color: Colors.redAccent,
+                                      ),
+                                      onPressed: () =>
+                                          _confirmDeleteUser(context, u),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              top: BorderSide(color: Colors.grey.shade200),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Total Users: ${state.total}',
+                                style: GoogleFonts.nunito(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.chevron_left),
+                                    onPressed: state.currentPage > 0
+                                        ? () => notifier.setPage(
+                                            state.currentPage - 1,
+                                          )
+                                        : null,
+                                  ),
+                                  Text(
+                                    'Page ${state.currentPage + 1}',
+                                    style: GoogleFonts.nunito(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.chevron_right),
+                                    onPressed:
+                                        (state.currentPage + 1) * 20 <
+                                            state.total
+                                        ? () => notifier.setPage(
+                                            state.currentPage + 1,
+                                          )
+                                        : null,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showUserFormDialog(BuildContext context, ProfileData? user) {
+    final isEdit = user != null;
+    final nameCtrl = TextEditingController(text: user?.displayName ?? '');
+    final phoneCtrl = TextEditingController();
+    final areaCtrl = TextEditingController(text: user?.homeArea ?? '');
+    final tokensCtrl = TextEditingController(
+      text: user?.tokenBalance.toString() ?? '0',
+    );
+    final firebaseUidCtrl = TextEditingController();
+    String preferredLocale = user?.preferredLocale ?? 'en';
+    bool isAdmin = user?.isAdmin ?? false;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: Text(
+                isEdit ? 'Edit User Profile' : 'Add New User',
+                style: GoogleFonts.fredoka(fontWeight: FontWeight.bold),
+              ),
+              content: SingleChildScrollView(
+                child: SizedBox(
+                  width: 450,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (!isEdit) ...[
+                        TextField(
+                          controller: firebaseUidCtrl,
+                          decoration: const InputDecoration(
+                            labelText:
+                                'Firebase UID * (Must match auth account)',
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                      TextField(
+                        controller: nameCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Display Name *',
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: phoneCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Phone Number (optional)',
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: areaCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Home Area (e.g. Dubai Marina)',
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: tokensCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Token Balance',
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        initialValue: preferredLocale,
+                        decoration: const InputDecoration(
+                          labelText: 'Preferred Locale *',
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'en',
+                            child: Text('English (en)'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'ar',
+                            child: Text('Arabic (ar)'),
+                          ),
+                        ],
+                        onChanged: (val) {
+                          if (val != null) {
+                            setDialogState(() {
+                              preferredLocale = val;
+                            });
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      SwitchListTile(
+                        title: const Text('Admin Privileges'),
+                        value: isAdmin,
+                        onChanged: (val) {
+                          setDialogState(() {
+                            isAdmin = val;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.forestDeep,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () async {
+                    if (nameCtrl.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Display Name is required'),
+                        ),
+                      );
+                      return;
+                    }
+                    if (!isEdit && firebaseUidCtrl.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Firebase UID is required for new users',
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+                    final payload = {
+                      'displayName': nameCtrl.text.trim(),
+                      'homeArea': areaCtrl.text.trim().isEmpty
+                          ? null
+                          : areaCtrl.text.trim(),
+                      'preferredLocale': preferredLocale,
+                      'tokenBalance': int.tryParse(tokensCtrl.text.trim()) ?? 0,
+                      'isAdmin': isAdmin,
+                      if (phoneCtrl.text.trim().isNotEmpty)
+                        'phoneNumber': phoneCtrl.text.trim(),
+                      if (!isEdit) 'firebaseUid': firebaseUidCtrl.text.trim(),
+                    };
+                    try {
+                      if (isEdit) {
+                        await ref
+                            .read(adminUsersProvider.notifier)
+                            .updateUser(user.id, payload);
+                      } else {
+                        await ref
+                            .read(adminUsersProvider.notifier)
+                            .createUser(payload);
+                      }
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              isEdit
+                                  ? 'User updated successfully'
+                                  : 'User created successfully',
+                            ),
+                          ),
+                        );
+                      }
+                    } catch (err) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Error saving user: $err')),
+                        );
+                      }
+                    }
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _confirmDeleteUser(BuildContext context, ProfileData user) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              const Icon(Icons.warning_rounded, color: Colors.red, size: 28),
+              const SizedBox(width: 10),
+              Text(
+                'Are you sure?',
+                style: GoogleFonts.fredoka(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red.shade900,
+                ),
+              ),
+            ],
+          ),
+          content: SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'You are about to delete user: ${user.displayName}',
+                  style: GoogleFonts.nunito(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Explanation of Permanent Consequences:',
+                  style: GoogleFonts.nunito(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: Colors.red.shade800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '• The user\'s profile and login account will be permanently deleted.\n'
+                  '• All tokens they have earned (${user.tokenBalance} tokens) will be permanently lost.\n'
+                  '• All price submissions, receipt photos, and flags associated with this user will be deleted.\n'
+                  '• All vouchers claimed or requested by this user will be removed or canceled.\n'
+                  '• The user will be immediately logged out and will not be able to log back in.\n\n'
+                  'This action is destructive, final, and cannot be undone.',
+                  style: GoogleFonts.nunito(
+                    fontSize: 13,
+                    color: Colors.grey.shade700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () async {
+                try {
+                  await ref
+                      .read(adminUsersProvider.notifier)
+                      .deleteUser(user.id);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('User deleted successfully'),
+                      ),
+                    );
+                  }
+                } catch (err) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error deleting user: $err')),
+                    );
+                  }
+                }
+              },
+              child: const Text('Delete Permanently'),
+            ),
+          ],
         );
       },
     );

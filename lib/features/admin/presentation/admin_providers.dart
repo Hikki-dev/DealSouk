@@ -6,6 +6,7 @@ import 'package:dealsouk/features/admin/domain/voucher_request.dart';
 import 'package:dealsouk/features/admin/data/admin_service.dart';
 import 'package:dealsouk/features/tokens/presentation/tokens_providers.dart';
 import 'package:dealsouk/features/profile/data/profile_service.dart';
+import 'package:dealsouk/features/products/domain/product.dart';
 
 class AdminSubmissionsNotifier extends Notifier<List<AdminSubmission>> {
   @override
@@ -248,4 +249,184 @@ class AdminAnalyticsNotifier extends Notifier<AdminAnalytics> {
 final adminAnalyticsProvider =
     NotifierProvider<AdminAnalyticsNotifier, AdminAnalytics>(
       AdminAnalyticsNotifier.new,
+    );
+
+// Products CRUD State & Provider
+class AdminProductsState {
+  final List<Product> products;
+  final int total;
+  final bool isLoading;
+  final String searchQuery;
+  final String? selectedCategory;
+  final int currentPage;
+
+  const AdminProductsState({
+    this.products = const [],
+    this.total = 0,
+    this.isLoading = false,
+    this.searchQuery = '',
+    this.selectedCategory = 'All',
+    this.currentPage = 0,
+  });
+
+  AdminProductsState copyWith({
+    List<Product>? products,
+    int? total,
+    bool? isLoading,
+    String? searchQuery,
+    String? selectedCategory,
+    int? currentPage,
+  }) {
+    return AdminProductsState(
+      products: products ?? this.products,
+      total: total ?? this.total,
+      isLoading: isLoading ?? this.isLoading,
+      searchQuery: searchQuery ?? this.searchQuery,
+      selectedCategory: selectedCategory ?? this.selectedCategory,
+      currentPage: currentPage ?? this.currentPage,
+    );
+  }
+}
+
+class AdminProductsNotifier extends Notifier<AdminProductsState> {
+  @override
+  AdminProductsState build() => const AdminProductsState();
+
+  Future<void> fetch() async {
+    state = state.copyWith(isLoading: true);
+    try {
+      final res = await adminService.getProducts(
+        query: state.searchQuery,
+        category: state.selectedCategory,
+        page: state.currentPage,
+      );
+      state = state.copyWith(
+        products: res['products'] as List<Product>,
+        total: res['total'] as int,
+        isLoading: false,
+      );
+    } catch (_) {
+      state = state.copyWith(isLoading: false);
+    }
+  }
+
+  void setSearchQuery(String q) {
+    state = state.copyWith(searchQuery: q, currentPage: 0);
+    fetch();
+  }
+
+  void setCategory(String? category) {
+    state = state.copyWith(selectedCategory: category, currentPage: 0);
+    fetch();
+  }
+
+  void setPage(int page) {
+    state = state.copyWith(currentPage: page);
+    fetch();
+  }
+
+  Future<void> createProduct(Map<String, dynamic> data) async {
+    await adminService.createProduct(data);
+    fetch();
+  }
+
+  Future<void> updateProduct(String id, Map<String, dynamic> data) async {
+    await adminService.updateProduct(id, data);
+    fetch();
+  }
+
+  Future<void> deleteProduct(String id) async {
+    await adminService.deleteProduct(id);
+    fetch();
+  }
+}
+
+final adminProductsProvider =
+    NotifierProvider<AdminProductsNotifier, AdminProductsState>(
+      AdminProductsNotifier.new,
+    );
+
+// Users CRUD State & Provider
+class AdminUsersState {
+  final List<ProfileData> users;
+  final int total;
+  final bool isLoading;
+  final String searchQuery;
+  final int currentPage;
+
+  const AdminUsersState({
+    this.users = const [],
+    this.total = 0,
+    this.isLoading = false,
+    this.searchQuery = '',
+    this.currentPage = 0,
+  });
+
+  AdminUsersState copyWith({
+    List<ProfileData>? users,
+    int? total,
+    bool? isLoading,
+    String? searchQuery,
+    int? currentPage,
+  }) {
+    return AdminUsersState(
+      users: users ?? this.users,
+      total: total ?? this.total,
+      isLoading: isLoading ?? this.isLoading,
+      searchQuery: searchQuery ?? this.searchQuery,
+      currentPage: currentPage ?? this.currentPage,
+    );
+  }
+}
+
+class AdminUsersNotifier extends Notifier<AdminUsersState> {
+  @override
+  AdminUsersState build() => const AdminUsersState();
+
+  Future<void> fetch() async {
+    state = state.copyWith(isLoading: true);
+    try {
+      final res = await adminService.getUsers(
+        query: state.searchQuery,
+        page: state.currentPage,
+      );
+      state = state.copyWith(
+        users: res['users'] as List<ProfileData>,
+        total: res['total'] as int,
+        isLoading: false,
+      );
+    } catch (_) {
+      state = state.copyWith(isLoading: false);
+    }
+  }
+
+  void setSearchQuery(String q) {
+    state = state.copyWith(searchQuery: q, currentPage: 0);
+    fetch();
+  }
+
+  void setPage(int page) {
+    state = state.copyWith(currentPage: page);
+    fetch();
+  }
+
+  Future<void> createUser(Map<String, dynamic> data) async {
+    await adminService.createUser(data);
+    fetch();
+  }
+
+  Future<void> updateUser(String id, Map<String, dynamic> data) async {
+    await adminService.updateUser(id, data);
+    fetch();
+  }
+
+  Future<void> deleteUser(String id) async {
+    await adminService.deleteUser(id);
+    fetch();
+  }
+}
+
+final adminUsersProvider =
+    NotifierProvider<AdminUsersNotifier, AdminUsersState>(
+      AdminUsersNotifier.new,
     );

@@ -157,6 +157,7 @@ class AuthNotifier extends Notifier<AuthState> {
           );
       await ref.read(userTransactionsProvider.notifier).fetch();
       await ref.read(mySubmissionsProvider.notifier).fetch();
+      await ref.read(dailyChallengeProvider.notifier).fetchToday();
     } catch (_) {}
   }
 

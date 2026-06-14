@@ -57,6 +57,8 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
   Position? _currentPosition;
   bool _isLocating = false;
   bool _mapReady = false;
+  double _customMaxRadiusKm = 8.0;
+  String _sortBy = 'distance'; // 'distance', 'name', 'last_updated'
 
   /// True while the first backend store fetch is in flight, so the UI shows a
   /// loading state instead of a misleading "No stores found" during the
@@ -280,18 +282,25 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
       // Radius filter — only when user is physically in Dubai
       if (_userIsInDubai) {
         final dist = _distanceTo(s);
-        if (dist != null && dist > _maxRadiusKm) return false;
+        if (dist != null && dist > _customMaxRadiusKm) return false;
       }
       return true;
     }).toList();
 
-    // Sort by distance (closest first) when in Dubai, else keep seed order
-    if (_userIsInDubai) {
+    // Sort according to selection
+    if (_sortBy == 'distance' && _userIsInDubai) {
       result.sort((a, b) {
         final da = _distanceTo(a) ?? double.maxFinite;
         final db = _distanceTo(b) ?? double.maxFinite;
         return da.compareTo(db);
       });
+    } else if (_sortBy == 'name' ||
+        (_sortBy == 'distance' && !_userIsInDubai)) {
+      result.sort((a, b) => a.name.compareTo(b.name));
+    } else if (_sortBy == 'last_updated') {
+      result.sort(
+        (a, b) => a.lastUpdatedHoursAgo.compareTo(b.lastUpdatedHoursAgo),
+      );
     }
     return result;
   }
@@ -330,7 +339,10 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                       ),
                     ),
                   ),
-                  _CircleButton(icon: Icons.tune_rounded, onTap: () {}),
+                  _CircleButton(
+                    icon: Icons.tune_rounded,
+                    onTap: () => _showFilterBottomSheet(context),
+                  ),
                 ],
               ),
             ),
@@ -1187,6 +1199,159 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                     ),
                   ),
                 ],
+              ),
+            );
+          },
+        );
+      },
+    ).whenComplete(() {
+      ref.read(navbarVisibleProvider.notifier).show();
+    });
+  }
+
+  void _showFilterBottomSheet(BuildContext context) {
+    ref.read(navbarVisibleProvider.notifier).hide();
+    showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setBottomSheetState) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2.5),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Filter Stores',
+                      style: GoogleFonts.fredoka(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Maximum Distance: ${_customMaxRadiusKm.toStringAsFixed(0)} km',
+                      style: GoogleFonts.nunito(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: AppTheme.textDark,
+                      ),
+                    ),
+                    Slider(
+                      value: _customMaxRadiusKm,
+                      min: 2.0,
+                      max: 50.0,
+                      divisions: 24,
+                      label: '${_customMaxRadiusKm.toStringAsFixed(0)} km',
+                      activeColor: AppTheme.forestDeep,
+                      onChanged: (val) {
+                        setBottomSheetState(() {
+                          _customMaxRadiusKm = val;
+                        });
+                        setState(() {});
+                      },
+                    ),
+                    if (!_userIsInDubai) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0, bottom: 8.0),
+                        child: Text(
+                          '(Distance filter applies only when inside Dubai with GPS enabled)',
+                          style: GoogleFonts.nunito(
+                            fontSize: 11,
+                            color: Colors.grey,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    Text(
+                      'Sort Stores By',
+                      style: GoogleFonts.nunito(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: AppTheme.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    RadioListTile<String>(
+                      title: const Text('Closest First'),
+                      value: 'distance',
+                      groupValue: _sortBy,
+                      activeColor: AppTheme.forestDeep,
+                      onChanged: _userIsInDubai
+                          ? (val) {
+                              if (val != null) {
+                                setBottomSheetState(() => _sortBy = val);
+                                setState(() {});
+                              }
+                            }
+                          : null,
+                      subtitle: !_userIsInDubai
+                          ? const Text('Requires GPS location')
+                          : null,
+                    ),
+                    RadioListTile<String>(
+                      title: const Text('Alphabetical (A-Z)'),
+                      value: 'name',
+                      groupValue: _sortBy,
+                      activeColor: AppTheme.forestDeep,
+                      onChanged: (val) {
+                        if (val != null) {
+                          setBottomSheetState(() => _sortBy = val);
+                          setState(() {});
+                        }
+                      },
+                    ),
+                    RadioListTile<String>(
+                      title: const Text('Recently Updated'),
+                      value: 'last_updated',
+                      groupValue: _sortBy,
+                      activeColor: AppTheme.forestDeep,
+                      onChanged: (val) {
+                        if (val != null) {
+                          setBottomSheetState(() => _sortBy = val);
+                          setState(() {});
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.forestDeep,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size.fromHeight(50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Text(
+                        'Apply Filters',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           },

@@ -72,6 +72,10 @@ jobs:
         working-directory: backend
         run: npm run build
 
+      - name: Test backend (Jest)
+        working-directory: backend
+        run: npm test
+
       - name: Install Firebase Functions dependencies
         working-directory: firebase/functions
         run: npm ci

@@ -27,7 +27,7 @@ import { startMaintenanceScheduler } from "./services/maintenance";
 
 export const prisma = new PrismaClient();
 
-const app = express();
+export const app = express();
 const PORT = process.env.PORT ?? 3000;
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -141,7 +141,12 @@ async function main() {
   startMaintenanceScheduler();
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+// Only boot the HTTP server when run directly (node dist/index.js). When the
+// module is imported by the test suite (supertest), we export `app` instead and
+// never call listen() / connect to a real database.
+if (require.main === module) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

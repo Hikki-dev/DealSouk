@@ -1,0 +1,41 @@
+name: Keep Backend Warm
+
+# Render's free tier sleeps a web service after ~15 min of inactivity, adding a
+# ~50s cold-start to the next request. This pings the health endpoint on a
+# schedule so the backend stays awake during demos and dev testing.
+#
+# Note: GitHub's scheduled runners are best-effort and can lag several minutes
+# under load, so we ping more often than strictly necessary. For a guaranteed
+# always-on backend, upgrade the Render service off the free tier instead.
+
+on:
+  schedule:
+    - cron: "*/10 * * * *" # every 10 minutes
+  workflow_dispatch: {}
+
+concurrency:
+  group: keep-warm
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    name: Ping /health
+    runs-on: ubuntu-latest
+    steps:
+      - name: Curl the health endpoint
+        run: |
+          URL="${KEEP_WARM_URL:-https://dealsouk.onrender.com/health}"
+          echo "Pinging $URL"
+          code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 "$URL" || echo "000")
+          echo "HTTP $code"
+          # A cold start can take ~50s; a second ping confirms it's awake.
+          if [ "$code" != "200" ]; then
+            echo "First ping not 200 (likely cold start) — retrying once..."
+            sleep 5
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 "$URL" || echo "000")
+            echo "HTTP $code"
+          fi
+          # Don't fail the workflow on a transient blip; this is best-effort.
+          exit 0
+    env:
+      KEEP_WARM_URL: ${{ vars.KEEP_WARM_URL }}

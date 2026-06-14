@@ -86,14 +86,12 @@ class OfflineSubmissionQueue {
     _flushing = true;
     try {
       final prefs = await SharedPreferences.getInstance();
-      final pending =
-          _decode(prefs.getString(_prefsKey))
-              .map(
-                (e) => PendingSubmission.fromJson(
-                  Map<String, dynamic>.from(e as Map),
-                ),
-              )
-              .toList();
+      final pending = _decode(prefs.getString(_prefsKey))
+          .map(
+            (e) =>
+                PendingSubmission.fromJson(Map<String, dynamic>.from(e as Map)),
+          )
+          .toList();
 
       if (pending.isEmpty) return;
 

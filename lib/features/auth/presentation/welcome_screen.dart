@@ -882,10 +882,7 @@ class _OtpInputField extends StatelessWidget {
             fillColor: Colors.white,
             counterText: '',
             hintText: '------',
-            hintStyle: TextStyle(
-              color: Colors.grey.shade400,
-              letterSpacing: 8,
-            ),
+            hintStyle: TextStyle(color: Colors.grey.shade400, letterSpacing: 8),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide(color: Colors.grey.shade300),

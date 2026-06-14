@@ -91,6 +91,18 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
     _searchController.addListener(() {
       setState(() => _searchQuery = _searchController.text.toLowerCase());
     });
+    // Load Dubai stores from the backend immediately, independent of location
+    // permission (there is no hardcoded fallback). _tryGetLocation refines the
+    // view only if the user grants location and is physically in Dubai.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref
+          .read(storesProvider.notifier)
+          .fetchNearby(
+            lat: _dubaiCenter.latitude,
+            lng: _dubaiCenter.longitude,
+            radiusKm: 40,
+          );
+    });
     // Attempt to get location but never move the map away from Dubai
     _tryGetLocation();
   }
@@ -140,9 +152,9 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
         _isLocating = false;
       });
 
-      // If the user IS in Dubai, pan the map to their live location
-      // and fetch stores around them. If they're abroad (testing),
-      // the map stays centred on Dubai and shows all static stores.
+      // If the user IS in Dubai, pan the map to their live location and refetch
+      // stores around them. If they're abroad (testing), the Dubai-center fetch
+      // started in initState already populated the list — no refetch needed.
       final lat = position.latitude;
       final lng = position.longitude;
       final isInDubai =
@@ -151,20 +163,16 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
           lng >= _dubaiMinLng &&
           lng <= _dubaiMaxLng;
 
-      if (isInDubai && _mapReady) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _mapController.move(LatLng(lat, lng), 13.5);
-        });
+      if (isInDubai) {
+        if (_mapReady) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _mapController.move(LatLng(lat, lng), 13.5);
+          });
+        }
+        ref
+            .read(storesProvider.notifier)
+            .fetchNearby(lat: lat, lng: lng, radiusKm: 40);
       }
-
-      // Always try to fetch live stores from backend around Dubai
-      ref
-          .read(storesProvider.notifier)
-          .fetchNearby(
-            lat: isInDubai ? lat : 25.2048,
-            lng: isInDubai ? lng : 55.2708,
-            radiusKm: 40,
-          );
     } catch (_) {
       setState(() => _isLocating = false);
     }

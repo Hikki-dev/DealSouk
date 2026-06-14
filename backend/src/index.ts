@@ -70,11 +70,20 @@ app.use(express.json({ limit: process.env.JSON_BODY_LIMIT ?? "1mb" }));
 let rateLimitStore: Store | undefined;
 if (isRedisEnabled && redis) {
   const r = redis;
-  rateLimitStore = new RedisStore({
-    sendCommand: (...args: string[]) =>
-      r.call(args[0], ...args.slice(1)) as Promise<never>,
-    prefix: "rl:global:",
-  });
+  try {
+    rateLimitStore = new RedisStore({
+      sendCommand: (...args: string[]) =>
+        r.call(args[0], ...args.slice(1)) as Promise<never>,
+      prefix: "rl:global:",
+    });
+  } catch (err) {
+    // Never let a Redis hiccup crash the API — degrade to the in-memory store.
+    console.error(
+      "[redis] rate-limit store init failed, using in-memory:",
+      (err as Error).message,
+    );
+    rateLimitStore = undefined;
+  }
 }
 
 const globalLimiter = rateLimit({

@@ -779,6 +779,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get storeNoStoresFound => 'No stores found';
 
   @override
+  String get storeLoadingStores => 'Loading nearby stores…';
+
+  @override
   String storeDubaiStoresCount(Object count) {
     return '$count Dubai stores';
   }

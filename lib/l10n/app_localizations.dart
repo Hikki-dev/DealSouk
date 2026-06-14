@@ -1454,6 +1454,12 @@ abstract class AppLocalizations {
   /// **'No stores found'**
   String get storeNoStoresFound;
 
+  /// No description provided for @storeLoadingStores.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading nearby stores…'**
+  String get storeLoadingStores;
+
   /// No description provided for @storeDubaiStoresCount.
   ///
   /// In en, this message translates to:

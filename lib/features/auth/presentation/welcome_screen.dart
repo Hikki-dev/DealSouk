@@ -196,15 +196,100 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     final code = _otpController.text.trim();
     if (code.isEmpty) return;
     setState(() => _loading = true);
-    await ref.read(authProvider.notifier).verifyOtp(_verificationId, code);
-    if (mounted) setState(() => _loading = false);
+    final success = await ref
+        .read(authProvider.notifier)
+        .verifyOtp(_verificationId, code);
+    if (mounted) {
+      setState(() => _loading = false);
+      if (!success) {
+        _showError();
+      }
+    }
   }
 
   void _showError() {
     final error = ref.read(authProvider).error;
     if (error != null && mounted) {
+      final isAr = AppLocalizations.of(context)!.localeName == 'ar';
+
+      String displayError = error;
+      if (error == 'Invalid code. Please try again.') {
+        displayError = isAr
+            ? 'الرمز الذي أدخلته غير صحيح. يرجى المحاولة مرة أخرى.'
+            : 'The OTP code you entered is incorrect. Please check and try again.';
+      }
+
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error), backgroundColor: Colors.red.shade700),
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          margin: const EdgeInsets.only(bottom: 20, left: 16, right: 16),
+          content: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFE53935), Color(0xFFC62828)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.25),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.25),
+                width: 1.5,
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(
+                    color: Colors.white24,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.error_outline_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isAr ? 'خطأ في التحقق' : 'Verification Error',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        displayError,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontSize: 12.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       );
     }
   }

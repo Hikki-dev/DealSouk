@@ -60,13 +60,15 @@ app.set("trust proxy", 1);
 app.use(helmet());
 app.use(
   cors({
-    origin: allowedOrigins ?? [
-      "http://localhost:3000",
-      "http://localhost:5000",
-      "http://localhost:5173",
-    ],
+    origin: isProduction
+      ? allowedOrigins
+      : (origin, callback) => {
+          // Allow all origins in development (e.g. dynamic Flutter web ports)
+          callback(null, true);
+        },
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   }),
 );
 app.use(express.json({ limit: process.env.JSON_BODY_LIMIT ?? "1mb" }));
@@ -104,6 +106,13 @@ const globalLimiter = rateLimit({
   store: rateLimitStore,
 });
 app.use(globalLimiter);
+
+app.get("/", (_req, res) => {
+  res.json({
+    status: "ok",
+    message: "Welcome to the DealSouk API Service. Refer to /health for server diagnostics.",
+  });
+});
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });

@@ -154,6 +154,7 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<String?> sendOtp(String phoneNumber) async {
+    state = state.copyWith(error: null);
     final completer = Completer<String?>();
 
     try {
@@ -183,6 +184,7 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<bool> verifyOtp(String verificationId, String smsCode) async {
+    state = state.copyWith(error: null);
     try {
       final result = await authService.verifyOtp(
         verificationId: verificationId,

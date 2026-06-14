@@ -66,7 +66,9 @@ class AuthService {
   }) async {
     if (kIsWeb) {
       if (_webConfirmationResult == null) {
-        throw StateError('No confirmation result found for Web OTP verification.');
+        throw StateError(
+          'No confirmation result found for Web OTP verification.',
+        );
       }
       return _webConfirmationResult!.confirm(smsCode);
     }

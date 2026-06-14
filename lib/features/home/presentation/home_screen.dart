@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:dealsouk/core/widgets/avatar_image.dart';
+import 'package:dealsouk/core/util/greeting.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -75,15 +76,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final dailyChallenge = ref.watch(dailyChallengeProvider);
     final settings = ref.watch(adminSettingsProvider);
 
-    final hour = DateTime.now().hour;
-    final String greeting;
-    if (hour < 12) {
-      greeting = l.greeting;
-    } else if (hour < 17) {
-      greeting = l.greetingAfternoon;
-    } else {
-      greeting = l.greetingEvening;
-    }
+    final greeting = switch (dayPartForHour(DateTime.now().hour)) {
+      DayPart.morning => l.greeting,
+      DayPart.afternoon => l.greetingAfternoon,
+      DayPart.evening => l.greetingEvening,
+    };
 
     final savedCount = cartItems.length;
     final bool searching = _searchQuery.trim().isNotEmpty;

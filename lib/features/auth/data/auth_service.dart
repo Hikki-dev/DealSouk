@@ -135,8 +135,38 @@ class AuthService {
 
   // --- Get ID Token (for backend calls) ---
 
+  // Single-flight guard for forced refreshes. Without this, a burst of
+  // concurrent 401s (common when the Render backend cold-starts) each fires its
+  // own forceRefresh, hammering Firebase's token endpoint and triggering
+  // `quota-exceeded`. Coalescing them into one in-flight refresh keeps us well
+  // under quota.
+  Future<String?>? _pendingRefresh;
+
   Future<String?> getIdToken({bool forceRefresh = false}) async {
-    return _auth.currentUser?.getIdToken(forceRefresh);
+    // Never let a Firebase auth failure (quota-exceeded, network blip, expired
+    // session) throw out of here. The interceptor calls this on EVERY request,
+    // so an uncaught throw cascades through every provider fetch and can trap
+    // the user inside non-dismissible flows (e.g. the home-area sheet). Degrade
+    // to an unauthenticated request instead — the backend returns a clean 401
+    // the caller can handle.
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return null;
+      if (!forceRefresh) return await user.getIdToken(false);
+      // Coalesce concurrent forced refreshes.
+      _pendingRefresh ??= user.getIdToken(true);
+      try {
+        return await _pendingRefresh;
+      } finally {
+        _pendingRefresh = null;
+      }
+    } on FirebaseAuthException catch (e) {
+      debugPrint('getIdToken failed (${e.code}); proceeding without token');
+      return null;
+    } catch (e) {
+      debugPrint('getIdToken failed unexpectedly; proceeding without token');
+      return null;
+    }
   }
 
   // --- Helpers ---

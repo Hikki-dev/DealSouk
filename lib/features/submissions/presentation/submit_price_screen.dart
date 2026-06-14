@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:dealsouk/core/widgets/souk_widgets.dart';
 import 'package:dealsouk/l10n/app_localizations.dart';
 import 'package:dealsouk/features/admin/domain/admin_settings.dart';
@@ -21,6 +22,22 @@ import 'package:dealsouk/core/offline/sync_service.dart';
 import 'package:dealsouk/core/network/storage_service.dart';
 import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/core/widgets/responsive_container.dart';
+
+/// Haversine distance in km between two GPS points. Mirrors the map's own
+/// calculation (store_screen.dart) so the distance shown when picking a
+/// supermarket matches the distance shown on the map for the same store.
+double _haversineKm(double lat1, double lng1, double lat2, double lng2) {
+  const r = 6371.0; // Earth radius km
+  final dLat = (lat2 - lat1) * pi / 180;
+  final dLng = (lng2 - lng1) * pi / 180;
+  final a =
+      sin(dLat / 2) * sin(dLat / 2) +
+      cos(lat1 * pi / 180) *
+          cos(lat2 * pi / 180) *
+          sin(dLng / 2) *
+          sin(dLng / 2);
+  return r * 2 * asin(sqrt(a));
+}
 
 class SubmitPriceScreen extends ConsumerStatefulWidget {
   final String? requestId;
@@ -206,6 +223,28 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
     );
   }
 
+  /// "branch • distance km away" using the user's REAL GPS position when
+  /// available (same haversine the map uses), falling back to the backend's
+  /// Dubai-relative distance only when location is unknown. The branch segment
+  /// is dropped entirely when empty so there's no orphan separator.
+  String _storeSubtitle(Store store) {
+    final userPos = ref.read(userLocationProvider);
+    final km = userPos != null
+        ? _haversineKm(
+            userPos.latitude,
+            userPos.longitude,
+            store.lat,
+            store.lng,
+          )
+        : store.distance;
+    // Whole-number km once we're far away (abroad testing); one decimal nearby.
+    final distLabel = km >= 100
+        ? '${km.toStringAsFixed(0)} km away'
+        : '${km.toStringAsFixed(1)} km away';
+    final branch = store.branch.trim();
+    return branch.isEmpty ? distLabel : '$branch • $distLabel';
+  }
+
   Widget _buildStepContent({
     required List<Store> stores,
     required List<Product> products,
@@ -314,7 +353,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                       ),
                     ),
                     subtitle: Text(
-                      '${store.branch} • ${store.distance.toStringAsFixed(1)} km away',
+                      _storeSubtitle(store),
                       style: GoogleFonts.nunito(
                         color: Colors.grey.shade600,
                         fontSize: 13,

@@ -1084,72 +1084,88 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     );
   }
 
+  /// Clean monochrome line icon per badge — replaces the emoji set, which read
+  /// as generic/AI. One restrained icon language across all badges.
+  IconData _badgeIcon(String id) {
+    switch (id) {
+      case 'first_submission':
+        return Icons.sell_outlined;
+      case 'streak_7':
+        return Icons.local_fire_department_outlined;
+      case 'streak_30':
+        return Icons.calendar_today_outlined;
+      case 'first_request':
+        return Icons.search_rounded;
+      case 'accuracy_90':
+        return Icons.verified_outlined;
+      case 'voucher_earned':
+        return Icons.card_giftcard_outlined;
+      default:
+        return Icons.workspace_premium_outlined;
+    }
+  }
+
   Widget _liveBadgeCard(UserBadge badge, ThemeData theme) {
-    return Opacity(
-      opacity: badge.unlocked ? 1.0 : 0.45,
-      child: Card(
-        elevation: 0,
-        margin: const EdgeInsetsDirectional.only(end: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(
-            color: badge.unlocked
-                ? AppTheme.amberAccent.withValues(alpha: 0.5)
-                : Colors.grey.shade200,
-          ),
+    final unlocked = badge.unlocked;
+    const accent = AppTheme.forestDeep;
+    return Container(
+      width: 132,
+      // Directional margin: cards flow start→end, mirrored under Arabic RTL.
+      margin: const EdgeInsetsDirectional.only(end: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: unlocked
+              ? accent.withValues(alpha: 0.22)
+              : const Color(0xFFEDEDED),
         ),
-        child: Container(
-          width: 140,
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            children: [
-              Stack(
-                alignment: AlignmentDirectional.topEnd,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: badge.unlocked
-                          ? AppTheme.amberLight
-                          : Colors.grey.shade100,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      badge.emoji,
-                      style: const TextStyle(fontSize: 22),
-                    ),
-                  ),
-                  if (!badge.unlocked)
-                    const Icon(
-                      Icons.lock_rounded,
-                      size: 14,
-                      color: Colors.grey,
-                    ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                badge.name,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 11,
-                  color: badge.unlocked ? AppTheme.textDark : Colors.grey,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                badge.description,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 8, color: Colors.grey.shade600),
-              ),
-            ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: unlocked
+                  ? accent.withValues(alpha: 0.08)
+                  : const Color(0xFFF4F4F4),
+              shape: BoxShape.circle,
+            ),
+            // Locked badges show a single lock glyph — unambiguous, no overlay.
+            child: Icon(
+              unlocked ? _badgeIcon(badge.id) : Icons.lock_outline_rounded,
+              size: 22,
+              color: unlocked ? accent : Colors.grey.shade400,
+            ),
           ),
-        ),
+          const SizedBox(height: 12),
+          Text(
+            badge.name,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+              color: unlocked ? AppTheme.textDark : Colors.grey.shade500,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            badge.description,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 9.5,
+              height: 1.3,
+              color: Colors.grey.shade500,
+            ),
+          ),
+        ],
       ),
     );
   }

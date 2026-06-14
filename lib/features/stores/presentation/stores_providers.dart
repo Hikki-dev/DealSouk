@@ -1,6 +1,19 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:dealsouk/features/stores/domain/store.dart';
 import 'package:dealsouk/features/stores/data/stores_service.dart';
+
+class UserLocationNotifier extends Notifier<Position?> {
+  @override
+  Position? build() => null;
+
+  @override
+  set state(Position? value) => super.state = value;
+}
+
+final userLocationProvider = NotifierProvider<UserLocationNotifier, Position?>(
+  UserLocationNotifier.new,
+);
 
 /// Backend-driven store list. There is no hardcoded fallback: the map and list
 /// reflect exactly what the backend returns for the requested area. While the

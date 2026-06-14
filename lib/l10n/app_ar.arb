@@ -163,7 +163,7 @@
       }
     }
   },
-  "unverifiedOutdated": "غير موثّق — قد يكون قديماً",
+  "unverifiedOutdated": "غير موثّق، قد يكون قديماً",
   "stalePriceWarning": "بيانات السعر قد تكون قديمة (+72 ساعة)",
   "staleStore": "قديم",
   "filterByChain": "تصفية حسب السلسلة",
@@ -326,7 +326,7 @@
   "storeLocationPromptBody": "يستخدم ديل سوق موقعك لعرض المسافة بينك وبين كل متجر في دبي.",
   "storeLocationPromptSkip": "تخطٍ",
   "storeLocationPromptAllow": "السماح",
-  "storeMapTitle": "خريطة المتاجر — دبي",
+  "storeMapTitle": "خريطة متاجر دبي",
   "storeSearchHint": "ابحث باسم المتجر أو المنطقة…",
   "storeNoStoresFound": "لم يتم العثور على متاجر",
   "storeLoadingStores": "جارٍ تحميل المتاجر القريبة…",
@@ -407,7 +407,7 @@
   "submitSubmitAPrice": "إرسال سعر",
   "submitCouldNotSendPrice": "تعذّر إرسال هذا السعر. يرجى التحقق من اتصالك والمحاولة مرة أخرى.",
   "submitSavedOffline": "تم الحفظ. سنرسل هذا السعر تلقائيًا عند عودة الاتصال بالإنترنت.",
-  "offlineBanner": "أنت غير متصل بالإنترنت — تم حفظ تغييراتك وستتم مزامنتها عند عودة الاتصال.",
+  "offlineBanner": "أنت غير متصل بالإنترنت. تم حفظ تغييراتك وستتم مزامنتها عند عودة الاتصال.",
   "offlinePendingSync": "{count, plural, =1{تغيير واحد بانتظار المزامنة} other{{count} تغييرات بانتظار المزامنة}}",
   "@offlinePendingSync": {
     "placeholders": {
@@ -416,9 +416,9 @@
       }
     }
   },
-  "submitTransactionDescription": "+{tokens} توكن — تم إرسال {product} في {store}",
+  "submitTransactionDescription": "+{tokens} توكن مقابل {product} في {store}",
   "submitPhotoUploaded": "تم رفع الصورة",
-  "submitPhotoUploadFailed": "تعذّر إضافة الصورة — اضغط للمحاولة مرة أخرى.",
+  "submitPhotoUploadFailed": "تعذّر إضافة الصورة. اضغط للمحاولة مرة أخرى.",
   "submitTapToUpload": "اضغط للرفع",
   "submitPriceSubmitted": "تم إرسال السعر!",
   "submitTokensGained": "+{tokens} توكن",
@@ -573,7 +573,7 @@
   "leaderToggleStreaks": "المتصدرون والسلاسل",
   "leaderToggleRequestBoard": "لوحة الطلبات النشطة",
   "leaderRankNumber": "المرتبة #{n}",
-  "leaderRankUnknown": "المرتبة —",
+  "leaderRankUnknown": "غير مصنّف",
   "leaderDayStreak": "سلسلة {days} يوم",
   "leaderTokensLabel": "النقاط",
   "leaderVoucherName": "قسيمة يونيون كوب بقيمة 50 درهم",

@@ -403,6 +403,7 @@ class SearchScreen extends ConsumerWidget {
       'Waitrose',
       'Al Maya',
       'Geant',
+      'Al Madina',
     ];
 
     ref.read(navbarVisibleProvider.notifier).hide();

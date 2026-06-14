@@ -51,7 +51,7 @@ export async function notifyRankChange(
       : `You dropped to #${newRank}`,
     direction === "up"
       ? `You climbed ${oldRank - newRank} spots on the leaderboard this month`
-      : `You fell ${newRank - oldRank} spots — submit more prices to climb back`,
+      : `You fell ${newRank - oldRank} spots. Submit more prices to climb back`,
     { type: "rank_change", newRank: String(newRank), oldRank: String(oldRank) },
   );
 }

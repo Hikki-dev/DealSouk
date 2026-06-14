@@ -101,7 +101,7 @@ class MyRequestsNotifier extends Notifier<List<PriceRequest>> {
     // "1 change waiting to sync" banner and the negative balance).
     if (requestCostTokens > 0 &&
         ref.read(userTokensProvider) < requestCostTokens) {
-      lastError = 'Not enough tokens — submit a few prices to earn some first.';
+      lastError = 'Not enough tokens. Submit a few prices to earn some first.';
       return;
     }
     lastError = null;

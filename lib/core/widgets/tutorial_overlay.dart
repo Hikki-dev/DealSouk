@@ -97,9 +97,9 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
       iconBg: const Color(0xFFE3F2FD),
       iconColor: const Color(0xFF1E88E5),
       rows: const [
-        ('Carrefour — Mall of the Emirates', 'Updated 2h ago'),
-        ('Union Coop — Al Barsha', 'Updated 5h ago'),
-        ('Lulu — Al Qusais', 'Updated 1d ago'),
+        ('Carrefour • Mall of the Emirates', 'Updated 2h ago'),
+        ('Union Coop • Al Barsha', 'Updated 5h ago'),
+        ('Lulu • Al Qusais', 'Updated 1d ago'),
       ],
     );
   }

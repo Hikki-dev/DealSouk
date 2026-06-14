@@ -665,7 +665,7 @@ abstract class AppLocalizations {
   /// No description provided for @unverifiedOutdated.
   ///
   /// In en, this message translates to:
-  /// **'Unverified — may be outdated'**
+  /// **'Unverified, may be outdated'**
   String get unverifiedOutdated;
 
   /// No description provided for @stalePriceWarning.
@@ -1439,7 +1439,7 @@ abstract class AppLocalizations {
   /// No description provided for @storeMapTitle.
   ///
   /// In en, this message translates to:
-  /// **'Store Map — Dubai'**
+  /// **'Dubai Store Map'**
   String get storeMapTitle;
 
   /// No description provided for @storeSearchHint.
@@ -1925,7 +1925,7 @@ abstract class AppLocalizations {
   /// No description provided for @offlineBanner.
   ///
   /// In en, this message translates to:
-  /// **'You\'re offline — changes are saved and will sync when you reconnect.'**
+  /// **'You\'re offline. Changes are saved and will sync when you reconnect.'**
   String get offlineBanner;
 
   /// No description provided for @offlinePendingSync.
@@ -1937,7 +1937,7 @@ abstract class AppLocalizations {
   /// No description provided for @submitTransactionDescription.
   ///
   /// In en, this message translates to:
-  /// **'+{tokens} tokens — submitted {product} @ {store}'**
+  /// **'+{tokens} tokens for {product} at {store}'**
   String submitTransactionDescription(
     Object tokens,
     Object product,
@@ -1953,7 +1953,7 @@ abstract class AppLocalizations {
   /// No description provided for @submitPhotoUploadFailed.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t add the photo — tap to try again.'**
+  /// **'Couldn\'t add the photo. Tap to try again.'**
   String get submitPhotoUploadFailed;
 
   /// No description provided for @submitTapToUpload.
@@ -2883,7 +2883,7 @@ abstract class AppLocalizations {
   /// No description provided for @leaderRankUnknown.
   ///
   /// In en, this message translates to:
-  /// **'Rank —'**
+  /// **'Unranked'**
   String get leaderRankUnknown;
 
   /// No description provided for @leaderDayStreak.

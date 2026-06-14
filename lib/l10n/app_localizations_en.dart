@@ -312,7 +312,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get unverifiedOutdated => 'Unverified — may be outdated';
+  String get unverifiedOutdated => 'Unverified, may be outdated';
 
   @override
   String get stalePriceWarning => 'Price data may be outdated (>72h)';
@@ -770,7 +770,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get storeLocationPromptAllow => 'Allow';
 
   @override
-  String get storeMapTitle => 'Store Map — Dubai';
+  String get storeMapTitle => 'Dubai Store Map';
 
   @override
   String get storeSearchHint => 'Search store name or area…';
@@ -1051,7 +1051,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get offlineBanner =>
-      'You\'re offline — changes are saved and will sync when you reconnect.';
+      'You\'re offline. Changes are saved and will sync when you reconnect.';
 
   @override
   String offlinePendingSync(int count) {
@@ -1070,7 +1070,7 @@ class AppLocalizationsEn extends AppLocalizations {
     Object product,
     Object store,
   ) {
-    return '+$tokens tokens — submitted $product @ $store';
+    return '+$tokens tokens for $product at $store';
   }
 
   @override
@@ -1078,7 +1078,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get submitPhotoUploadFailed =>
-      'Couldn\'t add the photo — tap to try again.';
+      'Couldn\'t add the photo. Tap to try again.';
 
   @override
   String get submitTapToUpload => 'Tap to Upload';
@@ -1614,7 +1614,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get leaderRankUnknown => 'Rank —';
+  String get leaderRankUnknown => 'Unranked';
 
   @override
   String leaderDayStreak(Object days) {

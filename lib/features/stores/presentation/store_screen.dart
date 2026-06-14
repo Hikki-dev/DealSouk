@@ -93,6 +93,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
     'Nesto',
     'Al Maya',
     'Grandiose',
+    'Al Madina',
   ];
 
   @override
@@ -104,9 +105,20 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
     // Load Dubai stores from the backend immediately, independent of location
     // permission (there is no hardcoded fallback). _tryGetLocation refines the
     // view only if the user grants location and is physically in Dubai.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _reloadStores());
-    // Attempt to get location but never move the map away from Dubai
-    _tryGetLocation();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _reloadStores();
+      final pos = ref.read(userLocationProvider);
+      if (pos != null) {
+        setState(() {
+          _currentPosition = pos;
+        });
+        if (_mapReady) {
+          _mapController.move(LatLng(pos.latitude, pos.longitude), 13.5);
+        }
+      } else {
+        _tryGetLocation();
+      }
+    });
   }
 
   /// Fetch the Dubai-area stores and toggle the loading flag. Reused by the
@@ -169,6 +181,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
         _currentPosition = position;
         _isLocating = false;
       });
+      ref.read(userLocationProvider.notifier).state = position;
 
       // If the user IS in Dubai, pan the map to their live location and refetch
       // stores around them. If they're abroad (testing), the Dubai-center fetch
@@ -262,10 +275,9 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
   }
 
   /// Distance from user's GPS to a store in km.
-  /// Returns null when user is not in Dubai (no radius filtering).
   double? _distanceTo(Store store) {
     final p = _currentPosition;
-    if (p == null || !_userIsInDubai) return null;
+    if (p == null) return null;
     return _haversineKm(p.latitude, p.longitude, store.lat, store.lng);
   }
 
@@ -290,14 +302,14 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
     }).toList();
 
     // Sort according to selection
-    if (_sortBy == 'distance' && _userIsInDubai) {
+    if (_sortBy == 'distance' && _currentPosition != null) {
       result.sort((a, b) {
         final da = _distanceTo(a) ?? double.maxFinite;
         final db = _distanceTo(b) ?? double.maxFinite;
         return da.compareTo(db);
       });
     } else if (_sortBy == 'name' ||
-        (_sortBy == 'distance' && !_userIsInDubai)) {
+        (_sortBy == 'distance' && _currentPosition == null)) {
       result.sort((a, b) => a.name.compareTo(b.name));
     } else if (_sortBy == 'last_updated') {
       result.sort(
@@ -462,10 +474,16 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                 fontSize: 13.5,
                               ),
                               border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
                               isDense: true,
                             ),
                           ),
                         ),
+                        // Clear button only. Filtering lives in the single
+                        // top-right control (the tune button) so there's just
+                        // one obvious place to filter, not two that do the same
+                        // thing.
                         if (_searchQuery.isNotEmpty)
                           GestureDetector(
                             onTap: () {
@@ -477,12 +495,6 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                               color: Colors.grey.shade400,
                               size: 18,
                             ),
-                          )
-                        else
-                          Icon(
-                            Icons.filter_list_rounded,
-                            color: AppTheme.forestDeep,
-                            size: 20,
                           ),
                       ],
                     ),
@@ -590,9 +602,8 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                       ),
                                       maxZoom: 20,
                                     ),
-                                    // User location pin (only shown in Dubai)
-                                    if (_userIsInDubai &&
-                                        _currentPosition != null)
+                                    // User location pin (shown when position is available)
+                                    if (_currentPosition != null)
                                       CircleLayer(
                                         circles: [
                                           // Accuracy ring
@@ -631,8 +642,8 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                         final dist = _distanceTo(store);
                                         return Marker(
                                           point: LatLng(store.lat, store.lng),
-                                          width: 40,
-                                          height: 40,
+                                          width: 52,
+                                          height: 52,
                                           child: GestureDetector(
                                             onTap: () => _showStorePrices(
                                               context,
@@ -659,6 +670,8 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                                   border: Border.all(
                                                     color: Colors.white,
                                                     width: 2.5,
+                                                    strokeAlign: BorderSide
+                                                        .strokeAlignOutside,
                                                   ),
                                                   boxShadow: [
                                                     BoxShadow(
@@ -680,7 +693,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                                     store.name,
                                                     isStale,
                                                   ),
-                                                  size: 40,
+                                                  size: 52,
                                                   padding: 6,
                                                 ),
                                               ),
@@ -989,6 +1002,8 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
       String n when n.contains('nesto') => const Color(0xFFF4A261),
       String n when n.contains('al maya') => const Color(0xFF264653),
       String n when n.contains('grandiose') => const Color(0xFF8338EC),
+      String n when n.contains('al madina') || n.contains('madina') =>
+        const Color(0xFF0D9488),
       _ => AppTheme.forestDeep,
     };
   }
@@ -1629,6 +1644,8 @@ class _StoreChoiceCard extends StatelessWidget {
       String n when n.contains('nesto') => const Color(0xFFF4A261),
       String n when n.contains('al maya') => const Color(0xFF264653),
       String n when n.contains('grandiose') => const Color(0xFF8338EC),
+      String n when n.contains('al madina') || n.contains('madina') =>
+        const Color(0xFF0D9488),
       _ => AppTheme.forestDeep,
     };
   }
@@ -1668,6 +1685,7 @@ String? _chainSlug(String name) {
   if (n.contains('nesto')) return 'nesto';
   if (n.contains('al maya')) return 'al_maya';
   if (n.contains('grandiose')) return 'grandiose';
+  if (n.contains('al madina') || n.contains('madina')) return 'al_madina';
   return null;
 }
 

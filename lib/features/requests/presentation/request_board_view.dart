@@ -16,9 +16,19 @@ class RequestBoardView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
     final requests = ref.watch(priceRequestsProvider);
+    final myRequests = ref.watch(myRequestsProvider);
     final requestCost = ref.watch(adminSettingsProvider).requestCostTokens;
+    // "Price checks people need" is the COMMUNITY board: only other shoppers'
+    // open requests. Exclude the current user's own (they're shown separately
+    // under "My Price Requests" above, and the backend blocks fulfilling your
+    // own request anyway).
+    final myRequestIds = myRequests.map((r) => r.id).toSet();
     final activeRequests = requests
-        .where((r) => r.status == 'open' || r.status == 'pending')
+        .where(
+          (r) =>
+              (r.status == 'open' || r.status == 'pending') &&
+              !myRequestIds.contains(r.id),
+        )
         .toList();
 
     return Padding(
@@ -57,6 +67,28 @@ class RequestBoardView extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 20),
+
+          if (myRequests.isNotEmpty) ...[
+            Text(
+              'My Price Requests (${myRequests.length})',
+              style: GoogleFonts.fredoka(
+                fontSize: 16.5,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.forestDeep,
+              ),
+            ),
+            const SizedBox(height: 10),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: myRequests.length,
+              itemBuilder: (context, index) {
+                final req = myRequests[index];
+                return _MyRequestItemCard(request: req);
+              },
+            ),
+            const SizedBox(height: 20),
+          ],
 
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -171,6 +203,7 @@ class RequestBoardView extends ConsumerWidget {
       'Waitrose',
       'Al Maya',
       'Geant',
+      'Al Madina',
     ];
 
     // Hide navbar when sheet opens
@@ -450,6 +483,156 @@ class _RequestItemCard extends StatelessWidget {
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MyRequestItemCard extends ConsumerWidget {
+  final PriceRequest request;
+
+  const _MyRequestItemCard({required this.request});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
+    final statusColor = request.status == 'fulfilled'
+        ? Colors.green
+        : request.status == 'refunded'
+        ? Colors.blue
+        : request.status == 'open'
+        ? Colors.orange
+        : Colors.grey;
+
+    final displayStatus = request.status == 'open'
+        ? 'PENDING'
+        : request.status == 'fulfilled'
+        ? 'ACCEPTED'
+        : request.status.toUpperCase();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE8EEE4), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.01),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: statusColor.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.search_rounded, color: statusColor, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  request.productName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.nunito(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13.5,
+                    color: AppTheme.textDark,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '${request.storeName} • ${request.timestampLabel}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.nunito(
+                    color: Colors.grey.shade500,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (request.status == 'open') ...[
+                IconButton(
+                  tooltip: l.profileCancelRequest,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  icon: const Icon(
+                    Icons.cancel_outlined,
+                    color: AppTheme.redAccent,
+                    size: 20,
+                  ),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        title: Text(l.profileCancelRequestTitle),
+                        content: Text(
+                          l.profileCancelRequestBody(request.productName),
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text(l.profileNo),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              ref
+                                  .read(myRequestsProvider.notifier)
+                                  .cancelRequest(request.id);
+                              Navigator.pop(context);
+                            },
+                            child: Text(
+                              l.profileYesCancel,
+                              style: const TextStyle(color: AppTheme.redAccent),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(width: 8),
+              ],
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  displayStatus,
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.bold,
+                    color: statusColor,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

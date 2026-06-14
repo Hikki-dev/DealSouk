@@ -311,7 +311,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get unverifiedOutdated => 'غير موثّق — قد يكون قديماً';
+  String get unverifiedOutdated => 'غير موثّق، قد يكون قديماً';
 
   @override
   String get stalePriceWarning => 'بيانات السعر قد تكون قديمة (+72 ساعة)';
@@ -765,7 +765,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get storeLocationPromptAllow => 'السماح';
 
   @override
-  String get storeMapTitle => 'خريطة المتاجر — دبي';
+  String get storeMapTitle => 'خريطة متاجر دبي';
 
   @override
   String get storeSearchHint => 'ابحث باسم المتجر أو المنطقة…';
@@ -1046,7 +1046,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get offlineBanner =>
-      'أنت غير متصل بالإنترنت — تم حفظ تغييراتك وستتم مزامنتها عند عودة الاتصال.';
+      'أنت غير متصل بالإنترنت. تم حفظ تغييراتك وستتم مزامنتها عند عودة الاتصال.';
 
   @override
   String offlinePendingSync(int count) {
@@ -1065,7 +1065,7 @@ class AppLocalizationsAr extends AppLocalizations {
     Object product,
     Object store,
   ) {
-    return '+$tokens توكن — تم إرسال $product في $store';
+    return '+$tokens توكن مقابل $product في $store';
   }
 
   @override
@@ -1073,7 +1073,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get submitPhotoUploadFailed =>
-      'تعذّر إضافة الصورة — اضغط للمحاولة مرة أخرى.';
+      'تعذّر إضافة الصورة. اضغط للمحاولة مرة أخرى.';
 
   @override
   String get submitTapToUpload => 'اضغط للرفع';
@@ -1609,7 +1609,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get leaderRankUnknown => 'المرتبة —';
+  String get leaderRankUnknown => 'غير مصنّف';
 
   @override
   String leaderDayStreak(Object days) {

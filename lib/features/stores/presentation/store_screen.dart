@@ -169,12 +169,13 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
           lng >= _dubaiMinLng &&
           lng <= _dubaiMaxLng;
 
+      if (_mapReady) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _mapController.move(LatLng(lat, lng), 13.5);
+        });
+      }
+
       if (isInDubai) {
-        if (_mapReady) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _mapController.move(LatLng(lat, lng), 13.5);
-          });
-        }
         ref
             .read(storesProvider.notifier)
             .fetchNearby(lat: lat, lng: lng, radiusKm: 40);

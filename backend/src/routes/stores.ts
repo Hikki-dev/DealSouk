@@ -17,7 +17,7 @@ function distanceKm(lat1: number, lng1: number, lat2: number, lng2: number): num
 router.get('/nearby', async (req, res) => {
   const lat = parseFloat(req.query.lat as string);
   const lng = parseFloat(req.query.lng as string);
-  const radiusKm = Math.min(15, Math.max(0.5, parseFloat((req.query.radius as string) ?? '3')));
+  const radiusKm = Math.min(50, Math.max(0.5, parseFloat((req.query.radius as string) ?? '3')));
   const chain = req.query.chain as string | undefined;
 
   if (isNaN(lat) || isNaN(lng)) {

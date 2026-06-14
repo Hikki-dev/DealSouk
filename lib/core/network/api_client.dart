@@ -18,7 +18,7 @@ class ApiClient {
           'Production builds must not have a hardcoded Render URL fallback.',
         );
       }
-      return 'http://localhost:3000';
+      return 'https://dealsouk.onrender.com';
     }
     return _envBaseUrl;
   }

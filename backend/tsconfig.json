@@ -3,6 +3,10 @@
     "target": "ES2022",
     "module": "commonjs",
     "lib": ["ES2022"],
+    // Only scan these for global types. Module types (express, cors, supertest,
+    // …) resolve on import — without this, TS implicitly loads every @types/*
+    // package and errors on phantom ones (e.g. 'request') after a reinstall.
+    "types": ["node", "jest"],
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,

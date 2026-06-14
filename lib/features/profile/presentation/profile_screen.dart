@@ -52,6 +52,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     Future.microtask(() {
       ref.read(userVouchersProvider.notifier).fetch();
       ref.read(myRequestsProvider.notifier).fetchMyRequests();
+      // Reconcile economy + submissions from the server when the profile opens
+      // (also covers tokens, streak, accuracy, approved/total, token history).
+      ref.read(authProvider.notifier).refreshProfile();
     });
   }
 
@@ -66,24 +69,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final l = AppLocalizations.of(context)!;
     final tokens = ref.watch(userTokensProvider);
     final profile = ref.watch(userProfileProvider);
-    final submissions = ref.watch(adminSubmissionsProvider);
+    final stats = ref.watch(userStatsProvider);
+    final mySubmissions = ref.watch(mySubmissionsProvider);
     final transactions = ref.watch(userTransactionsProvider);
     final settings = ref.watch(adminSettingsProvider);
     final vouchers = ref.watch(userVouchersProvider);
     final locale = ref.watch(localeProvider);
     final streak = ref.watch(streakProvider);
 
-    final mySubmissions = submissions
-        .where((s) => s.sourcerName == profile.name)
-        .toList();
     final myRequests = ref.watch(myRequestsProvider);
     final level = tokensToLevel(tokens);
-    final approvedCount = mySubmissions
-        .where((s) => s.status == 'approved')
-        .length;
-    final accuracyPct = mySubmissions.isEmpty
-        ? 0
-        : ((approvedCount / mySubmissions.length) * 100).round();
+    // Authoritative server values (GET /profile/me), not derived from the
+    // admin moderation queue. Fall back to 0 / 100% until the first sync lands.
+    final approvedCount = stats?.approvedSubmissions ?? 0;
+    final accuracyPct = stats?.accuracyRating.round() ?? 100;
 
     return Scaffold(
       backgroundColor: AppTheme.background,

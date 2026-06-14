@@ -418,6 +418,7 @@
   },
   "submitTransactionDescription": "+{tokens} توكن — تم إرسال {product} في {store}",
   "submitPhotoUploaded": "تم رفع الصورة",
+  "submitPhotoUploadFailed": "تعذّر إضافة الصورة — اضغط للمحاولة مرة أخرى.",
   "submitTapToUpload": "اضغط للرفع",
   "submitPriceSubmitted": "تم إرسال السعر!",
   "submitTokensGained": "+{tokens} توكن",

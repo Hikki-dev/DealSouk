@@ -1950,6 +1950,12 @@ abstract class AppLocalizations {
   /// **'Photo Uploaded'**
   String get submitPhotoUploaded;
 
+  /// No description provided for @submitPhotoUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t add the photo — tap to try again.'**
+  String get submitPhotoUploadFailed;
+
   /// No description provided for @submitTapToUpload.
   ///
   /// In en, this message translates to:

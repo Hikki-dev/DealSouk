@@ -88,6 +88,10 @@ class AuthNotifier extends Notifier<AuthState> {
         roles: _effectiveRoles(AuthRole.fromClaims(data)),
       );
       _syncProfileProviders(data, firebaseUser: user);
+      // Pull the full economy (streak, accuracy, approved/total counts, and the
+      // user's own submissions) from /profile/me and reconcile every provider to
+      // DB truth. Fire-and-forget so login isn't blocked on the round-trip.
+      unawaited(refreshProfile());
     } catch (_) {
       state = AuthState(
         status: AuthStatus.authenticated,
@@ -126,6 +130,33 @@ class AuthNotifier extends Notifier<AuthState> {
             fallbackAvatarUrl: firebaseUser?.photoURL,
           );
       ref.read(userTransactionsProvider.notifier).fetch();
+    } catch (_) {}
+  }
+
+  /// Re-fetch GET /profile/me and reconcile every per-user provider to the
+  /// server's truth: token balance, streak, accuracy/approved/total stats, the
+  /// profile (name/area/avatar), token history, and the user's submissions.
+  /// Called on login and after any action that changes the economy (submitting
+  /// a price, fulfilling/cancelling a request) so optimistic UI converges to DB
+  /// and survives an app restart or a switch to another device.
+  Future<void> refreshProfile() async {
+    if (state.status != AuthStatus.authenticated) return;
+    try {
+      final profile = await profileService.getMyProfile();
+      ref.read(userTokensProvider.notifier).sync(profile.tokenBalance);
+      ref
+          .read(streakProvider.notifier)
+          .sync(profile.currentStreak, profile.longestStreak);
+      ref.read(userStatsProvider.notifier).sync(profile);
+      ref
+          .read(userProfileProvider.notifier)
+          .syncFromProfile(
+            profile,
+            fallbackName: state.firebaseUser?.displayName,
+            fallbackAvatarUrl: state.firebaseUser?.photoURL,
+          );
+      await ref.read(userTransactionsProvider.notifier).fetch();
+      await ref.read(mySubmissionsProvider.notifier).fetch();
     } catch (_) {}
   }
 

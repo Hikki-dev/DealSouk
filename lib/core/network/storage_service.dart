@@ -18,6 +18,18 @@ class StorageService {
     return _upload(photo, folder: 'receipts');
   }
 
+  /// Opens the camera and uploads a price-label photo to Firebase Storage.
+  /// Returns the download URL, or null if the user cancelled / the upload failed.
+  Future<String?> captureAndUploadPriceLabel() async {
+    final photo = await _picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 75,
+      maxWidth: 1200,
+    );
+    if (photo == null) return null;
+    return _upload(photo, folder: 'labels');
+  }
+
   /// Opens gallery and uploads the image.
   Future<String?> pickAndUploadReceipt() async {
     final photo = await _picker.pickImage(

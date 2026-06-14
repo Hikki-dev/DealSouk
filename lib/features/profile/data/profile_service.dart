@@ -1,6 +1,7 @@
 import 'package:dealsouk/features/products/domain/product.dart';
 import 'package:dealsouk/features/cart/domain/cart_item.dart';
 import 'package:dealsouk/features/tokens/domain/token_transaction.dart';
+import 'package:dealsouk/features/admin/domain/admin_submission.dart';
 import 'package:dealsouk/core/network/api_client.dart';
 
 class ProfileData {
@@ -14,6 +15,8 @@ class ProfileData {
   final bool isAdmin;
   final int totalSubmissions;
   final int approvedSubmissions;
+  final int currentStreak;
+  final int longestStreak;
 
   const ProfileData({
     required this.id,
@@ -26,6 +29,8 @@ class ProfileData {
     required this.isAdmin,
     required this.totalSubmissions,
     required this.approvedSubmissions,
+    this.currentStreak = 0,
+    this.longestStreak = 0,
   });
 
   factory ProfileData.fromJson(Map<String, dynamic> json) => ProfileData(
@@ -39,6 +44,8 @@ class ProfileData {
     isAdmin: json['isAdmin'] as bool? ?? false,
     totalSubmissions: json['totalSubmissions'] as int? ?? 0,
     approvedSubmissions: json['approvedSubmissions'] as int? ?? 0,
+    currentStreak: json['currentStreak'] as int? ?? 0,
+    longestStreak: json['longestStreak'] as int? ?? 0,
   );
 }
 
@@ -78,6 +85,17 @@ class ProfileService {
   Future<ProfileData> getMyProfile() async {
     final res = await apiClient.get('/profile/me');
     return ProfileData.fromJson(res.data as Map<String, dynamic>);
+  }
+
+  /// The current user's own submissions (FR-30 "My Submissions") straight from
+  /// the DB — independent of the admin moderation queue. AdminSubmission already
+  /// parses this exact shape (product/store/priceAed/status/tokensAwarded).
+  Future<List<AdminSubmission>> getMySubmissions() async {
+    final res = await apiClient.get('/profile/me/submissions');
+    final list = res.data as List<dynamic>;
+    return list
+        .map((e) => AdminSubmission.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<List<TokenTransaction>> getTransactions({int page = 0}) async {

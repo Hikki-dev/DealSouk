@@ -611,6 +611,7 @@
     }
   },
   "submitPhotoUploaded": "Photo Uploaded",
+  "submitPhotoUploadFailed": "Couldn't add the photo — tap to try again.",
   "submitTapToUpload": "Tap to Upload",
   "submitPriceSubmitted": "Price Submitted!",
   "submitTokensGained": "+{tokens} tokens",

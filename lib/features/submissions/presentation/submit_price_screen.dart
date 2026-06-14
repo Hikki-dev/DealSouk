@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dealsouk/core/widgets/souk_widgets.dart';
 import 'package:dealsouk/l10n/app_localizations.dart';
 import 'package:dealsouk/features/admin/domain/admin_settings.dart';
@@ -51,6 +52,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
   bool uploadedReceipt = false;
   String? _receiptUrl;
   bool _uploadingReceipt = false;
+  bool _uploadingPriceLabel = false;
   String selectedPromo = 'None';
 
   @override
@@ -469,13 +471,13 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
               children: [
                 Expanded(
                   child: _photoUploadButton(
-                    title: l.submitPriceLabelPhoto,
+                    title: _uploadingPriceLabel
+                        ? l.submitUploading
+                        : l.submitPriceLabelPhoto,
                     isUploaded: uploadedPriceLabel,
-                    onTap: () {
-                      setState(() {
-                        uploadedPriceLabel = !uploadedPriceLabel;
-                      });
-                    },
+                    onTap: (_uploadingPriceLabel || _uploadingReceipt)
+                        ? null
+                        : () => _capturePhoto(isReceipt: false),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -485,22 +487,9 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                         ? l.submitUploading
                         : l.submitReceiptPhoto,
                     isUploaded: uploadedReceipt,
-                    onTap: _uploadingReceipt
+                    onTap: (_uploadingPriceLabel || _uploadingReceipt)
                         ? null
-                        : () async {
-                            setState(() => _uploadingReceipt = true);
-                            final url = await storageService
-                                .captureAndUploadReceipt();
-                            if (mounted) {
-                              setState(() {
-                                _uploadingReceipt = false;
-                                if (url != null) {
-                                  _receiptUrl = url;
-                                  uploadedReceipt = true;
-                                }
-                              });
-                            }
-                          },
+                        : () => _capturePhoto(isReceipt: true),
                   ),
                 ),
               ],
@@ -975,6 +964,15 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                               .fulfillPriceRequest(widget.requestId!);
                         }
 
+                        // Reconcile optimistic updates with DB truth: pulls the
+                        // real token balance, streak, accuracy, approved/total
+                        // counts, token history, and the new row into "My
+                        // Submissions". Keeps everything consistent across
+                        // restarts and devices.
+                        unawaited(
+                          ref.read(authProvider.notifier).refreshProfile(),
+                        );
+
                         if (!mounted) return;
                         _showSuccessDialog(context, awarded);
                       }
@@ -1056,6 +1054,47 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
     if (uploadedPriceLabel) reward += 4;
     if (selectedPromo != 'None') reward += 1;
     return reward;
+  }
+
+  /// Opens the camera for a proof photo, uploads it, and gives the user explicit
+  /// feedback either way. Used by BOTH the price-label and receipt tiles so they
+  /// behave identically (the price-label tile previously just toggled a tick and
+  /// never opened the camera).
+  Future<void> _capturePhoto({required bool isReceipt}) async {
+    final l = AppLocalizations.of(context)!;
+    setState(() {
+      if (isReceipt) {
+        _uploadingReceipt = true;
+      } else {
+        _uploadingPriceLabel = true;
+      }
+    });
+    final url = isReceipt
+        ? await storageService.captureAndUploadReceipt()
+        : await storageService.captureAndUploadPriceLabel();
+    if (!mounted) return;
+    setState(() {
+      if (isReceipt) {
+        _uploadingReceipt = false;
+        if (url != null) {
+          _receiptUrl = url;
+          uploadedReceipt = true;
+        }
+      } else {
+        _uploadingPriceLabel = false;
+        if (url != null) {
+          uploadedPriceLabel = true;
+        }
+      }
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: AppTheme.forestDeep,
+        content: Text(
+          url != null ? l.submitPhotoUploaded : l.submitPhotoUploadFailed,
+        ),
+      ),
+    );
   }
 
   Widget _photoUploadButton({

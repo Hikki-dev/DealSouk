@@ -1072,6 +1072,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get submitPhotoUploaded => 'تم رفع الصورة';
 
   @override
+  String get submitPhotoUploadFailed =>
+      'تعذّر إضافة الصورة — اضغط للمحاولة مرة أخرى.';
+
+  @override
   String get submitTapToUpload => 'اضغط للرفع';
 
   @override

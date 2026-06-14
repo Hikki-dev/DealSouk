@@ -1077,6 +1077,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get submitPhotoUploaded => 'Photo Uploaded';
 
   @override
+  String get submitPhotoUploadFailed =>
+      'Couldn\'t add the photo — tap to try again.';
+
+  @override
   String get submitTapToUpload => 'Tap to Upload';
 
   @override

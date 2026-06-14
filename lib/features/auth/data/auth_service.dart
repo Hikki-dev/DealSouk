@@ -19,7 +19,10 @@ class AuthService {
       _googleSignInInitialized = true;
       return;
     }
-    await GoogleSignIn.instance.initialize();
+    await GoogleSignIn.instance.initialize(
+      serverClientId:
+          '548247133447-7v4gjkgha488t7v3kc79is8kijb3bog4.apps.googleusercontent.com',
+    );
     _googleSignInInitialized = true;
   }
 

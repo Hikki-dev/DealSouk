@@ -71,9 +71,9 @@ jobs:
             echo "Missing Firebase Android secrets. Configure FIREBASE_OPTIONS_DART_B64 and GOOGLE_SERVICES_JSON_B64."
             exit 1
           fi
-          echo "$FIREBASE_OPTIONS_DART_B64" | base64 --decode > lib/firebase_options.dart
+          echo "$FIREBASE_OPTIONS_DART_B64" | tr -d '\r\n ' | base64 --decode > lib/firebase_options.dart
           dart format lib/firebase_options.dart
-          echo "$GOOGLE_SERVICES_JSON_B64" | base64 --decode > android/app/google-services.json
+          echo "$GOOGLE_SERVICES_JSON_B64" | tr -d '\r\n ' | base64 --decode > android/app/google-services.json
 
       - name: Restore Android release keystore from secrets
         env:
@@ -89,7 +89,7 @@ jobs:
             echo "Missing Android signing secrets. Configure ANDROID_UPLOAD_KEYSTORE_B64, ANDROID_UPLOAD_STORE_PASSWORD, ANDROID_UPLOAD_KEY_ALIAS, and ANDROID_UPLOAD_KEY_PASSWORD."
             exit 1
           fi
-          echo "$ANDROID_UPLOAD_KEYSTORE_B64" | base64 --decode > android/app/upload-keystore.jks
+          echo "$ANDROID_UPLOAD_KEYSTORE_B64" | tr -d '\r\n ' | base64 --decode > android/app/upload-keystore.jks
 
       - name: Show Android release signing fingerprint
         env:

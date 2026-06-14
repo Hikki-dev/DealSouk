@@ -6,6 +6,7 @@ import 'package:dealsouk/features/auth/domain/auth_role.dart';
 import 'package:dealsouk/core/network/api_client.dart';
 import 'package:dealsouk/features/profile/data/profile_service.dart';
 import 'package:dealsouk/features/profile/presentation/profile_providers.dart';
+import 'package:dealsouk/core/offline/sync_service.dart';
 import 'package:dealsouk/features/tokens/presentation/tokens_providers.dart';
 
 enum AuthStatus { unknown, unauthenticated, guest, authenticated }
@@ -93,6 +94,13 @@ class AuthNotifier extends Notifier<AuthState> {
         displayName: user.displayName ?? user.phoneNumber ?? 'Souk User',
         roles: _effectiveRoles(const {AuthRole.user}),
       );
+      // Backend unreachable (e.g. Render cold start). Still surface the Google/
+      // Apple account's name + photo so the greeting and avatar aren't blank.
+      if (user.displayName != null || user.photoURL != null) {
+        ref
+            .read(userProfileProvider.notifier)
+            .seedFromAccount(name: user.displayName, avatarUrl: user.photoURL);
+      }
     }
   }
 
@@ -183,6 +191,9 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<void> signOut() async {
+    // Drop this account's pending offline ops so they don't leak into the next
+    // session on the same device (the queue is device-level).
+    await ref.read(syncControllerProvider.notifier).clear();
     await authService.signOut();
     state = const AuthState(status: AuthStatus.unauthenticated);
   }

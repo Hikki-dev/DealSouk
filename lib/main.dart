@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dealsouk/app/app.dart';
-import 'package:dealsouk/core/offline/offline_submission_queue.dart';
 import 'package:dealsouk/features/admin/presentation/admin_app.dart';
 import 'package:dealsouk/firebase_options.dart';
 
@@ -46,10 +45,6 @@ void main() async {
       debugPrint('FCM configuration failed: $e');
     }
   }
-
-  // Start offline submission queue — flushes any queued submissions from
-  // previous sessions and subscribes to connectivity changes.
-  if (!kIsWeb) offlineSubmissionQueue.init();
 
   runApp(
     ProviderScope(child: _adminMode ? const AdminApp() : const DealSoukApp()),

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dealsouk/core/offline/connectivity_service.dart';
 import 'package:dealsouk/core/offline/offline_queue.dart';
@@ -21,9 +22,28 @@ class SyncController extends Notifier<int> {
         syncNow();
       }
     });
+    // Drain on startup too: the device is usually already online when the app
+    // launches, so a connectivity *flip* never fires and the queue would
+    // otherwise sit forever.
     // ignore: discarded_futures
-    _refreshCount();
+    syncNow();
     return 0;
+  }
+
+  /// Drops all queued ops (called on sign-out). Pending writes are per-device,
+  /// so without this one account's queue would haunt the next session.
+  Future<void> clear() async {
+    await offlineQueue.clear();
+    state = 0;
+  }
+
+  /// A 4xx response means the server permanently refused the op (bad data,
+  /// insufficient tokens, etc.) — replaying it will never succeed. Network
+  /// errors and 5xx are transient and worth retrying.
+  bool _isPermanentRejection(Object e) {
+    if (e is! DioException) return false;
+    final code = e.response?.statusCode;
+    return code != null && code >= 400 && code < 500;
   }
 
   Future<void> _refreshCount() async {
@@ -83,6 +103,7 @@ class SyncController extends Notifier<int> {
     _syncing = true;
     try {
       final ops = await offlineQueue.all();
+      await _refreshCount();
       if (ops.isEmpty) return;
 
       var processedAny = false;
@@ -105,9 +126,16 @@ class SyncController extends Notifier<int> {
           }
           await offlineQueue.remove(op.id);
           processedAny = true;
-        } catch (_) {
-          // Still offline / transient server error — keep this op and retry
-          // on the next reconnect.
+        } catch (e) {
+          if (_isPermanentRejection(e)) {
+            // The server rejected this op outright (e.g. insufficient tokens,
+            // invalid data). Retrying will never succeed and would block the
+            // whole queue forever — drop it so the banner can clear.
+            await offlineQueue.remove(op.id);
+            processedAny = true;
+            continue;
+          }
+          // Offline / transient (timeout, 5xx) — keep it and retry on reconnect.
           break;
         }
       }

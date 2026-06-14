@@ -26,6 +26,8 @@ class AuthService {
   User? get currentUser => _auth.currentUser;
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
+  ConfirmationResult? _webConfirmationResult;
+
   // --- Phone OTP ---
 
   Future<void> sendOtp({
@@ -34,6 +36,17 @@ class AuthService {
     required void Function(String error) onError,
     void Function(PhoneAuthCredential)? onAutoVerified,
   }) async {
+    if (kIsWeb) {
+      try {
+        final result = await _auth.signInWithPhoneNumber(phoneNumber);
+        _webConfirmationResult = result;
+        onCodeSent('web');
+      } catch (e) {
+        onError(e.toString());
+      }
+      return;
+    }
+
     await _auth.verifyPhoneNumber(
       phoneNumber: phoneNumber,
       verificationCompleted: (credential) async {
@@ -51,6 +64,13 @@ class AuthService {
     required String verificationId,
     required String smsCode,
   }) async {
+    if (kIsWeb) {
+      if (_webConfirmationResult == null) {
+        throw StateError('No confirmation result found for Web OTP verification.');
+      }
+      return _webConfirmationResult!.confirm(smsCode);
+    }
+
     final credential = PhoneAuthProvider.credential(
       verificationId: verificationId,
       smsCode: smsCode,

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -153,21 +154,32 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<String?> sendOtp(String phoneNumber) async {
-    String? verificationId;
-    String? errorMsg;
+    final completer = Completer<String?>();
 
-    await authService.sendOtp(
-      phoneNumber: phoneNumber,
-      onCodeSent: (id) => verificationId = id,
-      onError: (e) => errorMsg = e,
-      onAutoVerified: (_) => _syncWithBackend(authService.currentUser!),
-    );
-
-    if (errorMsg != null) {
-      state = state.copyWith(error: errorMsg);
-      return null;
+    try {
+      await authService.sendOtp(
+        phoneNumber: phoneNumber,
+        onCodeSent: (id) {
+          if (!completer.isCompleted) {
+            completer.complete(id);
+          }
+        },
+        onError: (e) {
+          state = state.copyWith(error: e);
+          if (!completer.isCompleted) {
+            completer.complete(null);
+          }
+        },
+        onAutoVerified: (_) => _syncWithBackend(authService.currentUser!),
+      );
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
+      if (!completer.isCompleted) {
+        completer.complete(null);
+      }
     }
-    return verificationId;
+
+    return completer.future;
   }
 
   Future<bool> verifyOtp(String verificationId, String smsCode) async {

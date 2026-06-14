@@ -57,6 +57,11 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
   bool _isLocating = false;
   bool _mapReady = false;
 
+  /// True while the first backend store fetch is in flight, so the UI shows a
+  /// loading state instead of a misleading "No stores found" during the
+  /// (free-tier) cold-start wait.
+  bool _loadingStores = true;
+
   /// True only when the user is physically inside Dubai bounds.
   bool get _userIsInDubai {
     final p = _currentPosition;
@@ -94,14 +99,15 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
     // Load Dubai stores from the backend immediately, independent of location
     // permission (there is no hardcoded fallback). _tryGetLocation refines the
     // view only if the user grants location and is physically in Dubai.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await ref
           .read(storesProvider.notifier)
           .fetchNearby(
             lat: _dubaiCenter.latitude,
             lng: _dubaiCenter.longitude,
             radiusKm: 40,
           );
+      if (mounted) setState(() => _loadingStores = false);
     });
     // Attempt to get location but never move the map away from Dubai
     _tryGetLocation();
@@ -502,7 +508,9 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    filtered.isEmpty
+                                    (_loadingStores && filtered.isEmpty)
+                                        ? l.storeLoadingStores
+                                        : filtered.isEmpty
                                         ? l.storeNoStoresFound
                                         : l.storeDubaiStoresCount(
                                             filtered.length,
@@ -829,7 +837,28 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                     ),
                   ),
 
-                  if (filtered.isEmpty)
+                  if (_loadingStores && filtered.isEmpty)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 40),
+                        child: Column(
+                          children: [
+                            const CircularProgressIndicator(
+                              color: AppTheme.forestDeep,
+                            ),
+                            const SizedBox(height: 14),
+                            Text(
+                              l.storeLoadingStores,
+                              style: GoogleFonts.nunito(
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else if (filtered.isEmpty)
                     Center(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 32),

@@ -329,6 +329,7 @@
   "storeMapTitle": "خريطة المتاجر — دبي",
   "storeSearchHint": "ابحث باسم المتجر أو المنطقة…",
   "storeNoStoresFound": "لم يتم العثور على متاجر",
+  "storeLoadingStores": "جارٍ تحميل المتاجر القريبة…",
   "storeDubaiStoresCount": "{count} متجر في دبي",
   "storeTapPinHint": "اضغط على العلامة لعرض تفاصيل الفرع",
   "storeMarkerTooltipWithDistance": "{name} · {branch}\nيبعد {km} كم",

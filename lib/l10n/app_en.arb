@@ -441,6 +441,7 @@
   "storeMapTitle": "Store Map — Dubai",
   "storeSearchHint": "Search store name or area…",
   "storeNoStoresFound": "No stores found",
+  "storeLoadingStores": "Loading nearby stores…",
   "storeDubaiStoresCount": "{count} Dubai stores",
   "@storeDubaiStoresCount": {
     "placeholders": {

@@ -774,6 +774,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get storeNoStoresFound => 'لم يتم العثور على متاجر';
 
   @override
+  String get storeLoadingStores => 'جارٍ تحميل المتاجر القريبة…';
+
+  @override
   String storeDubaiStoresCount(Object count) {
     return '$count متجر في دبي';
   }

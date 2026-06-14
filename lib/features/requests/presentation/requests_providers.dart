@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dealsouk/features/requests/domain/price_request.dart';
 import 'package:dealsouk/features/requests/data/requests_service.dart';
@@ -88,6 +89,10 @@ final priceRequestsProvider =
     );
 
 class MyRequestsNotifier extends Notifier<List<PriceRequest>> {
+  /// Set when the last addPriceRequest was rejected (e.g. not enough tokens) so
+  /// the UI can show a message instead of silently doing nothing.
+  String? lastError;
+
   @override
   List<PriceRequest> build() => [];
 
@@ -116,6 +121,16 @@ class MyRequestsNotifier extends Notifier<List<PriceRequest>> {
       }
     }
 
+    // Affordability guard: the backend rejects a request you can't pay for, so
+    // don't attempt/queue/deduct it at all (this is what caused the stuck
+    // "1 change waiting to sync" banner and the negative balance).
+    if (requestCostTokens > 0 &&
+        ref.read(userTokensProvider) < requestCostTokens) {
+      lastError = 'Not enough tokens — submit a few prices to earn some first.';
+      return;
+    }
+    lastError = null;
+
     // Offline (NFR-22): queue the request and replay it on reconnect. It will
     // appear on the board once synced; the token cost is shown immediately.
     if (!await isCurrentlyOnline()) {
@@ -140,8 +155,17 @@ class MyRequestsNotifier extends Notifier<List<PriceRequest>> {
       state = [created, ...state];
       // Sync to the board so other shoppers see it instantly
       ref.read(priceRequestsProvider.notifier).fetchBoard();
-    } catch (_) {
-      // Network failure mid-request — queue it so it isn't lost.
+    } on DioException catch (e) {
+      final code = e.response?.statusCode;
+      if (code != null && code >= 400 && code < 500) {
+        // Server permanently rejected it (e.g. insufficient tokens, bad data).
+        // Nothing to retry — do NOT queue or deduct.
+        lastError = (e.response?.data is Map)
+            ? (e.response?.data['error']?.toString() ?? 'Request rejected')
+            : 'Request rejected';
+        return;
+      }
+      // Genuine network/timeout/5xx — queue it so it isn't lost.
       await ref
           .read(syncControllerProvider.notifier)
           .enqueueRequest(

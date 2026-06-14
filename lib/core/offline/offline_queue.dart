@@ -79,6 +79,13 @@ class OfflineQueue {
   }
 
   Future<int> count() async => (await all()).length;
+
+  /// Drops every queued op. Called on sign-out so one account's pending writes
+  /// never leak into the next session on the same device.
+  Future<void> clear() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_key);
+  }
 }
 
 final offlineQueue = OfflineQueue();

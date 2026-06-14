@@ -74,6 +74,18 @@ class UserProfileNotifier extends Notifier<UserProfile> {
     );
   }
 
+  /// Seeds the name/avatar straight from the Firebase account (Google/Apple)
+  /// when the backend profile isn't available — so the greeting + avatar show
+  /// the real identity instead of the "Shopper" placeholder.
+  void seedFromAccount({String? name, String? avatarUrl}) {
+    state = state.copyWith(
+      name: (name != null && name.isNotEmpty) ? name : state.name,
+      avatarUrl: (avatarUrl != null && avatarUrl.isNotEmpty)
+          ? avatarUrl
+          : state.avatarUrl,
+    );
+  }
+
   bool get _isGuest => ref.read(authProvider).isGuest;
 
   /// Restores a guest/demo profile from on-device storage (or seeds defaults).

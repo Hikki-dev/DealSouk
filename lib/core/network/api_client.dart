@@ -33,8 +33,12 @@ class ApiClient {
     _dio = Dio(
       BaseOptions(
         baseUrl: baseUrl,
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 15),
+        // The backend runs on Render's free tier, which sleeps after ~15 min
+        // idle and takes ~20-30s to cold-start. Timeouts must comfortably
+        // exceed that, or the first request after a nap (auth/verify, stores,
+        // a price request) times out and everything looks broken.
+        connectTimeout: const Duration(seconds: 35),
+        receiveTimeout: const Duration(seconds: 45),
         headers: {'Content-Type': 'application/json'},
       ),
     );

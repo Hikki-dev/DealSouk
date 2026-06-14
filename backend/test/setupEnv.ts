@@ -6,7 +6,8 @@ process.env.FIREBASE_PROJECT_ID = "test-project";
 process.env.FIREBASE_CLIENT_EMAIL = "test@test.iam.gserviceaccount.com";
 process.env.FIREBASE_PRIVATE_KEY = "test-key";
 process.env.DATABASE_ENCRYPTION_KEY = "0".repeat(64);
-process.env.DATABASE_URL = "postgresql://test:test@localhost:5432/testdb";
+// No DATABASE_URL is set: Prisma is mocked, and requireProductionEnv() is a
+// no-op outside production — so nothing opens a real DB connection.
 // Force in-memory rate limiting and stop dotenv/config (loaded by index.ts) from
 // pulling a real REDIS_URL out of backend/.env and opening a live connection.
 process.env.REDIS_URL = "";

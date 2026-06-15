@@ -70,7 +70,7 @@ dependencies:
 
   # Crypto (Apple Sign-In nonce)
   crypto: ^3.0.6
-  connectivity_plus: ^7.1.1
+  connectivity_plus: 6.1.5
   shared_preferences: ^2.5.5
 
 dev_dependencies:

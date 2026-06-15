@@ -93,6 +93,37 @@ jobs:
             exit 1
           fi
           echo "$ANDROID_UPLOAD_KEYSTORE_B64" | tr -d '\r\n ' | base64 --decode > android/app/upload-keystore.jks
+          cat > /tmp/ValidateKeystore.java <<'JAVA'
+          import java.io.FileInputStream;
+          import java.security.KeyStore;
+
+          public class ValidateKeystore {
+            public static void main(String[] args) throws Exception {
+              if (args.length != 4) {
+                throw new IllegalArgumentException("Expected: keystore storePassword keyAlias keyPassword");
+              }
+
+              KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+              try (FileInputStream input = new FileInputStream(args[0])) {
+                keyStore.load(input, args[1].toCharArray());
+              }
+
+              if (!keyStore.containsAlias(args[2])) {
+                throw new IllegalArgumentException("Android upload key alias was not found in the keystore.");
+              }
+
+              if (keyStore.getKey(args[2], args[3].toCharArray()) == null) {
+                throw new IllegalArgumentException("Android upload key could not be read.");
+              }
+            }
+          }
+          JAVA
+          javac /tmp/ValidateKeystore.java
+          java -cp /tmp ValidateKeystore \
+            android/app/upload-keystore.jks \
+            "$ANDROID_UPLOAD_STORE_PASSWORD" \
+            "$ANDROID_UPLOAD_KEY_ALIAS" \
+            "$ANDROID_UPLOAD_KEY_PASSWORD"
 
       # Must run before any raw Gradle invocation: `flutter pub get` generates
       # android/local.properties (flutter.sdk + sdk.dir), which settings.gradle.kts

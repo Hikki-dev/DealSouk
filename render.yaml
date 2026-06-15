@@ -4,7 +4,10 @@ services:
     runtime: node
     plan: free
     rootDir: backend
-    buildCommand: npm ci && npm run render:build
+    # npm install instead of npm ci: the lockfile is generated on macOS so
+    # optional Linux-native packages (@emnapi/*) are absent from it.
+    # npm install resolves them correctly on the Linux runner without failing.
+    buildCommand: npm install --no-audit --no-fund && npm run render:build
     startCommand: npm start
     healthCheckPath: /health
     envVars:

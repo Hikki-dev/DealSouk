@@ -1,12 +1,15 @@
 name: Android Internal APK
 
 on:
-  # Cut a version by pushing a tag, e.g. `git tag v2.1.0 && git push --tags`.
-  # The tag name (minus the leading v) becomes the app versionName.
+  # Auto-build on every push to main so you always have fresh APKs waiting.
   push:
+    branches:
+      - main
+    # Also cut a versioned release when you push a tag (e.g. git tag v2.1.0).
+    # The tag name (minus the leading v) becomes the app versionName.
     tags:
       - 'v*'
-  # Manual trigger for ad-hoc internal builds (no release is published).
+  # Manual trigger for ad-hoc builds against a staging URL.
   workflow_dispatch:
     inputs:
       api_base_url:

@@ -1,6 +1,11 @@
 name: iOS Internal Build
 
 on:
+  # Auto-build on every push to main so you always have a fresh IPA waiting.
+  push:
+    branches:
+      - main
+  # Manual trigger lets you build against a staging API URL without pushing a tag.
   workflow_dispatch:
     inputs:
       api_base_url:
@@ -14,8 +19,11 @@ concurrency:
 
 jobs:
   build-ios:
-    name: Build unsigned iOS app
+    name: Build unsigned iOS IPA (AltStore-ready)
     runs-on: macos-latest
+
+    env:
+      API_BASE_URL: ${{ github.event.inputs.api_base_url || 'https://dealsouk.onrender.com' }}
 
     steps:
       - name: Check out repository
@@ -47,14 +55,36 @@ jobs:
         run: flutter pub get
 
       - name: Build unsigned iOS release
-        run: >
-          flutter build ios --release --no-codesign
-          --dart-define=API_BASE_URL=${{ inputs.api_base_url }}
-          --dart-define=ADMIN_MODE=false
+        run: |
+          flutter build ios --release --no-codesign \
+            --dart-define=API_BASE_URL="$API_BASE_URL" \
+            --dart-define=ADMIN_MODE=false
 
-      - name: Upload iOS artifact
+      # Package the .app bundle into a .ipa that AltStore (and AltServer) can
+      # directly install. The IPA is just a zip with a Payload/ directory.
+      # AltStore re-signs it with your personal Apple ID certificate on-device.
+      - name: Package .app → .ipa (AltStore-ready)
+        run: |
+          mkdir -p build/ios/ipa/Payload
+          cp -r build/ios/iphoneos/Runner.app build/ios/ipa/Payload/
+          cd build/ios/ipa
+          zip -r ../DealSouk-unsigned.ipa Payload/
+          echo "IPA size: $(du -sh ../DealSouk-unsigned.ipa | cut -f1)"
+
+      - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dealsouk-ios-unsigned
+          name: DealSouk-iOS-unsigned-ipa
+          path: build/ios/DealSouk-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 30
+
+      # Also upload the raw .app folder as a fallback in case you want to
+      # inspect it or sign it yourself via Xcode Organizer / fastlane.
+      - name: Upload raw .app artifact (fallback)
+        uses: actions/upload-artifact@v4
+        with:
+          name: DealSouk-iOS-app-bundle
           path: build/ios/iphoneos
           if-no-files-found: error
+          retention-days: 7

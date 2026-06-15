@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../index';
-import { requireAuth, AuthRequest } from '../middleware/auth';
+import { requireAuth, requireEmailVerified, AuthRequest } from '../middleware/auth';
 import { authenticatedRateLimit } from '../middleware/rateLimits';
 import {
   calculateReward,
@@ -24,8 +24,12 @@ const flagLimiter = authenticatedRateLimit({
   message: 'Too many reports. Please try again in a minute.',
 });
 
+const MIN_PRICE_AED = 0.01;
 const MAX_PRICE_AED = 10000;
 const MAX_URL_LENGTH = 2048;
+const MAX_ID_LENGTH = 40;
+// Minimum gap between same-user, same-product, same-store submissions
+const DUPLICATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
 function isHttpsUrl(value: string): boolean {
   try {
@@ -62,7 +66,7 @@ router.get('/feed', async (req, res) => {
 });
 
 // POST /submissions
-router.post('/', requireAuth, submitLimiter, async (req: AuthRequest, res) => {
+router.post('/', requireAuth, requireEmailVerified, submitLimiter, async (req: AuthRequest, res) => {
   const { productId, storeId, priceAed, hasReceipt = false, receiptUrl, priceLabelUrl } = req.body as {
     productId: string;
     storeId: string;
@@ -72,10 +76,32 @@ router.post('/', requireAuth, submitLimiter, async (req: AuthRequest, res) => {
     priceLabelUrl?: string;
   };
 
-  if (!productId || !storeId || priceAed == null || priceAed <= 0 || priceAed > MAX_PRICE_AED) {
-    res.status(400).json({ error: 'productId, storeId, and a positive priceAed are required' });
+  // --- ABUSE-1: type confusion ---
+  // priceAed must be a finite number; NaN/Infinity/string bypass JS comparison operators.
+  if (
+    typeof priceAed !== 'number' ||
+    !isFinite(priceAed) ||
+    priceAed < MIN_PRICE_AED ||
+    priceAed > MAX_PRICE_AED
+  ) {
+    res.status(400).json({ error: `priceAed must be a number between ${MIN_PRICE_AED} and ${MAX_PRICE_AED}` });
     return;
   }
+
+  // --- ABUSE-2: ID format/length ---
+  if (
+    !productId || typeof productId !== 'string' || productId.length > MAX_ID_LENGTH ||
+    !storeId  || typeof storeId  !== 'string' || storeId.length  > MAX_ID_LENGTH
+  ) {
+    res.status(400).json({ error: 'Invalid productId or storeId' });
+    return;
+  }
+
+  // --- ABUSE-3: receipt bonus claim without proof ---
+  // hasReceipt: true grants 1.5× tokens. Require the URL so there is at least a
+  // stored artefact for admin review; a missing URL with hasReceipt=true is treated
+  // as hasReceipt=false (no bonus).
+  const claimsReceipt = hasReceipt === true && !!receiptUrl;
 
   if (receiptUrl && (receiptUrl.length > MAX_URL_LENGTH || !isHttpsUrl(receiptUrl))) {
     res.status(400).json({ error: 'receiptUrl must be a valid HTTPS URL' });
@@ -83,6 +109,20 @@ router.post('/', requireAuth, submitLimiter, async (req: AuthRequest, res) => {
   }
   if (priceLabelUrl && (priceLabelUrl.length > MAX_URL_LENGTH || !isHttpsUrl(priceLabelUrl))) {
     res.status(400).json({ error: 'priceLabelUrl must be a valid HTTPS URL' });
+    return;
+  }
+
+  // --- ABUSE-4: verify product and store exist (give clean 400, not unhandled FK 500) ---
+  const [productExists, storeExists] = await Promise.all([
+    prisma.product.findUnique({ where: { id: productId }, select: { id: true } }),
+    prisma.store.findUnique({ where: { id: storeId }, select: { id: true } }),
+  ]);
+  if (!productExists) {
+    res.status(400).json({ error: 'Product not found' });
+    return;
+  }
+  if (!storeExists) {
+    res.status(400).json({ error: 'Store not found' });
     return;
   }
 
@@ -99,11 +139,34 @@ router.post('/', requireAuth, submitLimiter, async (req: AuthRequest, res) => {
     return;
   }
 
+  // --- ABUSE-5: duplicate submission within 1 hour (reward farming while pending) ---
+  // Decay only applies to *approved* submissions, so an attacker can spam the same
+  // product+store while their previous submission is still pending and earn full
+  // tokens on every one once they're bulk-approved. Block same-user same-product
+  // same-store within a 1-hour window (rejected/hidden submissions are exempt so
+  // a legitimate correction is always possible).
+  const recentDuplicate = await prisma.priceSubmission.findFirst({
+    where: {
+      sourcerId: req.userId!,
+      productId,
+      storeId,
+      status: { notIn: ['rejected', 'hidden'] },
+      submittedAt: { gte: new Date(Date.now() - DUPLICATE_WINDOW_MS) },
+    },
+    select: { id: true },
+  });
+  if (recentDuplicate) {
+    res.status(409).json({
+      error: 'You already have a recent submission for this item at this store. Please wait at least 1 hour before resubmitting.',
+    });
+    return;
+  }
+
   const tokensAwarded = await calculateReward({
     productId,
     storeId,
     sourcerId: req.userId!,
-    hasReceipt,
+    hasReceipt: claimsReceipt,
   });
 
   const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000);
@@ -122,20 +185,30 @@ router.post('/', requireAuth, submitLimiter, async (req: AuthRequest, res) => {
     priorApproved >= TRUST_MIN_APPROVED &&
     (sourcer?.accuracyRating ?? 0) >= TRUST_MIN_ACCURACY;
 
-  const submission = await prisma.priceSubmission.create({
-    data: {
-      productId,
-      storeId,
-      sourcerId: req.userId!,
-      priceAed,
-      hasReceipt,
-      receiptUrl: receiptUrl ?? null,
-      priceLabelUrl: priceLabelUrl ?? null,
-      status: autoApprove ? 'approved' : 'pending',
-      tokensAwarded,
-      expiresAt,
-    },
-  });
+  let submission;
+  try {
+    submission = await prisma.priceSubmission.create({
+      data: {
+        productId,
+        storeId,
+        sourcerId: req.userId!,
+        priceAed,
+        hasReceipt: claimsReceipt,
+        receiptUrl: receiptUrl ?? null,
+        priceLabelUrl: priceLabelUrl ?? null,
+        status: autoApprove ? 'approved' : 'pending',
+        tokensAwarded,
+        expiresAt,
+      },
+    });
+  } catch (err: any) {
+    if (err.code === 'P2003') {
+      res.status(400).json({ error: 'Invalid productId or storeId' });
+    } else {
+      res.status(500).json({ error: 'Failed to create submission' });
+    }
+    return;
+  }
 
   if (autoApprove) {
     await runApprovalEffects({

@@ -1016,15 +1016,15 @@ router.get('/users/:id', async (req, res) => {
 });
 
 // POST /admin/users — Create new user
+// Note: isAdmin is intentionally excluded — use `npm run admin:set` CLI to grant admin privileges.
 router.post('/users', adminWriteLimiter, async (req, res) => {
-  const { displayName, phoneNumber, homeArea, preferredLocale, tokenBalance, firebaseUid, isAdmin } = req.body as {
+  const { displayName, phoneNumber, homeArea, preferredLocale, tokenBalance, firebaseUid } = req.body as {
     displayName: string;
     phoneNumber?: string;
     homeArea?: string;
     preferredLocale?: string;
     tokenBalance?: number;
     firebaseUid: string;
-    isAdmin?: boolean;
   };
 
   if (!displayName || !firebaseUid) {
@@ -1041,7 +1041,7 @@ router.post('/users', adminWriteLimiter, async (req, res) => {
         homeArea: homeArea || null,
         preferredLocale: preferredLocale || 'en',
         tokenBalance: tokenBalance ?? 0,
-        isAdmin: isAdmin ?? false,
+        isAdmin: false,
       },
     });
     res.status(201).json(user);
@@ -1055,14 +1055,14 @@ router.post('/users', adminWriteLimiter, async (req, res) => {
 });
 
 // PUT /admin/users/:id — Update user
+// Note: isAdmin is intentionally excluded — use `npm run admin:set` CLI to grant admin privileges.
 router.put('/users/:id', adminWriteLimiter, async (req, res) => {
-  const { displayName, phoneNumber, homeArea, preferredLocale, tokenBalance, isAdmin, isSuspended } = req.body as {
+  const { displayName, phoneNumber, homeArea, preferredLocale, tokenBalance, isSuspended } = req.body as {
     displayName?: string;
     phoneNumber?: string | null;
     homeArea?: string | null;
     preferredLocale?: string;
     tokenBalance?: number;
-    isAdmin?: boolean;
     isSuspended?: boolean;
   };
 
@@ -1075,7 +1075,6 @@ router.put('/users/:id', adminWriteLimiter, async (req, res) => {
         ...(homeArea !== undefined && { homeArea: homeArea || null }),
         ...(preferredLocale != null && { preferredLocale }),
         ...(tokenBalance != null && { tokenBalance }),
-        ...(isAdmin != null && { isAdmin }),
         ...(isSuspended != null && { isSuspended }),
       },
     });

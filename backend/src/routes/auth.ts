@@ -74,8 +74,9 @@ router.post('/verify', verifyLimiter, async (req, res) => {
       isSuspended: user.isSuspended,
       createdAt: user.createdAt,
     });
-  } catch (err) {
-    console.error(err);
+  } catch (err: any) {
+    // Log only the error code — never the full object, which can contain token fragments.
+    console.error('[auth/verify] token verification failed:', err?.errorInfo?.code ?? err?.code ?? 'unknown');
     res.status(401).json({ error: 'Invalid or expired token' });
   }
 });

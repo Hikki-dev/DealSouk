@@ -8,14 +8,40 @@ class StorageService {
   final _storage = FirebaseStorage.instance;
   final _picker = ImagePicker();
 
+  /// Opens the camera and returns the captured file WITHOUT uploading.
+  /// Returns null if the user cancelled.
+  Future<XFile?> capturePhotoFile() async {
+    return _picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 55,
+      maxWidth: 800,
+    );
+  }
+
+  /// Opens the gallery and returns the selected file WITHOUT uploading.
+  /// Returns null if the user cancelled.
+  Future<XFile?> pickPhotoFile() async {
+    return _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 55,
+      maxWidth: 800,
+    );
+  }
+
+  /// Uploads a previously-captured [file] for price-submission proof.
+  /// Returns the download URL, or null on failure.
+  Future<String?> uploadProofFile(XFile file, {required bool isReceipt}) {
+    return _upload(
+      file,
+      directFolder: isReceipt ? 'receipts' : 'price-labels',
+      signedKind: isReceipt ? 'receipt' : 'price_label',
+    );
+  }
+
   /// Opens camera and uploads the image to Firebase Storage.
   /// Returns the download URL, or null if the user cancelled.
   Future<String?> captureAndUploadReceipt() async {
-    final photo = await _picker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 75,
-      maxWidth: 1200,
-    );
+    final photo = await capturePhotoFile();
     if (photo == null) return null;
     return _upload(photo, directFolder: 'receipts', signedKind: 'receipt');
   }
@@ -23,11 +49,7 @@ class StorageService {
   /// Opens the camera and uploads a price-label photo to Firebase Storage.
   /// Returns the download URL, or null if the user cancelled / the upload failed.
   Future<String?> captureAndUploadPriceLabel() async {
-    final photo = await _picker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 75,
-      maxWidth: 1200,
-    );
+    final photo = await capturePhotoFile();
     if (photo == null) return null;
     return _upload(
       photo,
@@ -38,11 +60,7 @@ class StorageService {
 
   /// Opens gallery and uploads the image.
   Future<String?> pickAndUploadReceipt() async {
-    final photo = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 75,
-      maxWidth: 1200,
-    );
+    final photo = await pickPhotoFile();
     if (photo == null) return null;
     return _upload(photo, directFolder: 'receipts', signedKind: 'receipt');
   }
@@ -51,8 +69,8 @@ class StorageService {
   Future<String?> pickAndUploadAvatar() async {
     final photo = await _picker.pickImage(
       source: ImageSource.gallery,
-      imageQuality: 80,
-      maxWidth: 900,
+      imageQuality: 65,
+      maxWidth: 700,
     );
     if (photo == null) return null;
 
@@ -63,8 +81,8 @@ class StorageService {
   Future<String?> captureAndUploadAvatar() async {
     final photo = await _picker.pickImage(
       source: ImageSource.camera,
-      imageQuality: 80,
-      maxWidth: 900,
+      imageQuality: 65,
+      maxWidth: 700,
     );
     if (photo == null) return null;
 
@@ -77,8 +95,8 @@ class StorageService {
   Future<String?> pickLocalAvatarPath({bool fromCamera = false}) async {
     final photo = await _picker.pickImage(
       source: fromCamera ? ImageSource.camera : ImageSource.gallery,
-      imageQuality: 80,
-      maxWidth: 900,
+      imageQuality: 65,
+      maxWidth: 700,
     );
     return photo?.path;
   }

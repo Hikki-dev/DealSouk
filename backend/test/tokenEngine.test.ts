@@ -139,7 +139,9 @@ describe("token ledger hash chain", () => {
       },
     };
 
-    await createTokenLedgerEntry(tx, {
+    // Cast the minimal mock to satisfy the TransactionClient type — test-only.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await createTokenLedgerEntry(tx as any, {
       userId: "u1",
       amount: 25,
       reason: "Test award",

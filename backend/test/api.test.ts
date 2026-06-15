@@ -35,6 +35,7 @@ function signInAs(user: Partial<any>) {
   mockVerifyIdToken.mockResolvedValue({
     uid: user.firebaseUid ?? "fb-uid",
     auth_time: Math.floor(Date.now() / 1000),
+    email_verified: true,
     ...(user.decodedToken ?? {}),
   });
   mockPrisma.user.findUnique.mockResolvedValue({
@@ -59,12 +60,15 @@ describe("health", () => {
 });
 
 describe("cors", () => {
-  it("allows Flutter web localhost origins even when production CORS is locked down", () => {
+  it("blocks localhost origins in production (security hardening)", () => {
+    // Localhost is intentionally blocked in production to prevent local pages
+    // from making credentialed requests to the live API. Use ALLOW_LOCALHOST_CORS=true
+    // env var to opt in during development against the production backend.
     expect(
       isCorsOriginAllowed("http://localhost:51191", true, [
         "https://deal-souk.vercel.app",
       ]),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it("adds CORS headers to localhost preflight requests", async () => {

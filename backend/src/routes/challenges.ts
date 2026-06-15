@@ -64,20 +64,19 @@ async function getOrCreateTodayChallenge() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const existing = await prisma.dailyChallenge.findFirst({
-    where: { date: today },
-  });
-  if (existing) return existing;
-
   // Pick a template based on day of year for deterministic daily rotation
   const dayOfYear = Math.floor(
-    (today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) /
-      86400000,
+    (today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000,
   );
   const template = CHALLENGE_TEMPLATES[dayOfYear % CHALLENGE_TEMPLATES.length];
 
-  return prisma.dailyChallenge.create({
-    data: {
+  // upsert instead of findFirst+create to eliminate the race condition where
+  // two concurrent first-request-of-the-day calls both try to INSERT the row
+  // and the second one hits the @@unique([date]) constraint with a P2002.
+  return prisma.dailyChallenge.upsert({
+    where: { date: today },
+    update: {},
+    create: {
       date: today,
       title: template.title,
       description: template.description,

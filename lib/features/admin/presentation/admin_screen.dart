@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -1327,92 +1328,22 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           Row(
             children: [
               Expanded(
-                child: GestureDetector(
+                child: _EvidenceThumbnail(
+                  label: 'Price Label',
+                  url: sub.priceLabelUrl,
                   onTap: sub.hasPhoto
                       ? () => _showPricePhotoDialog(context, sub)
                       : null,
-                  child: Container(
-                    height: 84,
-                    decoration: BoxDecoration(
-                      color: sub.hasPhoto
-                          ? const Color(0xFFE3F2FD)
-                          : Colors.grey.shade50,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: sub.hasPhoto
-                            ? const Color(0xFF90CAF9)
-                            : const Color(0xFFE8EEE4),
-                      ),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.camera_alt_rounded,
-                          color: sub.hasPhoto
-                              ? Colors.blue.shade700
-                              : Colors.grey.shade400,
-                          size: 22,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          sub.hasPhoto ? 'Price Label Pic' : 'No Photo',
-                          style: GoogleFonts.nunito(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: sub.hasPhoto
-                                ? Colors.blue.shade800
-                                : Colors.grey.shade500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: GestureDetector(
+                child: _EvidenceThumbnail(
+                  label: 'Receipt',
+                  url: sub.receiptUrl,
                   onTap: sub.hasReceipt
                       ? () => _showReceiptDialog(context, sub)
                       : null,
-                  child: Container(
-                    height: 84,
-                    decoration: BoxDecoration(
-                      color: sub.hasReceipt
-                          ? const Color(0xFFE0F2F1)
-                          : Colors.grey.shade50,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: sub.hasReceipt
-                            ? const Color(0xFF80CBC4)
-                            : const Color(0xFFE8EEE4),
-                      ),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.receipt_long_rounded,
-                          color: sub.hasReceipt
-                              ? Colors.teal.shade700
-                              : Colors.grey.shade400,
-                          size: 22,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          sub.hasReceipt ? 'Receipt Scan' : 'No Receipt',
-                          style: GoogleFonts.nunito(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: sub.hasReceipt
-                                ? Colors.teal.shade800
-                                : Colors.grey.shade500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ),
               ),
             ],
@@ -3219,232 +3150,116 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
 
   // --- HIGH FIDELITY REAL PREVIEWS & MOCK DIALOGS ---
   void _showReceiptDialog(BuildContext context, AdminSubmission sub) {
+    final hasRealImage =
+        sub.receiptUrl != null && sub.receiptUrl!.startsWith('http');
     showDialog(
       context: context,
       builder: (context) {
         return Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.all(24),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 32,
+            vertical: 40,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Receipt Container
+              // Header
+              Row(
+                children: [
+                  const SizedBox(width: 48),
+                  Expanded(
+                    child: Text(
+                      'Receipt Evidence — ${sub.productName}',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // Image container
               Container(
-                width: 400,
                 constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.7,
+                  maxWidth: 520,
+                  maxHeight: MediaQuery.of(context).size.height * 0.75,
                 ),
-                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.3),
-                      blurRadius: 24,
+                      color: Colors.black.withValues(alpha: 0.4),
+                      blurRadius: 32,
                       offset: const Offset(0, 10),
                     ),
                   ],
                 ),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (sub.receiptUrl != null &&
-                          sub.receiptUrl!.startsWith('http')) ...[
-                        Text(
-                          'Receipt Evidence',
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.fredoka(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: AppTheme.textDark,
-                          ),
+                clipBehavior: Clip.hardEdge,
+                child: hasRealImage
+                    ? SingleChildScrollView(
+                        child: _proofImage(
+                          sub.receiptUrl!,
+                          fit: BoxFit.contain,
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        const SizedBox(height: 12),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.network(
-                            sub.receiptUrl!,
-                            fit: BoxFit.contain,
-                            loadingBuilder: (context, child, progress) {
-                              if (progress == null) return child;
-                              return const SizedBox(
-                                height: 200,
-                                child: Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                              );
-                            },
-                            errorBuilder: (context, error, stackTrace) {
-                              return const SizedBox(
-                                height: 100,
-                                child: Center(
-                                  child: Text('Failed to load receipt photo.'),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ] else ...[
-                        // Receipt Jagged Edge Accent
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(
-                            15,
-                            (index) => Container(
-                              width: 12,
-                              height: 6,
-                              margin: const EdgeInsets.symmetric(horizontal: 1),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(2),
-                              ),
+                      )
+                    : const Padding(
+                        padding: EdgeInsets.all(40),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.receipt_long_outlined,
+                              size: 48,
+                              color: Colors.grey,
                             ),
-                          ),
+                            SizedBox(height: 12),
+                            Text(
+                              'No receipt photo was attached.',
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 8),
-
-                        // Receipt Content
-                        Text(
-                          sub.storeName.toUpperCase(),
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontFamily: 'monospace',
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            letterSpacing: 1.5,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const Text(
-                          'DUBAI BR., UAE\nTRN: 1003482910003\nTEL: 04-2983742',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: 'monospace',
-                            fontSize: 10,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          '--------------------------------',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: 'monospace',
-                            color: Colors.grey,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-
-                        // Products List
-                        _receiptRow(sub.productName.toUpperCase(), sub.price),
-                        if (sub.promoType == 'Discount')
-                          _receiptRow(
-                            '  PROMO DISCOUNT',
-                            -1.50,
-                            isDiscount: true,
-                          ),
-                        _receiptRow('AL AIN WATER 6X1.5L', 8.50),
-                        _receiptRow('AL BAKER CHAKKI ATTA 5K', 12.95),
-                        const SizedBox(height: 8),
-                        const Text(
-                          '--------------------------------',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: 'monospace',
-                            color: Colors.grey,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-
-                        // Totals
-                        _receiptRow(
-                          'SUBTOTAL',
-                          sub.price +
-                              8.50 +
-                              12.95 +
-                              (sub.promoType == 'Discount' ? -1.50 : 0),
-                          isBold: true,
-                        ),
-                        _receiptRow(
-                          '5% VAT INCL.',
-                          (sub.price +
-                                  8.50 +
-                                  12.95 +
-                                  (sub.promoType == 'Discount' ? -1.50 : 0)) *
-                              0.05,
-                        ),
-                        const SizedBox(height: 4),
-                        _receiptRow(
-                          'TOTAL',
-                          sub.price +
-                              8.50 +
-                              12.95 +
-                              (sub.promoType == 'Discount' ? -1.50 : 0),
-                          isBold: true,
-                          isLarge: true,
-                        ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          '--------------------------------',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: 'monospace',
-                            color: Colors.grey,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'DATE: 2026-06-11 11:24\nCASHIER: AMIN\nOPID: 98324\nMODE: CASH',
-                          style: TextStyle(
-                            fontFamily: 'monospace',
-                            fontSize: 10,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Barcode Lines
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(24, (index) {
-                            final double width = (index % 4 == 0)
-                                ? 3.0
-                                : (index % 2 == 0)
-                                ? 1.5
-                                : 0.8;
-                            return Container(
-                              width: width,
-                              height: 30,
-                              margin: const EdgeInsets.only(right: 1.5),
-                              color: Colors.black87,
-                            );
-                          }),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          '*** THANK YOU FOR SHOPPING ***',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: 'monospace',
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black54,
-                          ),
-                        ),
-                      ],
+                      ),
+              ),
+              // Spacer so close button doesn't overlap on short screens
+              const SizedBox(height: 12),
+              // "Preview only" label
+              if (hasRealImage)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.lock_outline, color: Colors.white70, size: 13),
+                      SizedBox(width: 5),
+                      Text(
+                        'Preview only — download disabled',
+                        style: TextStyle(color: Colors.white70, fontSize: 11),
+                      ),
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              // Close Button
-              IconButton(
-                icon: const Icon(Icons.cancel, color: Colors.white, size: 40),
-                onPressed: () => Navigator.pop(context),
-              ),
             ],
           ),
         );
@@ -3452,322 +3267,178 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     );
   }
 
-  Widget _receiptRow(
-    String name,
-    double value, {
-    bool isBold = false,
-    bool isLarge = false,
-    bool isDiscount = false,
+  // ---------------------------------------------------------------------------
+  // Proof image viewer — preview-only, no download.
+  //
+  // Right-click / secondary-click is swallowed at both the gesture and pointer
+  // layers so the browser never sees it as "Save image as…". Build the admin
+  // web app with --web-renderer canvaskit (default for desktop) to also ensure
+  // images are painted onto a <canvas> rather than raw <img> elements.
+  // ---------------------------------------------------------------------------
+  Widget _proofImage(
+    String url, {
+    BoxFit fit = BoxFit.contain,
+    double? height,
+    BorderRadius borderRadius = BorderRadius.zero,
   }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Text(
-              name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontFamily: 'monospace',
-                fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-                fontSize: isLarge ? 14 : 11,
-                color: isDiscount ? Colors.red : Colors.black87,
-              ),
+    final placeholder = SizedBox(
+      height: height ?? 260,
+      child: const Center(child: CircularProgressIndicator()),
+    );
+    final errorWidget = SizedBox(
+      height: height ?? 120,
+      child: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.broken_image_outlined, color: Colors.grey, size: 36),
+            SizedBox(height: 6),
+            Text(
+              'Could not load image',
+              style: TextStyle(color: Colors.grey, fontSize: 12),
             ),
+          ],
+        ),
+      ),
+    );
+
+    return Listener(
+      // Swallow secondary (right-mouse) pointer-down events before they reach
+      // the browser's native context-menu handler.
+      behavior: HitTestBehavior.opaque,
+      onPointerDown: (PointerDownEvent event) {
+        if (event.buttons == kSecondaryMouseButton) {
+          // consumed — do nothing
+        }
+      },
+      child: GestureDetector(
+        // Belt-and-suspenders: also block at the gesture level.
+        onSecondaryTap: () {},
+        onSecondaryTapDown: (_) {},
+        child: ClipRRect(
+          borderRadius: borderRadius,
+          child: Image.network(
+            url,
+            fit: fit,
+            height: height,
+            loadingBuilder: (context, child, progress) =>
+                progress == null ? child : placeholder,
+            errorBuilder: (context, error, stack) => errorWidget,
           ),
-          Text(
-            value >= 0
-                ? 'AED ${value.toStringAsFixed(2)}'
-                : '-AED ${value.abs().toStringAsFixed(2)}',
-            style: TextStyle(
-              fontFamily: 'monospace',
-              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-              fontSize: isLarge ? 14 : 11,
-              color: isDiscount ? Colors.red : Colors.black87,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
   void _showPricePhotoDialog(BuildContext context, AdminSubmission sub) {
+    final hasRealImage =
+        sub.priceLabelUrl != null && sub.priceLabelUrl!.startsWith('http');
     showDialog(
       context: context,
       builder: (context) {
         return Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.all(24),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 32,
+            vertical: 40,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Header
+              Row(
+                children: [
+                  const SizedBox(width: 48),
+                  Expanded(
+                    child: Text(
+                      'Price Label — ${sub.productName}',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // Image container
               Container(
-                width: 400,
                 constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.7,
+                  maxWidth: 520,
+                  maxHeight: MediaQuery.of(context).size.height * 0.75,
                 ),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.3),
-                      blurRadius: 24,
+                      color: Colors.black.withValues(alpha: 0.4),
+                      blurRadius: 32,
                       offset: const Offset(0, 10),
                     ),
                   ],
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child:
-                      sub.priceLabelUrl != null &&
-                          sub.priceLabelUrl!.startsWith('http')
-                      ? Image.network(
+                clipBehavior: Clip.hardEdge,
+                child: hasRealImage
+                    ? SingleChildScrollView(
+                        child: _proofImage(
                           sub.priceLabelUrl!,
                           fit: BoxFit.contain,
-                          loadingBuilder: (context, child, progress) {
-                            if (progress == null) return child;
-                            return const SizedBox(
-                              height: 240,
-                              child: Center(child: CircularProgressIndicator()),
-                            );
-                          },
-                          errorBuilder: (context, error, stackTrace) {
-                            return const SizedBox(
-                              height: 240,
-                              child: Center(
-                                child: Text(
-                                  'Failed to load price label photo.',
-                                ),
-                              ),
-                            );
-                          },
-                        )
-                      : Container(
-                          width: 320,
-                          height: 240,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade200,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Stack(
-                            children: [
-                              // Shelf Visuals (Wood/Metal pattern)
-                              Column(
-                                children: [
-                                  Expanded(
-                                    flex: 3,
-                                    child: Container(
-                                      color: Colors.grey.shade300,
-                                      child: Center(
-                                        child: Icon(
-                                          sub.productName.contains('Milk')
-                                              ? Icons.local_cafe
-                                              : sub.productName.contains('Eggs')
-                                              ? Icons.egg
-                                              : Icons.breakfast_dining,
-                                          size: 84,
-                                          color: Colors.grey.shade400,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 1,
-                                    child: Container(
-                                      color: Colors.blueGrey.shade800,
-                                    ),
-                                  ),
-                                ],
-                              ),
-
-                              // Product packaging model sitting on shelf
-                              Positioned(
-                                bottom: 45,
-                                left: 110,
-                                child: Container(
-                                  width: 100,
-                                  height: 120,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: AppTheme.emeraldPrimary.withValues(
-                                        alpha: 0.3,
-                                      ),
-                                      width: 2,
-                                    ),
-                                    boxShadow: const [
-                                      BoxShadow(
-                                        color: Colors.black12,
-                                        blurRadius: 8,
-                                        offset: Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        sub.productName.contains('Milk')
-                                            ? Icons.local_cafe
-                                            : sub.productName.contains('Eggs')
-                                            ? Icons.egg
-                                            : Icons.breakfast_dining,
-                                        color: AppTheme.emeraldPrimary,
-                                        size: 40,
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        sub.brand,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 11,
-                                          color: AppTheme.textDark,
-                                        ),
-                                      ),
-                                      Text(
-                                        sub.productName.split(' ').first,
-                                        style: const TextStyle(
-                                          fontSize: 8,
-                                          color: Colors.grey,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-
-                              // Price Tag sticker stuck to shelf strip
-                              Positioned(
-                                bottom: 8,
-                                left: 60,
-                                child: Container(
-                                  width: 200,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(
-                                      0xFFFFFDE7,
-                                    ), // Yellow tag
-                                    borderRadius: BorderRadius.circular(4),
-                                    border: Border.all(
-                                      color: Colors.amber.shade400,
-                                      width: 1.5,
-                                    ),
-                                    boxShadow: const [
-                                      BoxShadow(
-                                        color: Colors.black26,
-                                        blurRadius: 3,
-                                        offset: Offset(0, 1),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              sub.productName.toUpperCase(),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(
-                                                fontSize: 7,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.black87,
-                                              ),
-                                            ),
-                                            Text(
-                                              'BARCODE: 62911000${sub.id.hashCode.abs().toString().substring(0, 4)}',
-                                              style: const TextStyle(
-                                                fontSize: 5,
-                                                fontFamily: 'monospace',
-                                                color: Colors.black54,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Text(
-                                        'AED ${sub.price.toStringAsFixed(2)}',
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w900,
-                                          color: Colors.red,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-
-                              // Shelf Label Overlay (e.g. Lulu / Carrefour)
-                              Positioned(
-                                top: 12,
-                                right: 12,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withValues(alpha: 0.6),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    sub.storeName,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ),
-
-                              // Promo Indicator badge
-                              if (sub.promoType != 'None')
-                                Positioned(
-                                  top: 12,
-                                  left: 12,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red,
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      sub.promoType.toUpperCase(),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
+                          borderRadius: BorderRadius.circular(12),
                         ),
+                      )
+                    : const Padding(
+                        padding: EdgeInsets.all(40),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.camera_alt_outlined,
+                              size: 48,
+                              color: Colors.grey,
+                            ),
+                            SizedBox(height: 12),
+                            Text(
+                              'No price label photo was attached.',
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      ),
+              ),
+              const SizedBox(height: 12),
+              if (hasRealImage)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.lock_outline, color: Colors.white70, size: 13),
+                      SizedBox(width: 5),
+                      Text(
+                        'Preview only — download disabled',
+                        style: TextStyle(color: Colors.white70, fontSize: 11),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              IconButton(
-                icon: const Icon(Icons.cancel, color: Colors.white, size: 40),
-                onPressed: () => Navigator.pop(context),
-              ),
             ],
           ),
         );
@@ -4811,6 +4482,131 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           ],
         );
       },
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Sidebar evidence thumbnail — shows the real photo when a URL is present,
+// otherwise a placeholder icon. Tapping opens the full lightbox dialog.
+// Right-click / secondary-click is blocked so the admin cannot save the image.
+// ---------------------------------------------------------------------------
+class _EvidenceThumbnail extends StatelessWidget {
+  const _EvidenceThumbnail({
+    required this.label,
+    required this.url,
+    required this.onTap,
+  });
+
+  final String label;
+  final String? url;
+  final VoidCallback? onTap;
+
+  bool get _hasImage => url != null && url!.startsWith('http');
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      onSecondaryTap: () {},
+      onSecondaryTapDown: (_) {},
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          height: 84,
+          decoration: BoxDecoration(
+            color: _hasImage ? Colors.black : Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: _hasImage ? Colors.transparent : const Color(0xFFE8EEE4),
+            ),
+          ),
+          child: _hasImage
+              ? Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Listener(
+                      behavior: HitTestBehavior.opaque,
+                      onPointerDown: (e) {
+                        if (e.buttons == kSecondaryMouseButton) {}
+                      },
+                      child: Image.network(
+                        url!,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (_, child, progress) => progress == null
+                            ? child
+                            : const Center(
+                                child: SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              ),
+                        errorBuilder: (context, error, stack) => const Center(
+                          child: Icon(
+                            Icons.broken_image_outlined,
+                            color: Colors.white54,
+                            size: 28,
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Label bar at bottom
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        color: Colors.black54,
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Text(
+                          label,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Expand icon hint
+                    const Positioned(
+                      top: 4,
+                      right: 4,
+                      child: Icon(
+                        Icons.zoom_in,
+                        color: Colors.white70,
+                        size: 14,
+                      ),
+                    ),
+                  ],
+                )
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      label == 'Receipt'
+                          ? Icons.receipt_long_rounded
+                          : Icons.camera_alt_rounded,
+                      color: Colors.grey.shade400,
+                      size: 22,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'No $label',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+      ),
     );
   }
 }

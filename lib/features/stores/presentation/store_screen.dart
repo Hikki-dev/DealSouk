@@ -1,8 +1,5 @@
 // ignore_for_file: deprecated_member_use
 
-// ignore: unused_import
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,6 +15,7 @@ import 'package:dealsouk/features/stores/presentation/stores_providers.dart';
 import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/core/widgets/souk_widgets.dart';
 import 'package:dealsouk/l10n/app_localizations.dart';
+import 'package:dealsouk/core/util/geo_utils.dart';
 
 /// Dubai city centre — map always defaults here
 const _dubaiCenter = LatLng(25.2048, 55.2708);
@@ -32,20 +30,6 @@ const _dubaiMinLat = 24.80;
 const _dubaiMaxLat = 25.45;
 const _dubaiMinLng = 54.90;
 const _dubaiMaxLng = 55.65;
-
-/// Haversine distance in km between two GPS points.
-double _haversineKm(double lat1, double lng1, double lat2, double lng2) {
-  const r = 6371.0; // Earth radius km
-  final dLat = (lat2 - lat1) * pi / 180;
-  final dLng = (lng2 - lng1) * pi / 180;
-  final a =
-      sin(dLat / 2) * sin(dLat / 2) +
-      cos(lat1 * pi / 180) *
-          cos(lat2 * pi / 180) *
-          sin(dLng / 2) *
-          sin(dLng / 2);
-  return r * 2 * asin(sqrt(a));
-}
 
 class StoreScreen extends ConsumerStatefulWidget {
   const StoreScreen({super.key});
@@ -278,7 +262,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
   double? _distanceTo(Store store) {
     final p = _currentPosition;
     if (p == null) return null;
-    return _haversineKm(p.latitude, p.longitude, store.lat, store.lng);
+    return haversineKm(p.latitude, p.longitude, store.lat, store.lng);
   }
 
   List<Store> _applyFilters(List<Store> stores) {

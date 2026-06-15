@@ -1,7 +1,6 @@
 // ignore_for_file: deprecated_member_use
 
 import 'dart:async';
-import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
@@ -28,19 +27,7 @@ import 'package:dealsouk/core/widgets/souk_widgets.dart';
 import 'package:dealsouk/core/widgets/platform_card.dart';
 import 'package:dealsouk/features/requests/presentation/request_board_view.dart';
 import 'package:dealsouk/l10n/app_localizations.dart';
-
-double _haversineKm(double lat1, double lng1, double lat2, double lng2) {
-  const r = 6371.0;
-  final dLat = (lat2 - lat1) * math.pi / 180;
-  final dLng = (lng2 - lng1) * math.pi / 180;
-  final a =
-      math.sin(dLat / 2) * math.sin(dLat / 2) +
-      math.cos(lat1 * math.pi / 180) *
-          math.cos(lat2 * math.pi / 180) *
-          math.sin(dLng / 2) *
-          math.sin(dLng / 2);
-  return r * 2 * math.asin(math.sqrt(a));
-}
+import 'package:dealsouk/core/util/geo_utils.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -1793,7 +1780,7 @@ class _FreshPriceEntryCard extends ConsumerWidget {
     if (match.isNotEmpty) {
       final store = match.first;
       if (pos != null) {
-        return _haversineKm(pos.latitude, pos.longitude, store.lat, store.lng);
+        return haversineKm(pos.latitude, pos.longitude, store.lat, store.lng);
       }
       return store.distance;
     }
@@ -1965,7 +1952,7 @@ class _FeaturedStoreCard extends ConsumerWidget {
     // unknown. Whole km when far away (abroad testing), one decimal nearby.
     final pos = ref.read(userLocationProvider);
     final km = pos != null
-        ? _haversineKm(pos.latitude, pos.longitude, store.lat, store.lng)
+        ? haversineKm(pos.latitude, pos.longitude, store.lat, store.lng)
         : store.distance;
     final distLabel = km >= 100 ? km.toStringAsFixed(0) : km.toStringAsFixed(1);
     return GestureDetector(
@@ -2102,14 +2089,14 @@ class _OfferCarouselState extends State<_OfferCarousel> {
   void initState() {
     super.initState();
     _timer = Timer.periodic(const Duration(seconds: 4), (timer) {
-      if (_pageController.hasClients) {
-        final nextPage = (_currentIndex + 1) % 3;
-        _pageController.animateToPage(
-          nextPage,
-          duration: const Duration(milliseconds: 350),
-          curve: Curves.easeInOut,
-        );
-      }
+      // Guard against firing on a disposed PageController (H-17).
+      if (!mounted || !_pageController.hasClients) return;
+      final nextPage = (_currentIndex + 1) % 3;
+      _pageController.animateToPage(
+        nextPage,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOut,
+      );
     });
   }
 

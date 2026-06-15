@@ -4,11 +4,19 @@ const GCM_ALGORITHM = 'aes-256-gcm';
 const LEGACY_ALGORITHM = 'aes-256-cbc';
 const IV_LENGTH = 16;
 
-// Key must be exactly 32 bytes. We generate a 32-byte key from the env variable,
-// or use a development fallback key if not specified.
-const ENCRYPTION_KEY = process.env.DATABASE_ENCRYPTION_KEY 
-  ? crypto.createHash('sha256').update(process.env.DATABASE_ENCRYPTION_KEY).digest()
-  : crypto.createHash('sha256').update('dealsouk-default-development-encryption-key-secret-12345').digest();
+// Key must be exactly 32 bytes. We derive it from DATABASE_ENCRYPTION_KEY via
+// SHA-256 so any length passphrase is accepted. The env var is mandatory — no
+// fallback exists, because a committed fallback key is a known-plaintext attack
+// on every phone number stored in production.
+const ENCRYPTION_KEY = (() => {
+  const key = process.env.DATABASE_ENCRYPTION_KEY;
+  if (!key) {
+    throw new Error(
+      'DATABASE_ENCRYPTION_KEY is required. Generate one with: openssl rand -base64 32',
+    );
+  }
+  return crypto.createHash('sha256').update(key).digest();
+})();
 
 export function encrypt(text: string): string {
   const iv = crypto.randomBytes(IV_LENGTH);

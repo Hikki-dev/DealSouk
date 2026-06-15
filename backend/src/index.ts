@@ -1,16 +1,13 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import compression from "compression";
 import helmet from "helmet";
 import rateLimit, { Store } from "express-rate-limit";
 import { RedisStore } from "rate-limit-redis";
 import { PrismaClient } from "@prisma/client";
 import { requireProductionEnv } from "./config/env";
 import { redis, isRedisEnabled } from "./services/redis";
-
-// TODO: Integrate TimescaleDB for time-series grocery price history data scaling.
-// TODO: Integrate Redis for leaderboard ranking caches, API rate-limiting, and session caching.
-// TODO: Integrate Swagger / OpenAPI UI middleware for live backend endpoint documentation.
 
 import authRoutes from "./routes/auth";
 import productRoutes from "./routes/products";
@@ -68,14 +65,18 @@ export function isCorsOriginAllowed(
   if (!origin) {
     return true;
   }
+  // Allow localhost only in development (or when explicitly opted in via env var).
+  // In production, localhost origins are blocked to prevent local pages from
+  // making credentialed requests to the live API.
   if (origin === "http://localhost" || origin.startsWith("http://localhost:")) {
-    return true;
+    return !production || process.env.ALLOW_LOCALHOST_CORS === "true";
   }
   return Boolean(origins?.includes(origin));
 }
 
 app.set("trust proxy", 1);
 app.use(helmet());
+app.use(compression());
 app.use(
   cors({
     origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {

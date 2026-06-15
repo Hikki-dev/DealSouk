@@ -55,15 +55,16 @@ class AuthState {
 class AuthNotifier extends Notifier<AuthState> {
   @override
   AuthState build() {
-    Future.microtask(() {
-      authService.authStateChanges.listen((user) {
-        if (user != null && state.status != AuthStatus.authenticated) {
-          _syncWithBackend(user);
-        } else if (user == null && state.status == AuthStatus.authenticated) {
-          state = const AuthState(status: AuthStatus.unauthenticated);
-        }
-      });
+    // Store and cancel the subscription on dispose to prevent memory leaks and
+    // duplicate listeners when the notifier is rebuilt (H-12).
+    final subscription = authService.authStateChanges.listen((user) {
+      if (user != null && state.status != AuthStatus.authenticated) {
+        _syncWithBackend(user);
+      } else if (user == null && state.status == AuthStatus.authenticated) {
+        state = const AuthState(status: AuthStatus.unauthenticated);
+      }
     });
+    ref.onDispose(subscription.cancel);
 
     final current = authService.currentUser;
     if (current != null) {

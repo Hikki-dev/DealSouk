@@ -9,6 +9,7 @@ import {
   TRUST_MIN_ACCURACY,
 } from '../services/tokenEngine';
 import { notifySubmissionHidden } from '../services/fcmNotifier';
+import { validateProofImage, deleteSubmissionProofs } from '../services/storageHelpers';
 
 const router = Router();
 
@@ -36,6 +37,62 @@ function isHttpsUrl(value: string): boolean {
     return new URL(value).protocol === 'https:';
   } catch {
     return false;
+  }
+}
+
+// Proof photo URLs must come from Firebase Storage — no other host is accepted.
+// This prevents SSRF: a crafted URL could otherwise be forwarded to the Anthropic
+// Vision API or used to reference off-platform content.
+function isFirebaseStorageUrl(value: string): boolean {
+  try {
+    const { protocol, hostname } = new URL(value);
+    return protocol === 'https:' && hostname === 'firebasestorage.googleapis.com';
+  } catch {
+    return false;
+  }
+}
+
+// Runs after the HTTP 201 is sent. Checks each proof photo with Claude Haiku
+// vision. If a photo clearly isn't a price label / receipt it auto-rejects the
+// submission and deletes the files from Firebase Storage immediately.
+async function validateAndRejectIfSpam(
+  submissionId: string,
+  priceLabelUrl: string | undefined,
+  receiptUrl: string | undefined,
+): Promise<void> {
+  try {
+    const checks = await Promise.all([
+      priceLabelUrl
+        ? validateProofImage(priceLabelUrl, 'price_label')
+        : Promise.resolve(null),
+      receiptUrl
+        ? validateProofImage(receiptUrl, 'receipt')
+        : Promise.resolve(null),
+    ]);
+
+    const [labelResult, receiptResult] = checks;
+    const labelFailed = labelResult !== null && !labelResult.valid;
+    const receiptFailed = receiptResult !== null && !receiptResult.valid;
+
+    if (!labelFailed && !receiptFailed) return; // all good
+
+    const reasons: string[] = [];
+    if (labelFailed) reasons.push(`Price label photo rejected: ${labelResult!.reason}`);
+    if (receiptFailed) reasons.push(`Receipt photo rejected: ${receiptResult!.reason}`);
+
+    console.log(`[ProofValidation] Auto-rejecting submission ${submissionId}: ${reasons.join(' | ')}`);
+
+    // Guard: only reject if still pending (admin may have already acted)
+    const updated = await prisma.priceSubmission.updateMany({
+      where: { id: submissionId, status: 'pending' },
+      data: { status: 'rejected' },
+    });
+
+    if (updated.count > 0) {
+      await deleteSubmissionProofs(receiptUrl, priceLabelUrl);
+    }
+  } catch (err) {
+    console.error('[ProofValidation] Background validation error:', err);
   }
 }
 
@@ -103,12 +160,12 @@ router.post('/', requireAuth, requireEmailVerified, submitLimiter, async (req: A
   // as hasReceipt=false (no bonus).
   const claimsReceipt = hasReceipt === true && !!receiptUrl;
 
-  if (receiptUrl && (receiptUrl.length > MAX_URL_LENGTH || !isHttpsUrl(receiptUrl))) {
-    res.status(400).json({ error: 'receiptUrl must be a valid HTTPS URL' });
+  if (receiptUrl && (receiptUrl.length > MAX_URL_LENGTH || !isFirebaseStorageUrl(receiptUrl))) {
+    res.status(400).json({ error: 'receiptUrl must be a Firebase Storage HTTPS URL' });
     return;
   }
-  if (priceLabelUrl && (priceLabelUrl.length > MAX_URL_LENGTH || !isHttpsUrl(priceLabelUrl))) {
-    res.status(400).json({ error: 'priceLabelUrl must be a valid HTTPS URL' });
+  if (priceLabelUrl && (priceLabelUrl.length > MAX_URL_LENGTH || !isFirebaseStorageUrl(priceLabelUrl))) {
+    res.status(400).json({ error: 'priceLabelUrl must be a Firebase Storage HTTPS URL' });
     return;
   }
 
@@ -224,6 +281,13 @@ router.post('/', requireAuth, requireEmailVerified, submitLimiter, async (req: A
     tokensAwarded,
     expiresAt: submission.expiresAt,
   });
+
+  // Run proof-photo validation in the background — never blocks the HTTP response.
+  // Trusted sourcers (autoApprove) skip the check to keep their fast path fast;
+  // their track record already signals reliability.
+  if (!autoApprove && (priceLabelUrl || receiptUrl)) {
+    setImmediate(() => void validateAndRejectIfSpam(submission.id, priceLabelUrl, receiptUrl));
+  }
 });
 
 // POST /submissions/:id/flag
@@ -253,18 +317,27 @@ router.post('/:id/flag', requireAuth, flagLimiter, async (req: AuthRequest, res)
     return;
   }
 
-  const newFlagCount = submission.flagCount + 1;
-  const newStatus = newFlagCount >= 3 ? 'hidden' : submission.status;
-
-  await prisma.priceSubmission.update({
-    where: { id: req.params.id },
-    data: { flagCount: newFlagCount, status: newStatus },
+  const updated = await prisma.$transaction(async (tx) => {
+    const incremented = await tx.priceSubmission.update({
+      where: { id: req.params.id },
+      data: { flagCount: { increment: 1 } },
+      select: { flagCount: true, status: true },
+    });
+    if (incremented.flagCount >= 3 && incremented.status !== 'hidden') {
+      await tx.priceSubmission.update({
+        where: { id: req.params.id },
+        data: { status: 'hidden' },
+      });
+      return { flagCount: incremented.flagCount, status: 'hidden' };
+    }
+    return incremented;
   });
-  if (newStatus === 'hidden') {
+
+  if (updated.status === 'hidden') {
     await notifySubmissionHidden(submission.sourcer.fcmToken, reason);
   }
 
-  res.json({ flagCount: newFlagCount, hidden: newStatus === 'hidden' });
+  res.json({ flagCount: updated.flagCount, hidden: updated.status === 'hidden' });
 });
 
 // GET /submissions/estimate?productId=&storeId=&hasReceipt=

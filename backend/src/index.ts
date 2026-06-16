@@ -131,7 +131,13 @@ app.get("/", (_req, res) => {
 });
 
 app.get("/health", (_req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
+  res.json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    // RENDER_GIT_COMMIT is injected automatically by Render; lets us confirm
+    // exactly which commit is live without a separate version endpoint.
+    commit: process.env.RENDER_GIT_COMMIT?.slice(0, 7) ?? "dev",
+  });
 });
 
 app.get("/system/status", (_req, res) => {

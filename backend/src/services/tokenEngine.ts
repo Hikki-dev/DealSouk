@@ -1,7 +1,12 @@
 import crypto from 'crypto';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../index';
-import { notifyStreakMilestone, notifyBadgeEarned, notifyRankChange } from './fcmNotifier';
+import {
+  notifyStreakMilestone,
+  notifyBadgeEarned,
+  notifyRankChange,
+  notifySubmissionApproved,
+} from './fcmNotifier';
 
 // FR-36: minimum approved track record before a sourcer's submissions
 // publish instantly (combined with a 90%+ accuracy rating).
@@ -356,6 +361,10 @@ export async function runApprovalEffects(params: {
   submissionId: string;
 }): Promise<number> {
   const oldRank = await computeMonthlyRank(params.sourcerId);
+  const beforeApproval = await prisma.user.findUnique({
+    where: { id: params.sourcerId },
+    select: { tokenBalance: true },
+  });
 
   if (params.tokensAwarded > 0) {
     await awardTokens(
@@ -373,8 +382,24 @@ export async function runApprovalEffects(params: {
   const newRank = await computeMonthlyRank(params.sourcerId);
   const user = await prisma.user.findUnique({
     where: { id: params.sourcerId },
-    select: { fcmToken: true },
+    select: { fcmToken: true, tokenBalance: true },
   });
+  const creditedTokens = Math.max(
+    0,
+    (user?.tokenBalance ?? 0) - (beforeApproval?.tokenBalance ?? 0),
+  );
+  if (creditedTokens > 0) {
+    const submission = await prisma.priceSubmission.findUnique({
+      where: { id: params.submissionId },
+      include: { product: true, store: true },
+    });
+    await notifySubmissionApproved(
+      user?.fcmToken,
+      creditedTokens,
+      submission?.product.name,
+      submission?.store.chain,
+    );
+  }
   await notifyRankChange(user?.fcmToken, newRank, oldRank);
 
   return accuracyRating;

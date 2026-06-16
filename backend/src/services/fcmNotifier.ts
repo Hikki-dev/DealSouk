@@ -36,6 +36,27 @@ export async function notifyRequestFulfilled(
   );
 }
 
+export async function notifySubmissionApproved(
+  fcmToken: string | null | undefined,
+  creditedTokens: number,
+  productName?: string,
+  storeName?: string,
+): Promise<void> {
+  if (!fcmToken) return;
+  const item = productName && storeName ? `${productName} at ${storeName}` : "your price";
+  await sendPushNotification(
+    fcmToken,
+    `Approved: +${creditedTokens} tokens`,
+    `Nice work. We approved ${item} and added the tokens to your balance.`,
+    {
+      type: "submission_approved",
+      creditedTokens: String(creditedTokens),
+      productName: productName ?? "",
+      storeName: storeName ?? "",
+    },
+  );
+}
+
 export async function notifyRankChange(
   fcmToken: string | null | undefined,
   newRank: number,

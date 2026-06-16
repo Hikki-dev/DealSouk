@@ -612,7 +612,11 @@
   },
   "submitPhotoUploaded": "Photo Uploaded",
   "submitPhotoUploadFailed": "Couldn't add the photo. Tap to try again.",
+  "submitProofPhotoRequired": "The proof photo did not finish uploading. Please tap the photo and try again.",
+  "submitReceiptPhotoRequired": "The receipt photo did not finish uploading. Please retry it, or retake the price-label photo only.",
   "submitTapToUpload": "Tap to Upload",
+  "submitTapToRetry": "Tap to retry",
+  "submitTapToRetake": "Tap to retake",
   "submitPriceSubmitted": "Price Submitted!",
   "submitTokensGained": "+{tokens} tokens",
   "@submitTokensGained": {
@@ -622,6 +626,13 @@
   },
   "submitPendingReviewMessage": "Your price submission is pending review.\nTokens will be credited to {name} after admin approval.",
   "@submitPendingReviewMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "submitAwaitingApproval": "Waiting for approval",
+  "submitApprovedNowMessage": "Nice work, {name}. These tokens were added now. Pull down on your profile any time to refresh the latest balance.",
+  "@submitApprovedNowMessage": {
     "placeholders": {
       "name": {}
     }

@@ -200,7 +200,7 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           name: DealSouk ${{ github.ref_name }}
-          generate_release_notes: true
+          body: Internal Android APKs for DealSouk ${{ github.ref_name }}.
           files: |
             build/outputs/DealSouk-Shopper.apk
             build/outputs/DealSouk-Shopper-arm64-v8a.apk

@@ -65,6 +65,8 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
   Future<String?>? _receiptFuture;
   bool _uploadingPriceLabel = false; // background upload in-flight
   bool _uploadingReceipt = false;
+  bool _priceLabelUploadFailed = false;
+  bool _receiptUploadFailed = false;
   bool _finalizingUploads = false; // brief wait on submit if still in-flight
   bool _isSubmitting = false; // API call in-flight
 
@@ -937,6 +939,25 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                                 setState(() => _finalizingUploads = false);
                               }
 
+                              if (_priceLabelUrl == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    backgroundColor: AppTheme.forestDeep,
+                                    content: Text(l.submitProofPhotoRequired),
+                                  ),
+                                );
+                                return;
+                              }
+                              if (uploadedReceipt && _receiptUrl == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    backgroundColor: AppTheme.forestDeep,
+                                    content: Text(l.submitReceiptPhotoRequired),
+                                  ),
+                                );
+                                return;
+                              }
+
                               final store = stores.firstWhere(
                                 (s) => s.id == selectedStoreId,
                               );
@@ -970,7 +991,8 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                                 return;
                               }
 
-                              int awarded = totalReward;
+                              var awarded = 0;
+                              var submissionStatus = 'pending';
                               setState(() => _isSubmitting = true);
                               try {
                                 final result = await submissionsService.create(
@@ -981,7 +1003,10 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                                   receiptUrl: _receiptUrl,
                                   priceLabelUrl: _priceLabelUrl,
                                 );
-                                awarded = result.tokensAwarded;
+                                submissionStatus = result.status;
+                                awarded = result.status == 'approved'
+                                    ? result.tokensAwarded
+                                    : 0;
                               } catch (_) {
                                 if (!mounted) return;
                                 setState(() => _isSubmitting = false);
@@ -996,29 +1021,36 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                               if (!mounted) return;
                               setState(() => _isSubmitting = false);
 
-                              // Optimistic UI updates
-                              ref
-                                  .read(userTokensProvider.notifier)
-                                  .addTokens(awarded);
-                              ref
-                                  .read(userTransactionsProvider.notifier)
-                                  .addTransaction(
-                                    awarded,
-                                    l.submitTransactionDescription(
+                              // Only trusted auto-approved submissions earn
+                              // immediately. Normal submissions wait for admin
+                              // approval, so the local balance must not fake it.
+                              if (submissionStatus == 'approved' &&
+                                  awarded > 0) {
+                                ref
+                                    .read(userTokensProvider.notifier)
+                                    .addTokens(awarded);
+                                ref
+                                    .read(userTransactionsProvider.notifier)
+                                    .addTransaction(
                                       awarded,
-                                      product.name,
-                                      store.name,
-                                    ),
-                                  );
+                                      l.submitTransactionDescription(
+                                        awarded,
+                                        product.name,
+                                        store.name,
+                                      ),
+                                    );
+                              }
                               ref
                                   .read(userProfileProvider.notifier)
                                   .incrementSubmissions();
-                              ref
-                                  .read(streakProvider.notifier)
-                                  .recordActivity();
-                              ref
-                                  .read(dailyChallengeProvider.notifier)
-                                  .recordProgress();
+                              if (submissionStatus == 'approved') {
+                                ref
+                                    .read(streakProvider.notifier)
+                                    .recordActivity();
+                                ref
+                                    .read(dailyChallengeProvider.notifier)
+                                    .recordProgress();
+                              }
 
                               if (widget.requestId != null) {
                                 ref
@@ -1038,7 +1070,11 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                               );
 
                               if (!mounted) return;
-                              _showSuccessDialog(context, awarded);
+                              _showSuccessDialog(
+                                context,
+                                reward: awarded,
+                                approvedNow: submissionStatus == 'approved',
+                              );
                             }
                           },
                     child: Container(
@@ -1148,11 +1184,13 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
       if (isReceipt) {
         _localReceiptFile = file;
         uploadedReceipt = true;
+        _receiptUploadFailed = false;
         _uploadingReceipt = true;
         _receiptFuture = uploadFuture;
       } else {
         _localPriceLabelFile = file;
         uploadedPriceLabel = true;
+        _priceLabelUploadFailed = false;
         _uploadingPriceLabel = true;
         _priceLabelFuture = uploadFuture;
       }
@@ -1165,9 +1203,11 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
       if (isReceipt) {
         _uploadingReceipt = false;
         _receiptUrl = url;
+        _receiptUploadFailed = url == null;
       } else {
         _uploadingPriceLabel = false;
         _priceLabelUrl = url;
+        _priceLabelUploadFailed = url == null;
       }
     });
 
@@ -1196,6 +1236,9 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
     VoidCallback? onTap,
   }) {
     final l = AppLocalizations.of(context)!;
+    final failed =
+        (title == l.submitPriceLabelPhoto && _priceLabelUploadFailed) ||
+        (title == l.submitReceiptPhoto && _receiptUploadFailed);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -1207,8 +1250,12 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
               : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isUploaded ? AppTheme.forestDeep : Colors.grey.shade200,
-            width: isUploaded ? 1.5 : 1,
+            color: failed
+                ? Colors.red.shade400
+                : isUploaded
+                ? AppTheme.forestDeep
+                : Colors.grey.shade200,
+            width: (isUploaded || failed) ? 1.5 : 1,
           ),
           boxShadow: [
             BoxShadow(
@@ -1240,10 +1287,10 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                           color: Colors.black.withValues(alpha: 0.45),
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 5),
-                        child: const Text(
-                          'Tap to retake',
+                        child: Text(
+                          failed ? l.submitTapToRetry : l.submitTapToRetake,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 9,
                             fontWeight: FontWeight.w600,
@@ -1274,11 +1321,15 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                         : Container(
                             padding: const EdgeInsets.all(2),
                             decoration: BoxDecoration(
-                              color: AppTheme.forestDeep,
+                              color: failed
+                                  ? Colors.red.shade600
+                                  : AppTheme.forestDeep,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(
-                              Icons.check,
+                            child: Icon(
+                              failed
+                                  ? Icons.priority_high_rounded
+                                  : Icons.check,
                               size: 14,
                               color: Colors.white,
                             ),
@@ -1314,7 +1365,11 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
     );
   }
 
-  void _showSuccessDialog(BuildContext context, int reward) {
+  void _showSuccessDialog(
+    BuildContext context, {
+    required int reward,
+    required bool approvedNow,
+  }) {
     final l = AppLocalizations.of(context)!;
     final profile = ref.read(userProfileProvider);
     final firstName = profile.name.split(' ').first;
@@ -1353,24 +1408,36 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0, end: reward.toDouble()),
-                duration: const Duration(milliseconds: 750),
-                curve: Curves.easeOutBack,
-                builder: (context, value, child) {
-                  return Text(
-                    l.submitTokensGained(value.round()),
-                    style: const TextStyle(
-                      color: AppTheme.forestDeep,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  );
-                },
-              ),
+              if (approvedNow)
+                TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0, end: reward.toDouble()),
+                  duration: const Duration(milliseconds: 750),
+                  curve: Curves.easeOutBack,
+                  builder: (context, value, child) {
+                    return Text(
+                      l.submitTokensGained(value.round()),
+                      style: const TextStyle(
+                        color: AppTheme.forestDeep,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    );
+                  },
+                )
+              else
+                Text(
+                  l.submitAwaitingApproval,
+                  style: const TextStyle(
+                    color: AppTheme.forestDeep,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
               const SizedBox(height: 8),
               Text(
-                l.submitPendingReviewMessage(firstName),
+                approvedNow
+                    ? l.submitApprovedNowMessage(firstName)
+                    : l.submitPendingReviewMessage(firstName),
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 13, height: 1.4),
               ),

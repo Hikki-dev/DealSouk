@@ -153,6 +153,18 @@ class BadgesNotifier extends Notifier<List<UserBadge>> {
     }).toList();
     state = updated;
   }
+
+  void syncFromProfile(ProfileData profile) {
+    final unlockedById = {for (final badge in profile.badges) badge.id: badge};
+    state = state.map((badge) {
+      final unlocked = unlockedById[badge.id];
+      if (unlocked == null) return badge.copyWith(unlocked: false);
+      return badge.copyWith(
+        unlocked: true,
+        unlockedAtLabel: unlocked.unlockedAtLabel,
+      );
+    }).toList();
+  }
 }
 
 final badgesProvider = NotifierProvider<BadgesNotifier, List<UserBadge>>(

@@ -1081,7 +1081,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'Couldn\'t add the photo. Tap to try again.';
 
   @override
+  String get submitProofPhotoRequired =>
+      'The proof photo did not finish uploading. Please tap the photo and try again.';
+
+  @override
+  String get submitReceiptPhotoRequired =>
+      'The receipt photo did not finish uploading. Please retry it, or retake the price-label photo only.';
+
+  @override
   String get submitTapToUpload => 'Tap to Upload';
+
+  @override
+  String get submitTapToRetry => 'Tap to retry';
+
+  @override
+  String get submitTapToRetake => 'Tap to retake';
 
   @override
   String get submitPriceSubmitted => 'Price Submitted!';
@@ -1094,6 +1108,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String submitPendingReviewMessage(Object name) {
     return 'Your price submission is pending review.\nTokens will be credited to $name after admin approval.';
+  }
+
+  @override
+  String get submitAwaitingApproval => 'Waiting for approval';
+
+  @override
+  String submitApprovedNowMessage(Object name) {
+    return 'Nice work, $name. These tokens were added now. Pull down on your profile any time to refresh the latest balance.';
   }
 
   @override

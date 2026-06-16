@@ -1,6 +1,7 @@
 import 'package:dealsouk/features/products/domain/product.dart';
 import 'package:dealsouk/features/cart/domain/cart_item.dart';
 import 'package:dealsouk/features/tokens/domain/token_transaction.dart';
+import 'package:dealsouk/features/tokens/domain/user_badge.dart';
 import 'package:dealsouk/features/admin/domain/admin_submission.dart';
 import 'package:dealsouk/core/network/api_client.dart';
 
@@ -17,6 +18,7 @@ class ProfileData {
   final int approvedSubmissions;
   final int currentStreak;
   final int longestStreak;
+  final List<UserBadge> badges;
 
   const ProfileData({
     required this.id,
@@ -31,22 +33,37 @@ class ProfileData {
     required this.approvedSubmissions,
     this.currentStreak = 0,
     this.longestStreak = 0,
+    this.badges = const [],
   });
 
-  factory ProfileData.fromJson(Map<String, dynamic> json) => ProfileData(
-    id: json['id'] as String,
-    displayName: json['displayName'] as String,
-    avatarUrl: json['avatarUrl'] as String?,
-    homeArea: json['homeArea'] as String?,
-    preferredLocale: json['preferredLocale'] as String? ?? 'en',
-    tokenBalance: json['tokenBalance'] as int? ?? 0,
-    accuracyRating: (json['accuracyRating'] as num?)?.toDouble() ?? 100.0,
-    isAdmin: json['isAdmin'] as bool? ?? false,
-    totalSubmissions: json['totalSubmissions'] as int? ?? 0,
-    approvedSubmissions: json['approvedSubmissions'] as int? ?? 0,
-    currentStreak: json['currentStreak'] as int? ?? 0,
-    longestStreak: json['longestStreak'] as int? ?? 0,
-  );
+  factory ProfileData.fromJson(Map<String, dynamic> json) {
+    final rawBadges = json['badges'] as List<dynamic>? ?? const [];
+    return ProfileData(
+      id: json['id'] as String,
+      displayName: json['displayName'] as String,
+      avatarUrl: json['avatarUrl'] as String?,
+      homeArea: json['homeArea'] as String?,
+      preferredLocale: json['preferredLocale'] as String? ?? 'en',
+      tokenBalance: json['tokenBalance'] as int? ?? 0,
+      accuracyRating: (json['accuracyRating'] as num?)?.toDouble() ?? 100.0,
+      isAdmin: json['isAdmin'] as bool? ?? false,
+      totalSubmissions: json['totalSubmissions'] as int? ?? 0,
+      approvedSubmissions: json['approvedSubmissions'] as int? ?? 0,
+      currentStreak: json['currentStreak'] as int? ?? 0,
+      longestStreak: json['longestStreak'] as int? ?? 0,
+      badges: rawBadges.map((entry) {
+        final badge = entry as Map<String, dynamic>;
+        return UserBadge(
+          id: badge['id'] as String? ?? '',
+          name: badge['name'] as String? ?? '',
+          emoji: badge['emoji'] as String? ?? '',
+          description: badge['description'] as String? ?? '',
+          unlocked: true,
+          unlockedAtLabel: badge['unlockedAt'] as String?,
+        );
+      }).toList(),
+    );
+  }
 }
 
 class UserVoucher {

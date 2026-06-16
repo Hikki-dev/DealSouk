@@ -15,6 +15,9 @@ on:
         required: true
         default: https://dealsouk.onrender.com
 
+permissions:
+  contents: write
+
 concurrency:
   group: ios-${{ github.ref }}
   cancel-in-progress: true
@@ -100,7 +103,7 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           name: DealSouk ${{ github.ref_name }}
-          generate_release_notes: true
+          body: AltStore-ready unsigned iOS IPA for DealSouk ${{ github.ref_name }}.
           files: build/ios/DealSouk-unsigned.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

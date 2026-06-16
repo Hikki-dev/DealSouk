@@ -149,6 +149,7 @@ class AuthNotifier extends Notifier<AuthState> {
     try {
       final profileData = ProfileData.fromJson(data);
       ref.read(userTokensProvider.notifier).sync(profileData.tokenBalance);
+      ref.read(badgesProvider.notifier).syncFromProfile(profileData);
       ref
           .read(userProfileProvider.notifier)
           .syncFromProfile(
@@ -173,6 +174,7 @@ class AuthNotifier extends Notifier<AuthState> {
     try {
       final profile = await profileService.getMyProfile();
       ref.read(userTokensProvider.notifier).sync(profile.tokenBalance);
+      ref.read(badgesProvider.notifier).syncFromProfile(profile);
       ref
           .read(streakProvider.notifier)
           .sync(profile.currentStreak, profile.longestStreak);

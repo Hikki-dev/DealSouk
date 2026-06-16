@@ -86,145 +86,153 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.background,
-      body: ListView(
-        padding: EdgeInsets.zero,
-        physics: const BouncingScrollPhysics(),
-        children: [
-          // ── Hero: big tappable avatar + name + level/streak + tokens ──
-          Container(
-            decoration: const BoxDecoration(
-              color: AppTheme.forestDeep,
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
-            ),
-            padding: EdgeInsets.fromLTRB(
-              20,
-              MediaQuery.of(context).padding.top + 24,
-              20,
-              26,
-            ),
-            child: Column(
-              children: [
-                _buildHeroAvatar(profile),
-                const SizedBox(height: 14),
-                Text(
-                  profile.name,
-                  style: GoogleFonts.fredoka(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
+      body: RefreshIndicator(
+        onRefresh: () => ref.read(authProvider.notifier).refreshProfile(),
+        color: AppTheme.forestDeep,
+        child: ListView(
+          padding: EdgeInsets.zero,
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
+          children: [
+            // ── Hero: big tappable avatar + name + level/streak + tokens ──
+            Container(
+              decoration: const BoxDecoration(
+                color: AppTheme.forestDeep,
+                borderRadius: BorderRadius.vertical(
+                  bottom: Radius.circular(30),
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.limeAccent.withValues(alpha: 0.25),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        l.profileLevelBadge(level, levelTitle(level)),
-                        style: const TextStyle(
-                          color: AppTheme.limeAccent,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
+              ),
+              padding: EdgeInsets.fromLTRB(
+                20,
+                MediaQuery.of(context).padding.top + 24,
+                20,
+                26,
+              ),
+              child: Column(
+                children: [
+                  _buildHeroAvatar(profile),
+                  const SizedBox(height: 14),
+                  Text(
+                    profile.name,
+                    style: GoogleFonts.fredoka(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.limeAccent.withValues(alpha: 0.25),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          l.profileLevelBadge(level, levelTitle(level)),
+                          style: const TextStyle(
+                            color: AppTheme.limeAccent,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    const Icon(
-                      Icons.local_fire_department,
-                      color: Colors.orange,
-                      size: 15,
-                    ),
-                    const SizedBox(width: 2),
-                    Text(
-                      l.profileDayStreak(streak.currentStreak),
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                      const SizedBox(width: 10),
+                      const Icon(
+                        Icons.local_fire_department,
+                        color: Colors.orange,
+                        size: 15,
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                      const SizedBox(width: 2),
+                      Text(
+                        l.profileDayStreak(streak.currentStreak),
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
 
-          // ── Quick stats ──
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 18, 16, 4),
-            child: Row(
-              children: [
-                _statCard(
-                  Icons.bolt,
-                  '$tokens',
-                  l.profileStatTokens,
-                  AppTheme.forestDeep,
-                ),
-                const SizedBox(width: 10),
-                _statCard(
-                  Icons.verified_outlined,
-                  '$accuracyPct%',
-                  l.profileStatAccuracy,
-                  Colors.green.shade600,
-                ),
-                const SizedBox(width: 10),
-                _statCard(
-                  Icons.receipt_long_outlined,
-                  '$approvedCount',
-                  l.profileStatApproved,
-                  Colors.blue.shade600,
-                ),
-                const SizedBox(width: 10),
-                _statCard(
-                  Icons.local_fire_department,
-                  '${streak.currentStreak}',
-                  l.profileStatStreak,
-                  Colors.orange.shade700,
-                ),
-              ],
+            // ── Quick stats ──
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 18, 16, 4),
+              child: Row(
+                children: [
+                  _statCard(
+                    Icons.bolt,
+                    '$tokens',
+                    l.profileStatTokens,
+                    AppTheme.forestDeep,
+                  ),
+                  const SizedBox(width: 10),
+                  _statCard(
+                    Icons.verified_outlined,
+                    '$accuracyPct%',
+                    l.profileStatAccuracy,
+                    Colors.green.shade600,
+                  ),
+                  const SizedBox(width: 10),
+                  _statCard(
+                    Icons.receipt_long_outlined,
+                    '$approvedCount',
+                    l.profileStatApproved,
+                    Colors.blue.shade600,
+                  ),
+                  const SizedBox(width: 10),
+                  _statCard(
+                    Icons.local_fire_department,
+                    '${streak.currentStreak}',
+                    l.profileStatStreak,
+                    Colors.orange.shade700,
+                  ),
+                ],
+              ),
             ),
-          ),
 
-          // ── Plain labeled sections (no tabs) ──
-          _profileSection(
-            icon: Icons.receipt_long_outlined,
-            title: l.profileSectionSubmissions,
-            child: _buildSubmissionsTab(mySubmissions, accuracyPct),
-          ),
-          _profileSection(
-            icon: Icons.bolt,
-            title: l.profileSectionTokens,
-            child: _buildTokenHistoryTab(transactions, tokens),
-          ),
-          _profileSection(
-            icon: Icons.search_rounded,
-            title: l.profileSectionRequests,
-            child: _buildRequestsTab(myRequests),
-          ),
-          _profileSection(
-            icon: Icons.settings_outlined,
-            title: l.profileSectionSettings,
-            initiallyExpanded: true,
-            child: _buildSettingsTab(
-              context,
-              profile,
-              settings,
-              locale,
-              tokens,
-              vouchers,
+            // ── Plain labeled sections (no tabs) ──
+            _profileSection(
+              icon: Icons.receipt_long_outlined,
+              title: l.profileSectionSubmissions,
+              child: _buildSubmissionsTab(mySubmissions, accuracyPct),
             ),
-          ),
+            _profileSection(
+              icon: Icons.bolt,
+              title: l.profileSectionTokens,
+              child: _buildTokenHistoryTab(transactions, tokens),
+            ),
+            _profileSection(
+              icon: Icons.search_rounded,
+              title: l.profileSectionRequests,
+              child: _buildRequestsTab(myRequests),
+            ),
+            _profileSection(
+              icon: Icons.settings_outlined,
+              title: l.profileSectionSettings,
+              initiallyExpanded: true,
+              child: _buildSettingsTab(
+                context,
+                profile,
+                settings,
+                locale,
+                tokens,
+                vouchers,
+              ),
+            ),
 
-          SizedBox(height: 110 + MediaQuery.of(context).padding.bottom),
-        ],
+            SizedBox(height: 110 + MediaQuery.of(context).padding.bottom),
+          ],
+        ),
       ),
     );
   }

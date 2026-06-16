@@ -1076,7 +1076,21 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعذّر إضافة الصورة. اضغط للمحاولة مرة أخرى.';
 
   @override
+  String get submitProofPhotoRequired =>
+      'لم يكتمل رفع صورة الدليل. اضغط على الصورة وحاول مرة أخرى.';
+
+  @override
+  String get submitReceiptPhotoRequired =>
+      'لم يكتمل رفع صورة الإيصال. أعد المحاولة أو استخدم صورة ملصق السعر فقط.';
+
+  @override
   String get submitTapToUpload => 'اضغط للرفع';
+
+  @override
+  String get submitTapToRetry => 'اضغط لإعادة المحاولة';
+
+  @override
+  String get submitTapToRetake => 'اضغط لإعادة التصوير';
 
   @override
   String get submitPriceSubmitted => 'تم إرسال السعر!';
@@ -1089,6 +1103,14 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String submitPendingReviewMessage(Object name) {
     return 'إرسال السعر الخاص بك قيد المراجعة.\nسيتم إضافة التوكنات إلى $name بعد موافقة المسؤول.';
+  }
+
+  @override
+  String get submitAwaitingApproval => 'بانتظار الموافقة';
+
+  @override
+  String submitApprovedNowMessage(Object name) {
+    return 'عمل رائع يا $name. تمت إضافة هذه التوكنات الآن. اسحب صفحة الملف الشخصي للأسفل في أي وقت لتحديث الرصيد.';
   }
 
   @override

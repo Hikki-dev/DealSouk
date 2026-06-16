@@ -1956,11 +1956,35 @@ abstract class AppLocalizations {
   /// **'Couldn\'t add the photo. Tap to try again.'**
   String get submitPhotoUploadFailed;
 
+  /// No description provided for @submitProofPhotoRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'The proof photo did not finish uploading. Please tap the photo and try again.'**
+  String get submitProofPhotoRequired;
+
+  /// No description provided for @submitReceiptPhotoRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'The receipt photo did not finish uploading. Please retry it, or retake the price-label photo only.'**
+  String get submitReceiptPhotoRequired;
+
   /// No description provided for @submitTapToUpload.
   ///
   /// In en, this message translates to:
   /// **'Tap to Upload'**
   String get submitTapToUpload;
+
+  /// No description provided for @submitTapToRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to retry'**
+  String get submitTapToRetry;
+
+  /// No description provided for @submitTapToRetake.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to retake'**
+  String get submitTapToRetake;
 
   /// No description provided for @submitPriceSubmitted.
   ///
@@ -1979,6 +2003,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your price submission is pending review.\nTokens will be credited to {name} after admin approval.'**
   String submitPendingReviewMessage(Object name);
+
+  /// No description provided for @submitAwaitingApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for approval'**
+  String get submitAwaitingApproval;
+
+  /// No description provided for @submitApprovedNowMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Nice work, {name}. These tokens were added now. Pull down on your profile any time to refresh the latest balance.'**
+  String submitApprovedNowMessage(Object name);
 
   /// No description provided for @submitOpenAdminReview.
   ///

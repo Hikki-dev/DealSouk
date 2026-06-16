@@ -34,6 +34,7 @@ router.post('/verify', verifyLimiter, async (req, res) => {
         data: {
           firebaseUid: decoded.uid,
           displayName,
+          avatarUrl: decoded.picture ?? null,
           phoneNumber,
           preferredLocale: 'en',
         },
@@ -44,6 +45,14 @@ router.post('/verify', verifyLimiter, async (req, res) => {
         where: { id: 1 },
         update: {},
         create: { id: 1 },
+      });
+    } else if (decoded.picture && decoded.picture !== user.avatarUrl) {
+      // Persist/refresh the Google/Apple profile photo so server-side consumers
+      // (e.g. the admin Users directory) can show it. These URLs rotate over
+      // time, so we re-sync whenever the token's picture claim changes.
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { avatarUrl: decoded.picture },
       });
     }
 
@@ -64,6 +73,7 @@ router.post('/verify', verifyLimiter, async (req, res) => {
     res.json({
       id: user.id,
       displayName: user.displayName,
+      avatarUrl: user.avatarUrl,
       homeArea: user.homeArea,
       preferredLocale: user.preferredLocale,
       tokenBalance: user.tokenBalance,

@@ -166,7 +166,11 @@ app.use(
     res: express.Response,
     _next: express.NextFunction,
   ) => {
-    console.error(err.stack);
+    if (isProduction) {
+      console.error("[error]", { name: err.name, message: err.message });
+    } else {
+      console.error(err.stack);
+    }
     res.status(500).json({ error: "Internal server error" });
   },
 );

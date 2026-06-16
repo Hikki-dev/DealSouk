@@ -17,8 +17,6 @@ class DealSoukApp extends ConsumerStatefulWidget {
 }
 
 class _DealSoukAppState extends ConsumerState<DealSoukApp> {
-  final _navigatorKey = GlobalKey<NavigatorState>();
-
   @override
   void initState() {
     super.initState();
@@ -26,7 +24,7 @@ class _DealSoukAppState extends ConsumerState<DealSoukApp> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       fcmService.initialize(
         onForegroundMessage: (msg) {
-          final ctx = _navigatorKey.currentContext;
+          final ctx = rootNavigatorKey.currentContext;
           if (ctx != null) showFcmBanner(ctx, msg);
         },
       );

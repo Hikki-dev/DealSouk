@@ -10,10 +10,10 @@ function storageBucketName(): string {
 
 // Firebase download URL format:
 // https://firebasestorage.googleapis.com/v0/b/{bucket}/o/{encoded_path}?alt=media&token=...
-function objectPathFromFirebaseUrl(url: string): string | null {
+export function objectPathFromFirebaseUrl(url: string): string | null {
   try {
     const parsed = new URL(url);
-    if (!parsed.hostname.includes('firebasestorage.googleapis.com')) return null;
+    if (parsed.hostname !== 'firebasestorage.googleapis.com') return null;
     const match = parsed.pathname.match(/\/v0\/b\/[^/]+\/o\/(.+)/);
     if (!match) return null;
     return decodeURIComponent(match[1]);

@@ -195,4 +195,45 @@ describe("token ledger hash chain", () => {
       invalidTransactionId: "tx2",
     });
   });
+
+  it("verifies independent per-user hash chains", async () => {
+    const u1CreatedAt = new Date("2026-06-14T00:00:00.000Z");
+    const u2CreatedAt = new Date("2026-06-14T00:00:30.000Z");
+    const u1Hash = hashTokenTransaction({
+      userId: "u1",
+      amount: 10,
+      reason: "Initial award",
+      createdAt: u1CreatedAt,
+      previousHash: null,
+    });
+    const u2Hash = hashTokenTransaction({
+      userId: "u2",
+      amount: 15,
+      reason: "Initial award",
+      createdAt: u2CreatedAt,
+      previousHash: null,
+    });
+    mockPrisma.tokenTransaction.findMany.mockResolvedValue([
+      {
+        id: "tx1",
+        userId: "u1",
+        amount: 10,
+        reason: "Initial award",
+        createdAt: u1CreatedAt,
+        previousHash: null,
+        hash: u1Hash,
+      },
+      {
+        id: "tx2",
+        userId: "u2",
+        amount: 15,
+        reason: "Initial award",
+        createdAt: u2CreatedAt,
+        previousHash: null,
+        hash: u2Hash,
+      },
+    ] as any);
+
+    await expect(verifyTokenLedgerChain()).resolves.toEqual({ ok: true });
+  });
 });

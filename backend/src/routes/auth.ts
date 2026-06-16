@@ -22,7 +22,7 @@ router.post('/verify', verifyLimiter, async (req, res) => {
 
   const token = authHeader.slice(7);
   try {
-    const decoded = await admin.auth().verifyIdToken(token);
+    const decoded = await admin.auth().verifyIdToken(token, true);
 
     let user = await prisma.user.findUnique({ where: { firebaseUid: decoded.uid } });
 

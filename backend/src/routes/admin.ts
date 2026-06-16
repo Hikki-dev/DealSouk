@@ -1,8 +1,11 @@
 import { Router } from 'express';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../index';
 import { requireAuth, requireAdmin, AuthRequest } from '../middleware/auth';
 import { authenticatedRateLimit } from '../middleware/rateLimits';
-import { spendTokens, recalculateAccuracyRating, runApprovalEffects, createTokenLedgerEntry } from '../services/tokenEngine';
+import { recalculateAccuracyRating, runApprovalEffects, createTokenLedgerEntry } from '../services/tokenEngine';
+import { deleteSubmissionProofs } from '../services/storageHelpers';
+import { decrypt, encrypt } from '../services/encryption';
 import {
   notifyAccountBanned,
   notifyAccountSuspended,
@@ -25,6 +28,72 @@ router.use(requireAuth);
 router.use(requireAdmin);
 
 const MAX_ADMIN_REASON_LENGTH = 500;
+const MIN_PRICE_AED = 0.01;
+const MAX_PRICE_AED = 10000;
+const MAX_TEXT_LENGTH = 120;
+const MAX_URL_LENGTH = 2048;
+const MAX_BARCODE_LENGTH = 64;
+
+function cleanNullableText(value: unknown, maxLength = MAX_TEXT_LENGTH): string | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return trimmed.slice(0, maxLength);
+}
+
+function cleanRequiredText(value: unknown, maxLength = MAX_TEXT_LENGTH): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return trimmed.slice(0, maxLength);
+}
+
+function cleanOptionalUrl(value: unknown): string | null | undefined {
+  const cleaned = cleanNullableText(value, MAX_URL_LENGTH);
+  if (cleaned == null) return cleaned;
+  try {
+    const url = new URL(cleaned);
+    return url.protocol === 'https:' ? cleaned : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function isValidPrice(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= MIN_PRICE_AED && value <= MAX_PRICE_AED;
+}
+
+function isNonNegativeInteger(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0;
+}
+
+function decryptedPhoneNumber(value: string | null): string | null {
+  if (!value) return null;
+  if (!value.includes(':')) return value;
+  try {
+    return decrypt(value);
+  } catch {
+    return null;
+  }
+}
+
+function serializeAdminUser<T extends { phoneNumber: string | null }>(user: T): Omit<T, 'phoneNumber'> & { phoneNumber: string | null } {
+  return { ...user, phoneNumber: decryptedPhoneNumber(user.phoneNumber) };
+}
+
+function clampNumber(value: unknown, min: number, max: number, integer = true): number | undefined {
+  if (value === undefined || value === null) return undefined;
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return undefined;
+  const clamped = Math.min(max, Math.max(min, numeric));
+  return integer ? Math.round(clamped) : clamped;
+}
+
+function hasOversizedString(values: Array<[unknown, number]>): boolean {
+  return values.some(([value, maxLength]) => typeof value === 'string' && value.trim().length > maxLength);
+}
 
 function cleanReason(value: unknown, fallback: string): string {
   if (typeof value !== 'string') return fallback;
@@ -109,6 +178,10 @@ router.post('/submissions/:id/reject', adminWriteLimiter, async (req: AuthReques
     where: { id: req.params.id },
     data: { status: 'rejected' },
   });
+
+  // Delete proof photos from Firebase Storage — no point keeping rejected evidence
+  void deleteSubmissionProofs(submission.receiptUrl, submission.priceLabelUrl);
+
   await recordAdminAction({
     adminUserId: req.userId!,
     targetUserId: submission.sourcerId,
@@ -197,10 +270,31 @@ router.patch('/submissions/:id', adminWriteLimiter, async (req: AuthRequest, res
     return;
   }
 
+  if (priceAed !== undefined && !isValidPrice(priceAed)) {
+    res.status(400).json({ error: `priceAed must be a number between ${MIN_PRICE_AED} and ${MAX_PRICE_AED}` });
+    return;
+  }
+
+  if (productId) {
+    const product = await prisma.product.findUnique({ where: { id: productId }, select: { id: true } });
+    if (!product) {
+      res.status(400).json({ error: 'Invalid productId' });
+      return;
+    }
+  }
+
+  if (storeId) {
+    const store = await prisma.store.findUnique({ where: { id: storeId }, select: { id: true } });
+    if (!store) {
+      res.status(400).json({ error: 'Invalid storeId' });
+      return;
+    }
+  }
+
   const updated = await prisma.priceSubmission.update({
     where: { id: req.params.id },
     data: {
-      ...(priceAed != null && { priceAed }),
+      ...(priceAed !== undefined && { priceAed }),
       ...(productId && { productId }),
       ...(storeId && { storeId }),
     },
@@ -332,15 +426,17 @@ router.patch('/settings', adminWriteLimiter, async (req: AuthRequest, res) => {
     decayFactor?: number;
   };
 
+  const update = {
+    ...(tokenEarnRate != null && { tokenEarnRate: clampNumber(tokenEarnRate, 1, 500) }),
+    ...(voucherThreshold != null && { voucherThreshold: clampNumber(voucherThreshold, 1, 100000) }),
+    ...(dailySubmissionCap != null && { dailySubmissionCap: clampNumber(dailySubmissionCap, 1, 500) }),
+    ...(requestCostTokens != null && { requestCostTokens: clampNumber(requestCostTokens, 0, 10000) }),
+    ...(decayFactor != null && { decayFactor: clampNumber(decayFactor, 0, 1, false) }),
+  };
+
   const updated = await prisma.adminSettings.upsert({
     where: { id: 1 },
-    update: {
-      ...(tokenEarnRate != null && { tokenEarnRate }),
-      ...(voucherThreshold != null && { voucherThreshold }),
-      ...(dailySubmissionCap != null && { dailySubmissionCap }),
-      ...(requestCostTokens != null && { requestCostTokens }),
-      ...(decayFactor != null && { decayFactor }),
-    },
+    update,
     create: { id: 1 },
   });
   await recordAdminAction({
@@ -876,20 +972,35 @@ router.post('/products', adminWriteLimiter, async (req, res) => {
     barcode?: string;
   };
 
-  if (!name || !category) {
+  const cleanName = cleanRequiredText(name);
+  const cleanCategory = cleanRequiredText(category);
+  const cleanBrand = cleanNullableText(brand);
+  const cleanPackSize = cleanNullableText(packSize);
+  const cleanImageUrl = cleanOptionalUrl(imageUrl);
+  const cleanBarcode = cleanNullableText(barcode, MAX_BARCODE_LENGTH);
+
+  if (hasOversizedString([[name, MAX_TEXT_LENGTH], [brand, MAX_TEXT_LENGTH], [packSize, MAX_TEXT_LENGTH], [category, MAX_TEXT_LENGTH], [imageUrl, MAX_URL_LENGTH], [barcode, MAX_BARCODE_LENGTH]])) {
+    res.status(400).json({ error: 'Product fields exceed allowed length' });
+    return;
+  }
+  if (!cleanName || !cleanCategory) {
     res.status(400).json({ error: 'Name and category are required' });
+    return;
+  }
+  if (imageUrl !== undefined && cleanImageUrl === undefined) {
+    res.status(400).json({ error: 'imageUrl must be a valid HTTPS URL' });
     return;
   }
 
   try {
     const product = await prisma.product.create({
       data: {
-        name,
-        brand: brand || null,
-        packSize: packSize || null,
-        category,
-        imageUrl: imageUrl || null,
-        barcode: barcode || null,
+        name: cleanName,
+        brand: cleanBrand ?? null,
+        packSize: cleanPackSize ?? null,
+        category: cleanCategory,
+        imageUrl: cleanImageUrl ?? null,
+        barcode: cleanBarcode ?? null,
       },
     });
     res.status(201).json(product);
@@ -913,22 +1024,45 @@ router.put('/products/:id', adminWriteLimiter, async (req, res) => {
     barcode?: string;
   };
 
+  const cleanName = name !== undefined ? cleanRequiredText(name) : undefined;
+  const cleanCategory = category !== undefined ? cleanRequiredText(category) : undefined;
+  const cleanBrand = cleanNullableText(brand);
+  const cleanPackSize = cleanNullableText(packSize);
+  const cleanImageUrl = cleanOptionalUrl(imageUrl);
+  const cleanBarcode = cleanNullableText(barcode, MAX_BARCODE_LENGTH);
+
+  if (hasOversizedString([[name, MAX_TEXT_LENGTH], [brand, MAX_TEXT_LENGTH], [packSize, MAX_TEXT_LENGTH], [category, MAX_TEXT_LENGTH], [imageUrl, MAX_URL_LENGTH], [barcode, MAX_BARCODE_LENGTH]])) {
+    res.status(400).json({ error: 'Product fields exceed allowed length' });
+    return;
+  }
+  if ((name !== undefined && !cleanName) || (category !== undefined && !cleanCategory)) {
+    res.status(400).json({ error: 'Name and category cannot be blank' });
+    return;
+  }
+  if (imageUrl !== undefined && cleanImageUrl === undefined) {
+    res.status(400).json({ error: 'imageUrl must be a valid HTTPS URL' });
+    return;
+  }
+
   try {
+    const data: Prisma.ProductUpdateInput = {};
+    if (cleanName) data.name = cleanName;
+    if (cleanBrand !== undefined) data.brand = cleanBrand;
+    if (cleanPackSize !== undefined) data.packSize = cleanPackSize;
+    if (cleanCategory) data.category = cleanCategory;
+    if (cleanImageUrl !== undefined) data.imageUrl = cleanImageUrl;
+    if (cleanBarcode !== undefined) data.barcode = cleanBarcode;
+
     const product = await prisma.product.update({
       where: { id: req.params.id },
-      data: {
-        ...(name != null && { name }),
-        ...(brand !== undefined && { brand: brand || null }),
-        ...(packSize !== undefined && { packSize: packSize || null }),
-        ...(category != null && { category }),
-        ...(imageUrl !== undefined && { imageUrl: imageUrl || null }),
-        ...(barcode !== undefined && { barcode: barcode || null }),
-      },
+      data,
     });
     res.json(product);
   } catch (err: any) {
     if (err.code === 'P2002') {
       res.status(400).json({ error: 'Product with this barcode already exists' });
+    } else if (err.code === 'P2025') {
+      res.status(404).json({ error: 'Product not found' });
     } else {
       res.status(500).json({ error: 'Failed to update product' });
     }
@@ -983,7 +1117,6 @@ router.get('/users', async (req, res) => {
     ...(q && {
       OR: [
         { displayName: { contains: q, mode: 'insensitive' as const } },
-        { phoneNumber: { contains: q } },
         { firebaseUid: q },
       ],
     }),
@@ -1000,7 +1133,7 @@ router.get('/users', async (req, res) => {
     where: whereClause,
   });
 
-  res.json({ users, total });
+  res.json({ users: users.map(serializeAdminUser), total });
 });
 
 // GET /admin/users/:id — Fetch user details
@@ -1012,7 +1145,7 @@ router.get('/users/:id', async (req, res) => {
     res.status(404).json({ error: 'User not found' });
     return;
   }
-  res.json(user);
+  res.json(serializeAdminUser(user));
 });
 
 // POST /admin/users — Create new user
@@ -1031,20 +1164,55 @@ router.post('/users', adminWriteLimiter, async (req, res) => {
     res.status(400).json({ error: 'DisplayName and FirebaseUid are required' });
     return;
   }
+  if (tokenBalance !== undefined && !isNonNegativeInteger(tokenBalance)) {
+    res.status(400).json({ error: 'tokenBalance must be a non-negative integer' });
+    return;
+  }
+  if (hasOversizedString([[displayName, MAX_TEXT_LENGTH], [phoneNumber, 32], [homeArea, MAX_TEXT_LENGTH], [preferredLocale, 8], [firebaseUid, 128]])) {
+    res.status(400).json({ error: 'User fields exceed allowed length' });
+    return;
+  }
+
+  const cleanDisplayName = cleanRequiredText(displayName);
+  const cleanPhoneNumber = cleanNullableText(phoneNumber, 32);
+  const cleanHomeArea = cleanNullableText(homeArea);
+  const cleanPreferredLocale = cleanRequiredText(preferredLocale ?? 'en', 8);
+  const cleanFirebaseUid = cleanRequiredText(firebaseUid, 128);
+
+  if (!cleanDisplayName || !cleanFirebaseUid || !cleanPreferredLocale) {
+    res.status(400).json({ error: 'DisplayName, FirebaseUid, and locale are required' });
+    return;
+  }
 
   try {
-    const user = await prisma.user.create({
-      data: {
-        displayName,
-        firebaseUid,
-        phoneNumber: phoneNumber || null,
-        homeArea: homeArea || null,
-        preferredLocale: preferredLocale || 'en',
-        tokenBalance: tokenBalance ?? 0,
-        isAdmin: false,
-      },
+    const user = await prisma.$transaction(async (tx) => {
+      const created = await tx.user.create({
+        data: {
+          displayName: cleanDisplayName,
+          firebaseUid: cleanFirebaseUid,
+          phoneNumber: cleanPhoneNumber ? encrypt(cleanPhoneNumber) : null,
+          homeArea: cleanHomeArea ?? null,
+          preferredLocale: cleanPreferredLocale,
+          isAdmin: false,
+        },
+      });
+      if (tokenBalance && tokenBalance > 0) {
+        await createTokenLedgerEntry(tx, {
+          userId: created.id,
+          amount: tokenBalance,
+          reason: 'Admin balance adjustment',
+        });
+        return tx.user.update({
+          where: { id: created.id },
+          data: {
+            tokenBalance: { increment: tokenBalance },
+            lifetimeTokensEarned: { increment: tokenBalance },
+          },
+        });
+      }
+      return created;
     });
-    res.status(201).json(user);
+    res.status(201).json(serializeAdminUser(user));
   } catch (err: any) {
     if (err.code === 'P2002') {
       res.status(400).json({ error: 'A user with this Firebase UID or phone number already exists' });
@@ -1066,22 +1234,68 @@ router.put('/users/:id', adminWriteLimiter, async (req, res) => {
     isSuspended?: boolean;
   };
 
+  if (tokenBalance !== undefined && !isNonNegativeInteger(tokenBalance)) {
+    res.status(400).json({ error: 'tokenBalance must be a non-negative integer' });
+    return;
+  }
+  if (hasOversizedString([[displayName, MAX_TEXT_LENGTH], [phoneNumber, 32], [homeArea, MAX_TEXT_LENGTH], [preferredLocale, 8]])) {
+    res.status(400).json({ error: 'User fields exceed allowed length' });
+    return;
+  }
+
+  const cleanDisplayName = displayName !== undefined ? cleanRequiredText(displayName) : undefined;
+  const cleanPhoneNumber = cleanNullableText(phoneNumber, 32);
+  const cleanHomeArea = cleanNullableText(homeArea);
+  const cleanPreferredLocale = preferredLocale !== undefined ? cleanRequiredText(preferredLocale, 8) : undefined;
+
+  if ((displayName !== undefined && !cleanDisplayName) || (preferredLocale !== undefined && !cleanPreferredLocale)) {
+    res.status(400).json({ error: 'DisplayName and locale cannot be blank' });
+    return;
+  }
+
   try {
-    const user = await prisma.user.update({
-      where: { id: req.params.id },
-      data: {
-        ...(displayName != null && { displayName }),
-        ...(phoneNumber !== undefined && { phoneNumber: phoneNumber || null }),
-        ...(homeArea !== undefined && { homeArea: homeArea || null }),
-        ...(preferredLocale != null && { preferredLocale }),
-        ...(tokenBalance != null && { tokenBalance }),
-        ...(isSuspended != null && { isSuspended }),
-      },
+    const user = await prisma.$transaction(async (tx) => {
+      const existing = await tx.user.findUnique({ where: { id: req.params.id } });
+      if (!existing) {
+        throw new Error('NOT_FOUND');
+      }
+
+      const data: Prisma.UserUpdateInput = {};
+      if (cleanDisplayName) data.displayName = cleanDisplayName;
+      if (cleanPhoneNumber !== undefined) data.phoneNumber = cleanPhoneNumber ? encrypt(cleanPhoneNumber) : null;
+      if (cleanHomeArea !== undefined) data.homeArea = cleanHomeArea;
+      if (cleanPreferredLocale) data.preferredLocale = cleanPreferredLocale;
+      if (isSuspended != null) data.isSuspended = isSuspended;
+
+      let updated = await tx.user.update({
+        where: { id: req.params.id },
+        data,
+      });
+
+      if (tokenBalance !== undefined && tokenBalance !== existing.tokenBalance) {
+        const delta = tokenBalance - existing.tokenBalance;
+        await createTokenLedgerEntry(tx, {
+          userId: existing.id,
+          amount: delta,
+          reason: 'Admin balance adjustment',
+        });
+        updated = await tx.user.update({
+          where: { id: req.params.id },
+          data: {
+            tokenBalance: delta > 0 ? { increment: delta } : { decrement: Math.abs(delta) },
+            ...(delta > 0 && { lifetimeTokensEarned: { increment: delta } }),
+          },
+        });
+      }
+
+      return updated;
     });
-    res.json(user);
+    res.json(serializeAdminUser(user));
   } catch (err: any) {
     if (err.code === 'P2002') {
       res.status(400).json({ error: 'Phone number already in use' });
+    } else if (err.message === 'NOT_FOUND') {
+      res.status(404).json({ error: 'User not found' });
     } else {
       res.status(500).json({ error: 'Failed to update user' });
     }

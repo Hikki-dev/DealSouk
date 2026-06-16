@@ -19,7 +19,7 @@ import 'package:dealsouk/features/profile/presentation/profile_screen.dart';
 import 'package:dealsouk/features/auth/presentation/unauthorized_screen.dart';
 import 'package:dealsouk/features/legal/presentation/privacy_policy_screen.dart';
 
-final _rootKey = GlobalKey<NavigatorState>();
+final rootNavigatorKey = GlobalKey<NavigatorState>();
 
 // A ChangeNotifier driven by Riverpod's ref.listen so GoRouter re-evaluates
 // redirects on every auth state change (not just on the first build).
@@ -34,7 +34,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   ref.onDispose(notifier.dispose);
 
   return GoRouter(
-    navigatorKey: _rootKey,
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/welcome',
     refreshListenable: notifier,
     redirect: (context, state) {

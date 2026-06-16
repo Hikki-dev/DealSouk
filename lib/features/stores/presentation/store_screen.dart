@@ -130,6 +130,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
     try {
       if (!kIsWeb) {
         bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+        if (!mounted) return;
         if (!serviceEnabled) {
           setState(() => _isLocating = false);
           return;
@@ -137,13 +138,16 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
       }
 
       LocationPermission permission = await Geolocator.checkPermission();
+      if (!mounted) return;
       if (permission == LocationPermission.denied) {
         final allowed = await _showLocationPrePrompt();
+        if (!mounted) return;
         if (!allowed) {
           setState(() => _isLocating = false);
           return;
         }
         permission = await Geolocator.requestPermission();
+        if (!mounted) return;
         if (permission == LocationPermission.denied) {
           setState(() => _isLocating = false);
           return;
@@ -160,6 +164,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
           accuracy: LocationAccuracy.high,
         ),
       );
+      if (!mounted) return;
 
       setState(() {
         _currentPosition = position;
@@ -180,6 +185,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
 
       if (_mapReady) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
           _mapController.move(LatLng(lat, lng), 13.5);
         });
       }
@@ -190,6 +196,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
             .fetchNearby(lat: lat, lng: lng, radiusKm: 40);
       }
     } catch (_) {
+      if (!mounted) return;
       setState(() => _isLocating = false);
     }
   }

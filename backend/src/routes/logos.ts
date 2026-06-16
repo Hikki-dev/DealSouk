@@ -18,6 +18,7 @@ const CHAIN_DOMAINS: Record<string, string> = {
 
 // In-process cache of fetched logo bytes so we don't hit Google on every load.
 const cache = new Map<string, { body: Buffer; contentType: string }>();
+const LOGO_FETCH_TIMEOUT_MS = 5_000;
 
 // GET /logos/:slug — proxies a chain's logo (Google favicon) with permissive
 // CORS + long cache headers. Flutter Web (CanvasKit) can't render Google's
@@ -50,6 +51,7 @@ router.get("/:slug", async (req, res) => {
   try {
     const upstream = await fetch(
       `https://www.google.com/s2/favicons?sz=128&domain=${domain}`,
+      { signal: AbortSignal.timeout(LOGO_FETCH_TIMEOUT_MS) },
     );
     if (!upstream.ok) {
       res.status(502).json({ error: "Logo upstream failed" });

@@ -82,7 +82,7 @@ export async function createTokenLedgerEntry(
 
 export async function verifyTokenLedgerChain(): Promise<{ ok: boolean; invalidTransactionId?: string }> {
   const rows = await prisma.tokenTransaction.findMany({
-    orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+    orderBy: [{ userId: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
     select: {
       id: true,
       userId: true,
@@ -94,8 +94,9 @@ export async function verifyTokenLedgerChain(): Promise<{ ok: boolean; invalidTr
     },
   });
 
-  let previousHash: string | null = null;
+  const previousHashByUser = new Map<string, string | null>();
   for (const row of rows) {
+    const previousHash = previousHashByUser.get(row.userId) ?? null;
     if (row.previousHash !== previousHash) {
       return { ok: false, invalidTransactionId: row.id };
     }
@@ -109,7 +110,7 @@ export async function verifyTokenLedgerChain(): Promise<{ ok: boolean; invalidTr
     if (row.hash !== expectedHash) {
       return { ok: false, invalidTransactionId: row.id };
     }
-    previousHash = row.hash;
+    previousHashByUser.set(row.userId, row.hash);
   }
 
   return { ok: true };

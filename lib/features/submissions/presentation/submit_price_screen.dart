@@ -4,7 +4,9 @@ import 'package:dealsouk/features/admin/domain/admin_settings.dart';
 import 'package:dealsouk/features/products/domain/product.dart';
 import 'package:dealsouk/features/stores/domain/store.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dealsouk/features/products/presentation/products_providers.dart';
@@ -127,7 +129,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
     final profile = ref.watch(userProfileProvider);
     final settings = ref.watch(adminSettingsProvider);
 
-    final priceEntered = double.tryParse(_priceController.text.trim()) != null;
+    final priceEntered = _parsedPrice != null;
     final int baseReward = _tokenEstimateBeforeReceipt(priceEntered);
     var totalReward = uploadedReceipt ? (baseReward * 1.5).round() : baseReward;
 
@@ -224,6 +226,12 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
 
   bool get _hasSelectedProduct =>
       selectedProductId != null || selectedProductName != null;
+
+  double? get _parsedPrice {
+    final value = double.tryParse(_priceController.text.trim());
+    if (value == null || value <= 0 || value > 10000) return null;
+    return value;
+  }
 
   String? get _typedProductName {
     final value = _normalizeProductName(_productSearchController.text);
@@ -586,6 +594,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
+              inputFormatters: [const _PriceInputFormatter()],
               style: GoogleFonts.fredoka(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -602,6 +611,9 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                   return l.submitPleaseEnterPrice;
                 }
                 if (double.tryParse(val) == null) {
+                  return l.submitPleaseEnterValidNumber;
+                }
+                if (double.parse(val) <= 0 || double.parse(val) > 10000) {
                   return l.submitPleaseEnterValidNumber;
                 }
                 return null;
@@ -962,7 +974,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                                   .firstWhere((p) => p.id == selectedProductId)
                                   .name
                             : selectedProductName!;
-                        final price = double.parse(_priceController.text);
+                        final price = _parsedPrice!;
 
                         // Offline (NFR-22): queue the submission and replay it
                         // on reconnect. Tokens are awarded after it syncs and is
@@ -1005,12 +1017,16 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                           );
                           awarded =
                               result.tokensAwarded + result.requestBountyTokens;
-                        } catch (_) {
+                        } catch (error) {
                           if (!mounted) return;
+                          final message = _submissionErrorMessage(
+                            error,
+                            l.submitCouldNotSendPrice,
+                          );
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               backgroundColor: AppTheme.forestDeep,
-                              content: Text(l.submitCouldNotSendPrice),
+                              content: Text(message),
                             ),
                           );
                           return;
@@ -1081,6 +1097,19 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
         ],
       ),
     );
+  }
+
+  String _submissionErrorMessage(Object error, String fallback) {
+    if (error is DioException) {
+      final data = error.response?.data;
+      if (data is Map && data['error'] != null) {
+        return data['error'].toString();
+      }
+      if (data is String && data.trim().isNotEmpty) {
+        return data.trim();
+      }
+    }
+    return fallback;
   }
 
   Widget _tokenRow(String title, String val, {bool isEnabled = true}) {
@@ -1334,5 +1363,22 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
         );
       },
     );
+  }
+}
+
+class _PriceInputFormatter extends TextInputFormatter {
+  const _PriceInputFormatter();
+
+  static final _validPricePattern = RegExp(r'^\d{0,5}(\.\d{0,2})?$');
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final text = newValue.text;
+    if (text.isEmpty) return newValue;
+    if (!_validPricePattern.hasMatch(text)) return oldValue;
+    return newValue;
   }
 }

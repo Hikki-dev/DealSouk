@@ -14,8 +14,11 @@ class AdminService {
         .toList();
   }
 
-  Future<void> approveSubmission(String id) async {
-    await apiClient.post('/admin/submissions/$id/approve');
+  Future<void> approveSubmission(String id, {String? productImageUrl}) async {
+    await apiClient.post(
+      '/admin/submissions/$id/approve',
+      data: {'productImageUrl': ?productImageUrl},
+    );
   }
 
   Future<void> rejectSubmission(String id, {String? reason}) async {
@@ -29,6 +32,7 @@ class AdminService {
     String id, {
     String? productName,
     String? storeName,
+    String? productImageUrl,
     double? price,
   }) async {
     await apiClient.patch(
@@ -36,6 +40,7 @@ class AdminService {
       data: {
         'productName': ?productName,
         'storeName': ?storeName,
+        'productImageUrl': ?productImageUrl,
         'priceAed': ?price,
       },
     );

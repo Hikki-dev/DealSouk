@@ -31,6 +31,20 @@ class StorageService {
     return _upload(photo, directFolder: 'receipts', signedKind: 'receipt');
   }
 
+  Future<String?> captureAndUploadPriceLabel() async {
+    final photo = await _picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 75,
+      maxWidth: 1200,
+    );
+    if (photo == null) return null;
+    return _upload(
+      photo,
+      directFolder: 'price-labels',
+      signedKind: 'price_label',
+    );
+  }
+
   /// Opens the gallery to pick an avatar and uploads it.
   Future<String?> pickAndUploadAvatar() async {
     final photo = await _picker.pickImage(

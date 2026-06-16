@@ -3,12 +3,13 @@ import { prisma } from '../index';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { authenticatedRateLimit } from '../middleware/rateLimits';
 import {
+  awardTokens,
   calculateReward,
   runApprovalEffects,
   TRUST_MIN_APPROVED,
   TRUST_MIN_ACCURACY,
 } from '../services/tokenEngine';
-import { notifySubmissionHidden } from '../services/fcmNotifier';
+import { notifyRequestFulfilled, notifySubmissionHidden } from '../services/fcmNotifier';
 
 const router = Router();
 
@@ -26,6 +27,8 @@ const flagLimiter = authenticatedRateLimit({
 
 const MAX_PRICE_AED = 10000;
 const MAX_URL_LENGTH = 2048;
+const MAX_PRODUCT_NAME_LENGTH = 120;
+const COMMUNITY_PRODUCT_CATEGORY = 'Community';
 
 function isHttpsUrl(value: string): boolean {
   try {
@@ -33,6 +36,26 @@ function isHttpsUrl(value: string): boolean {
   } catch {
     return false;
   }
+}
+
+function normalizeProductName(value: string): string {
+  return value.trim().replace(/\s+/g, ' ');
+}
+
+async function findOrCreateCommunityProduct(productName: string) {
+  const cleanProductName = normalizeProductName(productName);
+  const existing = await prisma.product.findFirst({
+    where: { name: { equals: cleanProductName, mode: 'insensitive' } },
+    orderBy: { id: 'asc' },
+  });
+  if (existing) return existing;
+
+  return prisma.product.create({
+    data: {
+      name: cleanProductName,
+      category: COMMUNITY_PRODUCT_CATEGORY,
+    },
+  });
 }
 
 // GET /submissions/feed?page=&limit=
@@ -63,17 +86,23 @@ router.get('/feed', async (req, res) => {
 
 // POST /submissions
 router.post('/', requireAuth, submitLimiter, async (req: AuthRequest, res) => {
-  const { productId, storeId, priceAed, hasReceipt = false, receiptUrl, priceLabelUrl } = req.body as {
-    productId: string;
+  const { productId, productName, storeId, priceAed, hasReceipt = false, receiptUrl, priceLabelUrl, requestId } = req.body as {
+    productId?: string;
+    productName?: string;
     storeId: string;
     priceAed: number;
     hasReceipt: boolean;
     receiptUrl?: string;
     priceLabelUrl?: string;
+    requestId?: string;
   };
 
-  if (!productId || !storeId || priceAed == null || priceAed <= 0 || priceAed > MAX_PRICE_AED) {
-    res.status(400).json({ error: 'productId, storeId, and a positive priceAed are required' });
+  if ((!productId && !productName?.trim()) || !storeId || priceAed == null || priceAed <= 0 || priceAed > MAX_PRICE_AED) {
+    res.status(400).json({ error: 'productId or productName, storeId, and a positive priceAed are required' });
+    return;
+  }
+  if (productName && normalizeProductName(productName).length > MAX_PRODUCT_NAME_LENGTH) {
+    res.status(400).json({ error: 'productName is too long' });
     return;
   }
 
@@ -84,6 +113,55 @@ router.post('/', requireAuth, submitLimiter, async (req: AuthRequest, res) => {
   if (priceLabelUrl && (priceLabelUrl.length > MAX_URL_LENGTH || !isHttpsUrl(priceLabelUrl))) {
     res.status(400).json({ error: 'priceLabelUrl must be a valid HTTPS URL' });
     return;
+  }
+
+  const store = await prisma.store.findUnique({ where: { id: storeId } });
+  if (!store) {
+    res.status(400).json({ error: 'Store not found' });
+    return;
+  }
+
+  const request = requestId
+    ? await prisma.priceRequest.findUnique({
+        where: { id: requestId },
+        include: { requester: true },
+      })
+    : null;
+  if (requestId && !request) {
+    res.status(404).json({ error: 'Request not found' });
+    return;
+  }
+  if (request) {
+    if (request.requesterId === req.userId) {
+      res.status(400).json({ error: 'Cannot fulfill your own request' });
+      return;
+    }
+    if (request.status !== 'open' || request.expiresAt <= new Date()) {
+      res.status(400).json({ error: 'Request is no longer open' });
+      return;
+    }
+    const requestStoreName = request.storeName.toLowerCase();
+    const submissionStoreName = `${store.chain} ${store.branchName}`.toLowerCase();
+    if (
+      !submissionStoreName.includes(requestStoreName) &&
+      !requestStoreName.includes(store.chain.toLowerCase())
+    ) {
+      res.status(400).json({ error: 'Submission store does not match the request' });
+      return;
+    }
+  }
+
+  let product;
+  if (request) {
+    product = await findOrCreateCommunityProduct(request.productName);
+  } else if (productId) {
+    product = await prisma.product.findUnique({ where: { id: productId } });
+    if (!product) {
+      res.status(400).json({ error: 'Product not found' });
+      return;
+    }
+  } else {
+    product = await findOrCreateCommunityProduct(productName!);
   }
 
   const settings = await prisma.adminSettings.findUnique({ where: { id: 1 } });
@@ -100,7 +178,7 @@ router.post('/', requireAuth, submitLimiter, async (req: AuthRequest, res) => {
   }
 
   const tokensAwarded = await calculateReward({
-    productId,
+    productId: product.id,
     storeId,
     sourcerId: req.userId!,
     hasReceipt,
@@ -124,7 +202,7 @@ router.post('/', requireAuth, submitLimiter, async (req: AuthRequest, res) => {
 
   const submission = await prisma.priceSubmission.create({
     data: {
-      productId,
+      productId: product.id,
       storeId,
       sourcerId: req.userId!,
       priceAed,
@@ -145,10 +223,44 @@ router.post('/', requireAuth, submitLimiter, async (req: AuthRequest, res) => {
     });
   }
 
+  let requestBountyTokens = 0;
+  if (request) {
+    const updated = await prisma.priceRequest.updateMany({
+      where: { id: request.id, status: 'open' },
+      data: { status: 'fulfilled', fulfilledBy: req.userId! },
+    });
+    if (updated.count === 0) {
+      res.status(400).json({ error: 'Request is no longer open' });
+      return;
+    }
+
+    requestBountyTokens = request.bountyTokens;
+    await awardTokens(
+      req.userId!,
+      requestBountyTokens,
+      `Fulfilled request: ${request.productName} @ ${request.storeName}`,
+    );
+
+    const sourcer = await prisma.user.findUnique({
+      where: { id: req.userId! },
+      select: { displayName: true },
+    });
+    await notifyRequestFulfilled(
+      request.requester.fcmToken,
+      sourcer?.displayName ?? 'A sourcer',
+      request.productName,
+      request.storeName,
+      request.bountyTokens,
+    );
+  }
+
   res.status(201).json({
     id: submission.id,
     status: submission.status,
+    productId: product.id,
+    productName: product.name,
     tokensAwarded,
+    requestBountyTokens,
     expiresAt: submission.expiresAt,
   });
 });

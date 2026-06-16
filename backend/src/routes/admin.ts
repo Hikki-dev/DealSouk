@@ -25,12 +25,21 @@ router.use(requireAuth);
 router.use(requireAdmin);
 
 const MAX_ADMIN_REASON_LENGTH = 500;
+const MAX_URL_LENGTH = 2048;
 
 function cleanReason(value: unknown, fallback: string): string {
   if (typeof value !== 'string') return fallback;
   const reason = value.trim();
   if (!reason) return fallback;
   return reason.slice(0, MAX_ADMIN_REASON_LENGTH);
+}
+
+function isHttpsUrl(value: string): boolean {
+  try {
+    return new URL(value).protocol === 'https:';
+  } catch {
+    return false;
+  }
 }
 
 // GET /admin/queue — flagged and pending submissions
@@ -51,7 +60,12 @@ router.get('/queue', async (_req, res) => {
       receiptUrl: s.receiptUrl,
       priceLabelUrl: s.priceLabelUrl,
       submittedAt: s.submittedAt,
-      product: { id: s.product.id, name: s.product.name },
+      product: {
+        id: s.product.id,
+        name: s.product.name,
+        brand: s.product.brand,
+        imageUrl: s.product.imageUrl,
+      },
       store: { id: s.store.id, chain: s.store.chain, branchName: s.store.branchName },
       sourcer: { id: s.sourcer.id, displayName: s.sourcer.displayName, accuracyRating: s.sourcer.accuracyRating },
       flagReasons: s.flags.map((f) => f.reason),
@@ -61,7 +75,19 @@ router.get('/queue', async (_req, res) => {
 
 // POST /admin/submissions/:id/approve
 router.post('/submissions/:id/approve', adminWriteLimiter, async (req: AuthRequest, res) => {
-  const submission = await prisma.priceSubmission.findUnique({ where: { id: req.params.id } });
+  const { productImageUrl } = req.body as { productImageUrl?: string | null };
+  if (
+    productImageUrl &&
+    (productImageUrl.length > MAX_URL_LENGTH || !isHttpsUrl(productImageUrl))
+  ) {
+    res.status(400).json({ error: 'productImageUrl must be a valid HTTPS URL' });
+    return;
+  }
+
+  const submission = await prisma.priceSubmission.findUnique({
+    where: { id: req.params.id },
+    include: { product: true },
+  });
   if (!submission) {
     res.status(404).json({ error: 'Submission not found' });
     return;
@@ -73,6 +99,14 @@ router.post('/submissions/:id/approve', adminWriteLimiter, async (req: AuthReque
   if (updated.count === 0) {
     res.status(400).json({ error: 'Already approved' });
     return;
+  }
+
+  const approvedProductImageUrl = productImageUrl?.trim() || submission.priceLabelUrl;
+  if (!submission.product.imageUrl && approvedProductImageUrl) {
+    await prisma.product.update({
+      where: { id: submission.productId },
+      data: { imageUrl: approvedProductImageUrl },
+    });
   }
 
   // Award tokens, welcome bonus (FR-07), streak (FR-46), challenge progress
@@ -185,11 +219,19 @@ router.post('/submissions/:id/reject', adminWriteLimiter, async (req: AuthReques
 
 // PATCH /admin/submissions/:id — edit price, product, or store (FR-56)
 router.patch('/submissions/:id', adminWriteLimiter, async (req: AuthRequest, res) => {
-  const { priceAed, productId, storeId } = req.body as {
+  const { priceAed, productId, storeId, productImageUrl } = req.body as {
     priceAed?: number;
     productId?: string;
     storeId?: string;
+    productImageUrl?: string | null;
   };
+  if (
+    productImageUrl &&
+    (productImageUrl.length > MAX_URL_LENGTH || !isHttpsUrl(productImageUrl))
+  ) {
+    res.status(400).json({ error: 'productImageUrl must be a valid HTTPS URL' });
+    return;
+  }
 
   const submission = await prisma.priceSubmission.findUnique({ where: { id: req.params.id } });
   if (!submission) {
@@ -211,6 +253,13 @@ router.patch('/submissions/:id', adminWriteLimiter, async (req: AuthRequest, res
     action: 'edit_submission',
     reason: `Edited submission ${req.params.id}`,
   });
+
+  if (productImageUrl !== undefined) {
+    await prisma.product.update({
+      where: { id: updated.productId },
+      data: { imageUrl: productImageUrl?.trim() || null },
+    });
+  }
 
   res.json({ id: updated.id, priceAed: Number(updated.priceAed), productId: updated.productId, storeId: updated.storeId });
 });

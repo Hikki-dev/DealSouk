@@ -19,13 +19,13 @@ import 'package:dealsouk/features/profile/presentation/profile_screen.dart';
 import 'package:dealsouk/features/auth/presentation/unauthorized_screen.dart';
 import 'package:dealsouk/features/legal/presentation/privacy_policy_screen.dart';
 
-final _rootKey = GlobalKey<NavigatorState>();
+final rootNavigatorKey = GlobalKey<NavigatorState>();
 
 GoRouter buildRouter(WidgetRef ref) {
   final authState = ref.watch(authProvider);
 
   return GoRouter(
-    navigatorKey: _rootKey,
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/welcome',
     redirect: (context, state) {
       return resolveRouteRedirect(
@@ -114,7 +114,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
 
   return GoRouter(
-    navigatorKey: _rootKey,
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/welcome',
     refreshListenable: GoRouterRefreshStream(
       Stream.fromFuture(Future.value(authState)),

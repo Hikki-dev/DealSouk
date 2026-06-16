@@ -13,6 +13,8 @@ class AdminSubmission {
   final String sourcerName;
   final double sourcerAccuracyRating;
   final String status; // 'pending', 'approved', 'rejected'
+  final String productImageUrl;
+  final String priceLabelUrl;
 
   AdminSubmission({
     required this.id,
@@ -29,6 +31,8 @@ class AdminSubmission {
     this.sourcerName = 'Hessa Al Maktoum',
     this.sourcerAccuracyRating = 100,
     this.status = 'pending',
+    this.productImageUrl = '',
+    this.priceLabelUrl = '',
   });
 
   factory AdminSubmission.fromJson(Map<String, dynamic> json) {
@@ -52,10 +56,12 @@ class AdminSubmission {
       productName:
           product['name'] as String? ?? json['productName'] as String? ?? '',
       brand: product['brand'] as String? ?? '',
+      productImageUrl: product['imageUrl'] as String? ?? '',
+      priceLabelUrl: json['priceLabelUrl'] as String? ?? '',
       storeName: '${store['chain'] ?? ''} ${store['branchName'] ?? ''}'.trim(),
       price: (json['priceAed'] as num?)?.toDouble() ?? 0.0,
       hasReceipt: json['hasReceipt'] as bool? ?? false,
-      hasPhoto: false,
+      hasPhoto: (json['priceLabelUrl'] as String?)?.isNotEmpty ?? false,
       promoType: 'Price Submission',
       tokensReward: json['tokensAwarded'] as int? ?? 0,
       timestampLabel: label,
@@ -75,6 +81,7 @@ class AdminSubmission {
     String? storeName,
     double? price,
     String? status,
+    String? productImageUrl,
   }) {
     return AdminSubmission(
       id: id,
@@ -91,6 +98,8 @@ class AdminSubmission {
       sourcerName: sourcerName,
       sourcerAccuracyRating: sourcerAccuracyRating,
       status: status ?? this.status,
+      productImageUrl: productImageUrl ?? this.productImageUrl,
+      priceLabelUrl: priceLabelUrl,
     );
   }
 }

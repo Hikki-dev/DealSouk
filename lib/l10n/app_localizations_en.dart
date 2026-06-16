@@ -897,6 +897,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get submitNoProductsFound => 'No products found matching your search.';
 
   @override
+  String submitUseTypedProduct(Object productName) {
+    return 'Use “$productName” as a new product';
+  }
+
+  @override
+  String get submitCommunityProductHint =>
+      'Submit the shelf price for this exact item.';
+
+  @override
   String get submitAttachProofRequired => 'Attach Proof (Required)';
 
   @override
@@ -1528,12 +1537,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Need a price checked? Ask nearby shoppers. If someone is already at that store, they can send back the shelf price.';
 
   @override
+  String requestMyRequestsTitle(Object count) {
+    return 'My price requests ($count)';
+  }
+
+  @override
   String requestBoardTitle(Object count) {
     return 'Price checks people need ($count)';
   }
 
   @override
   String get requestAskForPrice => 'Ask for a price';
+
+  @override
+  String get requestPendingStatus => 'PENDING';
 
   @override
   String get requestEmptyTitle => 'All price requests are completed!';

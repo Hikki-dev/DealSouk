@@ -1646,6 +1646,18 @@ abstract class AppLocalizations {
   /// **'No products found matching your search.'**
   String get submitNoProductsFound;
 
+  /// No description provided for @submitUseTypedProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Use “{productName}” as a new product'**
+  String submitUseTypedProduct(Object productName);
+
+  /// No description provided for @submitCommunityProductHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit the shelf price for this exact item.'**
+  String get submitCommunityProductHint;
+
   /// No description provided for @submitAttachProofRequired.
   ///
   /// In en, this message translates to:
@@ -2736,6 +2748,12 @@ abstract class AppLocalizations {
   /// **'Need a price checked? Ask nearby shoppers. If someone is already at that store, they can send back the shelf price.'**
   String get requestBannerExplanation;
 
+  /// No description provided for @requestMyRequestsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My price requests ({count})'**
+  String requestMyRequestsTitle(Object count);
+
   /// No description provided for @requestBoardTitle.
   ///
   /// In en, this message translates to:
@@ -2747,6 +2765,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ask for a price'**
   String get requestAskForPrice;
+
+  /// No description provided for @requestPendingStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'PENDING'**
+  String get requestPendingStatus;
 
   /// No description provided for @requestEmptyTitle.
   ///

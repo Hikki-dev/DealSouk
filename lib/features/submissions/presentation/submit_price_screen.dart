@@ -45,11 +45,14 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
 
   String? selectedStoreId;
   String? selectedProductId;
+  String? selectedProductName;
   final _priceController = TextEditingController();
 
   bool uploadedPriceLabel = false;
   bool uploadedReceipt = false;
+  String? _priceLabelUrl;
   String? _receiptUrl;
+  bool _uploadingPriceLabel = false;
   bool _uploadingReceipt = false;
   String selectedPromo = 'None';
 
@@ -84,18 +87,25 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
         }
       }
       if (widget.prefilledProductName != null) {
+        final requestedName = _normalizeProductName(
+          widget.prefilledProductName!,
+        );
+        _productSearchController.text = requestedName;
+        _productSearchQuery = requestedName;
         final products = ref.read(productsProvider);
         final match = products.where(
-          (p) =>
-              p.name.toLowerCase().contains(
-                widget.prefilledProductName!.toLowerCase(),
-              ) ||
-              widget.prefilledProductName!.toLowerCase().contains(
-                p.name.toLowerCase(),
-              ),
+          (p) => _productNamesMatch(p.name, requestedName),
         );
-        if (match.isNotEmpty && mounted) {
-          setState(() => selectedProductId = match.first.id);
+        if (mounted) {
+          setState(() {
+            if (match.isNotEmpty) {
+              selectedProductId = match.first.id;
+              selectedProductName = null;
+            } else {
+              selectedProductId = null;
+              selectedProductName = requestedName;
+            }
+          });
         }
       }
     });
@@ -201,6 +211,23 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
         ),
       ),
     );
+  }
+
+  String _normalizeProductName(String value) {
+    return value.trim().replaceAll(RegExp(r'\s+'), ' ');
+  }
+
+  bool _productNamesMatch(String a, String b) {
+    return _normalizeProductName(a).toLowerCase() ==
+        _normalizeProductName(b).toLowerCase();
+  }
+
+  bool get _hasSelectedProduct =>
+      selectedProductId != null || selectedProductName != null;
+
+  String? get _typedProductName {
+    final value = _normalizeProductName(_productSearchController.text);
+    return value.isEmpty ? null : value;
   }
 
   Widget _buildStepContent({
@@ -368,6 +395,8 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                     setState(() {
                       _productSearchQuery = code;
                       _productSearchController.text = code;
+                      selectedProductId = null;
+                      selectedProductName = null;
                     });
                   },
                 ),
@@ -381,10 +410,24 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
               onChanged: (val) {
                 setState(() {
                   _productSearchQuery = val;
+                  selectedProductId = null;
+                  selectedProductName = null;
                 });
               },
             ),
             const SizedBox(height: 16),
+            if (_typedProductName != null &&
+                !products.any(
+                  (product) =>
+                      _productNamesMatch(product.name, _typedProductName!),
+                ))
+              _communityProductCard(l, _typedProductName!),
+            if (_typedProductName != null &&
+                !products.any(
+                  (product) =>
+                      _productNamesMatch(product.name, _typedProductName!),
+                ))
+              const SizedBox(height: 8),
             if (products.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 24),
@@ -448,6 +491,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                         onTap: () {
                           setState(() {
                             selectedProductId = product.id;
+                            selectedProductName = null;
                           });
                         },
                       ),
@@ -469,13 +513,25 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
               children: [
                 Expanded(
                   child: _photoUploadButton(
-                    title: l.submitPriceLabelPhoto,
+                    title: _uploadingPriceLabel
+                        ? l.submitUploading
+                        : l.submitPriceLabelPhoto,
                     isUploaded: uploadedPriceLabel,
-                    onTap: () {
-                      setState(() {
-                        uploadedPriceLabel = !uploadedPriceLabel;
-                      });
-                    },
+                    onTap: _uploadingPriceLabel
+                        ? null
+                        : () async {
+                            setState(() => _uploadingPriceLabel = true);
+                            final url = await storageService
+                                .captureAndUploadPriceLabel();
+                            if (!mounted) return;
+                            setState(() {
+                              _uploadingPriceLabel = false;
+                              if (url != null) {
+                                _priceLabelUrl = url;
+                                uploadedPriceLabel = true;
+                              }
+                            });
+                          },
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -597,10 +653,14 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
           (s) => s.id == selectedStoreId,
           orElse: () => storesList.first,
         );
-        final product = productsList.firstWhere(
-          (p) => p.id == selectedProductId,
-          orElse: () => productsList.first,
-        );
+        final productName = selectedProductId != null
+            ? productsList
+                  .firstWhere(
+                    (p) => p.id == selectedProductId,
+                    orElse: () => productsList.first,
+                  )
+                  .name
+            : selectedProductName ?? '';
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -632,7 +692,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                     '${store.name} - ${store.branch}',
                   ),
                   const Divider(height: 24),
-                  _summaryRow(l.submitSummaryProduct, product.name),
+                  _summaryRow(l.submitSummaryProduct, productName),
                   const Divider(height: 24),
                   _summaryRow(
                     l.submitSummaryPrice,
@@ -833,7 +893,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
     if (_currentStep == 0) {
       canGoNext = selectedStoreId != null;
     } else if (_currentStep == 1) {
-      canGoNext = selectedProductId != null && uploadedPriceLabel;
+      canGoNext = _hasSelectedProduct && uploadedPriceLabel;
     } else if (_currentStep == 2) {
       canGoNext = priceEntered;
     } else {
@@ -897,9 +957,11 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                         final store = stores.firstWhere(
                           (s) => s.id == selectedStoreId,
                         );
-                        final product = products.firstWhere(
-                          (p) => p.id == selectedProductId,
-                        );
+                        final productName = selectedProductId != null
+                            ? products
+                                  .firstWhere((p) => p.id == selectedProductId)
+                                  .name
+                            : selectedProductName!;
                         final price = double.parse(_priceController.text);
 
                         // Offline (NFR-22): queue the submission and replay it
@@ -909,11 +971,14 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                           await ref
                               .read(syncControllerProvider.notifier)
                               .enqueueSubmission(
-                                productId: selectedProductId!,
+                                productId: selectedProductId,
+                                productName: selectedProductName,
                                 storeId: selectedStoreId!,
                                 priceAed: price,
                                 hasReceipt: uploadedReceipt,
                                 receiptUrl: _receiptUrl,
+                                priceLabelUrl: _priceLabelUrl,
+                                requestId: widget.requestId,
                               );
                           if (!mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -929,13 +994,17 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                         int awarded = totalReward;
                         try {
                           final result = await submissionsService.create(
-                            productId: selectedProductId!,
+                            productId: selectedProductId,
+                            productName: selectedProductName,
                             storeId: selectedStoreId!,
                             priceAed: price,
                             hasReceipt: uploadedReceipt,
                             receiptUrl: _receiptUrl,
+                            priceLabelUrl: _priceLabelUrl,
+                            requestId: widget.requestId,
                           );
-                          awarded = result.tokensAwarded;
+                          awarded =
+                              result.tokensAwarded + result.requestBountyTokens;
                         } catch (_) {
                           if (!mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -957,7 +1026,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                               awarded,
                               l.submitTransactionDescription(
                                 awarded,
-                                product.name,
+                                productName,
                                 store.name,
                               ),
                             );
@@ -972,7 +1041,11 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                         if (widget.requestId != null) {
                           ref
                               .read(priceRequestsProvider.notifier)
-                              .fulfillPriceRequest(widget.requestId!);
+                              .markPriceRequestFulfilled(widget.requestId!);
+                          ref.read(priceRequestsProvider.notifier).fetchBoard();
+                          ref
+                              .read(myRequestsProvider.notifier)
+                              .fetchMyRequests();
                         }
 
                         if (!mounted) return;
@@ -1051,11 +1124,67 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
   int _tokenEstimateBeforeReceipt(bool priceEntered) {
     var reward = 10;
     if (selectedStoreId != null) reward += 2;
-    if (selectedProductId != null) reward += 2;
+    if (_hasSelectedProduct) reward += 2;
     if (priceEntered) reward += 2;
     if (uploadedPriceLabel) reward += 4;
     if (selectedPromo != 'None') reward += 1;
     return reward;
+  }
+
+  Widget _communityProductCard(AppLocalizations l, String productName) {
+    final isSelected =
+        selectedProductName != null &&
+        _productNamesMatch(selectedProductName!, productName);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isSelected ? AppTheme.forestDeep : AppTheme.limeAccent,
+          width: isSelected ? 2 : 1,
+        ),
+      ),
+      child: ListTile(
+        dense: true,
+        leading: Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: AppTheme.limeAccent.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Icon(
+            Icons.add_box_outlined,
+            color: AppTheme.forestDeep,
+            size: 20,
+          ),
+        ),
+        title: Text(
+          l.submitUseTypedProduct(productName),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(
+          l.submitCommunityProductHint,
+          style: const TextStyle(fontSize: 12),
+        ),
+        trailing: isSelected
+            ? const Icon(
+                Icons.check_circle_rounded,
+                color: AppTheme.forestDeep,
+                size: 20,
+              )
+            : null,
+        onTap: () {
+          setState(() {
+            selectedProductId = null;
+            selectedProductName = productName;
+          });
+        },
+      ),
+    );
   }
 
   Widget _photoUploadButton({

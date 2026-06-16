@@ -8,6 +8,8 @@ import 'package:dealsouk/core/localization/locale_provider.dart';
 import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/core/network/fcm_service.dart';
 import 'package:dealsouk/core/network/system_status_service.dart';
+import 'package:dealsouk/features/requests/presentation/requests_providers.dart';
+import 'package:dealsouk/features/tokens/presentation/tokens_providers.dart';
 
 class DealSoukApp extends ConsumerStatefulWidget {
   const DealSoukApp({super.key});
@@ -17,8 +19,6 @@ class DealSoukApp extends ConsumerStatefulWidget {
 }
 
 class _DealSoukAppState extends ConsumerState<DealSoukApp> {
-  final _navigatorKey = GlobalKey<NavigatorState>();
-
   @override
   void initState() {
     super.initState();
@@ -26,11 +26,28 @@ class _DealSoukAppState extends ConsumerState<DealSoukApp> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       fcmService.initialize(
         onForegroundMessage: (msg) {
-          final ctx = _navigatorKey.currentContext;
+          _refreshForPushEvent(msg.data['type']);
+          final ctx = rootNavigatorKey.currentContext;
           if (ctx != null) showFcmBanner(ctx, msg);
         },
       );
     });
+  }
+
+  void _refreshForPushEvent(String? type) {
+    switch (type) {
+      case 'request_fulfilled':
+        ref.read(priceRequestsProvider.notifier).fetchBoard();
+        ref.read(myRequestsProvider.notifier).fetchMyRequests();
+        ref.read(userTransactionsProvider.notifier).fetch();
+        break;
+      case 'submission_approved':
+        ref.read(userTransactionsProvider.notifier).fetch();
+        ref.read(badgesProvider.notifier).checkAndUnlock('submission_approved');
+        break;
+      default:
+        break;
+    }
   }
 
   @override

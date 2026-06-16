@@ -9,6 +9,10 @@ const router = Router();
 const MAX_REQUEST_TEXT_LENGTH = 120;
 const MAX_BOUNTY_TOKENS = 100;
 
+function normalizeName(value: string): string {
+  return value.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
 const createRequestLimiter = authenticatedRateLimit({
   envName: "REQUEST_RATE_LIMIT_PER_MINUTE",
   fallback: 10,
@@ -123,6 +127,12 @@ router.post("/", requireAuth, createRequestLimiter, async (req: AuthRequest, res
 
 // POST /requests/:id/fulfill — sourcer fulfills a request (FR-28: notify requester via FCM)
 router.post("/:id/fulfill", requireAuth, fulfillRequestLimiter, async (req: AuthRequest, res) => {
+  const { submissionId } = req.body as { submissionId?: string };
+  if (!submissionId) {
+    res.status(400).json({ error: "submissionId is required to fulfill a request" });
+    return;
+  }
+
   const request = await prisma.priceRequest.findUnique({
     where: { id: req.params.id },
     include: { requester: true },
@@ -134,6 +144,30 @@ router.post("/:id/fulfill", requireAuth, fulfillRequestLimiter, async (req: Auth
   }
   if (request.requesterId === req.userId) {
     res.status(400).json({ error: "Cannot fulfill your own request" });
+    return;
+  }
+
+  const submission = await prisma.priceSubmission.findUnique({
+    where: { id: submissionId },
+    include: { product: true, store: true },
+  });
+  if (!submission || submission.sourcerId !== req.userId) {
+    res.status(400).json({ error: "Submission not found for this sourcer" });
+    return;
+  }
+  if (normalizeName(submission.product.name) !== normalizeName(request.productName)) {
+    res.status(400).json({ error: "Submission product does not match the request" });
+    return;
+  }
+  const requestStoreName = normalizeName(request.storeName);
+  const submissionStoreName = normalizeName(
+    `${submission.store.chain} ${submission.store.branchName}`,
+  );
+  if (
+    !submissionStoreName.includes(requestStoreName) &&
+    !requestStoreName.includes(normalizeName(submission.store.chain))
+  ) {
+    res.status(400).json({ error: "Submission store does not match the request" });
     return;
   }
 

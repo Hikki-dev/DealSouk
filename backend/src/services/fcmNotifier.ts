@@ -101,6 +101,19 @@ export async function notifySubmissionHidden(
   );
 }
 
+export async function notifySubmissionApproved(
+  fcmToken: string | null | undefined,
+  tokensAwarded: number,
+): Promise<void> {
+  if (!fcmToken) return;
+  await sendPushNotification(
+    fcmToken,
+    "Price verified!",
+    `Your submitted price was approved. +${tokensAwarded} tokens`,
+    { type: "submission_approved", tokensAwarded: String(tokensAwarded) },
+  );
+}
+
 export async function notifyAdminWarning(
   fcmToken: string | null | undefined,
   reason: string,

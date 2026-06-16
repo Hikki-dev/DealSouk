@@ -892,6 +892,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get submitNoProductsFound => 'لم يتم العثور على منتجات مطابقة لبحثك.';
 
   @override
+  String submitUseTypedProduct(Object productName) {
+    return 'استخدم \"$productName\" كمنتج جديد';
+  }
+
+  @override
+  String get submitCommunityProductHint => 'أرسل سعر الرف لهذا المنتج بالضبط.';
+
+  @override
   String get submitAttachProofRequired => 'أرفق إثباتًا (مطلوب)';
 
   @override
@@ -1523,12 +1531,20 @@ class AppLocalizationsAr extends AppLocalizations {
       'هل تحتاج إلى التحقق من سعر؟ اسأل المتسوقين القريبين. إذا كان أحدهم في المتجر بالفعل، يمكنه إرسال سعر الرف لك.';
 
   @override
+  String requestMyRequestsTitle(Object count) {
+    return 'طلبات الأسعار الخاصة بي ($count)';
+  }
+
+  @override
   String requestBoardTitle(Object count) {
     return 'عمليات التحقق من الأسعار المطلوبة ($count)';
   }
 
   @override
   String get requestAskForPrice => 'اطلب سعرًا';
+
+  @override
+  String get requestPendingStatus => 'قيد الانتظار';
 
   @override
   String get requestEmptyTitle => 'تم إنجاز جميع طلبات الأسعار!';

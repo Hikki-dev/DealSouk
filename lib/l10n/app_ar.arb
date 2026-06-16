@@ -361,6 +361,13 @@
   "submitSearchBarcodeHint": "ابحث بالاسم أو العلامة التجارية أو امسح الباركود",
   "submitScanBarcodeTooltip": "مسح الباركود",
   "submitNoProductsFound": "لم يتم العثور على منتجات مطابقة لبحثك.",
+  "submitUseTypedProduct": "استخدم \"{productName}\" كمنتج جديد",
+  "@submitUseTypedProduct": {
+    "placeholders": {
+      "productName": {}
+    }
+  },
+  "submitCommunityProductHint": "أرسل سعر الرف لهذا المنتج بالضبط.",
   "submitAttachProofRequired": "أرفق إثباتًا (مطلوب)",
   "submitPriceLabelPhoto": "صورة ملصق السعر",
   "submitReceiptPhoto": "صورة الإيصال",
@@ -549,8 +556,15 @@
   "productPriceRange": "الأدنى {lowest} • الأعلى {highest}",
   "productLatestPrice": "الأحدث {latest}",
   "requestBannerExplanation": "هل تحتاج إلى التحقق من سعر؟ اسأل المتسوقين القريبين. إذا كان أحدهم في المتجر بالفعل، يمكنه إرسال سعر الرف لك.",
+  "requestMyRequestsTitle": "طلبات الأسعار الخاصة بي ({count})",
+  "@requestMyRequestsTitle": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "requestBoardTitle": "عمليات التحقق من الأسعار المطلوبة ({count})",
   "requestAskForPrice": "اطلب سعرًا",
+  "requestPendingStatus": "قيد الانتظار",
   "requestEmptyTitle": "تم إنجاز جميع طلبات الأسعار!",
   "requestEmptySubtitle": "هل تحتاج إلى سعر؟ اضغط على \"اطلب سعرًا\" لطلب التحقق من السعر.",
   "requestFormTitle": "اطلب التحقق من سعر",

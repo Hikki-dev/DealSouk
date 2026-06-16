@@ -18,9 +18,16 @@ class AdminSubmissionsNotifier extends Notifier<List<AdminSubmission>> {
     } catch (_) {}
   }
 
-  Future<void> approveSubmission(String id, WidgetRef ref) async {
+  Future<void> approveSubmission(
+    String id,
+    WidgetRef ref, {
+    String? productImageUrl,
+  }) async {
     try {
-      await adminService.approveSubmission(id);
+      await adminService.approveSubmission(
+        id,
+        productImageUrl: productImageUrl,
+      );
       state = state.where((s) => s.id != id).toList();
       await ref.read(userTransactionsProvider.notifier).fetch();
       final profile = await profileService.getMyProfile();
@@ -41,6 +48,7 @@ class AdminSubmissionsNotifier extends Notifier<List<AdminSubmission>> {
     String id, {
     String? productName,
     String? storeName,
+    String? productImageUrl,
     double? price,
   }) async {
     try {
@@ -48,6 +56,7 @@ class AdminSubmissionsNotifier extends Notifier<List<AdminSubmission>> {
         id,
         productName: productName,
         storeName: storeName,
+        productImageUrl: productImageUrl,
         price: price,
       );
       state = state.map((s) {
@@ -56,6 +65,7 @@ class AdminSubmissionsNotifier extends Notifier<List<AdminSubmission>> {
             productName: productName,
             storeName: storeName,
             price: price,
+            productImageUrl: productImageUrl,
           );
         }
         return s;

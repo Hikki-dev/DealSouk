@@ -48,6 +48,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ref.read(cartProvider.notifier).loadPersistedCart();
       ref.read(dailyChallengeProvider.notifier).fetchToday();
       ref.read(priceRequestsProvider.notifier).fetchBoard();
+      ref.read(myRequestsProvider.notifier).fetchMyRequests();
     });
   }
 
@@ -478,7 +479,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             // 3. Request section should be visible from the home page.
             const SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(4, 12, 4, 4),
+                padding: EdgeInsets.fromLTRB(4, 8, 4, 0),
                 child: RequestBoardView(),
               ),
             ),

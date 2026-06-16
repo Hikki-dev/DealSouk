@@ -1647,7 +1647,18 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
 
   // --- ACTIONS INTERFACE ---
   void _approve(String id, AdminSubmission sub) {
-    ref.read(adminSubmissionsProvider.notifier).approveSubmission(id, ref);
+    final productImageCandidate = sub.productImageUrl.isNotEmpty
+        ? sub.productImageUrl
+        : sub.priceLabelUrl;
+    ref
+        .read(adminSubmissionsProvider.notifier)
+        .approveSubmission(
+          id,
+          ref,
+          productImageUrl: productImageCandidate.isEmpty
+              ? null
+              : productImageCandidate,
+        );
     _selectNextAfterRemoval(id);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -1846,6 +1857,11 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
   // --- EDIT DIALOG ---
   void _showEditDialog(BuildContext context, AdminSubmission sub) {
     final priceCtrl = TextEditingController(text: sub.price.toStringAsFixed(2));
+    final imageCtrl = TextEditingController(
+      text: sub.productImageUrl.isNotEmpty
+          ? sub.productImageUrl
+          : sub.priceLabelUrl,
+    );
     String selectedStore = sub.storeName;
     final storeNames = [
       'Carrefour JLT',
@@ -1895,6 +1911,17 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
+                  TextField(
+                    controller: imageCtrl,
+                    keyboardType: TextInputType.url,
+                    decoration: const InputDecoration(
+                      labelText: 'Product image URL',
+                      helperText:
+                          'Leave as the submitted photo, replace it, or clear it.',
+                      prefixIcon: Icon(Icons.image_outlined),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     initialValue: selectedStore,
                     decoration: const InputDecoration(
@@ -1934,6 +1961,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                         .editSubmission(
                           sub.id,
                           storeName: selectedStore,
+                          productImageUrl: imageCtrl.text.trim(),
                           price: newPrice,
                         );
                     Navigator.pop(context);
@@ -3279,204 +3307,14 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
-                  child: Stack(
-                    children: [
-                      // Shelf Visuals (Wood/Metal pattern)
-                      Column(
-                        children: [
-                          Expanded(
-                            flex: 3,
-                            child: Container(
-                              color: Colors.grey.shade300,
-                              child: Center(
-                                child: Icon(
-                                  sub.productName.contains('Milk')
-                                      ? Icons.local_cafe
-                                      : sub.productName.contains('Eggs')
-                                      ? Icons.egg
-                                      : Icons.breakfast_dining,
-                                  size: 84,
-                                  color: Colors.grey.shade400,
-                                ),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 1,
-                            child: Container(color: Colors.blueGrey.shade800),
-                          ),
-                        ],
-                      ),
-
-                      // Product packaging model sitting on shelf
-                      Positioned(
-                        bottom: 45,
-                        left: 110,
-                        child: Container(
-                          width: 100,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Colors.black38,
-                                blurRadius: 8,
-                                offset: Offset(0, 4),
-                              ),
-                            ],
-                            border: Border.all(color: Colors.grey.shade300),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                sub.productName.contains('Milk')
-                                    ? Icons.local_cafe
-                                    : sub.productName.contains('Eggs')
-                                    ? Icons.egg
-                                    : Icons.breakfast_dining,
-                                color: AppTheme.emeraldPrimary,
-                                size: 40,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                sub.brand,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 11,
-                                  color: AppTheme.textDark,
-                                ),
-                              ),
-                              Text(
-                                sub.productName.split(' ').first,
-                                style: const TextStyle(
-                                  fontSize: 8,
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      // Price Tag sticker stuck to shelf strip
-                      Positioned(
-                        bottom: 8,
-                        left: 60,
-                        child: Container(
-                          width: 200,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFFDE7), // Yellow tag
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(
-                              color: Colors.amber.shade400,
-                              width: 1.5,
-                            ),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Colors.black26,
-                                blurRadius: 3,
-                                offset: Offset(0, 1),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      sub.productName.toUpperCase(),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontSize: 7,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
-                                    Text(
-                                      'BARCODE: 62911000${sub.id.hashCode.abs().toString().substring(0, 4)}',
-                                      style: const TextStyle(
-                                        fontSize: 5,
-                                        fontFamily: 'monospace',
-                                        color: Colors.black54,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Text(
-                                'AED ${sub.price.toStringAsFixed(2)}',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.red,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      // Shelf Label Overlay (e.g. Lulu / Carrefour)
-                      Positioned(
-                        top: 12,
-                        right: 12,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.6),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            sub.storeName,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // Promo Indicator badge
-                      if (sub.promoType != 'None')
-                        Positioned(
-                          top: 12,
-                          left: 12,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              sub.promoType.toUpperCase(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+                  child: sub.priceLabelUrl.isNotEmpty
+                      ? Image.network(
+                          sub.priceLabelUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              _fallbackPricePhoto(sub),
+                        )
+                      : _fallbackPricePhoto(sub),
                 ),
               ),
               const SizedBox(height: 16),
@@ -3489,6 +3327,195 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           ),
         );
       },
+    );
+  }
+
+  Widget _fallbackPricePhoto(AdminSubmission sub) {
+    return Stack(
+      children: [
+        // Shelf Visuals (Wood/Metal pattern)
+        Column(
+          children: [
+            Expanded(
+              flex: 3,
+              child: Container(
+                color: Colors.grey.shade300,
+                child: Center(
+                  child: Icon(
+                    sub.productName.contains('Milk')
+                        ? Icons.local_cafe
+                        : sub.productName.contains('Eggs')
+                        ? Icons.egg
+                        : Icons.breakfast_dining,
+                    size: 84,
+                    color: Colors.grey.shade400,
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              flex: 1,
+              child: Container(color: Colors.blueGrey.shade800),
+            ),
+          ],
+        ),
+
+        // Product packaging model sitting on shelf
+        Positioned(
+          bottom: 45,
+          left: 110,
+          child: Container(
+            width: 100,
+            height: 120,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black38,
+                  blurRadius: 8,
+                  offset: Offset(0, 4),
+                ),
+              ],
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  sub.productName.contains('Milk')
+                      ? Icons.local_cafe
+                      : sub.productName.contains('Eggs')
+                      ? Icons.egg
+                      : Icons.breakfast_dining,
+                  color: AppTheme.emeraldPrimary,
+                  size: 40,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  sub.brand,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                    color: AppTheme.textDark,
+                  ),
+                ),
+                Text(
+                  sub.productName.split(' ').first,
+                  style: const TextStyle(
+                    fontSize: 8,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Price Tag sticker stuck to shelf strip
+        Positioned(
+          bottom: 8,
+          left: 60,
+          child: Container(
+            width: 200,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFFDE7), // Yellow tag
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: Colors.amber.shade400, width: 1.5),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 3,
+                  offset: Offset(0, 1),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        sub.productName.toUpperCase(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 7,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      Text(
+                        'BARCODE: 62911000${sub.id.hashCode.abs().toString().substring(0, 4)}',
+                        style: const TextStyle(
+                          fontSize: 5,
+                          fontFamily: 'monospace',
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  'AED ${sub.price.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.red,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Shelf Label Overlay (e.g. Lulu / Carrefour)
+        Positioned(
+          top: 12,
+          right: 12,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.6),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              sub.storeName,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+
+        // Promo Indicator badge
+        if (sub.promoType != 'None')
+          Positioned(
+            top: 12,
+            left: 12,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                sub.promoType.toUpperCase(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 9,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

@@ -1,6 +1,11 @@
 import crypto from 'crypto';
 import { prisma } from '../index';
-import { notifyStreakMilestone, notifyBadgeEarned, notifyRankChange } from './fcmNotifier';
+import {
+  notifyBadgeEarned,
+  notifyRankChange,
+  notifyStreakMilestone,
+  notifySubmissionApproved,
+} from './fcmNotifier';
 
 // FR-36: minimum approved track record before a sourcer's submissions
 // publish instantly (combined with a 90%+ accuracy rating).
@@ -367,6 +372,7 @@ export async function runApprovalEffects(params: {
     where: { id: params.sourcerId },
     select: { fcmToken: true },
   });
+  await notifySubmissionApproved(user?.fcmToken, params.tokensAwarded);
   await notifyRankChange(user?.fcmToken, newRank, oldRank);
 
   return accuracyRating;

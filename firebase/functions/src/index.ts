@@ -103,6 +103,9 @@ export const sanitizeUploadedImage = onObjectFinalized(
     const bucket = getStorage().bucket(bucketName);
     const file = bucket.file(objectName);
     const [input] = await file.download();
+    const downloadToken =
+      metadata?.firebaseStorageDownloadTokens ??
+      metadata?.firebasestoragedownloadtokens;
 
     const output = await sharp(input, { failOn: "truncated" })
       .rotate()
@@ -123,6 +126,9 @@ export const sanitizeUploadedImage = onObjectFinalized(
           ? "public, max-age=3600"
           : "private, max-age=0, no-transform",
         metadata: {
+          ...(downloadToken
+            ? { firebaseStorageDownloadTokens: downloadToken }
+            : {}),
           dealsoukProcessed: "true",
           exifStripped: "true",
           malwareScanStatus: scanStatus,

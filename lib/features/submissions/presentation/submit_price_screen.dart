@@ -511,7 +511,14 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                     localFile: _localPriceLabelFile,
                     onTap: _uploadingPriceLabel
                         ? null
-                        : () => _capturePhoto(isReceipt: false),
+                        : () {
+                            if (_priceLabelUploadFailed &&
+                                _localPriceLabelFile != null) {
+                              unawaited(_retryPhotoUpload(isReceipt: false));
+                            } else {
+                              unawaited(_capturePhoto(isReceipt: false));
+                            }
+                          },
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -523,7 +530,14 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                     localFile: _localReceiptFile,
                     onTap: _uploadingReceipt
                         ? null
-                        : () => _capturePhoto(isReceipt: true),
+                        : () {
+                            if (_receiptUploadFailed &&
+                                _localReceiptFile != null) {
+                              unawaited(_retryPhotoUpload(isReceipt: true));
+                            } else {
+                              unawaited(_capturePhoto(isReceipt: true));
+                            }
+                          },
                   ),
                 ),
               ],
@@ -940,22 +954,49 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                               }
 
                               if (_priceLabelUrl == null) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    backgroundColor: AppTheme.forestDeep,
-                                    content: Text(l.submitProofPhotoRequired),
-                                  ),
-                                );
-                                return;
+                                if (_localPriceLabelFile != null) {
+                                  setState(() => _finalizingUploads = true);
+                                  await _retryPhotoUpload(
+                                    isReceipt: false,
+                                    showFailureSnackBar: false,
+                                  );
+                                  if (!mounted) return;
+                                  setState(() => _finalizingUploads = false);
+                                }
+                                if (_priceLabelUrl == null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      backgroundColor: AppTheme.forestDeep,
+                                      content: Text(l.submitProofPhotoRequired),
+                                    ),
+                                  );
+                                  return;
+                                }
                               }
                               if (uploadedReceipt && _receiptUrl == null) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    backgroundColor: AppTheme.forestDeep,
-                                    content: Text(l.submitReceiptPhotoRequired),
-                                  ),
-                                );
-                                return;
+                                if (_localReceiptFile != null) {
+                                  setState(() => _finalizingUploads = true);
+                                  await _retryPhotoUpload(
+                                    isReceipt: true,
+                                    showFailureSnackBar: false,
+                                  );
+                                  if (!mounted) return;
+                                  setState(() => _finalizingUploads = false);
+                                }
+                                if (_receiptUrl != null) {
+                                  // The retry recovered the optional receipt,
+                                  // so continue with final submission.
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      backgroundColor: AppTheme.forestDeep,
+                                      content: Text(
+                                        l.submitReceiptPhotoRequired,
+                                      ),
+                                    ),
+                                  );
+                                  return;
+                                }
                               }
 
                               final store = stores.firstWhere(
@@ -1175,6 +1216,28 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
     // Snap feedback the instant the camera closes — feels immediate.
     unawaited(HapticFeedback.mediumImpact());
 
+    await _startPhotoUpload(file, isReceipt: isReceipt);
+  }
+
+  Future<void> _retryPhotoUpload({
+    required bool isReceipt,
+    bool showFailureSnackBar = true,
+  }) async {
+    final file = isReceipt ? _localReceiptFile : _localPriceLabelFile;
+    if (file == null) return;
+    unawaited(HapticFeedback.selectionClick());
+    await _startPhotoUpload(
+      file,
+      isReceipt: isReceipt,
+      showFailureSnackBar: showFailureSnackBar,
+    );
+  }
+
+  Future<void> _startPhotoUpload(
+    XFile file, {
+    required bool isReceipt,
+    bool showFailureSnackBar = true,
+  }) async {
     final uploadFuture = storageService.uploadProofFile(
       file,
       isReceipt: isReceipt,
@@ -1185,12 +1248,14 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
         _localReceiptFile = file;
         uploadedReceipt = true;
         _receiptUploadFailed = false;
+        _receiptUrl = null;
         _uploadingReceipt = true;
         _receiptFuture = uploadFuture;
       } else {
         _localPriceLabelFile = file;
         uploadedPriceLabel = true;
         _priceLabelUploadFailed = false;
+        _priceLabelUrl = null;
         _uploadingPriceLabel = true;
         _priceLabelFuture = uploadFuture;
       }
@@ -1211,7 +1276,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
       }
     });
 
-    if (url == null) {
+    if (url == null && showFailureSnackBar) {
       // Capture context refs before the await so we don't call into a disposed
       // widget tree if the screen was popped while the upload was in flight (H-13).
       if (!mounted) return;

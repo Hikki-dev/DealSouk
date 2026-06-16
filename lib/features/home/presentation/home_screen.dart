@@ -2031,12 +2031,19 @@ class _FeaturedStoreCard extends ConsumerWidget {
                         color: Color(0xFFFFA000),
                       ),
                       const SizedBox(width: 2),
-                      Text(
-                        l.homeStoreDistancePrices(distLabel, store.pricesCount),
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey.shade600,
-                          fontWeight: FontWeight.w600,
+                      Expanded(
+                        child: Text(
+                          l.homeStoreDistancePrices(
+                            distLabel,
+                            store.pricesCount,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey.shade600,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],

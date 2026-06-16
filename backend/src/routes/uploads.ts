@@ -12,10 +12,13 @@ const uploadLimiter = authenticatedRateLimit({
   message: 'Too many upload requests. Please try again in a minute.',
 });
 
+// Client compresses proofs to ≤55% quality at 800 px — typical output is
+// 50–250 KB. 3 MB gives comfortable headroom for large HEIC originals while
+// blocking oversized spam uploads that would inflate Storage costs.
 const UPLOAD_CONFIG = {
-  receipt: { folder: 'receipts', maxBytes: 8 * 1024 * 1024 },
-  price_label: { folder: 'price-labels', maxBytes: 8 * 1024 * 1024 },
-  avatar: { folder: 'avatars', maxBytes: 4 * 1024 * 1024 },
+  receipt: { folder: 'receipts', maxBytes: 3 * 1024 * 1024 },
+  price_label: { folder: 'price-labels', maxBytes: 3 * 1024 * 1024 },
+  avatar: { folder: 'avatars', maxBytes: 2 * 1024 * 1024 },
 } as const;
 
 const CONTENT_TYPES: Record<string, string> = {

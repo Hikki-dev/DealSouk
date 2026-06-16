@@ -17,6 +17,11 @@ const bool _devMockAdmin = bool.fromEnvironment(
   defaultValue: false,
 );
 
+// The admin web console routes on role (admin vs unauthorized), so it must wait
+// for the backend before it can decide. The shopper app never gates navigation
+// on roles, so it flips to authenticated as soon as Firebase resolves.
+const bool _adminMode = bool.fromEnvironment('ADMIN_MODE', defaultValue: false);
+
 class AuthState {
   final AuthStatus status;
   final User? firebaseUser;
@@ -110,6 +115,29 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
+  // Finish an interactive sign-in once Firebase has authenticated [user].
+  //
+  // Shopper app: flip to `authenticated` immediately (so the router leaves the
+  // welcome/loading screen without waiting on a possibly cold-starting backend)
+  // and reconcile roles/profile in the background. This mirrors what `build()`
+  // already does for a restored session and fixes the long login spinner / the
+  // app being stuck on the loading screen until a tab switch.
+  //
+  // Admin web: keep awaiting the backend, because the route choice (AdminScreen
+  // vs UnauthorizedScreen) depends on the role that only the backend knows.
+  Future<void> _completeSignIn(User user) async {
+    if (_adminMode) {
+      await _syncWithBackend(user);
+      return;
+    }
+    state = AuthState(
+      status: AuthStatus.authenticated,
+      firebaseUser: user,
+      displayName: user.displayName ?? user.phoneNumber,
+    );
+    unawaited(_syncWithBackend(user));
+  }
+
   Set<AuthRole> _effectiveRoles(Set<AuthRole> backendRoles) {
     if (kDebugMode && _devMockAdmin) {
       return {...backendRoles, AuthRole.admin};
@@ -166,7 +194,7 @@ class AuthNotifier extends Notifier<AuthState> {
     state = state.copyWith(status: AuthStatus.unknown);
     try {
       final result = await authService.signInWithGoogle();
-      await _syncWithBackend(result.user!);
+      await _completeSignIn(result.user!);
     } catch (e) {
       state = const AuthState(
         status: AuthStatus.unauthenticated,
@@ -178,7 +206,7 @@ class AuthNotifier extends Notifier<AuthState> {
     state = state.copyWith(status: AuthStatus.unknown);
     try {
       final result = await authService.signInWithApple();
-      await _syncWithBackend(result.user!);
+      await _completeSignIn(result.user!);
     } catch (e) {
       state = const AuthState(
         status: AuthStatus.unauthenticated,
@@ -223,7 +251,7 @@ class AuthNotifier extends Notifier<AuthState> {
         verificationId: verificationId,
         smsCode: smsCode,
       );
-      await _syncWithBackend(result.user!);
+      await _completeSignIn(result.user!);
       return true;
     } catch (e) {
       state = state.copyWith(error: 'Invalid code. Please try again.');

@@ -90,3 +90,17 @@ jobs:
           path: build/ios/iphoneos
           if-no-files-found: error
           retention-days: 7
+
+      # On a version tag, attach the IPA to the matching GitHub Release so it
+      # sits alongside the Android APKs. Manual (workflow_dispatch) runs skip
+      # this and just leave the IPA as a downloadable build artifact above.
+      - name: Publish IPA to release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: DealSouk ${{ github.ref_name }}
+          generate_release_notes: true
+          files: build/ios/DealSouk-unsigned.ipa
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:dealsouk/features/admin/presentation/widgets/admin_panel_widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -445,7 +446,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                     child: Row(
                                       children: [
                                         Expanded(
-                                          child: _statCard(
+                                          child: adminStatCard(
                                             'PENDING REVIEWS',
                                             '$pendingCount',
                                             Icons.hourglass_empty_rounded,
@@ -454,7 +455,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                         ),
                                         const SizedBox(width: 14),
                                         Expanded(
-                                          child: _statCard(
+                                          child: adminStatCard(
                                             'APPROVED TODAY',
                                             '$approvedCount',
                                             Icons.check_circle_outline_rounded,
@@ -463,7 +464,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                         ),
                                         const SizedBox(width: 14),
                                         Expanded(
-                                          child: _statCard(
+                                          child: adminStatCard(
                                             'TOKENS ISSUED',
                                             '$tokensIssuedCount',
                                             Icons.bolt_rounded,
@@ -775,61 +776,6 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _statCard(String label, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE8EEE4), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.015),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                label,
-                style: GoogleFonts.nunito(
-                  fontSize: 11,
-                  color: Colors.grey.shade500,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: color, size: 16),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: GoogleFonts.fredoka(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textDark,
-              height: 1.0,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -2049,7 +1995,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         Row(
           children: [
             Expanded(
-              child: _statCard(
+              child: adminStatCard(
                 'TODAY',
                 '${analytics.submissionsToday}',
                 Icons.today_rounded,
@@ -2058,7 +2004,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             ),
             const SizedBox(width: 14),
             Expanded(
-              child: _statCard(
+              child: adminStatCard(
                 'THIS MONTH',
                 '${analytics.submissionsThisMonth}',
                 Icons.calendar_month_rounded,
@@ -2067,7 +2013,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             ),
             const SizedBox(width: 14),
             Expanded(
-              child: _statCard(
+              child: adminStatCard(
                 'PENDING VOUCHERS',
                 '${analytics.pendingVouchers}',
                 Icons.confirmation_num_rounded,
@@ -2077,12 +2023,12 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           ],
         ),
         const SizedBox(height: 18),
-        _analyticsSection(
+        adminAnalyticsSection(
           title: 'Trending Products',
           emptyText: 'No product trends yet.',
           children: analytics.trendingProducts
               .map(
-                (item) => _analyticsRow(
+                (item) => adminAnalyticsRow(
                   title: item.name,
                   subtitle: item.category,
                   value: '${item.submissions} submissions',
@@ -2091,12 +2037,12 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               .toList(),
         ),
         const SizedBox(height: 18),
-        _analyticsSection(
+        adminAnalyticsSection(
           title: 'Coverage Hotspots',
           emptyText: 'No coverage data yet.',
           children: analytics.coverageAreas
               .map(
-                (area) => _analyticsRow(
+                (area) => adminAnalyticsRow(
                   title: '${area.chain} ${area.branchName}'.trim(),
                   subtitle: area.area,
                   value: '${area.recentSubmissions} recent',
@@ -2206,82 +2152,6 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _analyticsSection({
-    required String title,
-    required String emptyText,
-    required List<Widget> children,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE8EEE4)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: GoogleFonts.fredoka(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textDark,
-            ),
-          ),
-          const SizedBox(height: 12),
-          if (children.isEmpty)
-            Text(emptyText, style: TextStyle(color: Colors.grey.shade600))
-          else
-            ...children,
-        ],
-      ),
-    );
-  }
-
-  Widget _analyticsRow({
-    required String title,
-    required String subtitle,
-    required String value,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    color: AppTheme.textDark,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            value,
-            style: const TextStyle(
-              color: AppTheme.forestDeep,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ],
-      ),
     );
   }
 

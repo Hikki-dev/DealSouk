@@ -878,6 +878,24 @@ abstract class AppLocalizations {
   /// **'{count} prices'**
   String homePricesCount(Object count);
 
+  /// No description provided for @savedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved Items'**
+  String get savedTitle;
+
+  /// No description provided for @savedEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved items yet'**
+  String get savedEmptyTitle;
+
+  /// No description provided for @savedEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the heart on any product to save it here for quick access while you shop.'**
+  String get savedEmptyHint;
+
   /// No description provided for @scanBarcodeTitle.
   ///
   /// In en, this message translates to:

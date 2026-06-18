@@ -244,6 +244,9 @@
       "count": {}
     }
   },
+  "savedTitle": "Saved Items",
+  "savedEmptyTitle": "No saved items yet",
+  "savedEmptyHint": "Tap the heart on any product to save it here for quick access while you shop.",
   "scanBarcodeTitle": "Scan Barcode",
   "scanBarcodeHint": "Point the camera at the barcode. We will use it to find the product faster.",
   "homeLoadError": "Couldn't load prices",

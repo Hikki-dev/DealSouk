@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dealsouk/features/products/presentation/products_providers.dart';
-import 'package:dealsouk/features/cart/presentation/cart_providers.dart';
+import 'package:dealsouk/features/saved/presentation/saved_providers.dart';
 import 'package:dealsouk/features/requests/presentation/requests_providers.dart';
 import 'package:dealsouk/features/profile/presentation/profile_providers.dart';
 import 'package:dealsouk/features/admin/presentation/admin_providers.dart';
@@ -68,9 +68,8 @@ class SearchScreen extends ConsumerWidget {
     final products = ref.watch(productsProvider);
     final productsLoad = ref.watch(productsLoadProvider);
     final filterState = ref.watch(filterProvider);
-    final cartItems = ref.watch(cartProvider);
     final requestCost = ref.watch(adminSettingsProvider).requestCostTokens;
-    final savedCount = cartItems.length;
+    final savedCount = ref.watch(savedProductsProvider).length;
 
     final selectedCategory = filterState.selectedCategory == 'All'
         ? 'Fresh'
@@ -118,7 +117,7 @@ class SearchScreen extends ConsumerWidget {
               button: true,
               label: l.searchMyList,
               child: GestureDetector(
-                onTap: () => context.go('/cart'),
+                onTap: () => context.go('/saved'),
                 child: Padding(
                   padding: const EdgeInsetsDirectional.only(end: 16),
                   child: Stack(

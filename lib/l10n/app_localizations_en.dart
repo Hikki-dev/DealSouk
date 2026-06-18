@@ -441,6 +441,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get savedTitle => 'Saved Items';
+
+  @override
+  String get savedEmptyTitle => 'No saved items yet';
+
+  @override
+  String get savedEmptyHint =>
+      'Tap the heart on any product to save it here for quick access while you shop.';
+
+  @override
   String get scanBarcodeTitle => 'Scan Barcode';
 
   @override

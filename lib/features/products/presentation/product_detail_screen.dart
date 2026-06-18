@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dealsouk/features/products/presentation/products_providers.dart';
+import 'package:dealsouk/features/saved/presentation/saved_providers.dart';
 import 'package:dealsouk/features/stores/presentation/stores_providers.dart';
 import 'package:dealsouk/features/cart/presentation/cart_providers.dart';
 import 'package:dealsouk/features/requests/presentation/requests_providers.dart';
@@ -29,7 +30,6 @@ class ProductDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
-  bool _isFavorite = false;
   bool _compareExpanded = true;
   List<StoreProductPrice> _storePrices = [];
   List<ProductPriceHistory> _priceHistory = [];
@@ -85,6 +85,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     final products = ref.watch(productsProvider);
     final auth = ref.watch(authProvider);
     final requestCost = ref.watch(adminSettingsProvider).requestCostTokens;
+    // G3: persisted saved-items list (US-10), separate from the cart.
+    final isSaved = ref.watch(savedProductsProvider).contains(widget.productId);
 
     final product = products.firstWhere(
       (p) => p.id == widget.productId,
@@ -139,20 +141,18 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           ),
           actions: [
             IconButton(
-              tooltip: _isFavorite
+              tooltip: isSaved
                   ? l.productRemoveFromFavourites
                   : l.productAddToFavourites,
               icon: Icon(
-                _isFavorite
+                isSaved
                     ? Icons.favorite_rounded
                     : Icons.favorite_border_rounded,
-                color: _isFavorite ? AppTheme.redAccent : Colors.black,
+                color: isSaved ? AppTheme.redAccent : Colors.black,
               ),
-              onPressed: () {
-                setState(() {
-                  _isFavorite = !_isFavorite;
-                });
-              },
+              onPressed: () => ref
+                  .read(savedProductsProvider.notifier)
+                  .toggle(widget.productId),
             ),
           ],
         ),

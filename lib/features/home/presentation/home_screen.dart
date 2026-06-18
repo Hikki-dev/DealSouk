@@ -15,6 +15,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:dealsouk/features/products/presentation/products_providers.dart';
 import 'package:dealsouk/features/stores/presentation/stores_providers.dart';
 import 'package:dealsouk/features/cart/presentation/cart_providers.dart';
+import 'package:dealsouk/features/saved/presentation/saved_providers.dart';
 import 'package:dealsouk/features/requests/presentation/requests_providers.dart';
 import 'package:dealsouk/features/profile/presentation/profile_providers.dart';
 import 'package:dealsouk/features/admin/presentation/admin_providers.dart';
@@ -231,7 +232,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final productsLoad = ref.watch(productsLoadProvider);
     final filterState = ref.watch(filterProvider);
     final tokens = ref.watch(userTokensProvider);
-    final cartItems = ref.watch(cartProvider);
     final profile = ref.watch(userProfileProvider);
     final firstName = profile.name.split(' ').first;
     final dailyChallenge = ref.watch(dailyChallengeProvider);
@@ -243,7 +243,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       DayPart.evening => l.greetingEvening,
     };
 
-    final savedCount = cartItems.length;
+    final savedCount = ref.watch(savedProductsProvider).length;
     final bool searching = _searchQuery.trim().isNotEmpty;
     final filtered = products.where((p) {
       if (filterState.selectedCategory != 'All' &&
@@ -413,7 +413,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                           // Saved price list shortcut
                           GestureDetector(
-                            onTap: () => context.go('/cart'),
+                            onTap: () => context.go('/saved'),
                             child: Stack(
                               clipBehavior: Clip.none,
                               children: [

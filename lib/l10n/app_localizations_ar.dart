@@ -439,6 +439,16 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get savedTitle => 'العناصر المحفوظة';
+
+  @override
+  String get savedEmptyTitle => 'لا توجد عناصر محفوظة بعد';
+
+  @override
+  String get savedEmptyHint =>
+      'اضغط على القلب في أي منتج لحفظه هنا للوصول السريع أثناء التسوق.';
+
+  @override
   String get scanBarcodeTitle => 'مسح الباركود';
 
   @override

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -360,10 +361,14 @@ class SoukProductVisual extends StatelessWidget {
           borderRadius: BorderRadius.circular(borderRadius),
         ),
         child: product.imageUrl.isNotEmpty
-            ? Image.network(
-                product.imageUrl,
+            ? CachedNetworkImage(
+                imageUrl: product.imageUrl,
                 fit: fit,
-                errorBuilder: (context, error, stackTrace) =>
+                // P4: cap decode size to the card slot + disk cache (NFR-01).
+                memCacheWidth: 320,
+                placeholder: (context, url) =>
+                    _FallbackProductIcon(product: product, color: color),
+                errorWidget: (context, url, error) =>
                     _FallbackProductIcon(product: product, color: color),
               )
             : _FallbackProductIcon(product: product, color: color),

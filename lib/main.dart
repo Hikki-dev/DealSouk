@@ -58,12 +58,9 @@ void main() async {
   if (_sentryDsn.isEmpty) {
     runApp(app);
   } else {
-    await SentryFlutter.init(
-      (options) {
-        options.dsn = _sentryDsn;
-        options.tracesSampleRate = 0.1;
-      },
-      appRunner: () => runApp(app),
-    );
+    await SentryFlutter.init((options) {
+      options.dsn = _sentryDsn;
+      options.tracesSampleRate = 0.1;
+    }, appRunner: () => runApp(app));
   }
 }

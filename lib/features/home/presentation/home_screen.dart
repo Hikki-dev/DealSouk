@@ -228,6 +228,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final products = ref.watch(productsProvider);
+    final productsLoad = ref.watch(productsLoadProvider);
     final filterState = ref.watch(filterProvider);
     final tokens = ref.watch(userTokensProvider);
     final cartItems = ref.watch(cartProvider);
@@ -776,7 +777,54 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
 
             // Verified prices list cards (show up to 8 filtered results)
-            if (feedProducts.isEmpty)
+            if (feedProducts.isEmpty &&
+                products.isEmpty &&
+                productsLoad == ProductsLoadState.error)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 32,
+                  ),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.cloud_off_rounded,
+                          size: 48,
+                          color: Colors.grey.shade300,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          l.homeLoadError,
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          l.homeLoadErrorHint,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.grey.shade400,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        FilledButton.icon(
+                          onPressed: () =>
+                              ref.read(productsProvider.notifier).fetch(),
+                          icon: const Icon(Icons.refresh_rounded, size: 18),
+                          label: Text(l.retry),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              )
+            else if (feedProducts.isEmpty)
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(

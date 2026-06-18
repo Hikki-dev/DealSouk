@@ -878,6 +878,24 @@ abstract class AppLocalizations {
   /// **'{count} prices'**
   String homePricesCount(Object count);
 
+  /// No description provided for @homeLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load prices'**
+  String get homeLoadError;
+
+  /// No description provided for @homeLoadErrorHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and try again. The server may be waking up.'**
+  String get homeLoadErrorHint;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
   /// No description provided for @homeNoPricesMatch.
   ///
   /// In en, this message translates to:

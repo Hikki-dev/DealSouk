@@ -441,6 +441,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get homeLoadError => 'Couldn\'t load prices';
+
+  @override
+  String get homeLoadErrorHint =>
+      'Check your connection and try again. The server may be waking up.';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
   String get homeNoPricesMatch => 'No prices match this filter yet';
 
   @override

@@ -66,6 +66,7 @@ class SearchScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
     final products = ref.watch(productsProvider);
+    final productsLoad = ref.watch(productsLoadProvider);
     final filterState = ref.watch(filterProvider);
     final cartItems = ref.watch(cartProvider);
     final requestCost = ref.watch(adminSettingsProvider).requestCostTokens;
@@ -290,7 +291,56 @@ class SearchScreen extends ConsumerWidget {
 
             // Products Grid
             Expanded(
-              child: displayedProducts.isEmpty
+              child: products.isEmpty && productsLoad == ProductsLoadState.error
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.cloud_off_rounded,
+                              size: 60,
+                              color: Colors.grey.shade300,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              l.homeLoadError,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15.5,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              l.homeLoadErrorHint,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.grey.shade500,
+                                fontSize: 13,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            FilledButton.icon(
+                              onPressed: () => ref
+                                  .read(productsProvider.notifier)
+                                  .fetch(
+                                    query: filterState.searchQuery,
+                                    category:
+                                        filterState.selectedCategory == 'All'
+                                        ? null
+                                        : filterState.selectedCategory,
+                                  ),
+                              icon: const Icon(Icons.refresh_rounded, size: 18),
+                              label: Text(l.retry),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : displayedProducts.isEmpty
                   ? Center(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 24.0),

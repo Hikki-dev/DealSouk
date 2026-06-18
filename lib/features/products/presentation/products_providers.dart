@@ -3,18 +3,38 @@ import 'package:dealsouk/features/products/domain/product.dart';
 import 'package:dealsouk/features/products/data/products_service.dart';
 import 'package:dealsouk/features/submissions/data/submissions_service.dart';
 
+/// Load status for the products feed so the UI can tell "no results" apart from
+/// "the fetch failed" (B3). On a Render cold-start the request times out; without
+/// this the app looked empty with no way to retry.
+enum ProductsLoadState { idle, loading, loaded, error }
+
+class ProductsLoadNotifier extends Notifier<ProductsLoadState> {
+  @override
+  ProductsLoadState build() => ProductsLoadState.idle;
+  void set(ProductsLoadState value) => state = value;
+}
+
+final productsLoadProvider =
+    NotifierProvider<ProductsLoadNotifier, ProductsLoadState>(
+      ProductsLoadNotifier.new,
+    );
+
 class ProductsNotifier extends Notifier<List<Product>> {
   @override
   List<Product> build() => [];
 
   Future<void> fetch({String query = '', String? category}) async {
+    ref.read(productsLoadProvider.notifier).set(ProductsLoadState.loading);
     try {
       final results = await productsService.search(
         query: query,
         category: category,
       );
       state = results;
-    } catch (_) {}
+      ref.read(productsLoadProvider.notifier).set(ProductsLoadState.loaded);
+    } catch (_) {
+      ref.read(productsLoadProvider.notifier).set(ProductsLoadState.error);
+    }
   }
 
   void updateProductPrice(String productId, double price, String storeName) {

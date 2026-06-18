@@ -439,6 +439,16 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get homeLoadError => 'تعذّر تحميل الأسعار';
+
+  @override
+  String get homeLoadErrorHint =>
+      'تحقق من اتصالك وحاول مرة أخرى. قد يكون الخادم قيد التشغيل.';
+
+  @override
+  String get retry => 'إعادة المحاولة';
+
+  @override
   String get homeNoPricesMatch => 'لا توجد أسعار تطابق هذا الفلتر بعد';
 
   @override

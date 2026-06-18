@@ -244,6 +244,9 @@
       "count": {}
     }
   },
+  "homeLoadError": "Couldn't load prices",
+  "homeLoadErrorHint": "Check your connection and try again. The server may be waking up.",
+  "retry": "Retry",
   "homeNoPricesMatch": "No prices match this filter yet",
   "homeNoPricesHint": "Try All prices, search for an item, or ask shoppers to check a price.",
   "homeFindAnItem": "Find an item",

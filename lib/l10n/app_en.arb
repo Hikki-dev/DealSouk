@@ -244,6 +244,8 @@
       "count": {}
     }
   },
+  "scanBarcodeTitle": "Scan Barcode",
+  "scanBarcodeHint": "Point the camera at the barcode. We will use it to find the product faster.",
   "homeLoadError": "Couldn't load prices",
   "homeLoadErrorHint": "Check your connection and try again. The server may be waking up.",
   "retry": "Retry",

@@ -439,6 +439,13 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get scanBarcodeTitle => 'مسح الباركود';
+
+  @override
+  String get scanBarcodeHint =>
+      'وجّه الكاميرا نحو الباركود لنستخدمه في العثور على المنتج بسرعة.';
+
+  @override
   String get homeLoadError => 'تعذّر تحميل الأسعار';
 
   @override

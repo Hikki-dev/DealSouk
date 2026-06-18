@@ -878,6 +878,18 @@ abstract class AppLocalizations {
   /// **'{count} prices'**
   String homePricesCount(Object count);
 
+  /// No description provided for @scanBarcodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan Barcode'**
+  String get scanBarcodeTitle;
+
+  /// No description provided for @scanBarcodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Point the camera at the barcode. We will use it to find the product faster.'**
+  String get scanBarcodeHint;
+
   /// No description provided for @homeLoadError.
   ///
   /// In en, this message translates to:

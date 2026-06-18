@@ -441,6 +441,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get scanBarcodeTitle => 'Scan Barcode';
+
+  @override
+  String get scanBarcodeHint =>
+      'Point the camera at the barcode. We will use it to find the product faster.';
+
+  @override
   String get homeLoadError => 'Couldn\'t load prices';
 
   @override

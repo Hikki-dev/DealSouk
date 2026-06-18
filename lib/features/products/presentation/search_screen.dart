@@ -403,6 +403,7 @@ class SearchScreen extends ConsumerWidget {
       'Waitrose',
       'Al Maya',
       'Geant',
+      'Al Madina',
     ];
 
     ref.read(navbarVisibleProvider.notifier).hide();
@@ -473,20 +474,24 @@ class SearchScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (formKey.currentState!.validate()) {
-                      ref
-                          .read(myRequestsProvider.notifier)
-                          .addPriceRequest(
-                            productName: productName.trim(),
-                            storeName: selectedStore,
-                            requestCostTokens: requestCost,
-                          );
+                      final notifier = ref.read(myRequestsProvider.notifier);
+                      final messenger = ScaffoldMessenger.of(context);
+                      await notifier.addPriceRequest(
+                        productName: productName.trim(),
+                        storeName: selectedStore,
+                        requestCostTokens: requestCost,
+                      );
+                      if (!context.mounted) return;
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      final err = notifier.lastError;
+                      messenger.showSnackBar(
                         SnackBar(
-                          content: Text(l.searchRequestPosted),
-                          backgroundColor: AppTheme.forestDeep,
+                          content: Text(err ?? l.searchRequestPosted),
+                          backgroundColor: err != null
+                              ? Colors.red.shade700
+                              : AppTheme.forestDeep,
                         ),
                       );
                     }

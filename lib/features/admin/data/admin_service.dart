@@ -4,6 +4,8 @@ import 'package:dealsouk/features/admin/domain/admin_analytics.dart';
 import 'package:dealsouk/features/admin/domain/admin_settings.dart';
 import 'package:dealsouk/features/admin/domain/voucher_request.dart';
 import 'package:dealsouk/core/network/api_client.dart';
+import 'package:dealsouk/features/products/domain/product.dart';
+import 'package:dealsouk/features/profile/data/profile_service.dart';
 
 class AdminService {
   Future<List<AdminSubmission>> getQueue() async {
@@ -156,6 +158,73 @@ class AdminService {
       options: Options(responseType: ResponseType.bytes),
     );
     return List<int>.from(res.data as List<dynamic>);
+  }
+
+  // Products CRUD
+  Future<Map<String, dynamic>> getProducts({
+    String query = '',
+    String? category,
+    int page = 0,
+  }) async {
+    final res = await apiClient.get(
+      '/admin/products',
+      params: {
+        'q': query,
+        if (category != null && category != 'All') 'category': category,
+        'page': page,
+      },
+    );
+    final data = res.data as Map<String, dynamic>;
+    final list = data['products'] as List<dynamic>;
+    final productsList = list
+        .map((e) => Product.fromJson(e as Map<String, dynamic>))
+        .toList();
+    return {'products': productsList, 'total': data['total'] as int? ?? 0};
+  }
+
+  Future<Product> createProduct(Map<String, dynamic> data) async {
+    final res = await apiClient.post('/admin/products', data: data);
+    return Product.fromJson(res.data as Map<String, dynamic>);
+  }
+
+  Future<Product> updateProduct(String id, Map<String, dynamic> data) async {
+    final res = await apiClient.put('/admin/products/$id', data: data);
+    return Product.fromJson(res.data as Map<String, dynamic>);
+  }
+
+  Future<void> deleteProduct(String id) async {
+    await apiClient.delete('/admin/products/$id');
+  }
+
+  // Users CRUD
+  Future<Map<String, dynamic>> getUsers({
+    String query = '',
+    int page = 0,
+  }) async {
+    final res = await apiClient.get(
+      '/admin/users',
+      params: {'q': query, 'page': page},
+    );
+    final data = res.data as Map<String, dynamic>;
+    final list = data['users'] as List<dynamic>;
+    final usersList = list
+        .map((e) => ProfileData.fromJson(e as Map<String, dynamic>))
+        .toList();
+    return {'users': usersList, 'total': data['total'] as int? ?? 0};
+  }
+
+  Future<ProfileData> createUser(Map<String, dynamic> data) async {
+    final res = await apiClient.post('/admin/users', data: data);
+    return ProfileData.fromJson(res.data as Map<String, dynamic>);
+  }
+
+  Future<ProfileData> updateUser(String id, Map<String, dynamic> data) async {
+    final res = await apiClient.put('/admin/users/$id', data: data);
+    return ProfileData.fromJson(res.data as Map<String, dynamic>);
+  }
+
+  Future<void> deleteUser(String id) async {
+    await apiClient.delete('/admin/users/$id');
   }
 }
 

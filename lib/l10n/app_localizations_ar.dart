@@ -311,7 +311,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get unverifiedOutdated => 'غير موثّق — قد يكون قديماً';
+  String get unverifiedOutdated => 'غير موثّق، قد يكون قديماً';
 
   @override
   String get stalePriceWarning => 'بيانات السعر قد تكون قديمة (+72 ساعة)';
@@ -768,7 +768,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get storeLocationPromptAllow => 'السماح';
 
   @override
-  String get storeMapTitle => 'خريطة المتاجر — دبي';
+  String get storeMapTitle => 'خريطة متاجر دبي';
 
   @override
   String get storeSearchHint => 'ابحث باسم المتجر أو المنطقة…';
@@ -1057,7 +1057,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get offlineBanner =>
-      'أنت غير متصل بالإنترنت — تم حفظ تغييراتك وستتم مزامنتها عند عودة الاتصال.';
+      'أنت غير متصل بالإنترنت. تم حفظ تغييراتك وستتم مزامنتها عند عودة الاتصال.';
 
   @override
   String offlinePendingSync(int count) {
@@ -1076,14 +1076,32 @@ class AppLocalizationsAr extends AppLocalizations {
     Object product,
     Object store,
   ) {
-    return '+$tokens توكن — تم إرسال $product في $store';
+    return '+$tokens توكن مقابل $product في $store';
   }
 
   @override
   String get submitPhotoUploaded => 'تم رفع الصورة';
 
   @override
+  String get submitPhotoUploadFailed =>
+      'تعذّر إضافة الصورة. اضغط للمحاولة مرة أخرى.';
+
+  @override
+  String get submitProofPhotoRequired =>
+      'لم يكتمل رفع صورة الدليل. اضغط على الصورة وحاول مرة أخرى.';
+
+  @override
+  String get submitReceiptPhotoRequired =>
+      'لم يكتمل رفع صورة الإيصال. أعد المحاولة أو استخدم صورة ملصق السعر فقط.';
+
+  @override
   String get submitTapToUpload => 'اضغط للرفع';
+
+  @override
+  String get submitTapToRetry => 'اضغط لإعادة المحاولة';
+
+  @override
+  String get submitTapToRetake => 'اضغط لإعادة التصوير';
 
   @override
   String get submitPriceSubmitted => 'تم إرسال السعر!';
@@ -1096,6 +1114,14 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String submitPendingReviewMessage(Object name) {
     return 'إرسال السعر الخاص بك قيد المراجعة.\nسيتم إضافة التوكنات إلى $name بعد موافقة المسؤول.';
+  }
+
+  @override
+  String get submitAwaitingApproval => 'بانتظار الموافقة';
+
+  @override
+  String submitApprovedNowMessage(Object name) {
+    return 'عمل رائع يا $name. تمت إضافة هذه التوكنات الآن. اسحب صفحة الملف الشخصي للأسفل في أي وقت لتحديث الرصيد.';
   }
 
   @override
@@ -1591,18 +1617,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get requestSubmitButton => 'اطلب هذا السعر';
 
   @override
-  String requestCardSubtitle(
-    Object storeName,
-    Object distance,
-    Object requesterName,
-  ) {
-    return '$storeName • $distance كم • نشره $requesterName';
+  String requestCardSubtitle(Object storeName, Object requesterName) {
+    return '$storeName • نشره $requesterName';
   }
 
   @override
   String requestCheckPriceButton(Object tokens) {
     return 'تحقق من السعر (+$tokens رمزًا)';
   }
+
+  @override
+  String get storeLoadErrorTitle => 'تعذّر تحميل المتاجر';
+
+  @override
+  String get storeLoadErrorSubtitle => 'تحقق من اتصالك وحاول مرة أخرى.';
+
+  @override
+  String get storeRetryButton => 'إعادة المحاولة';
 
   @override
   String get leaderRewardsTitle => 'المكافآت ولوحة المتصدرين';
@@ -1619,7 +1650,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get leaderRankUnknown => 'المرتبة —';
+  String get leaderRankUnknown => 'غير مصنّف';
 
   @override
   String leaderDayStreak(Object days) {

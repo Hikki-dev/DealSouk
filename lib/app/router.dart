@@ -21,105 +21,24 @@ import 'package:dealsouk/features/legal/presentation/privacy_policy_screen.dart'
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
-GoRouter buildRouter(WidgetRef ref) {
-  final authState = ref.watch(authProvider);
-
-  return GoRouter(
-    navigatorKey: rootNavigatorKey,
-    initialLocation: '/welcome',
-    redirect: (context, state) {
-      return resolveRouteRedirect(
-        matchedLocation: state.matchedLocation,
-        isAuthUnknown: authState.status == AuthStatus.unknown,
-        isUnauthenticated: authState.status == AuthStatus.unauthenticated,
-        isGuest: authState.isGuest,
-        isAdmin: authState.isAdmin,
-        // Browser QA convenience only — never relaxes the guard in release.
-        allowGuestProfile: kDebugMode,
-      );
-    },
-    routes: [
-      GoRoute(
-        path: '/welcome',
-        builder: (context, state) => const WelcomeScreen(),
-      ),
-
-      ShellRoute(
-        builder: (ctx, st, child) => ShellLayout(child: child),
-        routes: [
-          GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
-          GoRoute(
-            path: '/search',
-            builder: (context, state) => const SearchScreen(),
-          ),
-          GoRoute(
-            path: '/stores',
-            builder: (context, state) => const StoreScreen(),
-          ),
-          GoRoute(
-            path: '/cart',
-            builder: (context, state) => const CartScreen(),
-          ),
-          GoRoute(
-            path: '/leaderboard',
-            builder: (context, state) => const LeaderboardScreen(),
-          ),
-          GoRoute(
-            path: '/profile',
-            builder: (context, state) => const ProfileScreen(),
-          ),
-        ],
-      ),
-
-      GoRoute(path: '/admin', builder: (context, state) => const AdminScreen()),
-      GoRoute(
-        path: '/unauthorized',
-        builder: (context, state) => const UnauthorizedScreen(),
-      ),
-      GoRoute(
-        path: '/privacy',
-        builder: (context, state) => const PrivacyPolicyScreen(),
-      ),
-      GoRoute(
-        path: '/product/:id',
-        builder: (context, state) {
-          final id = state.pathParameters['id'] ?? '';
-          return ProductDetailScreen(productId: id);
-        },
-      ),
-      GoRoute(
-        path: '/scan-barcode',
-        builder: (context, state) => BarcodeScanScreen(
-          returnScannedCode: state.uri.queryParameters['return'] == '1',
-        ),
-      ),
-      GoRoute(
-        path: '/submit-price',
-        builder: (context, state) {
-          final extra = state.extra as Map<String, dynamic>?;
-          return SubmitPriceScreen(
-            requestId: extra?['requestId'] as String?,
-            prefilledProductName: extra?['productName'] as String?,
-            prefilledStoreName: extra?['storeName'] as String?,
-          );
-        },
-      ),
-    ],
-  );
+// A ChangeNotifier driven by Riverpod's ref.listen so GoRouter re-evaluates
+// redirects on every auth state change (not just on the first build).
+class _AuthChangeNotifier extends ChangeNotifier {
+  _AuthChangeNotifier(Ref ref) {
+    ref.listen<AuthState>(authProvider, (prev, next) => notifyListeners());
+  }
 }
 
-// Keep a simple static router for app.dart to reference;
-// the redirect logic gets auth state via the provider listener below.
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
+  final notifier = _AuthChangeNotifier(ref);
+  ref.onDispose(notifier.dispose);
 
   return GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: '/welcome',
-    refreshListenable: GoRouterRefreshStream(
-      Stream.fromFuture(Future.value(authState)),
-    ),
+    refreshListenable: notifier,
     redirect: (context, state) {
+      final authState = ref.read(authProvider);
       return resolveRouteRedirect(
         matchedLocation: state.matchedLocation,
         isAuthUnknown: authState.status == AuthStatus.unknown,
@@ -195,9 +114,3 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
-
-class GoRouterRefreshStream extends ChangeNotifier {
-  GoRouterRefreshStream(Stream<dynamic> stream) {
-    stream.listen((_) => notifyListeners());
-  }
-}

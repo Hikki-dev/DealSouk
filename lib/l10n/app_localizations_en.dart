@@ -312,7 +312,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get unverifiedOutdated => 'Unverified — may be outdated';
+  String get unverifiedOutdated => 'Unverified, may be outdated';
 
   @override
   String get stalePriceWarning => 'Price data may be outdated (>72h)';
@@ -773,7 +773,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get storeLocationPromptAllow => 'Allow';
 
   @override
-  String get storeMapTitle => 'Store Map — Dubai';
+  String get storeMapTitle => 'Dubai Store Map';
 
   @override
   String get storeSearchHint => 'Search store name or area…';
@@ -1063,7 +1063,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get offlineBanner =>
-      'You\'re offline — changes are saved and will sync when you reconnect.';
+      'You\'re offline. Changes are saved and will sync when you reconnect.';
 
   @override
   String offlinePendingSync(int count) {
@@ -1082,14 +1082,32 @@ class AppLocalizationsEn extends AppLocalizations {
     Object product,
     Object store,
   ) {
-    return '+$tokens tokens — submitted $product @ $store';
+    return '+$tokens tokens for $product at $store';
   }
 
   @override
   String get submitPhotoUploaded => 'Photo Uploaded';
 
   @override
+  String get submitPhotoUploadFailed =>
+      'Couldn\'t add the photo. Tap to try again.';
+
+  @override
+  String get submitProofPhotoRequired =>
+      'The proof photo did not finish uploading. Please tap the photo and try again.';
+
+  @override
+  String get submitReceiptPhotoRequired =>
+      'The receipt photo did not finish uploading. Please retry it, or retake the price-label photo only.';
+
+  @override
   String get submitTapToUpload => 'Tap to Upload';
+
+  @override
+  String get submitTapToRetry => 'Tap to retry';
+
+  @override
+  String get submitTapToRetake => 'Tap to retake';
 
   @override
   String get submitPriceSubmitted => 'Price Submitted!';
@@ -1102,6 +1120,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String submitPendingReviewMessage(Object name) {
     return 'Your price submission is pending review.\nTokens will be credited to $name after admin approval.';
+  }
+
+  @override
+  String get submitAwaitingApproval => 'Waiting for approval';
+
+  @override
+  String submitApprovedNowMessage(Object name) {
+    return 'Nice work, $name. These tokens were added now. Pull down on your profile any time to refresh the latest balance.';
   }
 
   @override
@@ -1597,18 +1623,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get requestSubmitButton => 'Ask for this price';
 
   @override
-  String requestCardSubtitle(
-    Object storeName,
-    Object distance,
-    Object requesterName,
-  ) {
-    return '$storeName • $distance km • Posted by $requesterName';
+  String requestCardSubtitle(Object storeName, Object requesterName) {
+    return '$storeName • Posted by $requesterName';
   }
 
   @override
   String requestCheckPriceButton(Object tokens) {
     return 'Check price (+$tokens Tokens)';
   }
+
+  @override
+  String get storeLoadErrorTitle => 'Couldn\'t load stores';
+
+  @override
+  String get storeLoadErrorSubtitle => 'Check your connection and try again.';
+
+  @override
+  String get storeRetryButton => 'Retry';
 
   @override
   String get leaderRewardsTitle => 'Rewards & Leaderboard';
@@ -1625,7 +1656,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get leaderRankUnknown => 'Rank —';
+  String get leaderRankUnknown => 'Unranked';
 
   @override
   String leaderDayStreak(Object days) {

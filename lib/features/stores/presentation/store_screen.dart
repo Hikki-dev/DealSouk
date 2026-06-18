@@ -1,5 +1,4 @@
-// ignore: unused_import
-import 'dart:math';
+// ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -16,6 +15,7 @@ import 'package:dealsouk/features/stores/presentation/stores_providers.dart';
 import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/core/widgets/souk_widgets.dart';
 import 'package:dealsouk/l10n/app_localizations.dart';
+import 'package:dealsouk/core/util/geo_utils.dart';
 
 /// Dubai city centre — map always defaults here
 const _dubaiCenter = LatLng(25.2048, 55.2708);
@@ -31,20 +31,6 @@ const _dubaiMaxLat = 25.45;
 const _dubaiMinLng = 54.90;
 const _dubaiMaxLng = 55.65;
 
-/// Haversine distance in km between two GPS points.
-double _haversineKm(double lat1, double lng1, double lat2, double lng2) {
-  const r = 6371.0; // Earth radius km
-  final dLat = (lat2 - lat1) * pi / 180;
-  final dLng = (lng2 - lng1) * pi / 180;
-  final a =
-      sin(dLat / 2) * sin(dLat / 2) +
-      cos(lat1 * pi / 180) *
-          cos(lat2 * pi / 180) *
-          sin(dLng / 2) *
-          sin(dLng / 2);
-  return r * 2 * asin(sqrt(a));
-}
-
 class StoreScreen extends ConsumerStatefulWidget {
   const StoreScreen({super.key});
 
@@ -57,6 +43,8 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
   Position? _currentPosition;
   bool _isLocating = false;
   bool _mapReady = false;
+  double _customMaxRadiusKm = 8.0;
+  String _sortBy = 'distance'; // 'distance', 'name', 'last_updated'
 
   /// True while the first backend store fetch is in flight, so the UI shows a
   /// loading state instead of a misleading "No stores found" during the
@@ -89,6 +77,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
     'Nesto',
     'Al Maya',
     'Grandiose',
+    'Al Madina',
   ];
 
   @override
@@ -100,18 +89,34 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
     // Load Dubai stores from the backend immediately, independent of location
     // permission (there is no hardcoded fallback). _tryGetLocation refines the
     // view only if the user grants location and is physically in Dubai.
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await ref
-          .read(storesProvider.notifier)
-          .fetchNearby(
-            lat: _dubaiCenter.latitude,
-            lng: _dubaiCenter.longitude,
-            radiusKm: 40,
-          );
-      if (mounted) setState(() => _loadingStores = false);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _reloadStores();
+      final pos = ref.read(userLocationProvider);
+      if (pos != null) {
+        setState(() {
+          _currentPosition = pos;
+        });
+        if (_mapReady) {
+          _mapController.move(LatLng(pos.latitude, pos.longitude), 13.5);
+        }
+      } else {
+        _tryGetLocation();
+      }
     });
-    // Attempt to get location but never move the map away from Dubai
-    _tryGetLocation();
+  }
+
+  /// Fetch the Dubai-area stores and toggle the loading flag. Reused by the
+  /// initial load and the Retry button shown when a fetch fails.
+  Future<void> _reloadStores() async {
+    if (mounted) setState(() => _loadingStores = true);
+    await ref
+        .read(storesProvider.notifier)
+        .fetchNearby(
+          lat: _dubaiCenter.latitude,
+          lng: _dubaiCenter.longitude,
+          radiusKm: 40,
+        );
+    if (mounted) setState(() => _loadingStores = false);
   }
 
   @override
@@ -125,6 +130,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
     try {
       if (!kIsWeb) {
         bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+        if (!mounted) return;
         if (!serviceEnabled) {
           setState(() => _isLocating = false);
           return;
@@ -132,13 +138,16 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
       }
 
       LocationPermission permission = await Geolocator.checkPermission();
+      if (!mounted) return;
       if (permission == LocationPermission.denied) {
         final allowed = await _showLocationPrePrompt();
+        if (!mounted) return;
         if (!allowed) {
           setState(() => _isLocating = false);
           return;
         }
         permission = await Geolocator.requestPermission();
+        if (!mounted) return;
         if (permission == LocationPermission.denied) {
           setState(() => _isLocating = false);
           return;
@@ -155,11 +164,13 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
           accuracy: LocationAccuracy.high,
         ),
       );
+      if (!mounted) return;
 
       setState(() {
         _currentPosition = position;
         _isLocating = false;
       });
+      ref.read(userLocationProvider.notifier).state = position;
 
       // If the user IS in Dubai, pan the map to their live location and refetch
       // stores around them. If they're abroad (testing), the Dubai-center fetch
@@ -174,6 +185,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
 
       if (_mapReady) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
           _mapController.move(LatLng(lat, lng), 13.5);
         });
       }
@@ -184,6 +196,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
             .fetchNearby(lat: lat, lng: lng, radiusKm: 40);
       }
     } catch (_) {
+      if (!mounted) return;
       setState(() => _isLocating = false);
     }
   }
@@ -253,11 +266,10 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
   }
 
   /// Distance from user's GPS to a store in km.
-  /// Returns null when user is not in Dubai (no radius filtering).
   double? _distanceTo(Store store) {
     final p = _currentPosition;
-    if (p == null || !_userIsInDubai) return null;
-    return _haversineKm(p.latitude, p.longitude, store.lat, store.lng);
+    if (p == null) return null;
+    return haversineKm(p.latitude, p.longitude, store.lat, store.lng);
   }
 
   List<Store> _applyFilters(List<Store> stores) {
@@ -275,18 +287,25 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
       // Radius filter — only when user is physically in Dubai
       if (_userIsInDubai) {
         final dist = _distanceTo(s);
-        if (dist != null && dist > _maxRadiusKm) return false;
+        if (dist != null && dist > _customMaxRadiusKm) return false;
       }
       return true;
     }).toList();
 
-    // Sort by distance (closest first) when in Dubai, else keep seed order
-    if (_userIsInDubai) {
+    // Sort according to selection
+    if (_sortBy == 'distance' && _currentPosition != null) {
       result.sort((a, b) {
         final da = _distanceTo(a) ?? double.maxFinite;
         final db = _distanceTo(b) ?? double.maxFinite;
         return da.compareTo(db);
       });
+    } else if (_sortBy == 'name' ||
+        (_sortBy == 'distance' && _currentPosition == null)) {
+      result.sort((a, b) => a.name.compareTo(b.name));
+    } else if (_sortBy == 'last_updated') {
+      result.sort(
+        (a, b) => a.lastUpdatedHoursAgo.compareTo(b.lastUpdatedHoursAgo),
+      );
     }
     return result;
   }
@@ -325,7 +344,10 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                       ),
                     ),
                   ),
-                  _CircleButton(icon: Icons.tune_rounded, onTap: () {}),
+                  _CircleButton(
+                    icon: Icons.tune_rounded,
+                    onTap: () => _showFilterBottomSheet(context),
+                  ),
                 ],
               ),
             ),
@@ -443,10 +465,16 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                 fontSize: 13.5,
                               ),
                               border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
                               isDense: true,
                             ),
                           ),
                         ),
+                        // Clear button only. Filtering lives in the single
+                        // top-right control (the tune button) so there's just
+                        // one obvious place to filter, not two that do the same
+                        // thing.
                         if (_searchQuery.isNotEmpty)
                           GestureDetector(
                             onTap: () {
@@ -458,12 +486,6 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                               color: Colors.grey.shade400,
                               size: 18,
                             ),
-                          )
-                        else
-                          Icon(
-                            Icons.filter_list_rounded,
-                            color: AppTheme.forestDeep,
-                            size: 20,
                           ),
                       ],
                     ),
@@ -571,9 +593,8 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                       ),
                                       maxZoom: 20,
                                     ),
-                                    // User location pin (only shown in Dubai)
-                                    if (_userIsInDubai &&
-                                        _currentPosition != null)
+                                    // User location pin (shown when position is available)
+                                    if (_currentPosition != null)
                                       CircleLayer(
                                         circles: [
                                           // Accuracy ring
@@ -612,8 +633,8 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                         final dist = _distanceTo(store);
                                         return Marker(
                                           point: LatLng(store.lat, store.lng),
-                                          width: 40,
-                                          height: 40,
+                                          width: 52,
+                                          height: 52,
                                           child: GestureDetector(
                                             onTap: () => _showStorePrices(
                                               context,
@@ -640,6 +661,8 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                                   border: Border.all(
                                                     color: Colors.white,
                                                     width: 2.5,
+                                                    strokeAlign: BorderSide
+                                                        .strokeAlignOutside,
                                                   ),
                                                   boxShadow: [
                                                     BoxShadow(
@@ -661,7 +684,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                                     store.name,
                                                     isStale,
                                                   ),
-                                                  size: 40,
+                                                  size: 52,
                                                   padding: 6,
                                                 ),
                                               ),
@@ -862,6 +885,49 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                         ),
                       ),
                     )
+                  else if (ref.read(storesProvider.notifier).hadError &&
+                      _searchQuery.isEmpty)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 32),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.cloud_off_rounded,
+                              size: 48,
+                              color: Colors.grey.shade300,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              l.storeLoadErrorTitle,
+                              style: GoogleFonts.nunito(
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              l.storeLoadErrorSubtitle,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.nunito(
+                                color: Colors.grey.shade500,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            ElevatedButton.icon(
+                              onPressed: _loadingStores ? null : _reloadStores,
+                              icon: const Icon(Icons.refresh_rounded, size: 18),
+                              label: Text(l.storeRetryButton),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.forestDeep,
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
                   else if (filtered.isEmpty)
                     Center(
                       child: Padding(
@@ -927,6 +993,8 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
       String n when n.contains('nesto') => const Color(0xFFF4A261),
       String n when n.contains('al maya') => const Color(0xFF264653),
       String n when n.contains('grandiose') => const Color(0xFF8338EC),
+      String n when n.contains('al madina') || n.contains('madina') =>
+        const Color(0xFF0D9488),
       _ => AppTheme.forestDeep,
     };
   }
@@ -1139,6 +1207,159 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                     ),
                   ),
                 ],
+              ),
+            );
+          },
+        );
+      },
+    ).whenComplete(() {
+      ref.read(navbarVisibleProvider.notifier).show();
+    });
+  }
+
+  void _showFilterBottomSheet(BuildContext context) {
+    ref.read(navbarVisibleProvider.notifier).hide();
+    showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setBottomSheetState) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2.5),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Filter Stores',
+                      style: GoogleFonts.fredoka(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Maximum Distance: ${_customMaxRadiusKm.toStringAsFixed(0)} km',
+                      style: GoogleFonts.nunito(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: AppTheme.textDark,
+                      ),
+                    ),
+                    Slider(
+                      value: _customMaxRadiusKm,
+                      min: 2.0,
+                      max: 50.0,
+                      divisions: 24,
+                      label: '${_customMaxRadiusKm.toStringAsFixed(0)} km',
+                      activeColor: AppTheme.forestDeep,
+                      onChanged: (val) {
+                        setBottomSheetState(() {
+                          _customMaxRadiusKm = val;
+                        });
+                        setState(() {});
+                      },
+                    ),
+                    if (!_userIsInDubai) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0, bottom: 8.0),
+                        child: Text(
+                          '(Distance filter applies only when inside Dubai with GPS enabled)',
+                          style: GoogleFonts.nunito(
+                            fontSize: 11,
+                            color: Colors.grey,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    Text(
+                      'Sort Stores By',
+                      style: GoogleFonts.nunito(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: AppTheme.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    RadioListTile<String>(
+                      title: const Text('Closest First'),
+                      value: 'distance',
+                      groupValue: _sortBy,
+                      activeColor: AppTheme.forestDeep,
+                      onChanged: _userIsInDubai
+                          ? (val) {
+                              if (val != null) {
+                                setBottomSheetState(() => _sortBy = val);
+                                setState(() {});
+                              }
+                            }
+                          : null,
+                      subtitle: !_userIsInDubai
+                          ? const Text('Requires GPS location')
+                          : null,
+                    ),
+                    RadioListTile<String>(
+                      title: const Text('Alphabetical (A-Z)'),
+                      value: 'name',
+                      groupValue: _sortBy,
+                      activeColor: AppTheme.forestDeep,
+                      onChanged: (val) {
+                        if (val != null) {
+                          setBottomSheetState(() => _sortBy = val);
+                          setState(() {});
+                        }
+                      },
+                    ),
+                    RadioListTile<String>(
+                      title: const Text('Recently Updated'),
+                      value: 'last_updated',
+                      groupValue: _sortBy,
+                      activeColor: AppTheme.forestDeep,
+                      onChanged: (val) {
+                        if (val != null) {
+                          setBottomSheetState(() => _sortBy = val);
+                          setState(() {});
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.forestDeep,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size.fromHeight(50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Text(
+                        'Apply Filters',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -1414,6 +1635,8 @@ class _StoreChoiceCard extends StatelessWidget {
       String n when n.contains('nesto') => const Color(0xFFF4A261),
       String n when n.contains('al maya') => const Color(0xFF264653),
       String n when n.contains('grandiose') => const Color(0xFF8338EC),
+      String n when n.contains('al madina') || n.contains('madina') =>
+        const Color(0xFF0D9488),
       _ => AppTheme.forestDeep,
     };
   }
@@ -1453,6 +1676,7 @@ String? _chainSlug(String name) {
   if (n.contains('nesto')) return 'nesto';
   if (n.contains('al maya')) return 'al_maya';
   if (n.contains('grandiose')) return 'grandiose';
+  if (n.contains('al madina') || n.contains('madina')) return 'al_madina';
   return null;
 }
 

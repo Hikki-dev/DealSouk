@@ -4,6 +4,7 @@ class UserBadge {
   final String emoji;
   final String description;
   final bool unlocked;
+  final String? unlockedAtLabel;
 
   const UserBadge({
     required this.id,
@@ -11,15 +12,17 @@ class UserBadge {
     required this.emoji,
     required this.description,
     required this.unlocked,
+    this.unlockedAtLabel,
   });
 
-  UserBadge copyWith({bool? unlocked}) {
+  UserBadge copyWith({bool? unlocked, String? unlockedAtLabel}) {
     return UserBadge(
       id: id,
       name: name,
       emoji: emoji,
       description: description,
       unlocked: unlocked ?? this.unlocked,
+      unlockedAtLabel: unlockedAtLabel ?? this.unlockedAtLabel,
     );
   }
 }

@@ -1,6 +1,6 @@
-// Shared time-window constants (R5).
-// Named here, following the `*_MS` convention in middleware/auth.ts, so the
-// domain windows that drive freshness, expiry, decay, and moderation can't
+// Shared business-rule / time-window constants used across multiple backend
+// files. Named here, following the `*_MS` convention in middleware/auth.ts, so
+// the domain windows that drive freshness, expiry, decay, and moderation can't
 // silently drift between routes. Prefer adding new time magic numbers here.
 
 // FR-48: Levels 1–20 based on cumulative lifetime tokens earned, one level per
@@ -13,6 +13,8 @@ export const SECOND_MS = 1000;
 export const MINUTE_MS = 60 * SECOND_MS;
 export const HOUR_MS = 60 * MINUTE_MS;
 export const DAY_MS = 24 * HOUR_MS;
+// Back-compat alias for code that imports MS_PER_HOUR.
+export const MS_PER_HOUR = HOUR_MS;
 
 // FR-17 / FR-18 / FR-20: crowd-sourced prices are "fresh" for 72h, after which
 // they are dimmed and excluded from active results / best-price resolution.
@@ -35,3 +37,10 @@ export const REMOVAL_LOOKBACK_MS = 30 * DAY_MS;
 // FR-41: a voucher is linked to the store the sourcer submitted the most data
 // for over the trailing 30-day qualifying period.
 export const VOUCHER_QUALIFYING_PERIOD_MS = 30 * DAY_MS;
+
+/** Returns midnight (00:00:00.000) of the current day in local time. */
+export function startOfToday(): Date {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}

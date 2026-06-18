@@ -25,7 +25,9 @@ jest.mock("firebase-admin", () => {
 });
 
 import request from "supertest";
-import { app } from "../src/index";
+import { app, isCorsOriginAllowed } from "../src/index";
+import { decrypt } from "../src/services/encryption";
+import { objectPathFromFirebaseUrl } from "../src/services/storageHelpers";
 import { mockGetSignedUrl, mockPrisma, mockRevokeRefreshTokens, mockVerifyIdToken, resetMocks } from "./mocks";
 
 beforeEach(() => resetMocks());
@@ -35,6 +37,7 @@ function signInAs(user: Partial<any>) {
   mockVerifyIdToken.mockResolvedValue({
     uid: user.firebaseUid ?? "fb-uid",
     auth_time: Math.floor(Date.now() / 1000),
+    email_verified: true,
     ...(user.decodedToken ?? {}),
   });
   mockPrisma.user.findUnique.mockResolvedValue({
@@ -55,6 +58,35 @@ describe("health", () => {
   it("GET /health → 200", async () => {
     const res = await request(app).get("/health");
     expect(res.status).toBe(200);
+  });
+});
+
+describe("cors", () => {
+  it("blocks localhost origins in production (security hardening)", () => {
+    // Localhost is intentionally blocked in production to prevent local pages
+    // from making credentialed requests to the live API. Use ALLOW_LOCALHOST_CORS=true
+    // env var to opt in during development against the production backend.
+    expect(
+      isCorsOriginAllowed("http://localhost:51191", true, [
+        "https://deal-souk.vercel.app",
+      ]),
+    ).toBe(false);
+  });
+
+  it("adds CORS headers to localhost preflight requests", async () => {
+    const res = await request(app)
+      .options("/system/status")
+      .set("Origin", "http://localhost:51191")
+      .set("Access-Control-Request-Method", "GET")
+      .set("Access-Control-Request-Headers", "authorization,content-type");
+
+    expect(res.status).toBe(204);
+    expect(res.headers["access-control-allow-origin"]).toBe(
+      "http://localhost:51191",
+    );
+    expect(res.headers["access-control-allow-headers"]).toBe(
+      "Content-Type,Authorization",
+    );
   });
 });
 
@@ -93,6 +125,36 @@ describe("auth gate (NFR-06/08, requireAuth)", () => {
       .get("/leaderboard/monthly")
       .set("Authorization", "Bearer good-token");
     expect(res.status).toBe(403);
+  });
+});
+
+describe("auth verify", () => {
+  it("checks Firebase token revocation", async () => {
+    mockVerifyIdToken.mockResolvedValue({
+      uid: "fb-uid",
+      auth_time: Math.floor(Date.now() / 1000),
+    });
+    mockPrisma.user.findUnique.mockResolvedValue({
+      id: "u1",
+      firebaseUid: "fb-uid",
+      displayName: "Souk User",
+      homeArea: null,
+      preferredLocale: "en",
+      tokenBalance: 0,
+      accuracyRating: 100,
+      isAdmin: false,
+      isSuspended: false,
+      suspendedUntil: null,
+      bannedAt: null,
+      createdAt: new Date(),
+    } as any);
+
+    const res = await request(app)
+      .post("/auth/verify")
+      .set("Authorization", "Bearer good-token");
+
+    expect(res.status).toBe(200);
+    expect(mockVerifyIdToken).toHaveBeenCalledWith("good-token", true);
   });
 });
 
@@ -144,6 +206,145 @@ describe("admin gate (FR-57, requireAdmin)", () => {
       .get("/admin/queue")
       .set("Authorization", "Bearer good-token");
     expect(res.status).toBe(200);
+  });
+});
+
+describe("admin security hardening", () => {
+  it("creates users with encrypted phone numbers and ledger-backed initial balance", async () => {
+    signInAs({ isAdmin: true });
+
+    let storedPhone: string | null = null;
+    const tx = {
+      user: {
+        create: jest.fn(async (args) => {
+          storedPhone = args.data.phoneNumber;
+          return {
+            id: "new-user",
+            tokenBalance: 0,
+            phoneNumber: storedPhone,
+            ...args.data,
+          };
+        }),
+        update: jest.fn(async (args) => ({
+          id: "new-user",
+          displayName: "New User",
+          firebaseUid: "new-fb",
+          phoneNumber: storedPhone,
+          homeArea: null,
+          preferredLocale: "en",
+          tokenBalance: args.data.tokenBalance.increment,
+          lifetimeTokensEarned: args.data.lifetimeTokensEarned.increment,
+          isAdmin: false,
+        })),
+      },
+      tokenTransaction: {
+        findFirst: jest.fn().mockResolvedValue(null),
+        create: jest.fn(async (args) => args.data),
+      },
+    };
+    mockPrisma.$transaction.mockImplementation(async (cb: any) => cb(tx));
+
+    const res = await request(app)
+      .post("/admin/users")
+      .set("Authorization", "Bearer good-token")
+      .send({
+        displayName: "New User",
+        firebaseUid: "new-fb",
+        phoneNumber: "+971501111111",
+        tokenBalance: 25,
+      });
+
+    expect(res.status).toBe(201);
+    expect(storedPhone).toBeTruthy();
+    expect(storedPhone).not.toBe("+971501111111");
+    expect(decrypt(storedPhone!)).toBe("+971501111111");
+    expect(res.body.phoneNumber).toBe("+971501111111");
+    expect(tx.tokenTransaction.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          userId: "new-user",
+          amount: 25,
+          reason: "Admin balance adjustment",
+        }),
+      }),
+    );
+  });
+
+  it("omits encrypted phoneNumber substring search and decrypts list responses", async () => {
+    signInAs({ isAdmin: true });
+    mockPrisma.user.findMany.mockResolvedValue([
+      {
+        id: "u2",
+        firebaseUid: "fb2",
+        displayName: "List User",
+        phoneNumber: "+971502222222",
+      },
+    ] as any);
+    mockPrisma.user.count.mockResolvedValue(1);
+
+    const res = await request(app)
+      .get("/admin/users?q=971")
+      .set("Authorization", "Bearer good-token");
+
+    expect(res.status).toBe(200);
+    expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          OR: [
+            { displayName: { contains: "971", mode: "insensitive" } },
+            { firebaseUid: "971" },
+          ],
+        },
+      }),
+    );
+    expect(res.body.users[0].phoneNumber).toBe("+971502222222");
+  });
+
+  it("rejects invalid admin submission edits before writing", async () => {
+    signInAs({ isAdmin: true });
+    mockPrisma.priceSubmission.findUnique.mockResolvedValue({ id: "sub1", sourcerId: "u2" } as any);
+
+    const res = await request(app)
+      .patch("/admin/submissions/sub1")
+      .set("Authorization", "Bearer good-token")
+      .send({ priceAed: -1 });
+
+    expect(res.status).toBe(400);
+    expect(mockPrisma.priceSubmission.update).not.toHaveBeenCalled();
+  });
+
+  it("clamps admin settings to safe ranges", async () => {
+    signInAs({ isAdmin: true });
+    (mockPrisma.adminSettings.upsert as jest.Mock).mockImplementation(async (args: any) => ({
+      id: 1,
+      tokenEarnRate: args.update.tokenEarnRate,
+      voucherThreshold: args.update.voucherThreshold,
+      dailySubmissionCap: args.update.dailySubmissionCap,
+      requestCostTokens: args.update.requestCostTokens,
+      decayFactor: args.update.decayFactor,
+    }));
+
+    const res = await request(app)
+      .patch("/admin/settings")
+      .set("Authorization", "Bearer good-token")
+      .send({
+        tokenEarnRate: -10,
+        voucherThreshold: 9999999,
+        dailySubmissionCap: 0,
+        requestCostTokens: -1,
+        decayFactor: 3,
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual(
+      expect.objectContaining({
+        tokenEarnRate: 1,
+        voucherThreshold: 100000,
+        dailySubmissionCap: 1,
+        requestCostTokens: 0,
+        decayFactor: 1,
+      }),
+    );
   });
 });
 
@@ -200,6 +401,24 @@ describe("signed uploads", () => {
     expect(res.body.objectPath).toMatch(/^receipts\/fb-uid\//);
     expect(res.body.requiredHeaders["Content-Type"]).toBe("image/jpeg");
     expect(res.body.requiredHeaders["x-goog-meta-firebasestoragedownloadtokens"]).toBeTruthy();
+  });
+});
+
+describe("Firebase Storage URL parsing", () => {
+  it("rejects look-alike Firebase Storage hostnames", () => {
+    expect(
+      objectPathFromFirebaseUrl(
+        "https://firebasestorage.googleapis.com.attacker.tld/v0/b/bucket/o/receipts%2Fx.jpg",
+      ),
+    ).toBeNull();
+  });
+
+  it("parses legitimate Firebase Storage download URLs", () => {
+    expect(
+      objectPathFromFirebaseUrl(
+        "https://firebasestorage.googleapis.com/v0/b/bucket/o/receipts%2Fx.jpg?alt=media",
+      ),
+    ).toBe("receipts/x.jpg");
   });
 });
 

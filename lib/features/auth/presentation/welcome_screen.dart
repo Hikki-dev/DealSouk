@@ -9,6 +9,11 @@ import 'package:dealsouk/core/widgets/souk_widgets.dart';
 import 'package:dealsouk/core/widgets/tutorial_overlay.dart';
 import 'package:dealsouk/l10n/app_localizations.dart';
 
+const bool _adminBuild = bool.fromEnvironment(
+  'ADMIN_MODE',
+  defaultValue: false,
+);
+
 class WelcomeScreen extends ConsumerStatefulWidget {
   const WelcomeScreen({super.key});
 
@@ -17,15 +22,10 @@ class WelcomeScreen extends ConsumerStatefulWidget {
 }
 
 class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
-  bool _isAdminMode = const bool.fromEnvironment(
-    'ADMIN_MODE',
-    defaultValue: false,
-  );
+  final bool _isAdminMode = _adminBuild;
   bool _loading = false;
 
   // Dev mode & privacy
-  int _logoTaps = 0;
-  bool _showAdminTab = false;
   bool _agreeToPrivacy = false;
 
   // Phone OTP state
@@ -351,55 +351,28 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
 
                       // Logo
                       Center(
-                        child: GestureDetector(
-                          onTap: () {
-                            if (const bool.fromEnvironment(
-                              'ADMIN_MODE',
-                              defaultValue: false,
-                            )) {
-                              return;
-                            }
-                            setState(() {
-                              _logoTaps++;
-                              if (_logoTaps >= 5) {
-                                _showAdminTab = !_showAdminTab;
-                                _logoTaps = 0;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      _showAdminTab
-                                          ? l.welcomeModeratorToggleEnabled
-                                          : l.welcomeModeratorToggleDisabled,
-                                    ),
-                                    duration: const Duration(seconds: 1),
-                                  ),
-                                );
-                              }
-                            });
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(18),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.08),
-                                  blurRadius: 24,
-                                  offset: const Offset(0, 10),
-                                ),
-                              ],
-                            ),
-                            child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 250),
-                              child: Icon(
-                                _isAdminMode
-                                    ? Icons.gavel_rounded
-                                    : Icons.insights_rounded,
-                                key: ValueKey<bool>(_isAdminMode),
-                                size: 44,
-                                color: AppTheme.forestDeep,
+                        child: Container(
+                          padding: const EdgeInsets.all(18),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 24,
+                                offset: const Offset(0, 10),
                               ),
+                            ],
+                          ),
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 250),
+                            child: Icon(
+                              _isAdminMode
+                                  ? Icons.gavel_rounded
+                                  : Icons.insights_rounded,
+                              key: ValueKey<bool>(_isAdminMode),
+                              size: 44,
+                              color: AppTheme.forestDeep,
                             ),
                           ),
                         ),
@@ -433,43 +406,6 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-
-                      // Mode toggle
-                      if (_showAdminTab) ...[
-                        Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.15),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              _modeTab(
-                                l.welcomeCustomerModeTab,
-                                !_isAdminMode,
-                                () => setState(() {
-                                  _isAdminMode = false;
-                                  _showPhoneInput = false;
-                                  _showOtpInput = false;
-                                }),
-                              ),
-                              _modeTab(
-                                l.welcomeAdminModeratorTab,
-                                _isAdminMode,
-                                () => setState(() {
-                                  _isAdminMode = true;
-                                  _showPhoneInput = false;
-                                  _showOtpInput = false;
-                                }),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                      ],
 
                       // Value pillars
                       Row(
@@ -742,32 +678,6 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 ),
               ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _modeTab(String label, bool active, VoidCallback onTap) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: active ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: active ? AppTheme.forestDeep : Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-              ),
-            ),
-          ),
         ),
       ),
     );

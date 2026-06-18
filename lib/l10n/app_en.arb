@@ -163,7 +163,7 @@
       }
     }
   },
-  "unverifiedOutdated": "Unverified — may be outdated",
+  "unverifiedOutdated": "Unverified, may be outdated",
   "stalePriceWarning": "Price data may be outdated (>72h)",
   "staleStore": "Stale",
   "filterByChain": "Filter by chain",
@@ -439,7 +439,7 @@
   "storeLocationPromptBody": "DealSouk uses your location to show how far each Dubai supermarket is from you.",
   "storeLocationPromptSkip": "Skip",
   "storeLocationPromptAllow": "Allow",
-  "storeMapTitle": "Store Map — Dubai",
+  "storeMapTitle": "Dubai Store Map",
   "storeSearchHint": "Search store name or area…",
   "storeNoStoresFound": "No stores found",
   "storeLoadingStores": "Loading nearby stores…",
@@ -601,7 +601,7 @@
   "submitSubmitAPrice": "Submit a price",
   "submitCouldNotSendPrice": "We could not send this price. Please check your connection and try again.",
   "submitSavedOffline": "Saved. We'll submit this price automatically when you're back online.",
-  "offlineBanner": "You're offline — changes are saved and will sync when you reconnect.",
+  "offlineBanner": "You're offline. Changes are saved and will sync when you reconnect.",
   "offlinePendingSync": "{count, plural, =1{1 change waiting to sync} other{{count} changes waiting to sync}}",
   "@offlinePendingSync": {
     "placeholders": {
@@ -610,7 +610,7 @@
       }
     }
   },
-  "submitTransactionDescription": "+{tokens} tokens — submitted {product} @ {store}",
+  "submitTransactionDescription": "+{tokens} tokens for {product} at {store}",
   "@submitTransactionDescription": {
     "placeholders": {
       "tokens": {},
@@ -619,7 +619,12 @@
     }
   },
   "submitPhotoUploaded": "Photo Uploaded",
+  "submitPhotoUploadFailed": "Couldn't add the photo. Tap to try again.",
+  "submitProofPhotoRequired": "The proof photo did not finish uploading. Please tap the photo and try again.",
+  "submitReceiptPhotoRequired": "The receipt photo did not finish uploading. Please retry it, or retake the price-label photo only.",
   "submitTapToUpload": "Tap to Upload",
+  "submitTapToRetry": "Tap to retry",
+  "submitTapToRetake": "Tap to retake",
   "submitPriceSubmitted": "Price Submitted!",
   "submitTokensGained": "+{tokens} tokens",
   "@submitTokensGained": {
@@ -629,6 +634,13 @@
   },
   "submitPendingReviewMessage": "Your price submission is pending review.\nTokens will be credited to {name} after admin approval.",
   "@submitPendingReviewMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "submitAwaitingApproval": "Waiting for approval",
+  "submitApprovedNowMessage": "Nice work, {name}. These tokens were added now. Pull down on your profile any time to refresh the latest balance.",
+  "@submitApprovedNowMessage": {
     "placeholders": {
       "name": {}
     }
@@ -888,11 +900,10 @@
   },
   "requestSentConfirm": "Great",
   "requestSubmitButton": "Ask for this price",
-  "requestCardSubtitle": "{storeName} • {distance} km • Posted by {requesterName}",
+  "requestCardSubtitle": "{storeName} • Posted by {requesterName}",
   "@requestCardSubtitle": {
     "placeholders": {
       "storeName": {},
-      "distance": {},
       "requesterName": {}
     }
   },
@@ -902,6 +913,9 @@
       "tokens": {}
     }
   },
+  "storeLoadErrorTitle": "Couldn't load stores",
+  "storeLoadErrorSubtitle": "Check your connection and try again.",
+  "storeRetryButton": "Retry",
   "leaderRewardsTitle": "Rewards & Leaderboard",
   "leaderToggleStreaks": "Leaderboard & Streaks",
   "leaderToggleRequestBoard": "Active Request Board",
@@ -911,7 +925,7 @@
       "n": {}
     }
   },
-  "leaderRankUnknown": "Rank —",
+  "leaderRankUnknown": "Unranked",
   "leaderDayStreak": "{days} Day Streak",
   "@leaderDayStreak": {
     "placeholders": {

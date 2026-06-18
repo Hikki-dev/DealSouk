@@ -90,3 +90,7 @@ CLAUDE.md
 # Ignore all markdown files globally to prevent any documentation leaks
 *.md
 **/*.md
+
+# Security docs are intentionally tracked
+!SECURITY_AUDIT.md
+!SECURITY_CHECKLIST.md

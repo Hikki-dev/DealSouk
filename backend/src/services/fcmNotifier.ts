@@ -36,6 +36,27 @@ export async function notifyRequestFulfilled(
   );
 }
 
+export async function notifySubmissionApproved(
+  fcmToken: string | null | undefined,
+  creditedTokens: number,
+  productName?: string,
+  storeName?: string,
+): Promise<void> {
+  if (!fcmToken) return;
+  const item = productName && storeName ? `${productName} at ${storeName}` : "your price";
+  await sendPushNotification(
+    fcmToken,
+    `Approved: +${creditedTokens} tokens`,
+    `Nice work. We approved ${item} and added the tokens to your balance.`,
+    {
+      type: "submission_approved",
+      creditedTokens: String(creditedTokens),
+      productName: productName ?? "",
+      storeName: storeName ?? "",
+    },
+  );
+}
+
 export async function notifyRankChange(
   fcmToken: string | null | undefined,
   newRank: number,
@@ -51,7 +72,7 @@ export async function notifyRankChange(
       : `You dropped to #${newRank}`,
     direction === "up"
       ? `You climbed ${oldRank - newRank} spots on the leaderboard this month`
-      : `You fell ${newRank - oldRank} spots — submit more prices to climb back`,
+      : `You fell ${newRank - oldRank} spots. Submit more prices to climb back`,
     { type: "rank_change", newRank: String(newRank), oldRank: String(oldRank) },
   );
 }
@@ -98,19 +119,6 @@ export async function notifySubmissionHidden(
     "Price hidden for review",
     `Your price was reported by shoppers and is waiting for admin review. Reason: ${reason}`,
     { type: "submission_hidden", reason },
-  );
-}
-
-export async function notifySubmissionApproved(
-  fcmToken: string | null | undefined,
-  tokensAwarded: number,
-): Promise<void> {
-  if (!fcmToken) return;
-  await sendPushNotification(
-    fcmToken,
-    "Price verified!",
-    `Your submitted price was approved. +${tokensAwarded} tokens`,
-    { type: "submission_approved", tokensAwarded: String(tokensAwarded) },
   );
 }
 

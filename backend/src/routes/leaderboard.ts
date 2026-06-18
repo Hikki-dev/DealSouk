@@ -70,17 +70,18 @@ async function computeBoard(
     orderBy: { _sum: { amount: 'desc' } },
     take: 10,
   });
-  const top10 = await Promise.all(
-    rankings.map(async (r, idx) => {
-      const user = await prisma.user.findUnique({ where: { id: r.userId } });
-      return {
-        rank: idx + 1,
-        userId: r.userId,
-        displayName: user?.displayName ?? 'Unknown',
-        tokensThisMonth: r._sum.amount ?? 0,
-      };
-    }),
-  );
+  const top10UserIds = rankings.map((r) => r.userId);
+  const top10Users = await prisma.user.findMany({
+    where: { id: { in: top10UserIds } },
+    select: { id: true, displayName: true },
+  });
+  const top10UserMap = new Map(top10Users.map((u) => [u.id, u.displayName]));
+  const top10 = rankings.map((r, idx) => ({
+    rank: idx + 1,
+    userId: r.userId,
+    displayName: top10UserMap.get(r.userId) ?? 'Unknown',
+    tokensThisMonth: r._sum.amount ?? 0,
+  }));
 
   const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const prevRankings = await prisma.tokenTransaction.groupBy({
@@ -93,17 +94,18 @@ async function computeBoard(
     orderBy: { _sum: { amount: 'desc' } },
     take: 3,
   });
-  const hallOfFame = await Promise.all(
-    prevRankings.map(async (r, idx) => {
-      const user = await prisma.user.findUnique({ where: { id: r.userId } });
-      return {
-        rank: idx + 1,
-        userId: r.userId,
-        displayName: user?.displayName ?? 'Unknown',
-        tokensThisMonth: r._sum.amount ?? 0,
-      };
-    }),
-  );
+  const hofUserIds = prevRankings.map((r) => r.userId);
+  const hofUsers = await prisma.user.findMany({
+    where: { id: { in: hofUserIds } },
+    select: { id: true, displayName: true },
+  });
+  const hofUserMap = new Map(hofUsers.map((u) => [u.id, u.displayName]));
+  const hallOfFame = prevRankings.map((r, idx) => ({
+    rank: idx + 1,
+    userId: r.userId,
+    displayName: hofUserMap.get(r.userId) ?? 'Unknown',
+    tokensThisMonth: r._sum.amount ?? 0,
+  }));
 
   return { top10, hallOfFame };
 }

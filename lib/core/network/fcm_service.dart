@@ -7,6 +7,7 @@ class FcmService {
 
   Future<void> initialize({
     required void Function(RemoteMessage) onForegroundMessage,
+    void Function(RemoteMessage)? onOpenedMessage,
   }) async {
     // Request permission (iOS + Android 13+)
     await _messaging.requestPermission(alert: true, badge: true, sound: true);
@@ -19,6 +20,12 @@ class FcmService {
 
     // Handle foreground messages
     FirebaseMessaging.onMessage.listen(onForegroundMessage);
+
+    if (onOpenedMessage != null) {
+      FirebaseMessaging.onMessageOpenedApp.listen(onOpenedMessage);
+      final initialMessage = await _messaging.getInitialMessage();
+      if (initialMessage != null) onOpenedMessage(initialMessage);
+    }
   }
 
   Future<void> _registerToken() async {

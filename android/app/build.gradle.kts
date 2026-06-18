@@ -27,6 +27,9 @@ android {
         applicationId = "com.dealsouk.dealsouk"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
+        // PRD §9 Platform & Device Requirements mandates "Android 13 (API level 33)
+        // and above". Do NOT lower this without a written PRD change — it is a
+        // hard product requirement, not a default.
         minSdk = 33
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

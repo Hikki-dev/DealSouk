@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../index';
 import {
   notifyBadgeEarned,
@@ -58,10 +59,13 @@ export function hashTokenTransaction(params: {
 }
 
 export async function createTokenLedgerEntry(
-  tx: any,
+  tx: Prisma.TransactionClient,
   params: { userId: string; amount: number; reason: string },
 ) {
+  // Scope the previous-hash lookup to this user so concurrent transactions for
+  // different users don't fork each other's hash chain (C-3).
   const previous = await tx.tokenTransaction.findFirst({
+    where: { userId: params.userId },
     orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     select: { hash: true },
   });
@@ -89,7 +93,7 @@ export async function createTokenLedgerEntry(
 
 export async function verifyTokenLedgerChain(): Promise<{ ok: boolean; invalidTransactionId?: string }> {
   const rows = await prisma.tokenTransaction.findMany({
-    orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+    orderBy: [{ userId: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
     select: {
       id: true,
       userId: true,
@@ -101,8 +105,9 @@ export async function verifyTokenLedgerChain(): Promise<{ ok: boolean; invalidTr
     },
   });
 
-  let previousHash: string | null = null;
+  const previousHashByUser = new Map<string, string | null>();
   for (const row of rows) {
+    const previousHash = previousHashByUser.get(row.userId) ?? null;
     if (row.previousHash !== previousHash) {
       return { ok: false, invalidTransactionId: row.id };
     }
@@ -116,7 +121,7 @@ export async function verifyTokenLedgerChain(): Promise<{ ok: boolean; invalidTr
     if (row.hash !== expectedHash) {
       return { ok: false, invalidTransactionId: row.id };
     }
-    previousHash = row.hash;
+    previousHashByUser.set(row.userId, row.hash);
   }
 
   return { ok: true };
@@ -187,16 +192,19 @@ export async function awardTokens(userId: string, amount: number, reason: string
 }
 
 export async function spendTokens(userId: string, amount: number, reason: string) {
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user || user.tokenBalance < amount) {
-    throw new Error('Insufficient token balance');
-  }
+  // Atomic check-and-decrement: the WHERE guard on tokenBalance >= amount means
+  // two concurrent calls can never both pass the check against the same stale
+  // balance and drive it negative (C-1 TOCTOU fix).
   await prisma.$transaction(async (tx) => {
+    const result = await tx.$executeRaw`
+      UPDATE "User"
+      SET "tokenBalance" = "tokenBalance" - ${amount}
+      WHERE id = ${userId} AND "tokenBalance" >= ${amount}
+    `;
+    if (result === 0) {
+      throw new Error('Insufficient token balance');
+    }
     await createTokenLedgerEntry(tx, { userId, amount: -amount, reason });
-    await tx.user.update({
-      where: { id: userId },
-      data: { tokenBalance: { decrement: amount } },
-    });
   });
 }
 
@@ -359,6 +367,10 @@ export async function runApprovalEffects(params: {
   submissionId: string;
 }): Promise<number> {
   const oldRank = await computeMonthlyRank(params.sourcerId);
+  const beforeApproval = await prisma.user.findUnique({
+    where: { id: params.sourcerId },
+    select: { tokenBalance: true },
+  });
 
   if (params.tokensAwarded > 0) {
     await awardTokens(
@@ -376,9 +388,24 @@ export async function runApprovalEffects(params: {
   const newRank = await computeMonthlyRank(params.sourcerId);
   const user = await prisma.user.findUnique({
     where: { id: params.sourcerId },
-    select: { fcmToken: true },
+    select: { fcmToken: true, tokenBalance: true },
   });
-  await notifySubmissionApproved(user?.fcmToken, params.tokensAwarded);
+  const creditedTokens = Math.max(
+    0,
+    (user?.tokenBalance ?? 0) - (beforeApproval?.tokenBalance ?? 0),
+  );
+  if (creditedTokens > 0) {
+    const submission = await prisma.priceSubmission.findUnique({
+      where: { id: params.submissionId },
+      include: { product: true, store: true },
+    });
+    await notifySubmissionApproved(
+      user?.fcmToken,
+      creditedTokens,
+      submission?.product.name,
+      submission?.store.chain,
+    );
+  }
   await notifyRankChange(user?.fcmToken, newRank, oldRank);
 
   return accuracyRating;

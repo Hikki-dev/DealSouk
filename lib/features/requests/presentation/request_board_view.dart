@@ -18,12 +18,17 @@ class RequestBoardView extends ConsumerWidget {
     final requests = ref.watch(priceRequestsProvider);
     final myRequests = ref.watch(myRequestsProvider);
     final requestCost = ref.watch(adminSettingsProvider).requestCostTokens;
-    final myActiveRequests = myRequests
-        .where((r) => r.status == 'open' || r.status == 'pending')
-        .toList();
-    final myRequestIds = myActiveRequests.map((r) => r.id).toSet();
+    // "Price checks people need" is the COMMUNITY board: only other shoppers'
+    // open requests. Exclude the current user's own (they're shown separately
+    // under "My Price Requests" above, and the backend blocks fulfilling your
+    // own request anyway).
+    final myRequestIds = myRequests.map((r) => r.id).toSet();
     final activeRequests = requests
-        .where((r) => r.status == 'open' && !myRequestIds.contains(r.id))
+        .where(
+          (r) =>
+              (r.status == 'open' || r.status == 'pending') &&
+              !myRequestIds.contains(r.id),
+        )
         .toList();
 
     return Padding(
@@ -61,20 +66,32 @@ class RequestBoardView extends ConsumerWidget {
               ],
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 20),
 
-          if (myActiveRequests.isNotEmpty) ...[
-            _SectionTitle(
-              title: l.requestMyRequestsTitle(myActiveRequests.length),
+          if (myRequests.isNotEmpty) ...[
+            Text(
+              'My Price Requests (${myRequests.length})',
+              style: GoogleFonts.fredoka(
+                fontSize: 16.5,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.forestDeep,
+              ),
             ),
-            const SizedBox(height: 8),
-            ...myActiveRequests.map((req) => _MyRequestItemCard(request: req)),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: myRequests.length,
+              itemBuilder: (context, index) {
+                final req = myRequests[index];
+                return _MyRequestItemCard(request: req);
+              },
+            ),
+            const SizedBox(height: 20),
           ],
 
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
                 child: Text(
@@ -91,11 +108,7 @@ class RequestBoardView extends ConsumerWidget {
                 onPressed: () =>
                     _showRequestFormSheet(context, ref, requestCost),
                 icon: const Icon(Icons.add_comment_rounded, size: 16),
-                label: Text(
-                  l.requestAskForPrice,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                label: Text(l.requestAskForPrice),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.forestDeep,
                   foregroundColor: Colors.white,
@@ -118,53 +131,52 @@ class RequestBoardView extends ConsumerWidget {
 
           if (activeRequests.isEmpty)
             Container(
-              padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
               width: double.infinity,
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: Colors.grey.shade100),
               ),
-              child: Row(
+              child: Column(
                 children: [
                   const Icon(
                     Icons.check_circle_outline_rounded,
                     color: Colors.green,
-                    size: 24,
+                    size: 44,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l.requestEmptyTitle,
-                          style: GoogleFonts.fredoka(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                            fontSize: 13,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          l.requestEmptySubtitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.nunito(
-                            color: Colors.grey,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+                  const SizedBox(height: 12),
+                  Text(
+                    l.requestEmptyTitle,
+                    style: GoogleFonts.fredoka(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    l.requestEmptySubtitle,
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.nunito(
+                      color: Colors.grey,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
               ),
             )
           else
-            ...activeRequests.map((req) => _RequestItemCard(request: req)),
-          const SizedBox(height: 10),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: activeRequests.length,
+              itemBuilder: (context, index) {
+                final req = activeRequests[index];
+                return _RequestItemCard(request: req);
+              },
+            ),
+          const SizedBox(height: 20),
         ],
       ),
     );
@@ -191,6 +203,7 @@ class RequestBoardView extends ConsumerWidget {
       'Waitrose',
       'Al Maya',
       'Geant',
+      'Al Madina',
     ];
 
     // Hide navbar when sheet opens
@@ -287,56 +300,67 @@ class RequestBoardView extends ConsumerWidget {
                 const SizedBox(height: 24),
 
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (formKey.currentState!.validate()) {
                       formKey.currentState!.save();
 
-                      ref
-                          .read(myRequestsProvider.notifier)
-                          .addPriceRequest(
-                            productName: productName,
-                            storeName: selectedStore,
-                            requestCostTokens: requestCost,
-                          );
+                      final notifier = ref.read(myRequestsProvider.notifier);
+                      final messenger = ScaffoldMessenger.of(context);
+                      await notifier.addPriceRequest(
+                        productName: productName,
+                        storeName: selectedStore,
+                        requestCostTokens: requestCost,
+                      );
 
+                      if (!context.mounted) return;
                       Navigator.pop(context);
 
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
+                      final err = notifier.lastError;
+                      if (err != null) {
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text(err),
+                            backgroundColor: Colors.red.shade700,
                           ),
-                          title: Row(
-                            children: [
-                              const Icon(
-                                Icons.check_circle_rounded,
-                                color: Colors.green,
+                        );
+                      } else {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            title: Row(
+                              children: [
+                                const Icon(
+                                  Icons.check_circle_rounded,
+                                  color: Colors.green,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(l.requestSentTitle),
+                              ],
+                            ),
+                            content: Text(
+                              l.requestSentBody(
+                                productName,
+                                selectedStore,
+                                requestCost,
                               ),
-                              const SizedBox(width: 8),
-                              Text(l.requestSentTitle),
+                              style: GoogleFonts.nunito(
+                                fontSize: 13,
+                                height: 1.4,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text(l.requestSentConfirm),
+                              ),
                             ],
                           ),
-                          content: Text(
-                            l.requestSentBody(
-                              productName,
-                              selectedStore,
-                              requestCost,
-                            ),
-                            style: GoogleFonts.nunito(
-                              fontSize: 13,
-                              height: 1.4,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: Text(l.requestSentConfirm),
-                            ),
-                          ],
-                        ),
-                      );
+                        );
+                      }
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -361,24 +385,6 @@ class RequestBoardView extends ConsumerWidget {
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  final String title;
-
-  const _SectionTitle({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: GoogleFonts.fredoka(
-        fontSize: 16.5,
-        fontWeight: FontWeight.bold,
-        color: AppTheme.textDark,
-      ),
-    );
-  }
-}
-
 class _RequestItemCard extends StatelessWidget {
   final PriceRequest request;
 
@@ -388,11 +394,11 @@ class _RequestItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFFE8EEE4), width: 1.2),
         boxShadow: [
           BoxShadow(
@@ -405,8 +411,8 @@ class _RequestItemCard extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: AppTheme.limeAccent.withValues(alpha: 0.2),
               shape: BoxShape.circle,
@@ -428,7 +434,7 @@ class _RequestItemCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.nunito(
                     fontWeight: FontWeight.bold,
-                    fontSize: 13,
+                    fontSize: 13.5,
                     color: AppTheme.textDark,
                   ),
                 ),
@@ -436,7 +442,6 @@ class _RequestItemCard extends StatelessWidget {
                 Text(
                   l.requestCardSubtitle(
                     request.storeName,
-                    request.distance,
                     request.requesterName,
                   ),
                   maxLines: 1,
@@ -464,22 +469,17 @@ class _RequestItemCard extends StatelessWidget {
               );
             },
             child: Container(
-              constraints: const BoxConstraints(maxWidth: 170),
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: AppTheme.forestDeep,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  l.requestCheckPriceButton(request.requestRewardTokens),
-                  maxLines: 1,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.bold,
-                  ),
+              child: Text(
+                l.requestCheckPriceButton(request.requestRewardTokens),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
@@ -498,13 +498,34 @@ class _MyRequestItemCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
+    final statusColor = request.status == 'fulfilled'
+        ? Colors.green
+        : request.status == 'refunded'
+        ? Colors.blue
+        : request.status == 'open'
+        ? Colors.orange
+        : Colors.grey;
+
+    final displayStatus = request.status == 'open'
+        ? 'PENDING'
+        : request.status == 'fulfilled'
+        ? 'ACCEPTED'
+        : request.status.toUpperCase();
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFFE8EEE4), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.01),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -512,14 +533,10 @@ class _MyRequestItemCard extends ConsumerWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppTheme.amberAccent.withValues(alpha: 0.12),
+              color: statusColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.search_rounded,
-              color: AppTheme.amberAccent,
-              size: 19,
-            ),
+            child: Icon(Icons.search_rounded, color: statusColor, size: 18),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -532,11 +549,11 @@ class _MyRequestItemCard extends ConsumerWidget {
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.nunito(
                     fontWeight: FontWeight.bold,
-                    fontSize: 13,
+                    fontSize: 13.5,
                     color: AppTheme.textDark,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Text(
                   '${request.storeName} • ${request.timestampLabel}',
                   maxLines: 1,
@@ -550,32 +567,72 @@ class _MyRequestItemCard extends ConsumerWidget {
               ],
             ),
           ),
-          IconButton(
-            tooltip: l.profileCancelRequest,
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(
-              Icons.cancel_outlined,
-              color: AppTheme.redAccent,
-              size: 20,
-            ),
-            onPressed: () {
-              ref.read(myRequestsProvider.notifier).cancelRequest(request.id);
-            },
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppTheme.amberAccent.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              l.requestPendingStatus,
-              style: const TextStyle(
-                color: AppTheme.amberAccent,
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
+          const SizedBox(width: 10),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (request.status == 'open') ...[
+                IconButton(
+                  tooltip: l.profileCancelRequest,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  icon: const Icon(
+                    Icons.cancel_outlined,
+                    color: AppTheme.redAccent,
+                    size: 20,
+                  ),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        title: Text(l.profileCancelRequestTitle),
+                        content: Text(
+                          l.profileCancelRequestBody(request.productName),
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text(l.profileNo),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              ref
+                                  .read(myRequestsProvider.notifier)
+                                  .cancelRequest(request.id);
+                              Navigator.pop(context);
+                            },
+                            child: Text(
+                              l.profileYesCancel,
+                              style: const TextStyle(color: AppTheme.redAccent),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(width: 8),
+              ],
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  displayStatus,
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.bold,
+                    color: statusColor,
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
         ],
       ),

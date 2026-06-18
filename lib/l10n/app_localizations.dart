@@ -665,7 +665,7 @@ abstract class AppLocalizations {
   /// No description provided for @unverifiedOutdated.
   ///
   /// In en, this message translates to:
-  /// **'Unverified — may be outdated'**
+  /// **'Unverified, may be outdated'**
   String get unverifiedOutdated;
 
   /// No description provided for @stalePriceWarning.
@@ -1445,7 +1445,7 @@ abstract class AppLocalizations {
   /// No description provided for @storeMapTitle.
   ///
   /// In en, this message translates to:
-  /// **'Store Map — Dubai'**
+  /// **'Dubai Store Map'**
   String get storeMapTitle;
 
   /// No description provided for @storeSearchHint.
@@ -1943,7 +1943,7 @@ abstract class AppLocalizations {
   /// No description provided for @offlineBanner.
   ///
   /// In en, this message translates to:
-  /// **'You\'re offline — changes are saved and will sync when you reconnect.'**
+  /// **'You\'re offline. Changes are saved and will sync when you reconnect.'**
   String get offlineBanner;
 
   /// No description provided for @offlinePendingSync.
@@ -1955,7 +1955,7 @@ abstract class AppLocalizations {
   /// No description provided for @submitTransactionDescription.
   ///
   /// In en, this message translates to:
-  /// **'+{tokens} tokens — submitted {product} @ {store}'**
+  /// **'+{tokens} tokens for {product} at {store}'**
   String submitTransactionDescription(
     Object tokens,
     Object product,
@@ -1968,11 +1968,41 @@ abstract class AppLocalizations {
   /// **'Photo Uploaded'**
   String get submitPhotoUploaded;
 
+  /// No description provided for @submitPhotoUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t add the photo. Tap to try again.'**
+  String get submitPhotoUploadFailed;
+
+  /// No description provided for @submitProofPhotoRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'The proof photo did not finish uploading. Please tap the photo and try again.'**
+  String get submitProofPhotoRequired;
+
+  /// No description provided for @submitReceiptPhotoRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'The receipt photo did not finish uploading. Please retry it, or retake the price-label photo only.'**
+  String get submitReceiptPhotoRequired;
+
   /// No description provided for @submitTapToUpload.
   ///
   /// In en, this message translates to:
   /// **'Tap to Upload'**
   String get submitTapToUpload;
+
+  /// No description provided for @submitTapToRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to retry'**
+  String get submitTapToRetry;
+
+  /// No description provided for @submitTapToRetake.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to retake'**
+  String get submitTapToRetake;
 
   /// No description provided for @submitPriceSubmitted.
   ///
@@ -1991,6 +2021,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your price submission is pending review.\nTokens will be credited to {name} after admin approval.'**
   String submitPendingReviewMessage(Object name);
+
+  /// No description provided for @submitAwaitingApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for approval'**
+  String get submitAwaitingApproval;
+
+  /// No description provided for @submitApprovedNowMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Nice work, {name}. These tokens were added now. Pull down on your profile any time to refresh the latest balance.'**
+  String submitApprovedNowMessage(Object name);
 
   /// No description provided for @submitOpenAdminReview.
   ///
@@ -2853,18 +2895,32 @@ abstract class AppLocalizations {
   /// No description provided for @requestCardSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'{storeName} • {distance} km • Posted by {requesterName}'**
-  String requestCardSubtitle(
-    Object storeName,
-    Object distance,
-    Object requesterName,
-  );
+  /// **'{storeName} • Posted by {requesterName}'**
+  String requestCardSubtitle(Object storeName, Object requesterName);
 
   /// No description provided for @requestCheckPriceButton.
   ///
   /// In en, this message translates to:
   /// **'Check price (+{tokens} Tokens)'**
   String requestCheckPriceButton(Object tokens);
+
+  /// No description provided for @storeLoadErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load stores'**
+  String get storeLoadErrorTitle;
+
+  /// No description provided for @storeLoadErrorSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and try again.'**
+  String get storeLoadErrorSubtitle;
+
+  /// No description provided for @storeRetryButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get storeRetryButton;
 
   /// No description provided for @leaderRewardsTitle.
   ///
@@ -2893,7 +2949,7 @@ abstract class AppLocalizations {
   /// No description provided for @leaderRankUnknown.
   ///
   /// In en, this message translates to:
-  /// **'Rank —'**
+  /// **'Unranked'**
   String get leaderRankUnknown;
 
   /// No description provided for @leaderDayStreak.

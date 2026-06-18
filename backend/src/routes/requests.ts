@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { prisma } from "../index";
-import { requireAuth, AuthRequest } from "../middleware/auth";
+import { requireAuth, requireEmailVerified, AuthRequest } from "../middleware/auth";
 import { authenticatedRateLimit } from "../middleware/rateLimits";
 import { spendTokens, awardTokens } from "../services/tokenEngine";
 import { notifyRequestFulfilled } from "../services/fcmNotifier";
@@ -72,7 +72,7 @@ router.get("/mine", requireAuth, async (req: AuthRequest, res) => {
 });
 
 // POST /requests — create a new price request, deduct tokens
-router.post("/", requireAuth, createRequestLimiter, async (req: AuthRequest, res) => {
+router.post("/", requireAuth, requireEmailVerified, createRequestLimiter, async (req: AuthRequest, res) => {
   const { productName, storeName, bountyTokens } = req.body as {
     productName: string;
     storeName: string;
@@ -127,7 +127,7 @@ router.post("/", requireAuth, createRequestLimiter, async (req: AuthRequest, res
 });
 
 // POST /requests/:id/fulfill — sourcer fulfills a request (FR-28: notify requester via FCM)
-router.post("/:id/fulfill", requireAuth, fulfillRequestLimiter, async (req: AuthRequest, res) => {
+router.post("/:id/fulfill", requireAuth, requireEmailVerified, fulfillRequestLimiter, async (req: AuthRequest, res) => {
   const { submissionId } = req.body as { submissionId?: string };
   if (!submissionId) {
     res.status(400).json({ error: "submissionId is required to fulfill a request" });
@@ -169,6 +169,19 @@ router.post("/:id/fulfill", requireAuth, fulfillRequestLimiter, async (req: Auth
     !requestStoreName.includes(normalizeName(submission.store.chain))
   ) {
     res.status(400).json({ error: "Submission store does not match the request" });
+    return;
+  }
+
+  // ABUSE-7: prevent sock-puppet bounty farming — require at least one approved
+  // submission before collecting any bounty. A brand-new account cannot immediately
+  // drain requests without contributing real price data first.
+  const fulfillerApprovedCount = await prisma.priceSubmission.count({
+    where: { sourcerId: req.userId!, status: 'approved' },
+  });
+  if (fulfillerApprovedCount === 0) {
+    res.status(403).json({
+      error: 'You must have at least one approved price submission before fulfilling requests.',
+    });
     return;
   }
 

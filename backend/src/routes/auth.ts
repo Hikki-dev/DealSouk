@@ -22,7 +22,7 @@ router.post('/verify', verifyLimiter, async (req, res) => {
 
   const token = authHeader.slice(7);
   try {
-    const decoded = await admin.auth().verifyIdToken(token);
+    const decoded = await admin.auth().verifyIdToken(token, true);
 
     let user = await prisma.user.findUnique({ where: { firebaseUid: decoded.uid } });
 
@@ -34,6 +34,7 @@ router.post('/verify', verifyLimiter, async (req, res) => {
         data: {
           firebaseUid: decoded.uid,
           displayName,
+          avatarUrl: decoded.picture ?? null,
           phoneNumber,
           preferredLocale: 'en',
         },
@@ -45,6 +46,26 @@ router.post('/verify', verifyLimiter, async (req, res) => {
         update: {},
         create: { id: 1 },
       });
+    } else if (decoded.picture && decoded.picture !== user.avatarUrl) {
+      // Persist/refresh the Google/Apple profile photo so server-side consumers
+      // (e.g. the admin Users directory) can show it. These URLs rotate over
+      // time, so we re-sync whenever the token's picture claim changes.
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { avatarUrl: decoded.picture },
+      });
+    }
+
+    // Mirror requireAuth's gating: banned/suspended users must not get a session,
+    // even though /verify only reads their profile. Keeps behaviour consistent
+    // across every route rather than letting verify hand back a usable profile.
+    if (user.bannedAt) {
+      res.status(403).json({ error: 'Account banned', reason: user.banReason });
+      return;
+    }
+    if (user.isSuspended && user.suspendedUntil && user.suspendedUntil > new Date()) {
+      res.status(403).json({ error: 'Account suspended', suspendedUntil: user.suspendedUntil });
+      return;
     }
 
     const roles = user.isAdmin ? ['user', 'admin'] : ['user'];
@@ -52,6 +73,7 @@ router.post('/verify', verifyLimiter, async (req, res) => {
     res.json({
       id: user.id,
       displayName: user.displayName,
+      avatarUrl: user.avatarUrl,
       homeArea: user.homeArea,
       preferredLocale: user.preferredLocale,
       tokenBalance: user.tokenBalance,
@@ -62,8 +84,9 @@ router.post('/verify', verifyLimiter, async (req, res) => {
       isSuspended: user.isSuspended,
       createdAt: user.createdAt,
     });
-  } catch (err) {
-    console.error(err);
+  } catch (err: any) {
+    // Log only the error code — never the full object, which can contain token fragments.
+    console.error('[auth/verify] token verification failed:', err?.errorInfo?.code ?? err?.code ?? 'unknown');
     res.status(401).json({ error: 'Invalid or expired token' });
   }
 });

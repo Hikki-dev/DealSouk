@@ -1,4 +1,5 @@
 import 'package:flutter/gestures.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +11,7 @@ import 'package:dealsouk/core/network/fcm_service.dart';
 import 'package:dealsouk/core/network/system_status_service.dart';
 import 'package:dealsouk/features/requests/presentation/requests_providers.dart';
 import 'package:dealsouk/features/tokens/presentation/tokens_providers.dart';
+import 'package:dealsouk/features/auth/presentation/auth_providers.dart';
 
 class DealSoukApp extends ConsumerStatefulWidget {
   const DealSoukApp({super.key});
@@ -29,7 +31,9 @@ class _DealSoukAppState extends ConsumerState<DealSoukApp> {
           _refreshForPushEvent(msg.data['type']);
           final ctx = rootNavigatorKey.currentContext;
           if (ctx != null) showFcmBanner(ctx, msg);
+          _refreshEconomyForNotification(msg);
         },
+        onOpenedMessage: _refreshEconomyForNotification,
       );
     });
   }
@@ -47,6 +51,19 @@ class _DealSoukAppState extends ConsumerState<DealSoukApp> {
         break;
       default:
         break;
+    }
+  }
+
+  void _refreshEconomyForNotification(RemoteMessage message) {
+    const economyEvents = {
+      'submission_approved',
+      'badge_earned',
+      'streak_milestone',
+      'rank_change',
+      'request_fulfilled',
+    };
+    if (economyEvents.contains(message.data['type'])) {
+      ref.read(authProvider.notifier).refreshProfile();
     }
   }
 

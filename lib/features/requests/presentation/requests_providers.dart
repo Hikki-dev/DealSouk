@@ -17,31 +17,6 @@ class PriceRequestsNotifier extends Notifier<List<PriceRequest>> {
     } catch (_) {}
   }
 
-  Future<void> addPriceRequest({
-    required String productName,
-    required String storeName,
-    required int requestCostTokens,
-    required String requesterName,
-  }) async {
-    try {
-      final created = await requestsService.create(
-        productName: productName,
-        storeName: storeName,
-        requestCostTokens: requestCostTokens,
-      );
-      if (requestCostTokens > 0) {
-        ref.read(userTokensProvider.notifier).deductTokens(requestCostTokens);
-        ref
-            .read(userTransactionsProvider.notifier)
-            .addTransaction(
-              -requestCostTokens,
-              'Requested price check: $productName at $storeName',
-            );
-      }
-      state = [created, ...state];
-    } catch (_) {}
-  }
-
   Future<void> fulfillPriceRequest(String requestId) async {
     try {
       final earned = await requestsService.fulfill(requestId);
@@ -138,7 +113,7 @@ class MyRequestsNotifier extends Notifier<List<PriceRequest>> {
     // "1 change waiting to sync" banner and the negative balance).
     if (requestCostTokens > 0 &&
         ref.read(userTokensProvider) < requestCostTokens) {
-      lastError = 'Not enough tokens — submit a few prices to earn some first.';
+      lastError = 'Not enough tokens. Submit a few prices to earn some first.';
       return;
     }
     lastError = null;

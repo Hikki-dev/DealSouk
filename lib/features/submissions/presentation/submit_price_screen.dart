@@ -1,12 +1,14 @@
+import 'dart:async';
+import 'dart:io';
+import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:dealsouk/core/widgets/souk_widgets.dart';
 import 'package:dealsouk/l10n/app_localizations.dart';
 import 'package:dealsouk/features/admin/domain/admin_settings.dart';
 import 'package:dealsouk/features/products/domain/product.dart';
 import 'package:dealsouk/features/stores/domain/store.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dealsouk/features/products/presentation/products_providers.dart';
@@ -22,6 +24,7 @@ import 'package:dealsouk/core/offline/sync_service.dart';
 import 'package:dealsouk/core/network/storage_service.dart';
 import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/core/widgets/responsive_container.dart';
+import 'package:dealsouk/core/util/geo_utils.dart';
 
 class SubmitPriceScreen extends ConsumerStatefulWidget {
   final String? requestId;
@@ -47,15 +50,26 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
 
   String? selectedStoreId;
   String? selectedProductId;
-  String? selectedProductName;
   final _priceController = TextEditingController();
 
   bool uploadedPriceLabel = false;
   bool uploadedReceipt = false;
-  String? _priceLabelUrl;
   String? _receiptUrl;
-  bool _uploadingPriceLabel = false;
+  String? _priceLabelUrl;
+
+  // Optimistic upload: local file available immediately after capture;
+  // upload runs in background and URL resolves before final submit.
+  XFile? _localPriceLabelFile;
+  XFile? _localReceiptFile;
+  Future<String?>? _priceLabelFuture;
+  Future<String?>? _receiptFuture;
+  bool _uploadingPriceLabel = false; // background upload in-flight
   bool _uploadingReceipt = false;
+  bool _priceLabelUploadFailed = false;
+  bool _receiptUploadFailed = false;
+  bool _finalizingUploads = false; // brief wait on submit if still in-flight
+  bool _isSubmitting = false; // API call in-flight
+
   String selectedPromo = 'None';
 
   @override
@@ -89,25 +103,18 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
         }
       }
       if (widget.prefilledProductName != null) {
-        final requestedName = _normalizeProductName(
-          widget.prefilledProductName!,
-        );
-        _productSearchController.text = requestedName;
-        _productSearchQuery = requestedName;
         final products = ref.read(productsProvider);
         final match = products.where(
-          (p) => _productNamesMatch(p.name, requestedName),
+          (p) =>
+              p.name.toLowerCase().contains(
+                widget.prefilledProductName!.toLowerCase(),
+              ) ||
+              widget.prefilledProductName!.toLowerCase().contains(
+                p.name.toLowerCase(),
+              ),
         );
-        if (mounted) {
-          setState(() {
-            if (match.isNotEmpty) {
-              selectedProductId = match.first.id;
-              selectedProductName = null;
-            } else {
-              selectedProductId = null;
-              selectedProductName = requestedName;
-            }
-          });
+        if (match.isNotEmpty && mounted) {
+          setState(() => selectedProductId = match.first.id);
         }
       }
     });
@@ -129,7 +136,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
     final profile = ref.watch(userProfileProvider);
     final settings = ref.watch(adminSettingsProvider);
 
-    final priceEntered = _parsedPrice != null;
+    final priceEntered = double.tryParse(_priceController.text.trim()) != null;
     final int baseReward = _tokenEstimateBeforeReceipt(priceEntered);
     var totalReward = uploadedReceipt ? (baseReward * 1.5).round() : baseReward;
 
@@ -215,27 +222,21 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
     );
   }
 
-  String _normalizeProductName(String value) {
-    return value.trim().replaceAll(RegExp(r'\s+'), ' ');
-  }
-
-  bool _productNamesMatch(String a, String b) {
-    return _normalizeProductName(a).toLowerCase() ==
-        _normalizeProductName(b).toLowerCase();
-  }
-
-  bool get _hasSelectedProduct =>
-      selectedProductId != null || selectedProductName != null;
-
-  double? get _parsedPrice {
-    final value = double.tryParse(_priceController.text.trim());
-    if (value == null || value <= 0 || value > 10000) return null;
-    return value;
-  }
-
-  String? get _typedProductName {
-    final value = _normalizeProductName(_productSearchController.text);
-    return value.isEmpty ? null : value;
+  /// "branch • distance km away" using the user's REAL GPS position when
+  /// available (same haversine the map uses), falling back to the backend's
+  /// Dubai-relative distance only when location is unknown. The branch segment
+  /// is dropped entirely when empty so there's no orphan separator.
+  String _storeSubtitle(Store store) {
+    final userPos = ref.read(userLocationProvider);
+    final km = userPos != null
+        ? haversineKm(userPos.latitude, userPos.longitude, store.lat, store.lng)
+        : store.distance;
+    // Whole-number km once we're far away (abroad testing); one decimal nearby.
+    final distLabel = km >= 100
+        ? '${km.toStringAsFixed(0)} km away'
+        : '${km.toStringAsFixed(1)} km away';
+    final branch = store.branch.trim();
+    return branch.isEmpty ? distLabel : '$branch • $distLabel';
   }
 
   Widget _buildStepContent({
@@ -346,7 +347,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                       ),
                     ),
                     subtitle: Text(
-                      '${store.branch} • ${store.distance.toStringAsFixed(1)} km away',
+                      _storeSubtitle(store),
                       style: GoogleFonts.nunito(
                         color: Colors.grey.shade600,
                         fontSize: 13,
@@ -403,8 +404,6 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                     setState(() {
                       _productSearchQuery = code;
                       _productSearchController.text = code;
-                      selectedProductId = null;
-                      selectedProductName = null;
                     });
                   },
                 ),
@@ -418,24 +417,10 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
               onChanged: (val) {
                 setState(() {
                   _productSearchQuery = val;
-                  selectedProductId = null;
-                  selectedProductName = null;
                 });
               },
             ),
             const SizedBox(height: 16),
-            if (_typedProductName != null &&
-                !products.any(
-                  (product) =>
-                      _productNamesMatch(product.name, _typedProductName!),
-                ))
-              _communityProductCard(l, _typedProductName!),
-            if (_typedProductName != null &&
-                !products.any(
-                  (product) =>
-                      _productNamesMatch(product.name, _typedProductName!),
-                ))
-              const SizedBox(height: 8),
             if (products.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 24),
@@ -499,7 +484,6 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                         onTap: () {
                           setState(() {
                             selectedProductId = product.id;
-                            selectedProductName = null;
                           });
                         },
                       ),
@@ -521,48 +505,37 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
               children: [
                 Expanded(
                   child: _photoUploadButton(
-                    title: _uploadingPriceLabel
-                        ? l.submitUploading
-                        : l.submitPriceLabelPhoto,
+                    title: l.submitPriceLabelPhoto,
                     isUploaded: uploadedPriceLabel,
+                    isUploading: _uploadingPriceLabel,
+                    localFile: _localPriceLabelFile,
                     onTap: _uploadingPriceLabel
                         ? null
-                        : () async {
-                            setState(() => _uploadingPriceLabel = true);
-                            final url = await storageService
-                                .captureAndUploadPriceLabel();
-                            if (!mounted) return;
-                            setState(() {
-                              _uploadingPriceLabel = false;
-                              if (url != null) {
-                                _priceLabelUrl = url;
-                                uploadedPriceLabel = true;
-                              }
-                            });
+                        : () {
+                            if (_priceLabelUploadFailed &&
+                                _localPriceLabelFile != null) {
+                              unawaited(_retryPhotoUpload(isReceipt: false));
+                            } else {
+                              unawaited(_capturePhoto(isReceipt: false));
+                            }
                           },
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: _photoUploadButton(
-                    title: _uploadingReceipt
-                        ? l.submitUploading
-                        : l.submitReceiptPhoto,
+                    title: l.submitReceiptPhoto,
                     isUploaded: uploadedReceipt,
+                    isUploading: _uploadingReceipt,
+                    localFile: _localReceiptFile,
                     onTap: _uploadingReceipt
                         ? null
-                        : () async {
-                            setState(() => _uploadingReceipt = true);
-                            final url = await storageService
-                                .captureAndUploadReceipt();
-                            if (mounted) {
-                              setState(() {
-                                _uploadingReceipt = false;
-                                if (url != null) {
-                                  _receiptUrl = url;
-                                  uploadedReceipt = true;
-                                }
-                              });
+                        : () {
+                            if (_receiptUploadFailed &&
+                                _localReceiptFile != null) {
+                              unawaited(_retryPhotoUpload(isReceipt: true));
+                            } else {
+                              unawaited(_capturePhoto(isReceipt: true));
                             }
                           },
                   ),
@@ -594,7 +567,6 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
-              inputFormatters: [const _PriceInputFormatter()],
               style: GoogleFonts.fredoka(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -611,9 +583,6 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                   return l.submitPleaseEnterPrice;
                 }
                 if (double.tryParse(val) == null) {
-                  return l.submitPleaseEnterValidNumber;
-                }
-                if (double.parse(val) <= 0 || double.parse(val) > 10000) {
                   return l.submitPleaseEnterValidNumber;
                 }
                 return null;
@@ -661,18 +630,18 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
       case 3:
         final storesList = ref.read(storesProvider);
         final productsList = ref.read(productsProvider);
+        // Guard against empty lists on cold start or connectivity loss (H-14).
+        if (storesList.isEmpty || productsList.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
         final store = storesList.firstWhere(
           (s) => s.id == selectedStoreId,
           orElse: () => storesList.first,
         );
-        final productName = selectedProductId != null
-            ? productsList
-                  .firstWhere(
-                    (p) => p.id == selectedProductId,
-                    orElse: () => productsList.first,
-                  )
-                  .name
-            : selectedProductName ?? '';
+        final product = productsList.firstWhere(
+          (p) => p.id == selectedProductId,
+          orElse: () => productsList.first,
+        );
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -704,7 +673,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                     '${store.name} - ${store.branch}',
                   ),
                   const Divider(height: 24),
-                  _summaryRow(l.submitSummaryProduct, productName),
+                  _summaryRow(l.submitSummaryProduct, product.name),
                   const Divider(height: 24),
                   _summaryRow(
                     l.submitSummaryPrice,
@@ -905,7 +874,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
     if (_currentStep == 0) {
       canGoNext = selectedStoreId != null;
     } else if (_currentStep == 1) {
-      canGoNext = _hasSelectedProduct && uploadedPriceLabel;
+      canGoNext = selectedProductId != null && _localPriceLabelFile != null;
     } else if (_currentStep == 2) {
       canGoNext = priceEntered;
     } else {
@@ -950,6 +919,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                         ? () {
                             if (_formKey.currentState!.validate() ||
                                 _currentStep < 2) {
+                              HapticFeedback.selectionClick();
                               setState(() => _currentStep++);
                             }
                           }
@@ -964,110 +934,190 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                     child: Text(l.submitNext),
                   )
                 : GestureDetector(
-                    onTap: () async {
-                      if (_formKey.currentState!.validate()) {
-                        final store = stores.firstWhere(
-                          (s) => s.id == selectedStoreId,
-                        );
-                        final productName = selectedProductId != null
-                            ? products
-                                  .firstWhere((p) => p.id == selectedProductId)
-                                  .name
-                            : selectedProductName!;
-                        final price = _parsedPrice!;
+                    onTap: (_finalizingUploads || _isSubmitting)
+                        ? null
+                        : () async {
+                            if (_formKey.currentState!.validate()) {
+                              // Await any background uploads still in-flight.
+                              if (_uploadingPriceLabel || _uploadingReceipt) {
+                                setState(() => _finalizingUploads = true);
+                                if (_priceLabelFuture != null &&
+                                    _priceLabelUrl == null) {
+                                  _priceLabelUrl = await _priceLabelFuture;
+                                }
+                                if (_receiptFuture != null &&
+                                    _receiptUrl == null) {
+                                  _receiptUrl = await _receiptFuture;
+                                }
+                                if (!mounted) return;
+                                setState(() => _finalizingUploads = false);
+                              }
 
-                        // Offline (NFR-22): queue the submission and replay it
-                        // on reconnect. Tokens are awarded after it syncs and is
-                        // approved, so we don't credit them optimistically here.
-                        if (!await isCurrentlyOnline()) {
-                          await ref
-                              .read(syncControllerProvider.notifier)
-                              .enqueueSubmission(
-                                productId: selectedProductId,
-                                productName: selectedProductName,
-                                storeId: selectedStoreId!,
-                                priceAed: price,
-                                hasReceipt: uploadedReceipt,
-                                receiptUrl: _receiptUrl,
-                                priceLabelUrl: _priceLabelUrl,
-                                requestId: widget.requestId,
+                              if (_priceLabelUrl == null) {
+                                if (_localPriceLabelFile != null) {
+                                  setState(() => _finalizingUploads = true);
+                                  await _retryPhotoUpload(
+                                    isReceipt: false,
+                                    showFailureSnackBar: false,
+                                  );
+                                  if (!mounted) return;
+                                  setState(() => _finalizingUploads = false);
+                                }
+                                if (_priceLabelUrl == null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      backgroundColor: AppTheme.forestDeep,
+                                      content: Text(l.submitProofPhotoRequired),
+                                    ),
+                                  );
+                                  return;
+                                }
+                              }
+                              if (uploadedReceipt && _receiptUrl == null) {
+                                if (_localReceiptFile != null) {
+                                  setState(() => _finalizingUploads = true);
+                                  await _retryPhotoUpload(
+                                    isReceipt: true,
+                                    showFailureSnackBar: false,
+                                  );
+                                  if (!mounted) return;
+                                  setState(() => _finalizingUploads = false);
+                                }
+                                if (_receiptUrl != null) {
+                                  // The retry recovered the optional receipt,
+                                  // so continue with final submission.
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      backgroundColor: AppTheme.forestDeep,
+                                      content: Text(
+                                        l.submitReceiptPhotoRequired,
+                                      ),
+                                    ),
+                                  );
+                                  return;
+                                }
+                              }
+
+                              final store = stores.firstWhere(
+                                (s) => s.id == selectedStoreId,
                               );
-                          if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              backgroundColor: AppTheme.forestDeep,
-                              content: Text(l.submitSavedOffline),
-                            ),
-                          );
-                          context.pop();
-                          return;
-                        }
+                              final product = products.firstWhere(
+                                (p) => p.id == selectedProductId,
+                              );
+                              final price = double.parse(_priceController.text);
 
-                        int awarded = totalReward;
-                        try {
-                          final result = await submissionsService.create(
-                            productId: selectedProductId,
-                            productName: selectedProductName,
-                            storeId: selectedStoreId!,
-                            priceAed: price,
-                            hasReceipt: uploadedReceipt,
-                            receiptUrl: _receiptUrl,
-                            priceLabelUrl: _priceLabelUrl,
-                            requestId: widget.requestId,
-                          );
-                          awarded =
-                              result.tokensAwarded + result.requestBountyTokens;
-                        } catch (error) {
-                          if (!mounted) return;
-                          final message = _submissionErrorMessage(
-                            error,
-                            l.submitCouldNotSendPrice,
-                          );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              backgroundColor: AppTheme.forestDeep,
-                              content: Text(message),
-                            ),
-                          );
-                          return;
-                        }
+                              // Offline (NFR-22): queue the submission and replay it
+                              // on reconnect. Tokens are awarded after it syncs and is
+                              // approved, so we don't credit them optimistically here.
+                              if (!await isCurrentlyOnline()) {
+                                await ref
+                                    .read(syncControllerProvider.notifier)
+                                    .enqueueSubmission(
+                                      productId: selectedProductId!,
+                                      storeId: selectedStoreId!,
+                                      priceAed: price,
+                                      hasReceipt: uploadedReceipt,
+                                      receiptUrl: _receiptUrl,
+                                      priceLabelUrl: _priceLabelUrl,
+                                    );
+                                if (!mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    backgroundColor: AppTheme.forestDeep,
+                                    content: Text(l.submitSavedOffline),
+                                  ),
+                                );
+                                context.pop();
+                                return;
+                              }
 
-                        // Optimistic UI updates
-                        ref
-                            .read(userTokensProvider.notifier)
-                            .addTokens(awarded);
-                        ref
-                            .read(userTransactionsProvider.notifier)
-                            .addTransaction(
-                              awarded,
-                              l.submitTransactionDescription(
-                                awarded,
-                                productName,
-                                store.name,
-                              ),
-                            );
-                        ref
-                            .read(userProfileProvider.notifier)
-                            .incrementSubmissions();
-                        ref.read(streakProvider.notifier).recordActivity();
-                        ref
-                            .read(dailyChallengeProvider.notifier)
-                            .recordProgress();
+                              var awarded = 0;
+                              var submissionStatus = 'pending';
+                              setState(() => _isSubmitting = true);
+                              try {
+                                final result = await submissionsService.create(
+                                  productId: selectedProductId!,
+                                  storeId: selectedStoreId!,
+                                  priceAed: price,
+                                  hasReceipt: uploadedReceipt,
+                                  receiptUrl: _receiptUrl,
+                                  priceLabelUrl: _priceLabelUrl,
+                                );
+                                submissionStatus = result.status;
+                                awarded = result.status == 'approved'
+                                    ? result.tokensAwarded
+                                    : 0;
+                              } catch (_) {
+                                if (!mounted) return;
+                                setState(() => _isSubmitting = false);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    backgroundColor: AppTheme.forestDeep,
+                                    content: Text(l.submitCouldNotSendPrice),
+                                  ),
+                                );
+                                return;
+                              }
+                              if (!mounted) return;
+                              setState(() => _isSubmitting = false);
 
-                        if (widget.requestId != null) {
-                          ref
-                              .read(priceRequestsProvider.notifier)
-                              .markPriceRequestFulfilled(widget.requestId!);
-                          ref.read(priceRequestsProvider.notifier).fetchBoard();
-                          ref
-                              .read(myRequestsProvider.notifier)
-                              .fetchMyRequests();
-                        }
+                              // Only trusted auto-approved submissions earn
+                              // immediately. Normal submissions wait for admin
+                              // approval, so the local balance must not fake it.
+                              if (submissionStatus == 'approved' &&
+                                  awarded > 0) {
+                                ref
+                                    .read(userTokensProvider.notifier)
+                                    .addTokens(awarded);
+                                ref
+                                    .read(userTransactionsProvider.notifier)
+                                    .addTransaction(
+                                      awarded,
+                                      l.submitTransactionDescription(
+                                        awarded,
+                                        product.name,
+                                        store.name,
+                                      ),
+                                    );
+                              }
+                              ref
+                                  .read(userProfileProvider.notifier)
+                                  .incrementSubmissions();
+                              if (submissionStatus == 'approved') {
+                                ref
+                                    .read(streakProvider.notifier)
+                                    .recordActivity();
+                                ref
+                                    .read(dailyChallengeProvider.notifier)
+                                    .recordProgress();
+                              }
 
-                        if (!mounted) return;
-                        _showSuccessDialog(context, awarded);
-                      }
-                    },
+                              if (widget.requestId != null) {
+                                ref
+                                    .read(priceRequestsProvider.notifier)
+                                    .fulfillPriceRequest(widget.requestId!);
+                              }
+
+                              // Reconcile optimistic updates with DB truth: pulls the
+                              // real token balance, streak, accuracy, approved/total
+                              // counts, token history, and the new row into "My
+                              // Submissions". Keeps everything consistent across
+                              // restarts and devices.
+                              unawaited(
+                                ref
+                                    .read(authProvider.notifier)
+                                    .refreshProfile(),
+                              );
+
+                              if (!mounted) return;
+                              _showSuccessDialog(
+                                context,
+                                reward: awarded,
+                                approvedNow: submissionStatus == 'approved',
+                              );
+                            }
+                          },
                     child: Container(
                       height: 54,
                       decoration: BoxDecoration(
@@ -1082,14 +1132,23 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                         ],
                       ),
                       child: Center(
-                        child: Text(
-                          l.submitSubmitAPrice,
-                          style: const TextStyle(
-                            color: AppTheme.forestDeep,
-                            fontSize: 15.5,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
+                        child: (_finalizingUploads || _isSubmitting)
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: AppTheme.forestDeep,
+                                ),
+                              )
+                            : Text(
+                                l.submitSubmitAPrice,
+                                style: const TextStyle(
+                                  color: AppTheme.forestDeep,
+                                  fontSize: 15.5,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
                       ),
                     ),
                   ),
@@ -1097,19 +1156,6 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
         ],
       ),
     );
-  }
-
-  String _submissionErrorMessage(Object error, String fallback) {
-    if (error is DioException) {
-      final data = error.response?.data;
-      if (data is Map && data['error'] != null) {
-        return data['error'].toString();
-      }
-      if (data is String && data.trim().isNotEmpty) {
-        return data.trim();
-      }
-    }
-    return fallback;
   }
 
   Widget _tokenRow(String title, String val, {bool isEnabled = true}) {
@@ -1153,75 +1199,111 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
   int _tokenEstimateBeforeReceipt(bool priceEntered) {
     var reward = 10;
     if (selectedStoreId != null) reward += 2;
-    if (_hasSelectedProduct) reward += 2;
+    if (selectedProductId != null) reward += 2;
     if (priceEntered) reward += 2;
     if (uploadedPriceLabel) reward += 4;
     if (selectedPromo != 'None') reward += 1;
     return reward;
   }
 
-  Widget _communityProductCard(AppLocalizations l, String productName) {
-    final isSelected =
-        selectedProductName != null &&
-        _productNamesMatch(selectedProductName!, productName);
+  /// Opens the camera for a proof photo. The local file is shown instantly
+  /// (green checkmark) and the upload runs in the background. The URL is
+  /// awaited only if still pending when the user taps final Submit.
+  Future<void> _capturePhoto({required bool isReceipt}) async {
+    final file = await storageService.capturePhotoFile();
+    if (file == null || !mounted) return;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isSelected ? AppTheme.forestDeep : AppTheme.limeAccent,
-          width: isSelected ? 2 : 1,
-        ),
-      ),
-      child: ListTile(
-        dense: true,
-        leading: Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: AppTheme.limeAccent.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: const Icon(
-            Icons.add_box_outlined,
-            color: AppTheme.forestDeep,
-            size: 20,
-          ),
-        ),
-        title: Text(
-          l.submitUseTypedProduct(productName),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(
-          l.submitCommunityProductHint,
-          style: const TextStyle(fontSize: 12),
-        ),
-        trailing: isSelected
-            ? const Icon(
-                Icons.check_circle_rounded,
-                color: AppTheme.forestDeep,
-                size: 20,
-              )
-            : null,
-        onTap: () {
-          setState(() {
-            selectedProductId = null;
-            selectedProductName = productName;
-          });
-        },
-      ),
+    // Snap feedback the instant the camera closes — feels immediate.
+    unawaited(HapticFeedback.mediumImpact());
+
+    await _startPhotoUpload(file, isReceipt: isReceipt);
+  }
+
+  Future<void> _retryPhotoUpload({
+    required bool isReceipt,
+    bool showFailureSnackBar = true,
+  }) async {
+    final file = isReceipt ? _localReceiptFile : _localPriceLabelFile;
+    if (file == null) return;
+    unawaited(HapticFeedback.selectionClick());
+    await _startPhotoUpload(
+      file,
+      isReceipt: isReceipt,
+      showFailureSnackBar: showFailureSnackBar,
     );
+  }
+
+  Future<void> _startPhotoUpload(
+    XFile file, {
+    required bool isReceipt,
+    bool showFailureSnackBar = true,
+  }) async {
+    final uploadFuture = storageService.uploadProofFile(
+      file,
+      isReceipt: isReceipt,
+    );
+
+    setState(() {
+      if (isReceipt) {
+        _localReceiptFile = file;
+        uploadedReceipt = true;
+        _receiptUploadFailed = false;
+        _receiptUrl = null;
+        _uploadingReceipt = true;
+        _receiptFuture = uploadFuture;
+      } else {
+        _localPriceLabelFile = file;
+        uploadedPriceLabel = true;
+        _priceLabelUploadFailed = false;
+        _priceLabelUrl = null;
+        _uploadingPriceLabel = true;
+        _priceLabelFuture = uploadFuture;
+      }
+    });
+
+    // Resolve in background — clears the spinner and stores the URL.
+    final url = await uploadFuture;
+    if (!mounted) return;
+    setState(() {
+      if (isReceipt) {
+        _uploadingReceipt = false;
+        _receiptUrl = url;
+        _receiptUploadFailed = url == null;
+      } else {
+        _uploadingPriceLabel = false;
+        _priceLabelUrl = url;
+        _priceLabelUploadFailed = url == null;
+      }
+    });
+
+    if (url == null && showFailureSnackBar) {
+      // Capture context refs before the await so we don't call into a disposed
+      // widget tree if the screen was popped while the upload was in flight (H-13).
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      final uploadFailedMsg = AppLocalizations.of(
+        context,
+      )!.submitPhotoUploadFailed;
+      messenger.showSnackBar(
+        SnackBar(
+          backgroundColor: AppTheme.forestDeep,
+          content: Text(uploadFailedMsg),
+        ),
+      );
+    }
   }
 
   Widget _photoUploadButton({
     required String title,
     required bool isUploaded,
+    required bool isUploading,
+    XFile? localFile,
     VoidCallback? onTap,
   }) {
     final l = AppLocalizations.of(context)!;
+    final failed =
+        (title == l.submitPriceLabelPhoto && _priceLabelUploadFailed) ||
+        (title == l.submitReceiptPhoto && _receiptUploadFailed);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -1233,8 +1315,12 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
               : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isUploaded ? AppTheme.forestDeep : Colors.grey.shade200,
-            width: isUploaded ? 1.5 : 1,
+            color: failed
+                ? Colors.red.shade400
+                : isUploaded
+                ? AppTheme.forestDeep
+                : Colors.grey.shade200,
+            width: (isUploaded || failed) ? 1.5 : 1,
           ),
           boxShadow: [
             BoxShadow(
@@ -1244,40 +1330,111 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
             ),
           ],
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              isUploaded ? Icons.check_circle : Icons.camera_alt_outlined,
-              color: isUploaded ? AppTheme.forestDeep : Colors.grey.shade500,
-              size: 28,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: isUploaded ? AppTheme.forestDeep : Colors.black87,
+        child: localFile != null
+            ? Stack(
+                fit: StackFit.expand,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Image.file(File(localFile.path), fit: BoxFit.cover),
+                  ),
+                  // Dark scrim at bottom for the retake hint
+                  if (!isUploading)
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.vertical(
+                            bottom: Radius.circular(20),
+                          ),
+                          color: Colors.black.withValues(alpha: 0.45),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 5),
+                        child: Text(
+                          failed ? l.submitTapToRetry : l.submitTapToRetake,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  // Status badge (spinner or checkmark)
+                  Positioned(
+                    top: 6,
+                    right: 6,
+                    child: isUploading
+                        ? Container(
+                            padding: const EdgeInsets.all(3),
+                            decoration: BoxDecoration(
+                              color: Colors.black54,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const SizedBox(
+                              height: 14,
+                              width: 14,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            ),
+                          )
+                        : Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: failed
+                                  ? Colors.red.shade600
+                                  : AppTheme.forestDeep,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              failed
+                                  ? Icons.priority_high_rounded
+                                  : Icons.check,
+                              size: 14,
+                              color: Colors.white,
+                            ),
+                          ),
+                  ),
+                ],
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.camera_alt_outlined,
+                    color: Colors.grey.shade500,
+                    size: 28,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    l.submitTapToUpload,
+                    style: TextStyle(fontSize: 9, color: Colors.grey.shade500),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              isUploaded ? l.submitPhotoUploaded : l.submitTapToUpload,
-              style: TextStyle(
-                fontSize: 9,
-                color: isUploaded
-                    ? AppTheme.forestDeep.withValues(alpha: 0.8)
-                    : Colors.grey.shade500,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
 
-  void _showSuccessDialog(BuildContext context, int reward) {
+  void _showSuccessDialog(
+    BuildContext context, {
+    required int reward,
+    required bool approvedNow,
+  }) {
     final l = AppLocalizations.of(context)!;
     final profile = ref.read(userProfileProvider);
     final firstName = profile.name.split(' ').first;
@@ -1316,24 +1473,36 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0, end: reward.toDouble()),
-                duration: const Duration(milliseconds: 750),
-                curve: Curves.easeOutBack,
-                builder: (context, value, child) {
-                  return Text(
-                    l.submitTokensGained(value.round()),
-                    style: const TextStyle(
-                      color: AppTheme.forestDeep,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  );
-                },
-              ),
+              if (approvedNow)
+                TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0, end: reward.toDouble()),
+                  duration: const Duration(milliseconds: 750),
+                  curve: Curves.easeOutBack,
+                  builder: (context, value, child) {
+                    return Text(
+                      l.submitTokensGained(value.round()),
+                      style: const TextStyle(
+                        color: AppTheme.forestDeep,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    );
+                  },
+                )
+              else
+                Text(
+                  l.submitAwaitingApproval,
+                  style: const TextStyle(
+                    color: AppTheme.forestDeep,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
               const SizedBox(height: 8),
               Text(
-                l.submitPendingReviewMessage(firstName),
+                approvedNow
+                    ? l.submitApprovedNowMessage(firstName)
+                    : l.submitPendingReviewMessage(firstName),
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 13, height: 1.4),
               ),
@@ -1363,22 +1532,5 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
         );
       },
     );
-  }
-}
-
-class _PriceInputFormatter extends TextInputFormatter {
-  const _PriceInputFormatter();
-
-  static final _validPricePattern = RegExp(r'^\d{0,5}(\.\d{0,2})?$');
-
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    final text = newValue.text;
-    if (text.isEmpty) return newValue;
-    if (!_validPricePattern.hasMatch(text)) return oldValue;
-    return newValue;
   }
 }

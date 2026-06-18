@@ -111,6 +111,21 @@ export async function requireAuth(req: AuthRequest, res: Response, next: NextFun
   }
 }
 
+// Guards reward-earning routes against throwaway / unverified accounts.
+// Google Sign-In and Apple Sign-In always set email_verified = true.
+// Email+password users must complete Firebase's email verification flow first.
+// Must be applied AFTER requireAuth (depends on req.firebaseToken being set).
+export function requireEmailVerified(req: AuthRequest, res: Response, next: NextFunction) {
+  if (!req.firebaseToken?.email_verified) {
+    res.status(403).json({
+      error: 'A verified email address is required to earn or spend rewards.',
+      code: 'EMAIL_NOT_VERIFIED',
+    });
+    return;
+  }
+  next();
+}
+
 export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction) {
   if (!req.isAdmin) {
     res.status(403).json({ error: 'Admin access required' });

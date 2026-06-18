@@ -253,29 +253,33 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                     ),
                                   ),
                                   TextButton.icon(
-                                    onPressed: () {
-                                      ref
-                                          .read(myRequestsProvider.notifier)
-                                          .addPriceRequest(
-                                            productName: product.name,
-                                            storeName:
-                                                product
-                                                        .lowestPriceStore
-                                                        .isNotEmpty &&
-                                                    product.lowestPriceStore !=
-                                                        '—'
-                                                ? product.lowestPriceStore
-                                                : 'Carrefour',
-                                            requestCostTokens: requestCost,
-                                          );
-                                      ScaffoldMessenger.of(
+                                    onPressed: () async {
+                                      final notifier = ref.read(
+                                        myRequestsProvider.notifier,
+                                      );
+                                      final messenger = ScaffoldMessenger.of(
                                         context,
-                                      ).showSnackBar(
+                                      );
+                                      final storeName =
+                                          product.lowestPriceStore.isNotEmpty &&
+                                              product.lowestPriceStore != '—'
+                                          ? product.lowestPriceStore
+                                          : 'Carrefour';
+                                      await notifier.addPriceRequest(
+                                        productName: product.name,
+                                        storeName: storeName,
+                                        requestCostTokens: requestCost,
+                                      );
+                                      final err = notifier.lastError;
+                                      messenger.showSnackBar(
                                         SnackBar(
                                           content: Text(
-                                            l.productRequestPriceConfirmation,
+                                            err ??
+                                                l.productRequestPriceConfirmation,
                                           ),
-                                          backgroundColor: AppTheme.forestDeep,
+                                          backgroundColor: err != null
+                                              ? Colors.red.shade700
+                                              : AppTheme.forestDeep,
                                         ),
                                       );
                                     },

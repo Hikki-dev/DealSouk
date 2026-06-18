@@ -43,6 +43,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     final streak = ref.watch(streakProvider);
     final badges = ref.watch(badgesProvider);
     final dailyChallenge = ref.watch(dailyChallengeProvider);
+    final stats = ref.watch(userStatsProvider);
 
     // FR-45: previous month's top 3 (Hall of Fame).
     final hallOfFame =
@@ -717,7 +718,17 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Row(
                     children: badges
-                        .map((badge) => _liveBadgeCard(badge, theme))
+                        .map(
+                          (badge) => _liveBadgeCard(
+                            badge,
+                            theme,
+                            tokens: tokens,
+                            approvedSubmissions:
+                                stats?.approvedSubmissions ?? 0,
+                            currentStreak: streak.currentStreak,
+                            accuracyRating: stats?.accuracyRating ?? 100,
+                          ),
+                        )
                         .toList(),
                   ),
                 ),
@@ -1084,74 +1095,300 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     );
   }
 
-  Widget _liveBadgeCard(UserBadge badge, ThemeData theme) {
-    return Opacity(
-      opacity: badge.unlocked ? 1.0 : 0.45,
-      child: Card(
-        elevation: 0,
-        margin: const EdgeInsetsDirectional.only(end: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(
-            color: badge.unlocked
-                ? AppTheme.amberAccent.withValues(alpha: 0.5)
-                : Colors.grey.shade200,
+  /// Clean monochrome line icon per badge — replaces the emoji set, which read
+  /// as generic/AI. One restrained icon language across all badges.
+  IconData _badgeIcon(String id) {
+    switch (id) {
+      case 'first_submission':
+        return Icons.sell_outlined;
+      case 'streak_7':
+        return Icons.local_fire_department_outlined;
+      case 'streak_30':
+        return Icons.calendar_today_outlined;
+      case 'first_request':
+        return Icons.search_rounded;
+      case 'accuracy_90':
+        return Icons.verified_outlined;
+      case 'voucher_earned':
+        return Icons.card_giftcard_outlined;
+      default:
+        return Icons.workspace_premium_outlined;
+    }
+  }
+
+  Widget _liveBadgeCard(
+    UserBadge badge,
+    ThemeData theme, {
+    required int tokens,
+    required int approvedSubmissions,
+    required int currentStreak,
+    required double accuracyRating,
+  }) {
+    final unlocked = badge.unlocked;
+    const accent = AppTheme.forestDeep;
+    return GestureDetector(
+      onTap: () => _showBadgeDetails(
+        badge,
+        tokens: tokens,
+        approvedSubmissions: approvedSubmissions,
+        currentStreak: currentStreak,
+        accuracyRating: accuracyRating,
+      ),
+      child: Container(
+        width: 132,
+        // Directional margin: cards flow start→end, mirrored under Arabic RTL.
+        margin: const EdgeInsetsDirectional.only(end: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: unlocked
+                ? accent.withValues(alpha: 0.22)
+                : const Color(0xFFEDEDED),
           ),
         ),
-        child: Container(
-          width: 140,
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            children: [
-              Stack(
-                alignment: AlignmentDirectional.topEnd,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: badge.unlocked
-                          ? AppTheme.amberLight
-                          : Colors.grey.shade100,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      badge.emoji,
-                      style: const TextStyle(fontSize: 22),
-                    ),
-                  ),
-                  if (!badge.unlocked)
-                    const Icon(
-                      Icons.lock_rounded,
-                      size: 14,
-                      color: Colors.grey,
-                    ),
-                ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: unlocked
+                    ? accent.withValues(alpha: 0.08)
+                    : const Color(0xFFF4F4F4),
+                shape: BoxShape.circle,
               ),
-              const SizedBox(height: 8),
-              Text(
-                badge.name,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 11,
-                  color: badge.unlocked ? AppTheme.textDark : Colors.grey,
-                ),
+              // Locked badges show a single lock glyph — unambiguous, no overlay.
+              child: Icon(
+                unlocked ? _badgeIcon(badge.id) : Icons.lock_outline_rounded,
+                size: 22,
+                color: unlocked ? accent : Colors.grey.shade400,
               ),
-              const SizedBox(height: 4),
-              Text(
-                badge.description,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 8, color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              badge.name,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                color: unlocked ? AppTheme.textDark : Colors.grey.shade500,
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              badge.description,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 9.5,
+                height: 1.3,
+                color: Colors.grey.shade500,
+              ),
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  void _showBadgeDetails(
+    UserBadge badge, {
+    required int tokens,
+    required int approvedSubmissions,
+    required int currentStreak,
+    required double accuracyRating,
+  }) {
+    final progress = _badgeProgress(
+      badge.id,
+      tokens: tokens,
+      approvedSubmissions: approvedSubmissions,
+      currentStreak: currentStreak,
+      accuracyRating: accuracyRating,
+    );
+    showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+            24,
+            20,
+            24,
+            MediaQuery.of(context).padding.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Container(
+                    width: 54,
+                    height: 54,
+                    decoration: BoxDecoration(
+                      color: badge.unlocked
+                          ? AppTheme.forestDeep.withValues(alpha: 0.09)
+                          : Colors.grey.shade100,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      badge.unlocked
+                          ? _badgeIcon(badge.id)
+                          : Icons.lock_outline_rounded,
+                      color: badge.unlocked
+                          ? AppTheme.forestDeep
+                          : Colors.grey.shade500,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          badge.name,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                            color: AppTheme.textDark,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          badge.unlocked ? 'Unlocked' : 'Still locked',
+                          style: TextStyle(
+                            color: badge.unlocked
+                                ? Colors.green.shade700
+                                : Colors.grey.shade600,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Text(
+                progress.message,
+                style: const TextStyle(
+                  fontSize: 14,
+                  height: 1.35,
+                  color: AppTheme.textDark,
+                ),
+              ),
+              const SizedBox(height: 18),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: LinearProgressIndicator(
+                  value: progress.value,
+                  minHeight: 8,
+                  backgroundColor: Colors.grey.shade100,
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    AppTheme.forestDeep,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                progress.label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 18),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Got it'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  _BadgeProgress _badgeProgress(
+    String badgeId, {
+    required int tokens,
+    required int approvedSubmissions,
+    required int currentStreak,
+    required double accuracyRating,
+  }) {
+    switch (badgeId) {
+      case 'first_submission':
+        return _BadgeProgress(
+          value: approvedSubmissions >= 1 ? 1 : 0,
+          label: '$approvedSubmissions / 1 approved price',
+          message: approvedSubmissions >= 1
+              ? 'Nice. Your first approved price is done.'
+              : 'Submit one clear shelf price. Once an admin approves it, this badge unlocks and your tokens arrive.',
+        );
+      case 'streak_7':
+        return _BadgeProgress(
+          value: (currentStreak / 7).clamp(0.0, 1.0),
+          label: '$currentStreak / 7 days',
+          message:
+              'Share at least one approved price each day for 7 days in a row.',
+        );
+      case 'streak_30':
+        return _BadgeProgress(
+          value: (currentStreak / 30).clamp(0.0, 1.0),
+          label: '$currentStreak / 30 days',
+          message:
+              'Keep the habit going: one approved price per day for 30 days.',
+        );
+      case 'first_request':
+        return const _BadgeProgress(
+          value: 0,
+          label: 'Fulfill 1 request',
+          message:
+              'Open the Active Request Board, pick a shopper request, and submit that price.',
+        );
+      case 'accuracy_90':
+        return _BadgeProgress(
+          value: (accuracyRating / 90).clamp(0.0, 1.0),
+          label: '${accuracyRating.round()}% / 90% accuracy',
+          message:
+              'Keep prices accurate and photos clear. Stay at 90% accuracy or higher.',
+        );
+      case 'voucher_earned':
+        return _BadgeProgress(
+          value: (tokens / 500).clamp(0.0, 1.0),
+          label: '$tokens / 500 tokens',
+          message:
+              'Earn 500 tokens from approved prices and bonuses to unlock your first voucher.',
+        );
+      default:
+        return const _BadgeProgress(
+          value: 0,
+          label: 'Keep contributing',
+          message: 'Keep sharing useful prices to unlock this badge.',
+        );
+    }
   }
 
   Color _getRankColor(int rank) {
@@ -1166,4 +1403,16 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
         return Colors.grey.shade100;
     }
   }
+}
+
+class _BadgeProgress {
+  final double value;
+  final String label;
+  final String message;
+
+  const _BadgeProgress({
+    required this.value,
+    required this.label,
+    required this.message,
+  });
 }

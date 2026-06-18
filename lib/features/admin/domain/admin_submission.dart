@@ -14,7 +14,8 @@ class AdminSubmission {
   final double sourcerAccuracyRating;
   final String status; // 'pending', 'approved', 'rejected'
   final String productImageUrl;
-  final String priceLabelUrl;
+  final String? receiptUrl;
+  final String? priceLabelUrl;
 
   AdminSubmission({
     required this.id,
@@ -32,7 +33,8 @@ class AdminSubmission {
     this.sourcerAccuracyRating = 100,
     this.status = 'pending',
     this.productImageUrl = '',
-    this.priceLabelUrl = '',
+    this.receiptUrl,
+    this.priceLabelUrl,
   });
 
   factory AdminSubmission.fromJson(Map<String, dynamic> json) {
@@ -51,17 +53,19 @@ class AdminSubmission {
     final product = json['product'] as Map<String, dynamic>? ?? {};
     final store = json['store'] as Map<String, dynamic>? ?? {};
     final sourcer = json['sourcer'] as Map<String, dynamic>? ?? {};
+    final receiptUrl = json['receiptUrl'] as String?;
+    final priceLabelUrl = json['priceLabelUrl'] as String?;
+
     return AdminSubmission(
       id: json['id'] as String,
       productName:
           product['name'] as String? ?? json['productName'] as String? ?? '',
       brand: product['brand'] as String? ?? '',
       productImageUrl: product['imageUrl'] as String? ?? '',
-      priceLabelUrl: json['priceLabelUrl'] as String? ?? '',
       storeName: '${store['chain'] ?? ''} ${store['branchName'] ?? ''}'.trim(),
       price: (json['priceAed'] as num?)?.toDouble() ?? 0.0,
       hasReceipt: json['hasReceipt'] as bool? ?? false,
-      hasPhoto: (json['priceLabelUrl'] as String?)?.isNotEmpty ?? false,
+      hasPhoto: priceLabelUrl != null && priceLabelUrl.isNotEmpty,
       promoType: 'Price Submission',
       tokensReward: json['tokensAwarded'] as int? ?? 0,
       timestampLabel: label,
@@ -73,6 +77,8 @@ class AdminSubmission {
       sourcerAccuracyRating:
           (sourcer['accuracyRating'] as num?)?.toDouble() ?? 100,
       status: json['status'] as String? ?? 'pending',
+      receiptUrl: receiptUrl,
+      priceLabelUrl: priceLabelUrl,
     );
   }
 
@@ -82,6 +88,8 @@ class AdminSubmission {
     double? price,
     String? status,
     String? productImageUrl,
+    String? receiptUrl,
+    String? priceLabelUrl,
   }) {
     return AdminSubmission(
       id: id,
@@ -90,7 +98,7 @@ class AdminSubmission {
       storeName: storeName ?? this.storeName,
       price: price ?? this.price,
       hasReceipt: hasReceipt,
-      hasPhoto: hasPhoto,
+      hasPhoto: (priceLabelUrl ?? this.priceLabelUrl)?.isNotEmpty ?? false,
       promoType: promoType,
       tokensReward: tokensReward,
       timestampLabel: timestampLabel,
@@ -99,7 +107,8 @@ class AdminSubmission {
       sourcerAccuracyRating: sourcerAccuracyRating,
       status: status ?? this.status,
       productImageUrl: productImageUrl ?? this.productImageUrl,
-      priceLabelUrl: priceLabelUrl,
+      receiptUrl: receiptUrl ?? this.receiptUrl,
+      priceLabelUrl: priceLabelUrl ?? this.priceLabelUrl,
     );
   }
 }

@@ -1,16 +1,13 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import compression from "compression";
 import helmet from "helmet";
 import rateLimit, { Store } from "express-rate-limit";
 import { RedisStore } from "rate-limit-redis";
 import { PrismaClient } from "@prisma/client";
 import { requireProductionEnv } from "./config/env";
 import { redis, isRedisEnabled } from "./services/redis";
-
-// TODO: Integrate TimescaleDB for time-series grocery price history data scaling.
-// TODO: Integrate Redis for leaderboard ranking caches, API rate-limiting, and session caching.
-// TODO: Integrate Swagger / OpenAPI UI middleware for live backend endpoint documentation.
 
 import authRoutes from "./routes/auth";
 import productRoutes from "./routes/products";
@@ -58,28 +55,33 @@ if (isProduction && (!allowedOrigins || allowedOrigins.length === 0)) {
   throw new Error("ALLOWED_ORIGINS must be configured in production");
 }
 
+export function isCorsOriginAllowed(
+  origin: string | undefined,
+  production = isProduction,
+  origins = allowedOrigins,
+): boolean {
+  if (!production) {
+    return true;
+  }
+  if (!origin) {
+    return true;
+  }
+  // Allow localhost only in development (or when explicitly opted in via env var).
+  // In production, localhost origins are blocked to prevent local pages from
+  // making credentialed requests to the live API.
+  if (origin === "http://localhost" || origin.startsWith("http://localhost:")) {
+    return !production || process.env.ALLOW_LOCALHOST_CORS === "true";
+  }
+  return Boolean(origins?.includes(origin));
+}
+
 app.set("trust proxy", 1);
 app.use(helmet());
+app.use(compression());
 app.use(
   cors({
     origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-      if (!isProduction) {
-        callback(null, true);
-        return;
-      }
-      if (!origin) {
-        callback(null, true);
-        return;
-      }
-      if (origin === "http://localhost" || origin.startsWith("http://localhost:")) {
-        callback(null, true);
-        return;
-      }
-      if (allowedOrigins && allowedOrigins.includes(origin)) {
-        callback(null, true);
-        return;
-      }
-      callback(null, false);
+      callback(null, isCorsOriginAllowed(origin));
     },
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -130,7 +132,13 @@ app.get("/", (_req, res) => {
 });
 
 app.get("/health", (_req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
+  res.json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    // RENDER_GIT_COMMIT is injected automatically by Render; lets us confirm
+    // exactly which commit is live without a separate version endpoint.
+    commit: process.env.RENDER_GIT_COMMIT?.slice(0, 7) ?? "dev",
+  });
 });
 
 app.get("/system/status", (_req, res) => {
@@ -166,7 +174,11 @@ app.use(
     res: express.Response,
     _next: express.NextFunction,
   ) => {
-    console.error(err.stack);
+    if (isProduction) {
+      console.error("[error]", { name: err.name, message: err.message });
+    } else {
+      console.error(err.stack);
+    }
     res.status(500).json({ error: "Internal server error" });
   },
 );

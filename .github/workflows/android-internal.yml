@@ -1,12 +1,15 @@
 name: Android Internal APK
 
 on:
-  # Cut a version by pushing a tag, e.g. `git tag v2.1.0 && git push --tags`.
-  # The tag name (minus the leading v) becomes the app versionName.
+  # Auto-build on every push to main so you always have fresh APKs waiting.
   push:
+    branches:
+      - main
+    # Also cut a versioned release when you push a tag (e.g. git tag v2.1.0).
+    # The tag name (minus the leading v) becomes the app versionName.
     tags:
       - 'v*'
-  # Manual trigger for ad-hoc internal builds (no release is published).
+  # Manual trigger for ad-hoc builds against a staging URL.
   workflow_dispatch:
     inputs:
       api_base_url:
@@ -71,9 +74,9 @@ jobs:
             echo "Missing Firebase Android secrets. Configure FIREBASE_OPTIONS_DART_B64 and GOOGLE_SERVICES_JSON_B64."
             exit 1
           fi
-          echo "$FIREBASE_OPTIONS_DART_B64" | base64 --decode > lib/firebase_options.dart
+          echo "$FIREBASE_OPTIONS_DART_B64" | tr -d '\r\n ' | base64 --decode > lib/firebase_options.dart
           dart format lib/firebase_options.dart
-          echo "$GOOGLE_SERVICES_JSON_B64" | base64 --decode > android/app/google-services.json
+          echo "$GOOGLE_SERVICES_JSON_B64" | tr -d '\r\n ' | base64 --decode > android/app/google-services.json
 
       - name: Restore Android release keystore from secrets
         env:
@@ -89,7 +92,45 @@ jobs:
             echo "Missing Android signing secrets. Configure ANDROID_UPLOAD_KEYSTORE_B64, ANDROID_UPLOAD_STORE_PASSWORD, ANDROID_UPLOAD_KEY_ALIAS, and ANDROID_UPLOAD_KEY_PASSWORD."
             exit 1
           fi
-          echo "$ANDROID_UPLOAD_KEYSTORE_B64" | base64 --decode > android/app/upload-keystore.jks
+          echo "$ANDROID_UPLOAD_KEYSTORE_B64" | tr -d '\r\n ' | base64 --decode > android/app/upload-keystore.jks
+          cat > /tmp/ValidateKeystore.java <<'JAVA'
+          import java.io.FileInputStream;
+          import java.security.KeyStore;
+
+          public class ValidateKeystore {
+            public static void main(String[] args) throws Exception {
+              if (args.length != 4) {
+                throw new IllegalArgumentException("Expected: keystore storePassword keyAlias keyPassword");
+              }
+
+              KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+              try (FileInputStream input = new FileInputStream(args[0])) {
+                keyStore.load(input, args[1].toCharArray());
+              }
+
+              if (!keyStore.containsAlias(args[2])) {
+                throw new IllegalArgumentException("Android upload key alias was not found in the keystore.");
+              }
+
+              if (keyStore.getKey(args[2], args[3].toCharArray()) == null) {
+                throw new IllegalArgumentException("Android upload key could not be read.");
+              }
+            }
+          }
+          JAVA
+          javac /tmp/ValidateKeystore.java
+          java -cp /tmp ValidateKeystore \
+            android/app/upload-keystore.jks \
+            "$ANDROID_UPLOAD_STORE_PASSWORD" \
+            "$ANDROID_UPLOAD_KEY_ALIAS" \
+            "$ANDROID_UPLOAD_KEY_PASSWORD"
+
+      # Must run before any raw Gradle invocation: `flutter pub get` generates
+      # android/local.properties (flutter.sdk + sdk.dir), which settings.gradle.kts
+      # reads at configuration time. Without it, `./gradlew :app:signingReport`
+      # fails with "android/local.properties (No such file or directory)".
+      - name: Install dependencies
+        run: flutter pub get
 
       - name: Show Android release signing fingerprint
         env:
@@ -98,9 +139,6 @@ jobs:
           ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
           ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
         run: cd android && ./gradlew :app:signingReport
-
-      - name: Install dependencies
-        run: flutter pub get
 
       - name: Build Shopper APKs (split-per-abi + universal)
         env:
@@ -162,7 +200,7 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           name: DealSouk ${{ github.ref_name }}
-          generate_release_notes: true
+          body: Internal Android APKs for DealSouk ${{ github.ref_name }}.
           files: |
             build/outputs/DealSouk-Shopper.apk
             build/outputs/DealSouk-Shopper-arm64-v8a.apk

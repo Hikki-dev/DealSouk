@@ -239,19 +239,23 @@ router.put('/me/cart', requireAuth, cartSyncLimiter, async (req: AuthRequest, re
     return;
   }
 
-  // Delete all existing cart items for this user, then upsert the new ones
-  await prisma.cartItem.deleteMany({ where: { userId: req.userId! } });
-
-  if (items.length > 0) {
-    await prisma.cartItem.createMany({
-      data: items.map((item) => ({
-        userId: req.userId!,
-        productId: item.productId,
-        quantity: Math.min(MAX_CART_QUANTITY, Math.max(1, Math.floor(Number(item.quantity)))),
-      })),
-      skipDuplicates: true,
-    });
-  }
+  // Wrap in a transaction so a crash or concurrent sync never leaves the cart
+  // half-empty: both the delete and the re-insert either both commit or both roll back.
+  await prisma.$transaction([
+    prisma.cartItem.deleteMany({ where: { userId: req.userId! } }),
+    ...(items.length > 0
+      ? [
+          prisma.cartItem.createMany({
+            data: items.map((item) => ({
+              userId: req.userId!,
+              productId: item.productId,
+              quantity: Math.min(MAX_CART_QUANTITY, Math.max(1, Math.floor(Number(item.quantity)))),
+            })),
+            skipDuplicates: true,
+          }),
+        ]
+      : []),
+  ]);
 
   res.json({ ok: true, count: items.length });
 });

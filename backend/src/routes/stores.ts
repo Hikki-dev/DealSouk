@@ -26,34 +26,66 @@ router.get('/nearby', async (req, res) => {
     return;
   }
 
+  // Load up to 500 stores (bounding box pre-filter uses lat/lng ranges; exact
+  // Haversine distance is applied in JS below to avoid a raw-SQL extension dep).
+  const latDelta = radiusKm / 111.0;
+  const lngDelta = radiusKm / (111.0 * Math.cos((lat * Math.PI) / 180));
   const allStores = await prisma.store.findMany({
-    where: chain ? { chain: { contains: chain, mode: 'insensitive' } } : undefined,
+    where: {
+      lat: { gte: lat - latDelta, lte: lat + latDelta },
+      lng: { gte: lng - lngDelta, lte: lng + lngDelta },
+      ...(chain ? { chain: { contains: chain, mode: 'insensitive' } } : {}),
+    },
+    take: 500,
   });
 
   const staleThreshold = new Date(Date.now() - STORE_STALE_MS);
 
-  const nearby = await Promise.all(
-    allStores
-      .map((store) => ({ store, dist: distanceKm(lat, lng, store.lat, store.lng) }))
-      .filter(({ dist }) => dist <= radiusKm)
-      .sort((a, b) => a.dist - b.dist)
-      .map(async ({ store, dist }) => {
-        const lastSubmission = await prisma.priceSubmission.findFirst({
-          where: { storeId: store.id, status: 'approved' },
-          orderBy: { submittedAt: 'desc' },
-        });
-        const submissionCount = await prisma.priceSubmission.count({
-          where: { storeId: store.id, status: 'approved', submittedAt: { gte: staleThreshold } },
-        });
-        return {
-          ...store,
-          distanceKm: Math.round(dist * 10) / 10,
-          lastUpdatedAt: lastSubmission?.submittedAt ?? null,
-          isStale: !lastSubmission || lastSubmission.submittedAt < staleThreshold,
-          activeSubmissionCount: submissionCount,
-        };
-      })
-  );
+  const nearbyStores = allStores
+    .map((store) => ({ store, dist: distanceKm(lat, lng, store.lat, store.lng) }))
+    .filter(({ dist }) => dist <= radiusKm)
+    .sort((a, b) => a.dist - b.dist);
+
+  if (nearbyStores.length === 0) {
+    res.json([]);
+    return;
+  }
+
+  const storeIds = nearbyStores.map(({ store }) => store.id);
+
+  // Batch: one query for latest submission per store, one for active counts.
+  // This replaces the previous N+1 pattern (2 queries per store).
+  const [latestSubmissions, activeCounts] = await Promise.all([
+    prisma.priceSubmission.findMany({
+      where: { storeId: { in: storeIds }, status: 'approved' },
+      orderBy: { submittedAt: 'desc' },
+      select: { storeId: true, submittedAt: true },
+      distinct: ['storeId'],
+    }),
+    prisma.priceSubmission.groupBy({
+      by: ['storeId'],
+      where: {
+        storeId: { in: storeIds },
+        status: 'approved',
+        submittedAt: { gte: staleThreshold },
+      },
+      _count: { storeId: true },
+    }),
+  ]);
+
+  const latestMap = new Map(latestSubmissions.map((s) => [s.storeId, s.submittedAt]));
+  const countMap = new Map(activeCounts.map((c) => [c.storeId, c._count.storeId]));
+
+  const nearby = nearbyStores.map(({ store, dist }) => {
+    const lastUpdatedAt = latestMap.get(store.id) ?? null;
+    return {
+      ...store,
+      distanceKm: Math.round(dist * 10) / 10,
+      lastUpdatedAt,
+      isStale: !lastUpdatedAt || lastUpdatedAt < staleThreshold,
+      activeSubmissionCount: countMap.get(store.id) ?? 0,
+    };
+  });
 
   res.json(nearby);
 });

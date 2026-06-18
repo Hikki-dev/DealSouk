@@ -3,11 +3,11 @@
     "target": "ES2022",
     "module": "commonjs",
     "lib": ["ES2022"],
-    // Prod build only needs node globals (jest is dev-only and omitted from
-    // production installs). Module types (express, cors, …) resolve on import.
+    // Prod build only needs runtime module globals; jest is dev-only and is
+    // added by tsconfig.test.json.
     // Tests get jest globals via tsconfig.test.json. Restricting the list also
     // stops TS implicitly loading every @types/* and erroring on phantom ones.
-    "types": ["node"],
+    "types": ["node", "express", "cors"],
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,

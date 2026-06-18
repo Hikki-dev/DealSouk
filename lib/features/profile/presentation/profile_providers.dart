@@ -1,8 +1,10 @@
 import 'dart:convert';
-
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dealsouk/features/profile/data/profile_service.dart';
+import 'package:dealsouk/core/localization/locale_provider.dart';
+import 'package:dealsouk/features/admin/domain/admin_submission.dart';
 import 'package:dealsouk/features/admin/presentation/admin_providers.dart';
 import 'package:dealsouk/features/auth/presentation/auth_providers.dart';
 
@@ -72,6 +74,10 @@ class UserProfileNotifier extends Notifier<UserProfile> {
       submissionsToday: 0,
       homeArea: data.homeArea ?? 'Dubai',
     );
+    final localeCode = data.preferredLocale.isNotEmpty
+        ? data.preferredLocale
+        : 'en';
+    ref.read(localeProvider.notifier).setLocale(Locale(localeCode));
   }
 
   /// Seeds the name/avatar straight from the Firebase account (Google/Apple)
@@ -179,6 +185,13 @@ class UserProfileNotifier extends Notifier<UserProfile> {
       await profileService.updateProfile(homeArea: area);
     }
   }
+
+  Future<void> updatePreferredLocale(String localeCode) async {
+    ref.read(localeProvider.notifier).setLocale(Locale(localeCode));
+    if (!_isGuest) {
+      await profileService.updateProfile(preferredLocale: localeCode);
+    }
+  }
 }
 
 final userProfileProvider = NotifierProvider<UserProfileNotifier, UserProfile>(
@@ -211,4 +224,37 @@ class UserVouchersNotifier extends Notifier<List<UserVoucher>> {
 final userVouchersProvider =
     NotifierProvider<UserVouchersNotifier, List<UserVoucher>>(
       UserVouchersNotifier.new,
+    );
+
+/// Authoritative per-user economy snapshot from GET /profile/me (accuracy,
+/// approved/total submissions, streak). The profile screen reads these instead
+/// of recomputing from the admin moderation queue, so they reflect DB truth.
+class UserStatsNotifier extends Notifier<ProfileData?> {
+  @override
+  ProfileData? build() => null;
+
+  void sync(ProfileData data) => state = data;
+}
+
+final userStatsProvider = NotifierProvider<UserStatsNotifier, ProfileData?>(
+  UserStatsNotifier.new,
+);
+
+/// The signed-in user's own submissions (GET /profile/me/submissions) — what
+/// the "My Submissions" list shows. Persisted in the DB, so it survives restart
+/// and is consistent across devices.
+class MySubmissionsNotifier extends Notifier<List<AdminSubmission>> {
+  @override
+  List<AdminSubmission> build() => [];
+
+  Future<void> fetch() async {
+    try {
+      state = await profileService.getMySubmissions();
+    } catch (_) {}
+  }
+}
+
+final mySubmissionsProvider =
+    NotifierProvider<MySubmissionsNotifier, List<AdminSubmission>>(
+      MySubmissionsNotifier.new,
     );

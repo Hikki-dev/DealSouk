@@ -1,5 +1,6 @@
 import { prisma } from '../index';
 import { awardTokens } from './tokenEngine';
+import { deleteSubmissionProofs } from './storageHelpers';
 
 // Periodic maintenance that enforces time-based PRD rules instead of relying
 // purely on lazy evaluation at read time.
@@ -15,13 +16,31 @@ import { awardTokens } from './tokenEngine';
 // alongside the lazy paths (e.g. /requests/board) without double-processing.
 
 export async function expireStaleSubmissions(now = new Date()): Promise<number> {
-  const result = await prisma.priceSubmission.updateMany({
+  // Fetch proof URLs before expiring so we can clean up the files
+  const stale = await prisma.priceSubmission.findMany({
     where: {
       status: { in: ['pending', 'approved'] },
       expiresAt: { lte: now },
     },
+    select: { id: true, receiptUrl: true, priceLabelUrl: true },
+  });
+
+  if (stale.length === 0) return 0;
+
+  const result = await prisma.priceSubmission.updateMany({
+    where: {
+      id: { in: stale.map((s) => s.id) },
+      status: { in: ['pending', 'approved'] },
+    },
     data: { status: 'expired' },
   });
+
+  // Fire-and-forget: delete Firebase Storage files for expired submissions.
+  // allSettled ensures one failing delete never aborts the others.
+  void Promise.allSettled(
+    stale.map((s) => deleteSubmissionProofs(s.receiptUrl, s.priceLabelUrl)),
+  );
+
   return result.count;
 }
 

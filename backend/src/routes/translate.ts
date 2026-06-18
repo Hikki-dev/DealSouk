@@ -8,6 +8,7 @@ router.use(requireAuth);
 // Evicts the oldest entry (insertion-order) once MAX_CACHE is reached.
 const cache = new Map<string, string>();
 const MAX_CACHE = 5000;
+const TRANSLATE_TIMEOUT_MS = 5_000;
 
 function cacheSet(key: string, value: string) {
   if (cache.size >= MAX_CACHE) {
@@ -50,6 +51,7 @@ router.post("/", async (req, res) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ q: trimmed, target, format: "text" }),
+        signal: AbortSignal.timeout(TRANSLATE_TIMEOUT_MS),
       },
     );
 

@@ -1,7 +1,12 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dealsouk/core/widgets/avatar_image.dart';
+import 'package:dealsouk/core/widgets/store_logo_avatar.dart';
 import 'package:dealsouk/core/util/greeting.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,6 +27,7 @@ import 'package:dealsouk/core/widgets/souk_widgets.dart';
 import 'package:dealsouk/core/widgets/platform_card.dart';
 import 'package:dealsouk/features/requests/presentation/request_board_view.dart';
 import 'package:dealsouk/l10n/app_localizations.dart';
+import 'package:dealsouk/core/util/geo_utils.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -36,19 +42,172 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocus = FocusNode();
   String _searchQuery = '';
+  String _sortBy = 'freshness'; // 'freshness', 'name', 'price'
+
+  static const List<String> _dubaiAreas = [
+    'Dubai Marina',
+    'Downtown Dubai',
+    'JLT',
+    'Deira',
+    'Business Bay',
+    'Al Barsha',
+    'Jumeirah',
+    'Mirdif',
+    'Al Quoz',
+    'Silicon Oasis',
+    'International City',
+    'Dubai Silicon Oasis',
+    'Al Nahda',
+    'Oud Metha',
+  ];
+
+  Future<void> _checkHomeAreaSelection() async {
+    final prefs = await SharedPreferences.getInstance();
+    final chosen = prefs.getBool('home_area_chosen_v1') ?? false;
+    if (!chosen && mounted) {
+      _showHomeAreaPromptSheet();
+    }
+  }
+
+  void _showHomeAreaPromptSheet() {
+    ref.read(navbarVisibleProvider.notifier).hide();
+    showModalBottomSheet(
+      context: context,
+      isDismissible: false,
+      enableDrag: false,
+      useRootNavigator: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Select Home Area',
+                style: GoogleFonts.fredoka(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textDark,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Please select your preferred home area to compare supermarket prices near you.',
+                style: TextStyle(
+                  fontSize: 13.5,
+                  color: AppTheme.textLight,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 20),
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.35,
+                ),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: _dubaiAreas.length,
+                  itemBuilder: (context, index) {
+                    final area = _dubaiAreas[index];
+                    return ListTile(
+                      title: Text(
+                        area,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () async {
+                        // Persist the choice locally FIRST so the user is never
+                        // trapped in this non-dismissible sheet if the network
+                        // sync fails (e.g. backend cold-start, auth hiccup).
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.setBool('home_area_chosen_v1', true);
+                        await prefs.setString('home_area_v1', area);
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                        }
+                        // Best-effort DB sync — runs after the sheet is gone so a
+                        // failure can't block the user. The value is cached above
+                        // and will reconcile on the next successful profile call.
+                        try {
+                          await ref
+                              .read(userProfileProvider.notifier)
+                              .updateHomeArea(area);
+                        } catch (_) {
+                          // Swallowed intentionally: choice is saved locally.
+                        }
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    ).whenComplete(() {
+      ref.read(navbarVisibleProvider.notifier).show();
+    });
+  }
 
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
+    Future.microtask(() async {
       ref.read(productsProvider.notifier).fetch();
-      ref
-          .read(storesProvider.notifier)
-          .fetchNearby(lat: 25.0771, lng: 55.1328, radiusKm: 5);
       ref.read(cartProvider.notifier).loadPersistedCart();
       ref.read(dailyChallengeProvider.notifier).fetchToday();
       ref.read(priceRequestsProvider.notifier).fetchBoard();
       ref.read(myRequestsProvider.notifier).fetchMyRequests();
+
+      // Check onboarding home area prompt
+      await _checkHomeAreaSelection();
+
+      // Request location permission and obtain user coordinates to calculate distances
+      try {
+        LocationPermission permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.denied) {
+          permission = await Geolocator.requestPermission();
+        }
+        if (permission == LocationPermission.always ||
+            permission == LocationPermission.whileInUse) {
+          final position = await Geolocator.getCurrentPosition(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.high,
+            ),
+          );
+          if (mounted) {
+            ref.read(userLocationProvider.notifier).state = position;
+            final lat = position.latitude;
+            final lng = position.longitude;
+            final isInDubai =
+                lat >= 24.80 && lat <= 25.45 && lng >= 54.90 && lng <= 55.65;
+            if (isInDubai) {
+              ref
+                  .read(storesProvider.notifier)
+                  .fetchNearby(lat: lat, lng: lng, radiusKm: 40);
+            } else {
+              // Sri Lanka or abroad: Fetch Dubai stores around Dubai center so catalog remains populated
+              ref
+                  .read(storesProvider.notifier)
+                  .fetchNearby(lat: 25.2048, lng: 55.2708, radiusKm: 40);
+            }
+          }
+        } else {
+          // No location: fetch default Dubai stores
+          ref
+              .read(storesProvider.notifier)
+              .fetchNearby(lat: 25.2048, lng: 55.2708, radiusKm: 40);
+        }
+      } catch (_) {
+        ref
+            .read(storesProvider.notifier)
+            .fetchNearby(lat: 25.2048, lng: 55.2708, radiusKm: 40);
+      }
     });
   }
 
@@ -85,12 +244,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     final savedCount = cartItems.length;
     final bool searching = _searchQuery.trim().isNotEmpty;
+    final filtered = products.where((p) {
+      if (filterState.selectedCategory != 'All' &&
+          p.category.toLowerCase() !=
+              filterState.selectedCategory.toLowerCase()) {
+        return false;
+      }
+      return true;
+    }).toList();
+
     final feedProducts =
-        _filterByFreshness(products, filterState.freshnessFilter)..sort(
-          (a, b) => (a.hoursAgo ?? _kNoFreshnessHours).compareTo(
-            b.hoursAgo ?? _kNoFreshnessHours,
-          ),
-        );
+        _filterByFreshness(filtered, filterState.freshnessFilter)..sort((a, b) {
+          if (_sortBy == 'name') {
+            return a.name.compareTo(b.name);
+          } else if (_sortBy == 'price') {
+            return a.lowestPrice.compareTo(b.lowestPrice);
+          } else {
+            return (a.hoursAgo ?? _kNoFreshnessHours).compareTo(
+              b.hoursAgo ?? _kNoFreshnessHours,
+            );
+          }
+        });
 
     // Categories defined for Dribbble layout with premium transparent 3D clay illustrations
     final List<_CategoryInfo> homeCategories = [
@@ -334,6 +508,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 decoration: InputDecoration(
                                   isDense: true,
                                   border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
                                   hintText: l.homeSearchHint,
                                   hintStyle: TextStyle(
                                     color: Colors.grey.shade500,
@@ -353,10 +529,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 ),
                               )
                             else
-                              Icon(
-                                Icons.tune_rounded,
-                                color: AppTheme.forestDeep,
-                                size: 20,
+                              GestureDetector(
+                                onTap: () => _showFilterBottomSheet(context),
+                                child: Icon(
+                                  Icons.tune_rounded,
+                                  color: AppTheme.forestDeep,
+                                  size: 20,
+                                ),
                               ),
                           ],
                         ),
@@ -764,6 +943,223 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
+
+  void _showFilterBottomSheet(BuildContext context) {
+    ref.read(navbarVisibleProvider.notifier).hide();
+    showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setBottomSheetState) {
+            final filterState = ref.watch(filterProvider);
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2.5),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Filter & Sort Products',
+                      style: GoogleFonts.fredoka(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Category',
+                      style: GoogleFonts.nunito(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: AppTheme.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      initialValue: filterState.selectedCategory,
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: AppTheme.forestDeep,
+                          ),
+                        ),
+                      ),
+                      items:
+                          [
+                            'All',
+                            'Fresh',
+                            'Fruits',
+                            'Snacks',
+                            'Dairy & Sweet',
+                            'Bakery',
+                          ].map((cat) {
+                            return DropdownMenuItem(
+                              value: cat,
+                              child: Text(cat),
+                            );
+                          }).toList(),
+                      onChanged: (val) {
+                        if (val != null) {
+                          ref.read(filterProvider.notifier).setCategory(val);
+                          setBottomSheetState(() {});
+                          setState(() {});
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Freshness Filter',
+                      style: GoogleFonts.nunito(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: AppTheme.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      initialValue: filterState.freshnessFilter,
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: AppTheme.forestDeep,
+                          ),
+                        ),
+                      ),
+                      items: ['All', 'Under 6h', 'Under 24h', 'Under 72h'].map((
+                        fresh,
+                      ) {
+                        return DropdownMenuItem(
+                          value: fresh,
+                          child: Text(fresh),
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        if (val != null) {
+                          ref
+                              .read(filterProvider.notifier)
+                              .setFreshnessFilter(val);
+                          setBottomSheetState(() {});
+                          setState(() {});
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Sort Products By',
+                      style: GoogleFonts.nunito(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: AppTheme.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    RadioListTile<String>(
+                      title: const Text('Recently Updated'),
+                      value: 'freshness',
+                      groupValue: _sortBy,
+                      activeColor: AppTheme.forestDeep,
+                      onChanged: (val) {
+                        if (val != null) {
+                          setBottomSheetState(() => _sortBy = val);
+                          setState(() {});
+                        }
+                      },
+                    ),
+                    RadioListTile<String>(
+                      title: const Text('Alphabetical (A-Z)'),
+                      value: 'name',
+                      groupValue: _sortBy,
+                      activeColor: AppTheme.forestDeep,
+                      onChanged: (val) {
+                        if (val != null) {
+                          setBottomSheetState(() => _sortBy = val);
+                          setState(() {});
+                        }
+                      },
+                    ),
+                    RadioListTile<String>(
+                      title: const Text('Lowest Price'),
+                      value: 'price',
+                      groupValue: _sortBy,
+                      activeColor: AppTheme.forestDeep,
+                      onChanged: (val) {
+                        if (val != null) {
+                          setBottomSheetState(() => _sortBy = val);
+                          setState(() {});
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.forestDeep,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size.fromHeight(50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Text(
+                        'Apply Filters',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    ).whenComplete(() {
+      ref.read(navbarVisibleProvider.notifier).show();
+    });
+  }
 }
 
 // Sentinel age (hours) for products with no fresh price; sorts/filters them last.
@@ -1093,7 +1489,7 @@ class _DailyChallengeCard extends ConsumerWidget {
               // Target Store details
               _detailRow(
                 icon: Icons.store_rounded,
-                iconColor: Colors.blue.shade600,
+                iconColor: AppTheme.forestDeep,
                 title: l.homeTargetSupermarket,
                 value: challenge.targetStore == 'Any'
                     ? l.homeAnySupermarketChain
@@ -1110,10 +1506,10 @@ class _DailyChallengeCard extends ConsumerWidget {
                     children: [
                       Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.query_stats_rounded,
                             size: 18,
-                            color: Colors.orange.shade600,
+                            color: AppTheme.forestDeep,
                           ),
                           const SizedBox(width: 8),
                           Text(
@@ -1163,29 +1559,6 @@ class _DailyChallengeCard extends ConsumerWidget {
                 value: l.homeRewardBonusValue(challenge.bonusTokens),
                 valueColor: const Color(0xFFC77C02),
               ),
-              const Divider(height: 24, color: Color(0xFFE8EEE4)),
-
-              // How to complete section
-              Text(
-                l.homeHowToComplete,
-                style: GoogleFonts.fredoka(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textDark,
-                ),
-              ),
-              const SizedBox(height: 10),
-              _stepItem(
-                number: '1',
-                text: l.homeStepVisitStore(
-                  challenge.targetStore == 'Any'
-                      ? l.homeAGenericSupermarket
-                      : challenge.targetStore,
-                ),
-              ),
-              _stepItem(number: '2', text: l.homeStepVerifyPrices),
-              _stepItem(number: '3', text: l.homeStepSubmitPrice),
-              _stepItem(number: '4', text: l.homeStepApproved),
               const SizedBox(height: 28),
 
               // Button
@@ -1317,46 +1690,6 @@ class _DailyChallengeCard extends ConsumerWidget {
       ],
     );
   }
-
-  Widget _stepItem({required String number, required String text}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 18,
-            height: 18,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              color: AppTheme.creamCircle,
-              shape: BoxShape.circle,
-            ),
-            child: Text(
-              number,
-              style: GoogleFonts.fredoka(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.forestDeep,
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              text,
-              style: GoogleFonts.nunito(
-                fontSize: 12.5,
-                color: AppTheme.textLight,
-                fontWeight: FontWeight.w600,
-                height: 1.3,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _FreshnessChipRow extends ConsumerWidget {
@@ -1429,12 +1762,17 @@ class _FreshPriceEntryCard extends ConsumerWidget {
   const _FreshPriceEntryCard({required this.product});
 
   double _getStoreDistance(WidgetRef ref, String storeName) {
+    final pos = ref.read(userLocationProvider);
     final stores = ref.read(storesProvider);
     final match = stores.where(
       (s) => s.name.toLowerCase().contains(storeName.toLowerCase()),
     );
     if (match.isNotEmpty) {
-      return match.first.distance;
+      final store = match.first;
+      if (pos != null) {
+        return haversineKm(pos.latitude, pos.longitude, store.lat, store.lng);
+      }
+      return store.distance;
     }
     // Fallback to a stable hash-based mock distance
     return (storeName.hashCode % 15 + 8) / 10.0; // between 0.8 km and 2.2 km
@@ -1583,14 +1921,22 @@ class _CategoryInfo {
   const _CategoryInfo(this.icon, this.label, this.category, this.color);
 }
 
-class _FeaturedStoreCard extends StatelessWidget {
+class _FeaturedStoreCard extends ConsumerWidget {
   final Store store;
 
   const _FeaturedStoreCard({required this.store});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
+    // Real distance from the user's live GPS (same haversine the map uses),
+    // falling back to the backend's Dubai-relative value only when location is
+    // unknown. Whole km when far away (abroad testing), one decimal nearby.
+    final pos = ref.read(userLocationProvider);
+    final km = pos != null
+        ? haversineKm(pos.latitude, pos.longitude, store.lat, store.lng)
+        : store.distance;
+    final distLabel = km >= 100 ? km.toStringAsFixed(0) : km.toStringAsFixed(1);
     return GestureDetector(
       onTap: () => context.go('/stores'),
       child: Container(
@@ -1626,27 +1972,18 @@ class _FeaturedStoreCard extends StatelessWidget {
                       child: Container(height: 14, color: AppTheme.cream),
                     ),
                   ),
-                  Positioned(
-                    left: 14,
+                  PositionedDirectional(
+                    start: 14,
                     bottom: 0,
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: AppTheme.forestMid,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2.5),
-                      ),
-                      child: Center(
-                        child: Text(
-                          store.name.substring(0, 1),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
+                    // Real chain logo (bundled asset → backend → initial), the
+                    // same resolution the store map uses. White ring keeps it
+                    // readable against the forest-green awning.
+                    child: StoreLogoAvatar(
+                      name: store.name,
+                      color: AppTheme.forestMid,
+                      size: 40,
+                      padding: 5,
+                      borderColor: Colors.white,
                     ),
                   ),
                 ],
@@ -1676,15 +2013,19 @@ class _FeaturedStoreCard extends StatelessWidget {
                         color: Color(0xFFFFA000),
                       ),
                       const SizedBox(width: 2),
-                      Text(
-                        l.homeStoreDistancePrices(
-                          store.distance,
-                          store.pricesCount,
-                        ),
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey.shade600,
-                          fontWeight: FontWeight.w600,
+                      Expanded(
+                        child: Text(
+                          l.homeStoreDistancePrices(
+                            distLabel,
+                            store.pricesCount,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey.shade600,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
@@ -1737,14 +2078,14 @@ class _OfferCarouselState extends State<_OfferCarousel> {
   void initState() {
     super.initState();
     _timer = Timer.periodic(const Duration(seconds: 4), (timer) {
-      if (_pageController.hasClients) {
-        final nextPage = (_currentIndex + 1) % 3;
-        _pageController.animateToPage(
-          nextPage,
-          duration: const Duration(milliseconds: 350),
-          curve: Curves.easeInOut,
-        );
-      }
+      // Guard against firing on a disposed PageController (H-17).
+      if (!mounted || !_pageController.hasClients) return;
+      final nextPage = (_currentIndex + 1) % 3;
+      _pageController.animateToPage(
+        nextPage,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOut,
+      );
     });
   }
 
@@ -1796,43 +2137,48 @@ class _OfferCarouselState extends State<_OfferCarousel> {
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(10, 16, 10, 10),
-                      child: FractionallySizedBox(
-                        widthFactor: 0.58,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              offer.title,
-                              style: GoogleFonts.fredoka(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF1F2937),
-                                height: 1.25,
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(10, 16, 10, 10),
+                        child: FractionallySizedBox(
+                          widthFactor: 0.58,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                offer.title,
+                                style: GoogleFonts.fredoka(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF1F2937),
+                                  height: 1.25,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              offer.subtitle,
-                              style: GoogleFonts.nunito(
-                                fontSize: 13,
-                                color: Colors.grey.shade600,
-                                fontWeight: FontWeight.bold,
+                              const SizedBox(height: 8),
+                              Text(
+                                offer.subtitle,
+                                style: GoogleFonts.nunito(
+                                  fontSize: 13,
+                                  color: Colors.grey.shade600,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                    Positioned(
-                      right: 10,
-                      bottom: -15,
-                      child: SizedBox(
-                        height: 120,
-                        width: 130,
-                        child: _OfferIconArt(icon: offer.icon),
-                      ),
+                    // Vertically centered, pinned to the trailing edge: right
+                    // in English, auto-mirrored to the left in Arabic. Spanning
+                    // top:0/bottom:0 lets Center balance it within the card so
+                    // the circle is fully visible instead of clipped at the
+                    // bottom-right corner.
+                    PositionedDirectional(
+                      end: 16,
+                      top: 0,
+                      bottom: 0,
+                      child: Center(child: _OfferIconArt(icon: offer.icon)),
                     ),
                   ],
                 ),

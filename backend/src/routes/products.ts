@@ -1,11 +1,19 @@
 import { Router } from 'express';
 import { prisma } from '../index';
 import { PRICE_FRESHNESS_MS, DAY_MS } from '../config/constants';
+import { ipRateLimit } from '../middleware/rateLimits';
 
 const router = Router();
 
+// ABUSE-6: unauthenticated search has no rate limit — add IP-based cap.
+const searchRateLimiter = ipRateLimit({
+  envName: 'SEARCH_RATE_LIMIT_PER_MINUTE',
+  fallback: 30,
+  message: 'Too many search requests. Please slow down.',
+});
+
 // GET /products/search?q=&category=
-router.get('/search', async (req, res) => {
+router.get('/search', searchRateLimiter, async (req, res) => {
   const q = String(req.query.q ?? '').trim();
   const category = req.query.category ? String(req.query.category).trim() : undefined;
 

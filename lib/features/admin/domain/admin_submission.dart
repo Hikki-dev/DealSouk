@@ -13,6 +13,7 @@ class AdminSubmission {
   final String sourcerName;
   final double sourcerAccuracyRating;
   final String status; // 'pending', 'approved', 'rejected'
+  final String productImageUrl;
   final String? receiptUrl;
   final String? priceLabelUrl;
 
@@ -31,6 +32,7 @@ class AdminSubmission {
     this.sourcerName = 'Hessa Al Maktoum',
     this.sourcerAccuracyRating = 100,
     this.status = 'pending',
+    this.productImageUrl = '',
     this.receiptUrl,
     this.priceLabelUrl,
   });
@@ -59,6 +61,7 @@ class AdminSubmission {
       productName:
           product['name'] as String? ?? json['productName'] as String? ?? '',
       brand: product['brand'] as String? ?? '',
+      productImageUrl: product['imageUrl'] as String? ?? '',
       storeName: '${store['chain'] ?? ''} ${store['branchName'] ?? ''}'.trim(),
       price: (json['priceAed'] as num?)?.toDouble() ?? 0.0,
       hasReceipt: json['hasReceipt'] as bool? ?? false,
@@ -84,6 +87,7 @@ class AdminSubmission {
     String? storeName,
     double? price,
     String? status,
+    String? productImageUrl,
     String? receiptUrl,
     String? priceLabelUrl,
   }) {
@@ -94,7 +98,7 @@ class AdminSubmission {
       storeName: storeName ?? this.storeName,
       price: price ?? this.price,
       hasReceipt: hasReceipt,
-      hasPhoto: priceLabelUrl != null ? priceLabelUrl.isNotEmpty : hasPhoto,
+      hasPhoto: (priceLabelUrl ?? this.priceLabelUrl)?.isNotEmpty ?? false,
       promoType: promoType,
       tokensReward: tokensReward,
       timestampLabel: timestampLabel,
@@ -102,6 +106,7 @@ class AdminSubmission {
       sourcerName: sourcerName,
       sourcerAccuracyRating: sourcerAccuracyRating,
       status: status ?? this.status,
+      productImageUrl: productImageUrl ?? this.productImageUrl,
       receiptUrl: receiptUrl ?? this.receiptUrl,
       priceLabelUrl: priceLabelUrl ?? this.priceLabelUrl,
     );

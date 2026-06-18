@@ -6,6 +6,7 @@ import 'package:dealsouk/features/requests/presentation/requests_providers.dart'
 import 'package:dealsouk/features/leaderboard/presentation/leaderboard_providers.dart';
 import 'package:dealsouk/features/profile/presentation/profile_providers.dart';
 import 'package:dealsouk/features/tokens/presentation/tokens_providers.dart';
+import 'package:dealsouk/features/admin/presentation/admin_providers.dart';
 import 'package:dealsouk/features/leaderboard/domain/leaderboard_user.dart';
 import 'package:dealsouk/features/tokens/domain/user_badge.dart';
 import 'package:dealsouk/core/theme/theme.dart';
@@ -39,6 +40,9 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context)!;
     final tokens = ref.watch(userTokensProvider);
+    // R4: voucher redemption threshold is admin-configurable (FR-40/61) — read
+    // it from settings instead of hardcoding 500 so the two can't drift.
+    final voucherThreshold = ref.watch(adminSettingsProvider).voucherThreshold;
     final profile = ref.watch(userProfileProvider);
     final streak = ref.watch(streakProvider);
     final badges = ref.watch(badgesProvider);
@@ -461,7 +465,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                                 ),
                               ),
                               Text(
-                                l.leaderTokenProgress(tokens, 500),
+                                l.leaderTokenProgress(tokens, voucherThreshold),
                                 style: TextStyle(
                                   color: theme.colorScheme.primary,
                                   fontWeight: FontWeight.bold,
@@ -474,7 +478,10 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                           ClipRRect(
                             borderRadius: BorderRadius.circular(6),
                             child: LinearProgressIndicator(
-                              value: (tokens / 500).clamp(0.0, 1.0),
+                              value: (tokens / voucherThreshold).clamp(
+                                0.0,
+                                1.0,
+                              ),
                               backgroundColor: Colors.grey.shade100,
                               valueColor: AlwaysStoppedAnimation<Color>(
                                 theme.colorScheme.primary,
@@ -483,17 +490,17 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          if (tokens >= 500) ...[
+                          if (tokens >= voucherThreshold) ...[
                             ElevatedButton.icon(
                               onPressed: () {
                                 // Deduct tokens and log transaction
                                 ref
                                     .read(userTokensProvider.notifier)
-                                    .deductTokens(500);
+                                    .deductTokens(voucherThreshold);
                                 ref
                                     .read(userTransactionsProvider.notifier)
                                     .addTransaction(
-                                      -500,
+                                      -voucherThreshold,
                                       l.leaderVoucherRedeemed,
                                     );
 
@@ -670,7 +677,9 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
-                                    l.leaderEarnMoreTokens(500 - tokens),
+                                    l.leaderEarnMoreTokens(
+                                      voucherThreshold - tokens,
+                                    ),
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: Colors.grey.shade600,

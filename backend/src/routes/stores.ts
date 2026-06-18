@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../index';
+import { PRICE_FRESHNESS_MS, STORE_STALE_MS } from '../config/constants';
 
 const router = Router();
 
@@ -38,7 +39,7 @@ router.get('/nearby', async (req, res) => {
     take: 500,
   });
 
-  const staleThreshold = new Date(Date.now() - 48 * 60 * 60 * 1000);
+  const staleThreshold = new Date(Date.now() - STORE_STALE_MS);
 
   const nearbyStores = allStores
     .map((store) => ({ store, dist: distanceKm(lat, lng, store.lat, store.lng) }))
@@ -91,7 +92,7 @@ router.get('/nearby', async (req, res) => {
 
 // GET /stores/:id/prices — fresh approved prices available at one branch
 router.get('/:id/prices', async (req, res) => {
-  const cutoff = new Date(Date.now() - 72 * 60 * 60 * 1000);
+  const cutoff = new Date(Date.now() - PRICE_FRESHNESS_MS);
 
   const prices = await prisma.priceSubmission.findMany({
     where: {

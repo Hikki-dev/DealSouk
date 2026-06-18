@@ -5,11 +5,13 @@ class SubmissionResult {
   final String id;
   final String status;
   final int tokensAwarded;
+  final int requestBountyTokens;
 
   const SubmissionResult({
     required this.id,
     required this.status,
     required this.tokensAwarded,
+    this.requestBountyTokens = 0,
   });
 }
 
@@ -26,12 +28,14 @@ class SubmissionsService {
   }
 
   Future<SubmissionResult> create({
-    required String productId,
+    String? productId,
+    String? productName,
     required String storeId,
     required double priceAed,
     bool hasReceipt = false,
     String? receiptUrl,
     String? priceLabelUrl,
+    String? requestId,
   }) async {
     // Offline queueing is owned by SyncController (sync_service.dart). This
     // method just performs the call and throws on failure, so the replay loop
@@ -39,12 +43,14 @@ class SubmissionsService {
     final res = await apiClient.post(
       '/submissions',
       data: {
-        'productId': productId,
+        'productId': ?productId,
+        'productName': ?productName,
         'storeId': storeId,
         'priceAed': priceAed,
         'hasReceipt': hasReceipt,
         'receiptUrl': ?receiptUrl,
         'priceLabelUrl': ?priceLabelUrl,
+        'requestId': ?requestId,
       },
     );
     final data = res.data as Map<String, dynamic>;
@@ -52,6 +58,7 @@ class SubmissionsService {
       id: data['id'] as String,
       status: data['status'] as String,
       tokensAwarded: data['tokensAwarded'] as int? ?? 0,
+      requestBountyTokens: data['requestBountyTokens'] as int? ?? 0,
     );
   }
 

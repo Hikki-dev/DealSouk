@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 // Logos are public assets — always served from the real backend even in debug.
@@ -121,20 +122,18 @@ class StoreLogoAvatar extends StatelessWidget {
   Widget _networkOrFallback(double radius) {
     final url = storeChainLogoUrl(name);
     if (url == null) return _fallback(radius);
-    return Image.network(
-      url,
+    return CachedNetworkImage(
+      imageUrl: url,
       fit: BoxFit.contain,
-      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-        if (wasSynchronouslyLoaded || frame != null) {
-          return Container(
-            color: Colors.white,
-            padding: EdgeInsets.all(padding),
-            child: child,
-          );
-        }
-        return _fallback(radius);
-      },
-      errorBuilder: (ctx, error, stack) => _fallback(radius),
+      // P4: disk-cached store logos with a slot-sized decode (NFR-01).
+      memCacheWidth: (radius * 6).round(),
+      imageBuilder: (context, imageProvider) => Container(
+        color: Colors.white,
+        padding: EdgeInsets.all(padding),
+        child: Image(image: imageProvider, fit: BoxFit.contain),
+      ),
+      placeholder: (context, u) => _fallback(radius),
+      errorWidget: (ctx, u, error) => _fallback(radius),
     );
   }
 

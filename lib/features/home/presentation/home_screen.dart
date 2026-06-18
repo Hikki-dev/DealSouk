@@ -15,6 +15,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:dealsouk/features/products/presentation/products_providers.dart';
 import 'package:dealsouk/features/stores/presentation/stores_providers.dart';
 import 'package:dealsouk/features/cart/presentation/cart_providers.dart';
+import 'package:dealsouk/features/saved/presentation/saved_providers.dart';
 import 'package:dealsouk/features/requests/presentation/requests_providers.dart';
 import 'package:dealsouk/features/profile/presentation/profile_providers.dart';
 import 'package:dealsouk/features/admin/presentation/admin_providers.dart';
@@ -228,9 +229,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final products = ref.watch(productsProvider);
+    final productsLoad = ref.watch(productsLoadProvider);
     final filterState = ref.watch(filterProvider);
     final tokens = ref.watch(userTokensProvider);
-    final cartItems = ref.watch(cartProvider);
     final profile = ref.watch(userProfileProvider);
     final firstName = profile.name.split(' ').first;
     final dailyChallenge = ref.watch(dailyChallengeProvider);
@@ -242,7 +243,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       DayPart.evening => l.greetingEvening,
     };
 
-    final savedCount = cartItems.length;
+    final savedCount = ref.watch(savedProductsProvider).length;
     final bool searching = _searchQuery.trim().isNotEmpty;
     final filtered = products.where((p) {
       if (filterState.selectedCategory != 'All' &&
@@ -260,9 +261,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           } else if (_sortBy == 'price') {
             return a.lowestPrice.compareTo(b.lowestPrice);
           } else {
-            return _freshnessMinutes(
-              a.updatedAtLabel,
-            ).compareTo(_freshnessMinutes(b.updatedAtLabel));
+            return (a.hoursAgo ?? _kNoFreshnessHours).compareTo(
+              b.hoursAgo ?? _kNoFreshnessHours,
+            );
           }
         });
 
@@ -412,7 +413,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                           // Saved price list shortcut
                           GestureDetector(
-                            onTap: () => context.go('/cart'),
+                            onTap: () => context.go('/saved'),
                             child: Stack(
                               clipBehavior: Clip.none,
                               children: [
@@ -658,7 +659,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             // 3. Request section should be visible from the home page.
             const SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(4, 12, 4, 4),
+                padding: EdgeInsets.fromLTRB(4, 8, 4, 0),
                 child: RequestBoardView(),
               ),
             ),
@@ -776,7 +777,54 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
 
             // Verified prices list cards (show up to 8 filtered results)
-            if (feedProducts.isEmpty)
+            if (feedProducts.isEmpty &&
+                products.isEmpty &&
+                productsLoad == ProductsLoadState.error)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 32,
+                  ),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.cloud_off_rounded,
+                          size: 48,
+                          color: Colors.grey.shade300,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          l.homeLoadError,
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          l.homeLoadErrorHint,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.grey.shade400,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        FilledButton.icon(
+                          onPressed: () =>
+                              ref.read(productsProvider.notifier).fetch(),
+                          icon: const Icon(Icons.refresh_rounded, size: 18),
+                          label: Text(l.retry),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              )
+            else if (feedProducts.isEmpty)
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
@@ -1162,30 +1210,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 }
 
+// Sentinel age (hours) for products with no fresh price; sorts/filters them last.
+const int _kNoFreshnessHours = 1 << 30;
+
 List<Product> _filterByFreshness(List<Product> products, String freshness) {
   if (freshness == 'All') return [...products];
-  final maxMinutes = switch (freshness) {
-    'Under 6h' => 6 * 60,
-    'Under 24h' => 24 * 60,
-    'Under 72h' => 72 * 60,
-    _ => 999999,
+  final maxHours = switch (freshness) {
+    'Under 6h' => 6,
+    'Under 24h' => 24,
+    'Under 72h' => 72,
+    _ => _kNoFreshnessHours,
   };
   return products
-      .where(
-        (product) => _freshnessMinutes(product.updatedAtLabel) <= maxMinutes,
-      )
+      .where((product) => (product.hoursAgo ?? _kNoFreshnessHours) <= maxHours)
       .toList();
-}
-
-int _freshnessMinutes(String label) {
-  final lower = label.toLowerCase();
-  if (lower.contains('just now')) return 0;
-  final number =
-      int.tryParse(RegExp(r'(\d+)').firstMatch(lower)?.group(1) ?? '') ?? 9999;
-  if (lower.contains('m')) return number;
-  if (lower.contains('h')) return number * 60;
-  if (lower.contains('d')) return number * 24 * 60;
-  return 9999;
 }
 
 class _HomeTokenBalance extends StatelessWidget {
@@ -1788,19 +1826,11 @@ class _FreshPriceEntryCard extends ConsumerWidget {
     return (storeName.hashCode % 15 + 8) / 10.0; // between 0.8 km and 2.2 km
   }
 
-  String _formatFreshness(AppLocalizations l, String label) {
-    final lower = label.toLowerCase();
-    if (lower.contains('just now')) return l.homeUpdatedJustNow;
-    final matches = RegExp(r'(\d+)').firstMatch(lower);
-    if (matches != null) {
-      final numStr = matches.group(1);
-      if (lower.contains('h')) {
-        return l.homeUpdatedHoursAgo(numStr ?? '');
-      } else if (lower.contains('d')) {
-        return l.homeUpdatedDaysAgo(numStr ?? '');
-      }
-    }
-    return label;
+  String _formatFreshness(AppLocalizations l, int? hoursAgo) {
+    if (hoursAgo == null) return l.homeNoRecentPrice;
+    if (hoursAgo < 1) return l.homeUpdatedJustNow;
+    if (hoursAgo < 24) return l.homeUpdatedHoursAgo('$hoursAgo');
+    return l.homeUpdatedDaysAgo('${hoursAgo ~/ 24}');
   }
 
   @override
@@ -1864,7 +1894,7 @@ class _FreshPriceEntryCard extends ConsumerWidget {
                         color: const Color(0xFFE8F5E9),
                       ),
                       _TrustPill(
-                        label: _formatFreshness(l, product.updatedAtLabel),
+                        label: _formatFreshness(l, product.hoursAgo),
                         icon: Icons.schedule_rounded,
                         color: const Color(0xFFF3F1EA),
                       ),

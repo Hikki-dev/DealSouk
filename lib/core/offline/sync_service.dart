@@ -53,24 +53,28 @@ class SyncController extends Notifier<int> {
   String _newId() => DateTime.now().microsecondsSinceEpoch.toString();
 
   Future<void> enqueueSubmission({
-    required String productId,
+    String? productId,
+    String? productName,
     required String storeId,
     required double priceAed,
     bool hasReceipt = false,
     String? receiptUrl,
     String? priceLabelUrl,
+    String? requestId,
   }) async {
     await offlineQueue.enqueue(
       PendingOp(
         id: _newId(),
         type: 'submission',
         payload: {
-          'productId': productId,
+          'productId': ?productId,
+          'productName': ?productName,
           'storeId': storeId,
           'priceAed': priceAed,
           'hasReceipt': hasReceipt,
           'receiptUrl': ?receiptUrl,
           'priceLabelUrl': ?priceLabelUrl,
+          'requestId': ?requestId,
         },
         createdAt: DateTime.now(),
       ),
@@ -113,12 +117,14 @@ class SyncController extends Notifier<int> {
         try {
           if (op.type == 'submission') {
             await submissionsService.create(
-              productId: op.payload['productId'] as String,
+              productId: op.payload['productId'] as String?,
+              productName: op.payload['productName'] as String?,
               storeId: op.payload['storeId'] as String,
               priceAed: (op.payload['priceAed'] as num).toDouble(),
               hasReceipt: op.payload['hasReceipt'] as bool? ?? false,
               receiptUrl: op.payload['receiptUrl'] as String?,
               priceLabelUrl: op.payload['priceLabelUrl'] as String?,
+              requestId: op.payload['requestId'] as String?,
             );
           } else if (op.type == 'request') {
             await requestsService.create(

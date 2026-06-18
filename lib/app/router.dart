@@ -18,6 +18,7 @@ import 'package:dealsouk/features/admin/presentation/admin_screen.dart';
 import 'package:dealsouk/features/profile/presentation/profile_screen.dart';
 import 'package:dealsouk/features/auth/presentation/unauthorized_screen.dart';
 import 'package:dealsouk/features/legal/presentation/privacy_policy_screen.dart';
+import 'package:dealsouk/features/saved/presentation/saved_screen.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -81,6 +82,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
       GoRoute(path: '/admin', builder: (context, state) => const AdminScreen()),
+      GoRoute(path: '/saved', builder: (context, state) => const SavedScreen()),
       GoRoute(
         path: '/unauthorized',
         builder: (context, state) => const UnauthorizedScreen(),

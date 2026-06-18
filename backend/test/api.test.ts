@@ -446,6 +446,79 @@ describe("submission validation (FR-32)", () => {
       });
     expect(res.status).toBe(400);
   });
+
+  it("fulfills a request against the exact requested product name, not a fuzzy catalog match", async () => {
+    signInAs({
+      isAdmin: false,
+      lifetimeTokensEarned: 0,
+      level: 1,
+      tokenBalance: 0,
+      accuracyRating: 100,
+    });
+    mockPrisma.store.findUnique.mockResolvedValue({
+      id: "s1",
+      chain: "Union Coop",
+      branchName: "Al Wasl",
+    } as any);
+    mockPrisma.priceRequest.findUnique.mockResolvedValue({
+      id: "r1",
+      requesterId: "requester-1",
+      productName: "Milk",
+      storeName: "Union Coop",
+      bountyTokens: 15,
+      status: "open",
+      expiresAt: new Date(Date.now() + 60_000),
+      requester: { fcmToken: null },
+    } as any);
+    mockPrisma.product.findFirst.mockResolvedValue(null);
+    mockPrisma.product.create.mockResolvedValue({
+      id: "p-milk",
+      name: "Milk",
+      category: "Community",
+    } as any);
+    mockPrisma.adminSettings.findUnique.mockResolvedValue({
+      id: 1,
+      tokenEarnRate: 10,
+      dailySubmissionCap: 30,
+      decayFactor: 0.7,
+      voucherThreshold: 500,
+    } as any);
+    mockPrisma.priceSubmission.count.mockResolvedValue(0);
+    mockPrisma.priceSubmission.findFirst.mockResolvedValue(null);
+    mockPrisma.priceSubmission.create.mockResolvedValue({
+      id: "sub1",
+      status: "pending",
+      expiresAt: new Date(),
+    } as any);
+    mockPrisma.priceRequest.updateMany.mockResolvedValue({ count: 1 } as any);
+    mockPrisma.$transaction.mockImplementation(async (callback: any) =>
+      callback(mockPrisma),
+    );
+    mockPrisma.tokenTransaction.findFirst.mockResolvedValue(null);
+    mockPrisma.tokenTransaction.create.mockResolvedValue({} as any);
+    mockPrisma.userBadge.findUnique.mockResolvedValue(null);
+
+    const res = await request(app)
+      .post("/submissions")
+      .set("Authorization", "Bearer good-token")
+      .send({
+        productId: "p-whole-milk",
+        storeId: "s1",
+        priceAed: 44,
+        requestId: "r1",
+      });
+
+    expect(res.status).toBe(201);
+    expect(mockPrisma.product.create).toHaveBeenCalledWith({
+      data: { name: "Milk", category: "Community" },
+    });
+    expect(mockPrisma.priceSubmission.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ productId: "p-milk" }),
+      }),
+    );
+    expect(res.body.requestBountyTokens).toBe(15);
+  });
 });
 
 describe("store prices (FR-09..16, 72h freshness)", () => {

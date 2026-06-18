@@ -1,3 +1,4 @@
+import 'package:dealsouk/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -31,12 +32,13 @@ class _BarcodeScanScreenState extends ConsumerState<BarcodeScanScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
-        title: const Text('Scan Barcode'),
+        title: Text(l.scanBarcodeTitle),
       ),
       body: Stack(
         children: [
@@ -67,10 +69,10 @@ class _BarcodeScanScreenState extends ConsumerState<BarcodeScanScreen> {
                 color: Colors.black.withValues(alpha: 0.72),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Text(
-                'Point the camera at the barcode. We will use it to find the product faster.',
+              child: Text(
+                l.scanBarcodeHint,
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
                   height: 1.35,

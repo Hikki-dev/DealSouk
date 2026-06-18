@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../index';
+import { PRICE_FRESHNESS_MS, DAY_MS } from '../config/constants';
 import { ipRateLimit } from '../middleware/rateLimits';
 
 const router = Router();
@@ -37,7 +38,7 @@ router.get('/search', searchRateLimiter, async (req, res) => {
   });
 
   // Augment each product with its cheapest fresh price (approved, < 72h)
-  const cutoff = new Date(Date.now() - 72 * 60 * 60 * 1000);
+  const cutoff = new Date(Date.now() - PRICE_FRESHNESS_MS);
   const enriched = await Promise.all(
     products.map(async (p) => {
       const cheapest = await prisma.priceSubmission.findFirst({
@@ -66,7 +67,7 @@ router.get('/search', searchRateLimiter, async (req, res) => {
 // isn't present yet (migration not deployed), falls back to scanning raw rows.
 router.get('/:id/history', async (req, res) => {
   const days = Math.min(90, Math.max(1, Number(req.query.days ?? 90)));
-  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  const cutoff = new Date(Date.now() - days * DAY_MS);
 
   try {
     const rows = await prisma.$queryRaw<
@@ -143,7 +144,7 @@ router.get('/:id', async (req, res) => {
 
 // GET /products/:id/prices — fresh approved submissions only (< 72h)
 router.get('/:id/prices', async (req, res) => {
-  const cutoff = new Date(Date.now() - 72 * 60 * 60 * 1000);
+  const cutoff = new Date(Date.now() - PRICE_FRESHNESS_MS);
   const limit = Math.min(50, Math.max(1, Number(req.query.limit ?? 50)));
 
   const prices = await prisma.priceSubmission.findMany({

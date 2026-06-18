@@ -210,7 +210,14 @@ final dailyChallengeProvider =
       DailyChallengeNotifier.new,
     );
 
-int tokensToLevel(int tokens) => (tokens ~/ 500).clamp(1, 20);
+/// Tokens per level / max level. Mirrors the backend constants exposed at
+/// GET /config (TOKENS_PER_LEVEL, MAX_LEVEL); the server is the source of
+/// truth — keep these in sync (R4).
+const int kTokensPerLevel = 500;
+const int kMaxLevel = 20;
+
+int tokensToLevel(int tokens) =>
+    (tokens ~/ kTokensPerLevel).clamp(1, kMaxLevel);
 double levelMultiplier(int level) => 1.0 + (level - 1) * 0.05;
 String levelTitle(int level) {
   if (level >= 15) return 'Souk Master';

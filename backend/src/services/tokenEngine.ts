@@ -6,6 +6,12 @@ import {
   notifyStreakMilestone,
   notifySubmissionApproved,
 } from './fcmNotifier';
+import {
+  DUPLICATE_DECAY_WINDOW_MS,
+  VOUCHER_QUALIFYING_PERIOD_MS,
+  TOKENS_PER_LEVEL,
+  MAX_LEVEL,
+} from '../config/constants';
 
 // FR-36: minimum approved track record before a sourcer's submissions
 // publish instantly (combined with a 90%+ accuracy rating).
@@ -21,8 +27,8 @@ export async function getSettings() {
 }
 
 export function computeLevel(lifetimeTokensEarned: number): number {
-  // Level 1-20 based on cumulative lifetime tokens earned (every 500 tokens = 1 level)
-  return Math.min(20, Math.floor(lifetimeTokensEarned / 500) + 1);
+  // FR-48: Levels 1-20 based on cumulative lifetime tokens earned.
+  return Math.min(MAX_LEVEL, Math.floor(lifetimeTokensEarned / TOKENS_PER_LEVEL) + 1);
 }
 
 function canonicalLedgerPayload(params: {
@@ -144,7 +150,7 @@ export async function calculateReward(params: {
       productId: params.productId,
       storeId: params.storeId,
       status: 'approved',
-      submittedAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+      submittedAt: { gte: new Date(Date.now() - DUPLICATE_DECAY_WINDOW_MS) },
     },
   });
   if (recentSub) {
@@ -420,7 +426,7 @@ async function checkVoucherThreshold(userId: string): Promise<void> {
     where: {
       sourcerId: userId,
       status: 'approved',
-      submittedAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+      submittedAt: { gte: new Date(Date.now() - VOUCHER_QUALIFYING_PERIOD_MS) },
     },
     _count: { storeId: true },
     orderBy: { _count: { storeId: 'desc' } },

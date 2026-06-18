@@ -301,6 +301,7 @@
   "homeFreshnessUnder24h": "Under 24h",
   "homeFreshnessUnder72h": "Under 72h",
   "homeUpdatedJustNow": "Updated just now",
+  "homeNoRecentPrice": "No recent price",
   "homeUpdatedHoursAgo": "Updated {hours} hours ago",
   "@homeUpdatedHoursAgo": {
     "placeholders": {

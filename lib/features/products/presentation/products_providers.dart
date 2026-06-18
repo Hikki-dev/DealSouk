@@ -25,9 +25,13 @@ class ProductsNotifier extends Notifier<List<Product>> {
             lowestPrice: price,
             lowestPriceStore: storeName,
             updatedAtLabel: 'Updated Just Now',
+            hoursAgo: 0,
           );
         } else {
-          return product.copyWith(updatedAtLabel: 'Updated Just Now');
+          return product.copyWith(
+            updatedAtLabel: 'Updated Just Now',
+            hoursAgo: 0,
+          );
         }
       }
       return product;

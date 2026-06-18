@@ -87,9 +87,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final bool searching = _searchQuery.trim().isNotEmpty;
     final feedProducts =
         _filterByFreshness(products, filterState.freshnessFilter)..sort(
-          (a, b) => _freshnessMinutes(
-            a.updatedAtLabel,
-          ).compareTo(_freshnessMinutes(b.updatedAtLabel)),
+          (a, b) => (a.hoursAgo ?? _kNoFreshnessHours).compareTo(
+            b.hoursAgo ?? _kNoFreshnessHours,
+          ),
         );
 
     // Categories defined for Dribbble layout with premium transparent 3D clay illustrations
@@ -766,30 +766,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 }
 
+// Sentinel age (hours) for products with no fresh price; sorts/filters them last.
+const int _kNoFreshnessHours = 1 << 30;
+
 List<Product> _filterByFreshness(List<Product> products, String freshness) {
   if (freshness == 'All') return [...products];
-  final maxMinutes = switch (freshness) {
-    'Under 6h' => 6 * 60,
-    'Under 24h' => 24 * 60,
-    'Under 72h' => 72 * 60,
-    _ => 999999,
+  final maxHours = switch (freshness) {
+    'Under 6h' => 6,
+    'Under 24h' => 24,
+    'Under 72h' => 72,
+    _ => _kNoFreshnessHours,
   };
   return products
-      .where(
-        (product) => _freshnessMinutes(product.updatedAtLabel) <= maxMinutes,
-      )
+      .where((product) => (product.hoursAgo ?? _kNoFreshnessHours) <= maxHours)
       .toList();
-}
-
-int _freshnessMinutes(String label) {
-  final lower = label.toLowerCase();
-  if (lower.contains('just now')) return 0;
-  final number =
-      int.tryParse(RegExp(r'(\d+)').firstMatch(lower)?.group(1) ?? '') ?? 9999;
-  if (lower.contains('m')) return number;
-  if (lower.contains('h')) return number * 60;
-  if (lower.contains('d')) return number * 24 * 60;
-  return 9999;
 }
 
 class _HomeTokenBalance extends StatelessWidget {
@@ -1450,19 +1440,11 @@ class _FreshPriceEntryCard extends ConsumerWidget {
     return (storeName.hashCode % 15 + 8) / 10.0; // between 0.8 km and 2.2 km
   }
 
-  String _formatFreshness(AppLocalizations l, String label) {
-    final lower = label.toLowerCase();
-    if (lower.contains('just now')) return l.homeUpdatedJustNow;
-    final matches = RegExp(r'(\d+)').firstMatch(lower);
-    if (matches != null) {
-      final numStr = matches.group(1);
-      if (lower.contains('h')) {
-        return l.homeUpdatedHoursAgo(numStr ?? '');
-      } else if (lower.contains('d')) {
-        return l.homeUpdatedDaysAgo(numStr ?? '');
-      }
-    }
-    return label;
+  String _formatFreshness(AppLocalizations l, int? hoursAgo) {
+    if (hoursAgo == null) return l.homeNoRecentPrice;
+    if (hoursAgo < 1) return l.homeUpdatedJustNow;
+    if (hoursAgo < 24) return l.homeUpdatedHoursAgo('$hoursAgo');
+    return l.homeUpdatedDaysAgo('${hoursAgo ~/ 24}');
   }
 
   @override
@@ -1526,7 +1508,7 @@ class _FreshPriceEntryCard extends ConsumerWidget {
                         color: const Color(0xFFE8F5E9),
                       ),
                       _TrustPill(
-                        label: _formatFreshness(l, product.updatedAtLabel),
+                        label: _formatFreshness(l, product.hoursAgo),
                         icon: Icons.schedule_rounded,
                         color: const Color(0xFFF3F1EA),
                       ),

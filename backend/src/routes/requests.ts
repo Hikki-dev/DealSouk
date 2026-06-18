@@ -4,6 +4,7 @@ import { requireAuth, AuthRequest } from "../middleware/auth";
 import { authenticatedRateLimit } from "../middleware/rateLimits";
 import { spendTokens, awardTokens } from "../services/tokenEngine";
 import { notifyRequestFulfilled } from "../services/fcmNotifier";
+import { REQUEST_EXPIRY_MS } from "../config/constants";
 
 const router = Router();
 const MAX_REQUEST_TEXT_LENGTH = 120;
@@ -111,7 +112,7 @@ router.post("/", requireAuth, createRequestLimiter, async (req: AuthRequest, res
     return;
   }
 
-  const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
+  const expiresAt = new Date(Date.now() + REQUEST_EXPIRY_MS);
   const request = await prisma.priceRequest.create({
     data: {
       requesterId: req.userId!,

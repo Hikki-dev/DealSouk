@@ -10,6 +10,7 @@ import {
   TRUST_MIN_ACCURACY,
 } from '../services/tokenEngine';
 import { notifyRequestFulfilled, notifySubmissionHidden } from '../services/fcmNotifier';
+import { PRICE_FRESHNESS_MS } from '../config/constants';
 
 const router = Router();
 
@@ -184,7 +185,7 @@ router.post('/', requireAuth, submitLimiter, async (req: AuthRequest, res) => {
     hasReceipt,
   });
 
-  const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000);
+  const expiresAt = new Date(Date.now() + PRICE_FRESHNESS_MS);
 
   // FR-36: trusted sourcers (verified track record + 90%+ accuracy) publish
   // instantly so prices appear in the live feed within 60s. Everyone else stays

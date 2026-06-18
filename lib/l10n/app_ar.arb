@@ -264,6 +264,7 @@
   "homeFreshnessUnder24h": "أقل من 24 ساعة",
   "homeFreshnessUnder72h": "أقل من 72 ساعة",
   "homeUpdatedJustNow": "تم التحديث الآن",
+  "homeNoRecentPrice": "لا يوجد سعر حديث",
   "homeUpdatedHoursAgo": "تم التحديث قبل {hours} ساعة",
   "homeUpdatedDaysAgo": "تم التحديث قبل {days} يوم",
   "homeVerifiedWithPhoto": "موثّق بصورة",

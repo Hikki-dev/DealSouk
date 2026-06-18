@@ -1064,6 +1064,12 @@ abstract class AppLocalizations {
   /// **'Updated just now'**
   String get homeUpdatedJustNow;
 
+  /// No description provided for @homeNoRecentPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'No recent price'**
+  String get homeNoRecentPrice;
+
   /// No description provided for @homeUpdatedHoursAgo.
   ///
   /// In en, this message translates to:

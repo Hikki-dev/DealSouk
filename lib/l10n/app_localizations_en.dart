@@ -549,6 +549,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeUpdatedJustNow => 'Updated just now';
 
   @override
+  String get homeNoRecentPrice => 'No recent price';
+
+  @override
   String homeUpdatedHoursAgo(Object hours) {
     return 'Updated $hours hours ago';
   }

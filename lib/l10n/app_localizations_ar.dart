@@ -546,6 +546,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeUpdatedJustNow => 'تم التحديث الآن';
 
   @override
+  String get homeNoRecentPrice => 'لا يوجد سعر حديث';
+
+  @override
   String homeUpdatedHoursAgo(Object hours) {
     return 'تم التحديث قبل $hours ساعة';
   }

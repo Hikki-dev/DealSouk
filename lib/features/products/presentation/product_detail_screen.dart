@@ -1,3 +1,4 @@
+import 'package:dealsouk/core/util/format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -885,10 +886,7 @@ class _PriceHistoryPanel extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                l.productPriceRange(
-                  'AED ${minPrice.toStringAsFixed(2)}',
-                  'AED ${maxPrice.toStringAsFixed(2)}',
-                ),
+                l.productPriceRange(formatAed(minPrice), formatAed(maxPrice)),
                 style: const TextStyle(
                   color: AppTheme.textDark,
                   fontSize: 12,

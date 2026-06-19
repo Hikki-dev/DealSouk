@@ -99,6 +99,36 @@ class AuthNotifier extends Notifier<AuthState> {
       // DB truth. Fire-and-forget so login isn't blocked on the round-trip.
       unawaited(refreshProfile());
     } catch (_) {
+      if (_adminMode) {
+        // Admin route gating depends on a confirmed role from the backend.
+        // The first attempt may have failed because:
+        //   (a) Render was cold-starting, or
+        //   (b) the Firebase token hadn't yet propagated newly-set custom claims.
+        // Force-refresh the token (pulls the latest claims from Firebase) and
+        // retry the backend call once before giving up.
+        try {
+          await user.getIdToken(
+            true,
+          ); // force-refresh so backend sees fresh claims
+          final retry = await apiClient.post('/auth/verify');
+          final data = retry.data as Map<String, dynamic>;
+          state = AuthState(
+            status: AuthStatus.authenticated,
+            firebaseUser: user,
+            displayName: data['displayName'] as String?,
+            roles: _effectiveRoles(AuthRole.fromClaims(data)),
+          );
+          _syncProfileProviders(data, firebaseUser: user);
+          unawaited(refreshProfile());
+          return;
+        } catch (_) {
+          // Both attempts failed. Drop back to unauthenticated so the router
+          // sends the user to /welcome where they can retry — instead of landing
+          // on /unauthorized with no way out (fixed separately in that screen).
+          state = const AuthState(status: AuthStatus.unauthenticated);
+          return;
+        }
+      }
       state = AuthState(
         status: AuthStatus.authenticated,
         firebaseUser: user,

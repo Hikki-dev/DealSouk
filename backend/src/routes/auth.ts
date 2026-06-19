@@ -22,7 +22,10 @@ router.post('/verify', verifyLimiter, async (req, res) => {
 
   const token = authHeader.slice(7);
   try {
-    const decoded = await admin.auth().verifyIdToken(token, true);
+    // checkRevoked=false: skips the extra live round-trip to Firebase's Token
+    // Store. Tokens expire in 1 h naturally; the revocation check was causing
+    // Render cold-start failures that wiped the admin role on every first login.
+    const decoded = await admin.auth().verifyIdToken(token, false);
 
     let user = await prisma.user.findUnique({ where: { firebaseUid: decoded.uid } });
 

@@ -233,6 +233,14 @@
   "homeHowItWorks": "ببساطة: ابحث عن منتج، تحقق من المتاجر القريبة، ثم قرر أين يستحق الذهاب.",
   "homeBestPricesNearYou": "أفضل الأسعار القريبة منك",
   "homePricesCount": "{count} سعر",
+  "savedTitle": "العناصر المحفوظة",
+  "savedEmptyTitle": "لا توجد عناصر محفوظة بعد",
+  "savedEmptyHint": "اضغط على القلب في أي منتج لحفظه هنا للوصول السريع أثناء التسوق.",
+  "scanBarcodeTitle": "مسح الباركود",
+  "scanBarcodeHint": "وجّه الكاميرا نحو الباركود لنستخدمه في العثور على المنتج بسرعة.",
+  "homeLoadError": "تعذّر تحميل الأسعار",
+  "homeLoadErrorHint": "تحقق من اتصالك وحاول مرة أخرى. قد يكون الخادم قيد التشغيل.",
+  "retry": "إعادة المحاولة",
   "homeNoPricesMatch": "لا توجد أسعار تطابق هذا الفلتر بعد",
   "homeNoPricesHint": "جرّب كل الأسعار، ابحث عن منتج، أو اطلب من المتسوقين التحقق من سعر.",
   "homeFindAnItem": "ابحث عن منتج",
@@ -264,6 +272,7 @@
   "homeFreshnessUnder24h": "أقل من 24 ساعة",
   "homeFreshnessUnder72h": "أقل من 72 ساعة",
   "homeUpdatedJustNow": "تم التحديث الآن",
+  "homeNoRecentPrice": "لا يوجد سعر حديث",
   "homeUpdatedHoursAgo": "تم التحديث قبل {hours} ساعة",
   "homeUpdatedDaysAgo": "تم التحديث قبل {days} يوم",
   "homeVerifiedWithPhoto": "موثّق بصورة",
@@ -361,6 +370,13 @@
   "submitSearchBarcodeHint": "ابحث بالاسم أو العلامة التجارية أو امسح الباركود",
   "submitScanBarcodeTooltip": "مسح الباركود",
   "submitNoProductsFound": "لم يتم العثور على منتجات مطابقة لبحثك.",
+  "submitUseTypedProduct": "استخدم \"{productName}\" كمنتج جديد",
+  "@submitUseTypedProduct": {
+    "placeholders": {
+      "productName": {}
+    }
+  },
+  "submitCommunityProductHint": "أرسل سعر الرف لهذا المنتج بالضبط.",
   "submitAttachProofRequired": "أرفق إثباتًا (مطلوب)",
   "submitPriceLabelPhoto": "صورة ملصق السعر",
   "submitReceiptPhoto": "صورة الإيصال",
@@ -556,8 +572,15 @@
   "productPriceRange": "الأدنى {lowest} • الأعلى {highest}",
   "productLatestPrice": "الأحدث {latest}",
   "requestBannerExplanation": "هل تحتاج إلى التحقق من سعر؟ اسأل المتسوقين القريبين. إذا كان أحدهم في المتجر بالفعل، يمكنه إرسال سعر الرف لك.",
+  "requestMyRequestsTitle": "طلبات الأسعار الخاصة بي ({count})",
+  "@requestMyRequestsTitle": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "requestBoardTitle": "عمليات التحقق من الأسعار المطلوبة ({count})",
   "requestAskForPrice": "اطلب سعرًا",
+  "requestPendingStatus": "قيد الانتظار",
   "requestEmptyTitle": "تم إنجاز جميع طلبات الأسعار!",
   "requestEmptySubtitle": "هل تحتاج إلى سعر؟ اضغط على \"اطلب سعرًا\" لطلب التحقق من السعر.",
   "requestFormTitle": "اطلب التحقق من سعر",

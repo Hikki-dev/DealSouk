@@ -7,6 +7,11 @@ class Product {
   final double lowestPrice;
   final String lowestPriceStore;
   final String updatedAtLabel;
+
+  /// Age of the cheapest fresh price in whole hours, or null when there is no
+  /// recent price. Kept numeric so freshness sort/filter never has to parse a
+  /// localized display string (B5); the label is formatted at the widget layer.
+  final int? hoursAgo;
   final String imageUrl;
   final String barcode;
 
@@ -19,6 +24,7 @@ class Product {
     required this.lowestPrice,
     required this.lowestPriceStore,
     required this.updatedAtLabel,
+    this.hoursAgo,
     this.imageUrl = '',
     this.barcode = '',
   });
@@ -59,6 +65,7 @@ class Product {
       lowestPrice: (json['lowestPrice'] as num?)?.toDouble() ?? 0.0,
       lowestPriceStore: json['lowestPriceStore'] as String? ?? '—',
       updatedAtLabel: updatedLabel,
+      hoursAgo: hoursAgo,
       imageUrl: json['imageUrl'] as String? ?? '',
       barcode: json['barcode'] as String? ?? '',
     );
@@ -68,6 +75,7 @@ class Product {
     double? lowestPrice,
     String? lowestPriceStore,
     String? updatedAtLabel,
+    int? hoursAgo,
   }) {
     return Product(
       id: id,
@@ -78,6 +86,7 @@ class Product {
       lowestPrice: lowestPrice ?? this.lowestPrice,
       lowestPriceStore: lowestPriceStore ?? this.lowestPriceStore,
       updatedAtLabel: updatedAtLabel ?? this.updatedAtLabel,
+      hoursAgo: hoursAgo ?? this.hoursAgo,
       imageUrl: imageUrl,
       barcode: barcode,
     );
@@ -94,6 +103,7 @@ class Product {
     'lowestPrice': lowestPrice,
     'lowestPriceStore': lowestPriceStore,
     'updatedAtLabel': updatedAtLabel,
+    'hoursAgo': hoursAgo,
     'imageUrl': imageUrl,
     'barcode': barcode,
   };

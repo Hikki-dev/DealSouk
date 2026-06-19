@@ -878,6 +878,54 @@ abstract class AppLocalizations {
   /// **'{count} prices'**
   String homePricesCount(Object count);
 
+  /// No description provided for @savedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved Items'**
+  String get savedTitle;
+
+  /// No description provided for @savedEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved items yet'**
+  String get savedEmptyTitle;
+
+  /// No description provided for @savedEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the heart on any product to save it here for quick access while you shop.'**
+  String get savedEmptyHint;
+
+  /// No description provided for @scanBarcodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan Barcode'**
+  String get scanBarcodeTitle;
+
+  /// No description provided for @scanBarcodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Point the camera at the barcode. We will use it to find the product faster.'**
+  String get scanBarcodeHint;
+
+  /// No description provided for @homeLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load prices'**
+  String get homeLoadError;
+
+  /// No description provided for @homeLoadErrorHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and try again. The server may be waking up.'**
+  String get homeLoadErrorHint;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
   /// No description provided for @homeNoPricesMatch.
   ///
   /// In en, this message translates to:
@@ -1063,6 +1111,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Updated just now'**
   String get homeUpdatedJustNow;
+
+  /// No description provided for @homeNoRecentPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'No recent price'**
+  String get homeNoRecentPrice;
 
   /// No description provided for @homeUpdatedHoursAgo.
   ///
@@ -1645,6 +1699,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No products found matching your search.'**
   String get submitNoProductsFound;
+
+  /// No description provided for @submitUseTypedProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Use “{productName}” as a new product'**
+  String submitUseTypedProduct(Object productName);
+
+  /// No description provided for @submitCommunityProductHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit the shelf price for this exact item.'**
+  String get submitCommunityProductHint;
 
   /// No description provided for @submitAttachProofRequired.
   ///
@@ -2778,6 +2844,12 @@ abstract class AppLocalizations {
   /// **'Need a price checked? Ask nearby shoppers. If someone is already at that store, they can send back the shelf price.'**
   String get requestBannerExplanation;
 
+  /// No description provided for @requestMyRequestsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My price requests ({count})'**
+  String requestMyRequestsTitle(Object count);
+
   /// No description provided for @requestBoardTitle.
   ///
   /// In en, this message translates to:
@@ -2789,6 +2861,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ask for a price'**
   String get requestAskForPrice;
+
+  /// No description provided for @requestPendingStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'PENDING'**
+  String get requestPendingStatus;
 
   /// No description provided for @requestEmptyTitle.
   ///

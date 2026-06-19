@@ -441,6 +441,33 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get savedTitle => 'Saved Items';
+
+  @override
+  String get savedEmptyTitle => 'No saved items yet';
+
+  @override
+  String get savedEmptyHint =>
+      'Tap the heart on any product to save it here for quick access while you shop.';
+
+  @override
+  String get scanBarcodeTitle => 'Scan Barcode';
+
+  @override
+  String get scanBarcodeHint =>
+      'Point the camera at the barcode. We will use it to find the product faster.';
+
+  @override
+  String get homeLoadError => 'Couldn\'t load prices';
+
+  @override
+  String get homeLoadErrorHint =>
+      'Check your connection and try again. The server may be waking up.';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
   String get homeNoPricesMatch => 'No prices match this filter yet';
 
   @override
@@ -547,6 +574,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeUpdatedJustNow => 'Updated just now';
+
+  @override
+  String get homeNoRecentPrice => 'No recent price';
 
   @override
   String homeUpdatedHoursAgo(Object hours) {
@@ -895,6 +925,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get submitNoProductsFound => 'No products found matching your search.';
+
+  @override
+  String submitUseTypedProduct(Object productName) {
+    return 'Use “$productName” as a new product';
+  }
+
+  @override
+  String get submitCommunityProductHint =>
+      'Submit the shelf price for this exact item.';
 
   @override
   String get submitAttachProofRequired => 'Attach Proof (Required)';
@@ -1554,12 +1593,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Need a price checked? Ask nearby shoppers. If someone is already at that store, they can send back the shelf price.';
 
   @override
+  String requestMyRequestsTitle(Object count) {
+    return 'My price requests ($count)';
+  }
+
+  @override
   String requestBoardTitle(Object count) {
     return 'Price checks people need ($count)';
   }
 
   @override
   String get requestAskForPrice => 'Ask for a price';
+
+  @override
+  String get requestPendingStatus => 'PENDING';
 
   @override
   String get requestEmptyTitle => 'All price requests are completed!';

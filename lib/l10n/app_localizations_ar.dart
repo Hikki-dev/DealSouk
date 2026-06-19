@@ -439,6 +439,33 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get savedTitle => 'العناصر المحفوظة';
+
+  @override
+  String get savedEmptyTitle => 'لا توجد عناصر محفوظة بعد';
+
+  @override
+  String get savedEmptyHint =>
+      'اضغط على القلب في أي منتج لحفظه هنا للوصول السريع أثناء التسوق.';
+
+  @override
+  String get scanBarcodeTitle => 'مسح الباركود';
+
+  @override
+  String get scanBarcodeHint =>
+      'وجّه الكاميرا نحو الباركود لنستخدمه في العثور على المنتج بسرعة.';
+
+  @override
+  String get homeLoadError => 'تعذّر تحميل الأسعار';
+
+  @override
+  String get homeLoadErrorHint =>
+      'تحقق من اتصالك وحاول مرة أخرى. قد يكون الخادم قيد التشغيل.';
+
+  @override
+  String get retry => 'إعادة المحاولة';
+
+  @override
   String get homeNoPricesMatch => 'لا توجد أسعار تطابق هذا الفلتر بعد';
 
   @override
@@ -544,6 +571,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get homeUpdatedJustNow => 'تم التحديث الآن';
+
+  @override
+  String get homeNoRecentPrice => 'لا يوجد سعر حديث';
 
   @override
   String homeUpdatedHoursAgo(Object hours) {
@@ -890,6 +920,14 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get submitNoProductsFound => 'لم يتم العثور على منتجات مطابقة لبحثك.';
+
+  @override
+  String submitUseTypedProduct(Object productName) {
+    return 'استخدم \"$productName\" كمنتج جديد';
+  }
+
+  @override
+  String get submitCommunityProductHint => 'أرسل سعر الرف لهذا المنتج بالضبط.';
 
   @override
   String get submitAttachProofRequired => 'أرفق إثباتًا (مطلوب)';
@@ -1549,12 +1587,20 @@ class AppLocalizationsAr extends AppLocalizations {
       'هل تحتاج إلى التحقق من سعر؟ اسأل المتسوقين القريبين. إذا كان أحدهم في المتجر بالفعل، يمكنه إرسال سعر الرف لك.';
 
   @override
+  String requestMyRequestsTitle(Object count) {
+    return 'طلبات الأسعار الخاصة بي ($count)';
+  }
+
+  @override
   String requestBoardTitle(Object count) {
     return 'عمليات التحقق من الأسعار المطلوبة ($count)';
   }
 
   @override
   String get requestAskForPrice => 'اطلب سعرًا';
+
+  @override
+  String get requestPendingStatus => 'قيد الانتظار';
 
   @override
   String get requestEmptyTitle => 'تم إنجاز جميع طلبات الأسعار!';

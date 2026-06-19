@@ -244,6 +244,14 @@
       "count": {}
     }
   },
+  "savedTitle": "Saved Items",
+  "savedEmptyTitle": "No saved items yet",
+  "savedEmptyHint": "Tap the heart on any product to save it here for quick access while you shop.",
+  "scanBarcodeTitle": "Scan Barcode",
+  "scanBarcodeHint": "Point the camera at the barcode. We will use it to find the product faster.",
+  "homeLoadError": "Couldn't load prices",
+  "homeLoadErrorHint": "Check your connection and try again. The server may be waking up.",
+  "retry": "Retry",
   "homeNoPricesMatch": "No prices match this filter yet",
   "homeNoPricesHint": "Try All prices, search for an item, or ask shoppers to check a price.",
   "homeFindAnItem": "Find an item",
@@ -301,6 +309,7 @@
   "homeFreshnessUnder24h": "Under 24h",
   "homeFreshnessUnder72h": "Under 72h",
   "homeUpdatedJustNow": "Updated just now",
+  "homeNoRecentPrice": "No recent price",
   "homeUpdatedHoursAgo": "Updated {hours} hours ago",
   "@homeUpdatedHoursAgo": {
     "placeholders": {
@@ -522,6 +531,13 @@
   "submitSearchBarcodeHint": "Search name, brand or scan barcode",
   "submitScanBarcodeTooltip": "Scan barcode",
   "submitNoProductsFound": "No products found matching your search.",
+  "submitUseTypedProduct": "Use “{productName}” as a new product",
+  "@submitUseTypedProduct": {
+    "placeholders": {
+      "productName": {}
+    }
+  },
+  "submitCommunityProductHint": "Submit the shelf price for this exact item.",
   "submitAttachProofRequired": "Attach Proof (Required)",
   "submitPriceLabelPhoto": "Price Label Photo",
   "submitReceiptPhoto": "Receipt Photo",
@@ -854,6 +870,12 @@
     }
   },
   "requestBannerExplanation": "Need a price checked? Ask nearby shoppers. If someone is already at that store, they can send back the shelf price.",
+  "requestMyRequestsTitle": "My price requests ({count})",
+  "@requestMyRequestsTitle": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "requestBoardTitle": "Price checks people need ({count})",
   "@requestBoardTitle": {
     "placeholders": {
@@ -861,6 +883,7 @@
     }
   },
   "requestAskForPrice": "Ask for a price",
+  "requestPendingStatus": "PENDING",
   "requestEmptyTitle": "All price requests are completed!",
   "requestEmptySubtitle": "Need a price? Tap 'Ask for a price' to request a price check.",
   "requestFormTitle": "Ask for a price check",

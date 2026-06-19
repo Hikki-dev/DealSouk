@@ -8,6 +8,7 @@ import { RedisStore } from "rate-limit-redis";
 import { PrismaClient } from "@prisma/client";
 import { requireProductionEnv } from "./config/env";
 import { redis, isRedisEnabled } from "./services/redis";
+import * as Sentry from "@sentry/node";
 
 import authRoutes from "./routes/auth";
 import productRoutes from "./routes/products";
@@ -21,6 +22,7 @@ import challengeRoutes from "./routes/challenges";
 import translateRoutes from "./routes/translate";
 import logoRoutes from "./routes/logos";
 import uploadRoutes from "./routes/uploads";
+import configRoutes from "./routes/config";
 import { startMaintenanceScheduler } from "./services/maintenance";
 
 // Safety net: a stray async rejection (e.g. a flaky/misconfigured cache) must
@@ -35,6 +37,16 @@ export const prisma = new PrismaClient();
 export const app = express();
 const PORT = process.env.PORT ?? 3000;
 const isProduction = process.env.NODE_ENV === "production";
+
+// G1: crash/error monitoring (PRD §12). No-op unless SENTRY_DSN is configured,
+// so local/dev and unconfigured deploys behave exactly as before.
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV ?? "development",
+    tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? 0.1),
+  });
+}
 
 requireProductionEnv([
   "DATABASE_URL",
@@ -164,6 +176,7 @@ app.use("/admin", adminRoutes);
 app.use("/challenges", challengeRoutes);
 app.use("/translate", translateRoutes);
 app.use("/logos", logoRoutes);
+app.use("/config", configRoutes);
 
 app.use(
   (
@@ -172,6 +185,9 @@ app.use(
     res: express.Response,
     _next: express.NextFunction,
   ) => {
+    if (process.env.SENTRY_DSN) {
+      Sentry.captureException(err);
+    }
     if (isProduction) {
       console.error("[error]", { name: err.name, message: err.message });
     } else {

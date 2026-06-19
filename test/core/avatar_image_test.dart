@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dealsouk/core/widgets/avatar_image.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,20 +11,20 @@ void main() {
     });
 
     test(
-      'returns a NetworkImage for an http(s) URL (Google photo / uploaded)',
+      'returns a cached network image for an http(s) URL (Google photo / uploaded)',
       () {
         final p = avatarImageProvider(
           'https://lh3.googleusercontent.com/a/x.jpg',
         );
-        expect(p, isA<NetworkImage>());
+        expect(p, isA<CachedNetworkImageProvider>());
         expect(
-          (p as NetworkImage).url,
+          (p as CachedNetworkImageProvider).url,
           'https://lh3.googleusercontent.com/a/x.jpg',
         );
 
         expect(
           avatarImageProvider('http://example.com/a.png'),
-          isA<NetworkImage>(),
+          isA<CachedNetworkImageProvider>(),
         );
       },
     );

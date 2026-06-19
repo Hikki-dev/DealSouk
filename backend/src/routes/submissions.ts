@@ -3,13 +3,15 @@ import { prisma } from '../index';
 import { requireAuth, requireEmailVerified, AuthRequest } from '../middleware/auth';
 import { authenticatedRateLimit } from '../middleware/rateLimits';
 import {
+  awardTokens,
   calculateReward,
   runApprovalEffects,
   TRUST_MIN_APPROVED,
   TRUST_MIN_ACCURACY,
 } from '../services/tokenEngine';
-import { notifySubmissionHidden } from '../services/fcmNotifier';
+import { notifyRequestFulfilled, notifySubmissionHidden } from '../services/fcmNotifier';
 import { validateProofImage, deleteSubmissionProofs } from '../services/storageHelpers';
+import { PRICE_FRESHNESS_MS } from '../config/constants';
 
 const router = Router();
 
@@ -28,6 +30,8 @@ const flagLimiter = authenticatedRateLimit({
 const MIN_PRICE_AED = 0.01;
 const MAX_PRICE_AED = 10000;
 const MAX_URL_LENGTH = 2048;
+const MAX_PRODUCT_NAME_LENGTH = 120;
+const COMMUNITY_PRODUCT_CATEGORY = 'Community';
 const MAX_ID_LENGTH = 40;
 // Minimum gap between same-user, same-product, same-store submissions
 const DUPLICATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
@@ -38,6 +42,26 @@ function isHttpsUrl(value: string): boolean {
   } catch {
     return false;
   }
+}
+
+function normalizeProductName(value: string): string {
+  return value.trim().replace(/\s+/g, ' ');
+}
+
+async function findOrCreateCommunityProduct(productName: string) {
+  const cleanProductName = normalizeProductName(productName);
+  const existing = await prisma.product.findFirst({
+    where: { name: { equals: cleanProductName, mode: 'insensitive' } },
+    orderBy: { id: 'asc' },
+  });
+  if (existing) return existing;
+
+  return prisma.product.create({
+    data: {
+      name: cleanProductName,
+      category: COMMUNITY_PRODUCT_CATEGORY,
+    },
+  });
 }
 
 // Proof photo URLs must come from Firebase Storage — no other host is accepted.
@@ -124,14 +148,32 @@ router.get('/feed', async (req, res) => {
 
 // POST /submissions
 router.post('/', requireAuth, requireEmailVerified, submitLimiter, async (req: AuthRequest, res) => {
-  const { productId, storeId, priceAed, hasReceipt = false, receiptUrl, priceLabelUrl } = req.body as {
-    productId: string;
+  const {
+    productId,
+    productName,
+    storeId,
+    priceAed,
+    hasReceipt = false,
+    receiptUrl,
+    priceLabelUrl,
+    requestId,
+  } = req.body as {
+    productId?: string;
+    productName?: string;
     storeId: string;
     priceAed: number;
     hasReceipt: boolean;
     receiptUrl?: string;
     priceLabelUrl?: string;
+    requestId?: string;
   };
+
+  // B9: either an existing productId or a typed productName is required — a
+  // community submission can name a product that isn't in the catalog yet.
+  if ((!productId && !productName?.trim()) || !storeId) {
+    res.status(400).json({ error: 'productId or productName, and storeId are required' });
+    return;
+  }
 
   // --- ABUSE-1: type confusion ---
   // priceAed must be a finite number; NaN/Infinity/string bypass JS comparison operators.
@@ -146,11 +188,17 @@ router.post('/', requireAuth, requireEmailVerified, submitLimiter, async (req: A
   }
 
   // --- ABUSE-2: ID format/length ---
+  // storeId is always required; productId is optional (a typed productName or a
+  // request fulfilment resolves to a product below), but must be a sane id string.
   if (
-    !productId || typeof productId !== 'string' || productId.length > MAX_ID_LENGTH ||
-    !storeId  || typeof storeId  !== 'string' || storeId.length  > MAX_ID_LENGTH
+    typeof storeId !== 'string' || !storeId || storeId.length > MAX_ID_LENGTH ||
+    (productId !== undefined && (typeof productId !== 'string' || productId.length > MAX_ID_LENGTH))
   ) {
     res.status(400).json({ error: 'Invalid productId or storeId' });
+    return;
+  }
+  if (productName && normalizeProductName(productName).length > MAX_PRODUCT_NAME_LENGTH) {
+    res.status(400).json({ error: 'productName is too long' });
     return;
   }
 
@@ -169,18 +217,55 @@ router.post('/', requireAuth, requireEmailVerified, submitLimiter, async (req: A
     return;
   }
 
-  // --- ABUSE-4: verify product and store exist (give clean 400, not unhandled FK 500) ---
-  const [productExists, storeExists] = await Promise.all([
-    prisma.product.findUnique({ where: { id: productId }, select: { id: true } }),
-    prisma.store.findUnique({ where: { id: storeId }, select: { id: true } }),
-  ]);
-  if (!productExists) {
-    res.status(400).json({ error: 'Product not found' });
-    return;
-  }
-  if (!storeExists) {
+  // --- ABUSE-4: verify the store exists (clean 400, not an unhandled FK 500).
+  // Product existence is enforced when the product is resolved below.
+  const store = await prisma.store.findUnique({ where: { id: storeId } });
+  if (!store) {
     res.status(400).json({ error: 'Store not found' });
     return;
+  }
+
+  const request = requestId
+    ? await prisma.priceRequest.findUnique({
+        where: { id: requestId },
+        include: { requester: true },
+      })
+    : null;
+  if (requestId && !request) {
+    res.status(404).json({ error: 'Request not found' });
+    return;
+  }
+  if (request) {
+    if (request.requesterId === req.userId) {
+      res.status(400).json({ error: 'Cannot fulfill your own request' });
+      return;
+    }
+    if (request.status !== 'open' || request.expiresAt <= new Date()) {
+      res.status(400).json({ error: 'Request is no longer open' });
+      return;
+    }
+    const requestStoreName = request.storeName.toLowerCase();
+    const submissionStoreName = `${store.chain} ${store.branchName}`.toLowerCase();
+    if (
+      !submissionStoreName.includes(requestStoreName) &&
+      !requestStoreName.includes(store.chain.toLowerCase())
+    ) {
+      res.status(400).json({ error: 'Submission store does not match the request' });
+      return;
+    }
+  }
+
+  let product;
+  if (request) {
+    product = await findOrCreateCommunityProduct(request.productName);
+  } else if (productId) {
+    product = await prisma.product.findUnique({ where: { id: productId } });
+    if (!product) {
+      res.status(400).json({ error: 'Product not found' });
+      return;
+    }
+  } else {
+    product = await findOrCreateCommunityProduct(productName!);
   }
 
   const settings = await prisma.adminSettings.findUnique({ where: { id: 1 } });
@@ -205,7 +290,7 @@ router.post('/', requireAuth, requireEmailVerified, submitLimiter, async (req: A
   const recentDuplicate = await prisma.priceSubmission.findFirst({
     where: {
       sourcerId: req.userId!,
-      productId,
+      productId: product.id,
       storeId,
       status: { notIn: ['rejected', 'hidden'] },
       submittedAt: { gte: new Date(Date.now() - DUPLICATE_WINDOW_MS) },
@@ -220,13 +305,13 @@ router.post('/', requireAuth, requireEmailVerified, submitLimiter, async (req: A
   }
 
   const tokensAwarded = await calculateReward({
-    productId,
+    productId: product.id,
     storeId,
     sourcerId: req.userId!,
     hasReceipt: claimsReceipt,
   });
 
-  const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000);
+  const expiresAt = new Date(Date.now() + PRICE_FRESHNESS_MS);
 
   // FR-36: trusted sourcers (verified track record + 90%+ accuracy) publish
   // instantly so prices appear in the live feed within 60s. Everyone else stays
@@ -246,7 +331,7 @@ router.post('/', requireAuth, requireEmailVerified, submitLimiter, async (req: A
   try {
     submission = await prisma.priceSubmission.create({
       data: {
-        productId,
+        productId: product.id,
         storeId,
         sourcerId: req.userId!,
         priceAed,
@@ -275,10 +360,44 @@ router.post('/', requireAuth, requireEmailVerified, submitLimiter, async (req: A
     });
   }
 
+  let requestBountyTokens = 0;
+  if (request) {
+    const updated = await prisma.priceRequest.updateMany({
+      where: { id: request.id, status: 'open' },
+      data: { status: 'fulfilled', fulfilledBy: req.userId! },
+    });
+    if (updated.count === 0) {
+      res.status(400).json({ error: 'Request is no longer open' });
+      return;
+    }
+
+    requestBountyTokens = request.bountyTokens;
+    await awardTokens(
+      req.userId!,
+      requestBountyTokens,
+      `Fulfilled request: ${request.productName} @ ${request.storeName}`,
+    );
+
+    const sourcer = await prisma.user.findUnique({
+      where: { id: req.userId! },
+      select: { displayName: true },
+    });
+    await notifyRequestFulfilled(
+      request.requester.fcmToken,
+      sourcer?.displayName ?? 'A sourcer',
+      request.productName,
+      request.storeName,
+      request.bountyTokens,
+    );
+  }
+
   res.status(201).json({
     id: submission.id,
     status: submission.status,
+    productId: product.id,
+    productName: product.name,
     tokensAwarded,
+    requestBountyTokens,
     expiresAt: submission.expiresAt,
   });
 

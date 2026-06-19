@@ -38,6 +38,18 @@ class PriceRequestsNotifier extends Notifier<List<PriceRequest>> {
     } catch (_) {}
   }
 
+  void markPriceRequestFulfilled(String requestId) {
+    state = state.map((req) {
+      if (req.id == requestId) {
+        return req.copyWith(
+          status: 'fulfilled',
+          timestampLabel: 'Fulfilled Just Now',
+        );
+      }
+      return req;
+    }).toList();
+  }
+
   void refundPriceRequest(String requestId) {
     final reqIndex = state.indexWhere((r) => r.id == requestId);
     if (reqIndex >= 0) {

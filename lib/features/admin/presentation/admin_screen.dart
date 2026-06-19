@@ -1,5 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:dealsouk/features/admin/presentation/widgets/admin_panel_widgets.dart';
+import 'package:dealsouk/features/admin/presentation/panels/analytics_panel.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,9 +12,6 @@ import 'package:dealsouk/features/admin/domain/admin_submission.dart';
 import 'package:dealsouk/features/admin/domain/voucher_request.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:dealsouk/core/network/file_download_helper.dart';
-import 'package:dealsouk/features/admin/data/admin_service.dart';
-import 'package:dealsouk/core/network/api_client.dart';
 import 'package:dealsouk/features/products/domain/product.dart';
 import 'package:dealsouk/features/profile/data/profile_service.dart';
 
@@ -445,7 +444,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                     child: Row(
                                       children: [
                                         Expanded(
-                                          child: _statCard(
+                                          child: adminStatCard(
                                             'PENDING REVIEWS',
                                             '$pendingCount',
                                             Icons.hourglass_empty_rounded,
@@ -454,7 +453,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                         ),
                                         const SizedBox(width: 14),
                                         Expanded(
-                                          child: _statCard(
+                                          child: adminStatCard(
                                             'APPROVED TODAY',
                                             '$approvedCount',
                                             Icons.check_circle_outline_rounded,
@@ -463,7 +462,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                         ),
                                         const SizedBox(width: 14),
                                         Expanded(
-                                          child: _statCard(
+                                          child: adminStatCard(
                                             'TOKENS ISSUED',
                                             '$tokensIssuedCount',
                                             Icons.bolt_rounded,
@@ -551,7 +550,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                     : _activeTab == 'map'
                     ? _buildMapDensityPanel()
                     : _activeTab == 'analytics'
-                    ? _buildAnalyticsPanel()
+                    ? const AnalyticsPanel()
                     : _activeTab == 'vouchers'
                     ? _buildVoucherQueuePanel(vouchers)
                     : _activeTab == 'stock'
@@ -775,61 +774,6 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _statCard(String label, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE8EEE4), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.015),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                label,
-                style: GoogleFonts.nunito(
-                  fontSize: 11,
-                  color: Colors.grey.shade500,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: color, size: 16),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: GoogleFonts.fredoka(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textDark,
-              height: 1.0,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -2037,251 +1981,6 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildAnalyticsPanel() {
-    final analytics = ref.watch(adminAnalyticsProvider);
-
-    return ListView(
-      padding: const EdgeInsets.all(24),
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: _statCard(
-                'TODAY',
-                '${analytics.submissionsToday}',
-                Icons.today_rounded,
-                Colors.green,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: _statCard(
-                'THIS MONTH',
-                '${analytics.submissionsThisMonth}',
-                Icons.calendar_month_rounded,
-                Colors.blue,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: _statCard(
-                'PENDING VOUCHERS',
-                '${analytics.pendingVouchers}',
-                Icons.confirmation_num_rounded,
-                Colors.orange,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 18),
-        _analyticsSection(
-          title: 'Trending Products',
-          emptyText: 'No product trends yet.',
-          children: analytics.trendingProducts
-              .map(
-                (item) => _analyticsRow(
-                  title: item.name,
-                  subtitle: item.category,
-                  value: '${item.submissions} submissions',
-                ),
-              )
-              .toList(),
-        ),
-        const SizedBox(height: 18),
-        _analyticsSection(
-          title: 'Coverage Hotspots',
-          emptyText: 'No coverage data yet.',
-          children: analytics.coverageAreas
-              .map(
-                (area) => _analyticsRow(
-                  title: '${area.chain} ${area.branchName}'.trim(),
-                  subtitle: area.area,
-                  value: '${area.recentSubmissions} recent',
-                ),
-              )
-              .toList(),
-        ),
-        const SizedBox(height: 18),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE8EEE4)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Data Exports & Reports',
-                style: GoogleFonts.fredoka(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textDark,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () async {
-                        try {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Downloading CSV...')),
-                          );
-                          final res = await apiClient.get(
-                            '/admin/exports/submissions.csv',
-                          );
-                          final csvContent = res.data as String;
-                          final bytes = csvContent.codeUnits;
-                          await FileDownloadHelper.downloadFile(
-                            bytes,
-                            'dealsouk-submissions.csv',
-                          );
-                        } catch (err) {
-                          if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Failed to download CSV: $err'),
-                            ),
-                          );
-                        }
-                      },
-                      icon: const Icon(Icons.table_view_rounded),
-                      label: const Text('Download CSV Report'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppTheme.forestDeep,
-                        side: const BorderSide(color: AppTheme.forestDeep),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () async {
-                        try {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Generating Analytics PDF...'),
-                            ),
-                          );
-                          final bytes = await adminService
-                              .downloadAnalyticsPdf();
-                          await FileDownloadHelper.downloadFile(
-                            bytes,
-                            'dealsouk-analytics.pdf',
-                          );
-                        } catch (err) {
-                          if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Failed to generate PDF: $err'),
-                            ),
-                          );
-                        }
-                      },
-                      icon: const Icon(Icons.picture_as_pdf_rounded),
-                      label: const Text('Export PDF Report'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.forestDeep,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _analyticsSection({
-    required String title,
-    required String emptyText,
-    required List<Widget> children,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE8EEE4)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: GoogleFonts.fredoka(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textDark,
-            ),
-          ),
-          const SizedBox(height: 12),
-          if (children.isEmpty)
-            Text(emptyText, style: TextStyle(color: Colors.grey.shade600))
-          else
-            ...children,
-        ],
-      ),
-    );
-  }
-
-  Widget _analyticsRow({
-    required String title,
-    required String subtitle,
-    required String value,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    color: AppTheme.textDark,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            value,
-            style: const TextStyle(
-              color: AppTheme.forestDeep,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ],
-      ),
     );
   }
 

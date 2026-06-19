@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
@@ -12,7 +13,8 @@ import 'package:flutter/widgets.dart';
 ImageProvider? avatarImageProvider(String? url) {
   if (url == null || url.isEmpty) return null;
   if (url.startsWith('http://') || url.startsWith('https://')) {
-    return NetworkImage(url);
+    // P4: disk-cached so avatars don't refetch on every rebuild (NFR-01).
+    return CachedNetworkImageProvider(url);
   }
   if (kIsWeb) return null;
   return FileImage(File(url));

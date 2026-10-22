@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:dealsouk/core/theme/app_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/l10n/app_localizations.dart';
@@ -107,7 +107,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
   Widget _buildCompeteVisual() {
     return _iconCardVisual(
       icon: Icons.emoji_events_rounded,
-      iconBg: const Color(0xFFFFF3E0),
+      iconBg: const Color(0xFFDCF0EE),
       iconColor: AppTheme.amberAccent,
       rows: const [
         ('🔥 5-day streak', '+50 bonus'),
@@ -624,7 +624,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                         Text(
                           slide.title,
                           textAlign: TextAlign.center,
-                          style: GoogleFonts.fredoka(
+                          style: AppFonts.display(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: AppTheme.textDark,
@@ -634,7 +634,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                         Text(
                           slide.description,
                           textAlign: TextAlign.center,
-                          style: GoogleFonts.nunito(
+                          style: AppFonts.body(
                             fontSize: 13.5,
                             color: Colors.grey.shade600,
                             fontWeight: FontWeight.w600,

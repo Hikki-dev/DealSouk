@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:dealsouk/core/util/map_tiles.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:dealsouk/core/theme/app_fonts.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:dealsouk/features/stores/data/stores_service.dart';
 import 'package:dealsouk/features/profile/presentation/profile_providers.dart';
@@ -221,7 +222,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                   Expanded(
                     child: Text(
                       l.storeLocationPromptTitle,
-                      style: GoogleFonts.fredoka(
+                      style: AppFonts.display(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                         color: AppTheme.textDark,
@@ -232,10 +233,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
               ),
               content: Text(
                 l.storeLocationPromptBody,
-                style: GoogleFonts.nunito(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: AppFonts.body(fontSize: 14, fontWeight: FontWeight.w700),
               ),
               actions: [
                 TextButton(
@@ -337,7 +335,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                     child: Text(
                       l.storeMapTitle,
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.fredoka(
+                      style: AppFonts.display(
                         color: AppTheme.forestDeep,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -541,7 +539,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                         : l.storeDubaiStoresCount(
                                             filtered.length,
                                           ),
-                                    style: GoogleFonts.fredoka(
+                                    style: AppFonts.display(
                                       color: Colors.white,
                                       fontSize: 14.5,
                                       fontWeight: FontWeight.bold,
@@ -550,7 +548,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                   const SizedBox(height: 2),
                                   Text(
                                     l.storeTapPinHint,
-                                    style: GoogleFonts.nunito(
+                                    style: AppFonts.body(
                                       color: Colors.white70,
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
@@ -583,16 +581,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                         ),
                                   ),
                                   children: [
-                                    TileLayer(
-                                      urlTemplate:
-                                          'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-                                      subdomains: const ['a', 'b', 'c', 'd'],
-                                      userAgentPackageName: 'com.dealsouk.app',
-                                      retinaMode: RetinaMode.isHighDensity(
-                                        context,
-                                      ),
-                                      maxZoom: 20,
-                                    ),
+                                    buildBaseTileLayer(context),
                                     // User location pin (shown when position is available)
                                     if (_currentPosition != null)
                                       CircleLayer(
@@ -693,15 +682,8 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                         );
                                       }).toList(),
                                     ),
-                                    // OSM attribution (required)
-                                    const RichAttributionWidget(
-                                      attributions: [
-                                        TextSourceAttribution(
-                                          'OpenStreetMap contributors',
-                                          prependCopyright: true,
-                                        ),
-                                      ],
-                                    ),
+                                    // Mapbox + OSM attribution (required)
+                                    buildMapAttribution(),
                                   ],
                                 ),
                                 // Locate button (bottom-right)
@@ -824,7 +806,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                               _userIsInDubai
                                   ? l.storeNearYouTitle
                                   : l.storeAllStoresTitle,
-                              style: GoogleFonts.fredoka(
+                              style: AppFonts.display(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 color: AppTheme.textDark,
@@ -833,7 +815,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                             if (_userIsInDubai)
                               Text(
                                 l.storeWithinRadiusSorted(_maxRadiusKm.toInt()),
-                                style: GoogleFonts.nunito(
+                                style: AppFonts.body(
                                   fontSize: 10.5,
                                   color: Colors.grey.shade500,
                                   fontWeight: FontWeight.w600,
@@ -853,7 +835,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                           ),
                           child: Text(
                             l.storeStoresCount(filtered.length),
-                            style: GoogleFonts.nunito(
+                            style: AppFonts.body(
                               color: AppTheme.forestDeep,
                               fontSize: 11,
                               fontWeight: FontWeight.w800,
@@ -876,7 +858,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                             const SizedBox(height: 14),
                             Text(
                               l.storeLoadingStores,
-                              style: GoogleFonts.nunito(
+                              style: AppFonts.body(
                                 color: Colors.grey.shade600,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -900,7 +882,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                             const SizedBox(height: 12),
                             Text(
                               l.storeLoadErrorTitle,
-                              style: GoogleFonts.nunito(
+                              style: AppFonts.body(
                                 color: Colors.grey.shade600,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -909,7 +891,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                             Text(
                               l.storeLoadErrorSubtitle,
                               textAlign: TextAlign.center,
-                              style: GoogleFonts.nunito(
+                              style: AppFonts.body(
                                 color: Colors.grey.shade500,
                                 fontSize: 12,
                               ),
@@ -942,7 +924,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                             const SizedBox(height: 12),
                             Text(
                               l.storeNoStoresMatch(_searchQuery),
-                              style: GoogleFonts.nunito(
+                              style: AppFonts.body(
                                 color: Colors.grey.shade500,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -1053,7 +1035,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                           children: [
                             Text(
                               store.name,
-                              style: GoogleFonts.fredoka(
+                              style: AppFonts.display(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                                 color: AppTheme.forestDeep,
@@ -1061,7 +1043,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                             ),
                             Text(
                               store.branch,
-                              style: GoogleFonts.nunito(
+                              style: AppFonts.body(
                                 color: Colors.grey.shade500,
                                 fontSize: 12,
                               ),
@@ -1150,7 +1132,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                 price.product.name,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.nunito(
+                                style: AppFonts.body(
                                   fontWeight: FontWeight.bold,
                                   color: AppTheme.textDark,
                                 ),
@@ -1161,7 +1143,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                         price.updatedAtLabel,
                                       )
                                     : price.updatedAtLabel,
-                                style: GoogleFonts.nunito(
+                                style: AppFonts.body(
                                   fontSize: 11,
                                   color: Colors.grey.shade500,
                                 ),
@@ -1249,7 +1231,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                     const SizedBox(height: 20),
                     Text(
                       'Filter Stores',
-                      style: GoogleFonts.fredoka(
+                      style: AppFonts.display(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: AppTheme.textDark,
@@ -1258,7 +1240,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                     const SizedBox(height: 20),
                     Text(
                       'Maximum Distance: ${_customMaxRadiusKm.toStringAsFixed(0)} km',
-                      style: GoogleFonts.nunito(
+                      style: AppFonts.body(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                         color: AppTheme.textDark,
@@ -1283,7 +1265,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                         padding: const EdgeInsets.only(left: 8.0, bottom: 8.0),
                         child: Text(
                           '(Distance filter applies only when inside Dubai with GPS enabled)',
-                          style: GoogleFonts.nunito(
+                          style: AppFonts.body(
                             fontSize: 11,
                             color: Colors.grey,
                             fontStyle: FontStyle.italic,
@@ -1294,7 +1276,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                     const SizedBox(height: 12),
                     Text(
                       'Sort Stores By',
-                      style: GoogleFonts.nunito(
+                      style: AppFonts.body(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                         color: AppTheme.textDark,
@@ -1392,16 +1374,13 @@ class _StorePricesEmptyState extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             title,
-            style: GoogleFonts.fredoka(
-              color: Colors.grey.shade600,
-              fontSize: 16,
-            ),
+            style: AppFonts.display(color: Colors.grey.shade600, fontSize: 16),
           ),
           const SizedBox(height: 6),
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: GoogleFonts.nunito(
+            style: AppFonts.body(
               color: Colors.grey.shade500,
               fontSize: 12,
               height: 1.35,
@@ -1513,7 +1492,7 @@ class _StoreChoiceCard extends StatelessWidget {
                       store.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.fredoka(
+                      style: AppFonts.display(
                         color: AppTheme.textDark,
                         fontSize: 14.5,
                         fontWeight: FontWeight.bold,
@@ -1533,7 +1512,7 @@ class _StoreChoiceCard extends StatelessWidget {
                             store.branch,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.nunito(
+                            style: AppFonts.body(
                               color: Colors.grey.shade500,
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -1577,7 +1556,7 @@ class _StoreChoiceCard extends StatelessWidget {
                           const SizedBox(width: 3),
                           Text(
                             l.storeDistanceKm(distanceKm!.toStringAsFixed(1)),
-                            style: GoogleFonts.nunito(
+                            style: AppFonts.body(
                               color: distanceKm! <= 3
                                   ? const Color(0xFF2A9D8F)
                                   : distanceKm! <= 6
@@ -1602,7 +1581,7 @@ class _StoreChoiceCard extends StatelessWidget {
                       ),
                       child: Text(
                         l.storeViewPrices,
-                        style: GoogleFonts.nunito(
+                        style: AppFonts.body(
                           color: chainColor,
                           fontSize: 9.5,
                           fontWeight: FontWeight.w800,

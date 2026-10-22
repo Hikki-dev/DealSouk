@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:dealsouk/core/theme/app_fonts.dart';
 import 'package:dealsouk/features/products/presentation/products_providers.dart';
 import 'package:dealsouk/features/saved/presentation/saved_providers.dart';
 import 'package:dealsouk/features/requests/presentation/requests_providers.dart';
@@ -106,7 +106,7 @@ class SearchScreen extends ConsumerWidget {
           ),
           title: Text(
             l.searchDailyFoods,
-            style: GoogleFonts.fredoka(
+            style: AppFonts.display(
               color: Colors.black,
               fontWeight: FontWeight.bold,
               fontSize: 18,
@@ -482,7 +482,7 @@ class SearchScreen extends ConsumerWidget {
               children: [
                 Text(
                   l.searchRequestPriceCheckTitle,
-                  style: GoogleFonts.fredoka(
+                  style: AppFonts.display(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: AppTheme.textDark,
@@ -491,7 +491,7 @@ class SearchScreen extends ConsumerWidget {
                 const SizedBox(height: 6),
                 Text(
                   l.searchRequestPriceCheckDescription(requestCost),
-                  style: GoogleFonts.nunito(
+                  style: AppFonts.body(
                     fontSize: 13,
                     color: Colors.grey.shade600,
                   ),

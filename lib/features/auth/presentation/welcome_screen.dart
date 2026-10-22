@@ -301,29 +301,43 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       child: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF5D2E12), Color(0xFF9A5524), Color(0xFFE99A4A)],
+            colors: [Color(0xFF084F52), Color(0xFF0B6B6B), Color(0xFF1A8782)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
         ),
         child: Stack(
           children: [
+            // Real Dubai Marina photo (bundled, no network), faded into the
+            // teal base so the sign-in content stays readable.
             Positioned.fill(
-              child: CustomPaint(painter: WelcomeGridPatternPainter()),
-            ),
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Opacity(
-                opacity: 0.10,
-                child: Image.network(
-                  'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=80&w=1000&auto=format&fit=crop',
-                  height: 300,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const SizedBox(height: 300),
-                ),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.asset(
+                    'assets/images/welcome_marina.jpg',
+                    fit: BoxFit.cover,
+                    alignment: Alignment.topCenter,
+                    cacheWidth: 1000,
+                    excludeFromSemantics: true,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const SizedBox.shrink(),
+                  ),
+                  const DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0x990A3B3E),
+                          Color(0xDD084F52),
+                          Color(0xF50B6B6B),
+                        ],
+                        stops: [0.0, 0.4, 0.75],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             Positioned(
@@ -990,12 +1004,11 @@ class _PrimaryCta extends StatelessWidget {
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Image.network(
-                      'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
-                      height: 20,
-                      width: 20,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const SizedBox(width: 20, height: 20),
+                    Image.asset(
+                      'assets/images/google_g.png',
+                      height: 22,
+                      width: 22,
+                      excludeFromSemantics: true,
                     ),
                     const SizedBox(width: 10),
                     Text(
@@ -1093,26 +1106,6 @@ class _SignInButton extends StatelessWidget {
       ),
     );
   }
-}
-
-class WelcomeGridPatternPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.03)
-      ..strokeWidth = 1.0
-      ..style = PaintingStyle.stroke;
-    const double gridSize = 32.0;
-    for (double x = 0; x < size.width; x += gridSize) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
-    }
-    for (double y = 0; y < size.height; y += gridSize) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class CountryInfo {

@@ -22,6 +22,9 @@ router.get('/search', searchRateLimiter, async (req, res) => {
     return;
   }
 
+  // Public, read-mostly catalogue data: let browsers and the CDN reuse it briefly.
+  res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=60');
+
   const products = await prisma.product.findMany({
     where: {
       ...(q && {

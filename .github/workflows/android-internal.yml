@@ -146,12 +146,14 @@ jobs:
           ANDROID_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_STORE_PASSWORD }}
           ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
           ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+          MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_ACCESS_TOKEN }}
         run: |
           flutter build apk --release --split-per-abi \
             --build-name="${{ steps.version.outputs.name }}" \
             --build-number="${{ steps.version.outputs.code }}" \
             --dart-define=API_BASE_URL="$API_BASE_URL" \
-            --dart-define=ADMIN_MODE=false
+            --dart-define=ADMIN_MODE=false \
+            --dart-define=MAPBOX_ACCESS_TOKEN="$MAPBOX_ACCESS_TOKEN"
           mkdir -p build/outputs
           # arm64-v8a covers ~98 % of modern Android — use it as the shareable universal APK
           cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build/outputs/DealSouk-Shopper.apk
@@ -165,12 +167,14 @@ jobs:
           ANDROID_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_STORE_PASSWORD }}
           ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
           ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+          MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_ACCESS_TOKEN }}
         run: |
           flutter build apk --release --split-per-abi \
             --build-name="${{ steps.version.outputs.name }}" \
             --build-number="${{ steps.version.outputs.code }}" \
             --dart-define=API_BASE_URL="$API_BASE_URL" \
-            --dart-define=ADMIN_MODE=true
+            --dart-define=ADMIN_MODE=true \
+            --dart-define=MAPBOX_ACCESS_TOKEN="$MAPBOX_ACCESS_TOKEN"
           cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build/outputs/DealSouk-Admin.apk
 
       - name: Upload Shopper APK artifact

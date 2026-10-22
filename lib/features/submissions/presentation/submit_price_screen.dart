@@ -7,7 +7,7 @@ import 'package:dealsouk/l10n/app_localizations.dart';
 import 'package:dealsouk/features/admin/domain/admin_settings.dart';
 import 'package:dealsouk/features/products/domain/product.dart';
 import 'package:dealsouk/features/stores/domain/store.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:dealsouk/core/theme/app_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -162,7 +162,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                 : _currentStep == 2
                 ? l.submitStepEnterPrice
                 : l.submitStepConfirmSubmit,
-            style: GoogleFonts.fredoka(fontWeight: FontWeight.bold),
+            style: AppFonts.display(fontWeight: FontWeight.bold),
           ),
           leading: IconButton(
             icon: const DirectionalIcon(Icons.arrow_back_ios_new_rounded),
@@ -340,7 +340,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                     ),
                     title: Text(
                       store.name,
-                      style: GoogleFonts.fredoka(
+                      style: AppFonts.display(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
                         color: AppTheme.textDark,
@@ -348,7 +348,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                     ),
                     subtitle: Text(
                       _storeSubtitle(store),
-                      style: GoogleFonts.nunito(
+                      style: AppFonts.body(
                         color: Colors.grey.shade600,
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
@@ -567,7 +567,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
-              style: GoogleFonts.fredoka(
+              style: AppFonts.display(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: AppTheme.textDark,
@@ -840,7 +840,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
       children: [
         Text(
           label,
-          style: GoogleFonts.nunito(
+          style: AppFonts.body(
             fontWeight: FontWeight.w800,
             fontSize: 13,
             color: Colors.grey.shade600,
@@ -851,7 +851,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
           child: Text(
             value,
             textAlign: TextAlign.end,
-            style: GoogleFonts.fredoka(
+            style: AppFonts.display(
               fontWeight: FontWeight.bold,
               fontSize: 14,
               color: AppTheme.textDark,

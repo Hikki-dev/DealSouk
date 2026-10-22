@@ -46,10 +46,15 @@ jobs:
             exit 1
           fi
           echo "$FIREBASE_OPTIONS_DART_B64" | base64 --decode > lib/firebase_options.dart
-          dart format lib/firebase_options.dart
 
       - name: Install Flutter dependencies
         run: flutter pub get
+
+      # Format the generated file only after `pub get`: before it there is no
+      # package config, so the formatter uses an older language version and the
+      # later `dart format .` check would always rewrite this file and fail.
+      - name: Format generated Firebase options
+        run: dart format lib/firebase_options.dart
 
       - name: Check formatting
         run: dart format --set-exit-if-changed .

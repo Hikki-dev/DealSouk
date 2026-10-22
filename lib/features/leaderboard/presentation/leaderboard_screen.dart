@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:dealsouk/core/theme/app_fonts.dart';
 import 'package:dealsouk/features/requests/presentation/requests_providers.dart';
 import 'package:dealsouk/features/leaderboard/presentation/leaderboard_providers.dart';
 import 'package:dealsouk/features/profile/presentation/profile_providers.dart';
@@ -139,7 +139,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                       child: Text(
                         l.leaderRewardsTitle,
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.fredoka(
+                        style: AppFonts.display(
                           color: AppTheme.forestDeep,
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -1052,7 +1052,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               const SizedBox(width: 8),
               Text(
                 l.leaderHallOfFame,
-                style: GoogleFonts.fredoka(
+                style: AppFonts.display(
                   fontWeight: FontWeight.bold,
                   fontSize: 17,
                   color: AppTheme.textDark,

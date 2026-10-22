@@ -2,7 +2,7 @@
 // admin_screen State so panels can be split into separate widgets without
 // duplicating these pure, stateless builders.
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:dealsouk/core/theme/app_fonts.dart';
 import 'package:dealsouk/core/theme/theme.dart';
 
 Widget adminStatCard(String label, String value, IconData icon, Color color) {
@@ -28,7 +28,7 @@ Widget adminStatCard(String label, String value, IconData icon, Color color) {
           children: [
             Text(
               label,
-              style: GoogleFonts.nunito(
+              style: AppFonts.body(
                 fontSize: 11,
                 color: Colors.grey.shade500,
                 fontWeight: FontWeight.bold,
@@ -48,7 +48,7 @@ Widget adminStatCard(String label, String value, IconData icon, Color color) {
         const SizedBox(height: 10),
         Text(
           value,
-          style: GoogleFonts.fredoka(
+          style: AppFonts.display(
             fontSize: 28,
             fontWeight: FontWeight.bold,
             color: AppTheme.textDark,
@@ -77,7 +77,7 @@ Widget adminAnalyticsSection({
       children: [
         Text(
           title,
-          style: GoogleFonts.fredoka(
+          style: AppFonts.display(
             fontSize: 16,
             fontWeight: FontWeight.bold,
             color: AppTheme.textDark,

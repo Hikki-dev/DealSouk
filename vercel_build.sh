@@ -11,6 +11,11 @@ if [ -z "$API_BASE_URL" ]; then
   exit 1
 fi
 
+if [ -z "$MAPBOX_ACCESS_TOKEN" ]; then
+  echo "WARNING: MAPBOX_ACCESS_TOKEN is not set. The admin map will show blank tiles."
+  echo "         Add it as a Vercel Environment Variable (a restricted public pk. token)."
+fi
+
 echo "==> Restoring generated Firebase options from Vercel env..."
 echo "$FIREBASE_OPTIONS_DART_B64" | base64 --decode > lib/firebase_options.dart
 
@@ -30,6 +35,7 @@ flutter pub get
 echo "==> Building Flutter web admin (release)..."
 flutter build web --release \
   --dart-define=API_BASE_URL="$API_BASE_URL" \
-  --dart-define=ADMIN_MODE=true
+  --dart-define=ADMIN_MODE=true \
+  --dart-define=MAPBOX_ACCESS_TOKEN="$MAPBOX_ACCESS_TOKEN"
 
 echo "==> Build complete! Output in build/web"

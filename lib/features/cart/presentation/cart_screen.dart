@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:dealsouk/core/theme/app_fonts.dart';
 import 'package:dealsouk/features/cart/domain/cart_item.dart';
 import 'package:dealsouk/features/stores/presentation/stores_providers.dart';
 import 'package:dealsouk/features/cart/presentation/cart_providers.dart';
@@ -40,7 +40,7 @@ class CartScreen extends ConsumerWidget {
           ),
           title: Text(
             l.cartMyList,
-            style: GoogleFonts.fredoka(
+            style: AppFonts.display(
               color: AppTheme.textDark,
               fontWeight: FontWeight.bold,
               fontSize: 18,
@@ -188,7 +188,7 @@ class _PriceDropBanner extends StatelessWidget {
               children: [
                 Text(
                   headline,
-                  style: GoogleFonts.fredoka(
+                  style: AppFonts.display(
                     color: AppTheme.forestDeep,
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
@@ -240,7 +240,7 @@ class _EmptySavedPrices extends StatelessWidget {
             const SizedBox(height: 20),
             Text(
               l.cartNoSavedPricesYet,
-              style: GoogleFonts.fredoka(
+              style: AppFonts.display(
                 fontSize: 21,
                 fontWeight: FontWeight.bold,
                 color: AppTheme.textDark,
@@ -250,7 +250,7 @@ class _EmptySavedPrices extends StatelessWidget {
             Text(
               l.cartEmptyStateSubtitle,
               textAlign: TextAlign.center,
-              style: GoogleFonts.nunito(
+              style: AppFonts.body(
                 color: AppTheme.textLight,
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
@@ -349,7 +349,7 @@ class _BestStoreBanner extends ConsumerWidget {
               const SizedBox(width: 8),
               Text(
                 l.cartShoppingListOptions,
-                style: GoogleFonts.fredoka(
+                style: AppFonts.display(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
@@ -368,7 +368,7 @@ class _BestStoreBanner extends ConsumerWidget {
                   children: [
                     Text(
                       l.cartCheapestBasket,
-                      style: GoogleFonts.nunito(
+                      style: AppFonts.body(
                         color: Colors.white70,
                         fontWeight: FontWeight.w800,
                         fontSize: 11,
@@ -381,7 +381,7 @@ class _BestStoreBanner extends ConsumerWidget {
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.fredoka(
+                      style: AppFonts.display(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
@@ -404,7 +404,7 @@ class _BestStoreBanner extends ConsumerWidget {
                   children: [
                     Text(
                       l.cartClosestOption,
-                      style: GoogleFonts.nunito(
+                      style: AppFonts.body(
                         color: Colors.white70,
                         fontWeight: FontWeight.w800,
                         fontSize: 11,
@@ -417,7 +417,7 @@ class _BestStoreBanner extends ConsumerWidget {
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.fredoka(
+                      style: AppFonts.display(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
@@ -446,7 +446,7 @@ class _BestStoreBanner extends ConsumerWidget {
                       savings.toStringAsFixed(2),
                       cheapestStoreName,
                     ),
-                    style: GoogleFonts.nunito(
+                    style: AppFonts.body(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 12.5,
@@ -468,7 +468,7 @@ class _BestStoreBanner extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     l.cartClosestIsCheapest,
-                    style: GoogleFonts.nunito(
+                    style: AppFonts.body(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 12.5,
@@ -502,7 +502,7 @@ class _SectionTitle extends StatelessWidget {
       children: [
         Text(
           title,
-          style: GoogleFonts.fredoka(
+          style: AppFonts.display(
             fontSize: 17,
             fontWeight: FontWeight.bold,
             color: AppTheme.textDark,
@@ -681,7 +681,7 @@ class _StoreComparison extends ConsumerWidget {
         children: [
           Text(
             l.cartNearbyStoreComparison,
-            style: GoogleFonts.fredoka(
+            style: AppFonts.display(
               fontSize: 15,
               fontWeight: FontWeight.bold,
               color: AppTheme.textDark,
@@ -775,7 +775,7 @@ class _PlainLanguageNote extends StatelessWidget {
           Expanded(
             child: Text(
               l.cartPlainLanguageNote,
-              style: GoogleFonts.nunito(
+              style: AppFonts.body(
                 fontSize: 12.5,
                 color: AppTheme.maroon,
                 fontWeight: FontWeight.w800,

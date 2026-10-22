@@ -60,10 +60,13 @@ jobs:
         run: flutter pub get
 
       - name: Build unsigned iOS release
+        env:
+          MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_ACCESS_TOKEN }}
         run: |
           flutter build ios --release --no-codesign \
             --dart-define=API_BASE_URL="$API_BASE_URL" \
-            --dart-define=ADMIN_MODE=false
+            --dart-define=ADMIN_MODE=false \
+            --dart-define=MAPBOX_ACCESS_TOKEN="$MAPBOX_ACCESS_TOKEN"
 
       # Package the .app bundle into a .ipa that AltStore (and AltServer) can
       # directly install. The IPA is just a zip with a Payload/ directory.

@@ -1,10 +1,10 @@
 // ignore_for_file: deprecated_member_use
 
-import 'package:dealsouk/core/config/map_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:dealsouk/core/util/map_tiles.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dealsouk/core/theme/app_fonts.dart';
@@ -581,8 +581,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                         ),
                                   ),
                                   children: [
-                                    MapConfig.tileLayer(context),
-                                    MapConfig.attributionWidget(),
+                                    buildBaseTileLayer(context),
                                     // User location pin (shown when position is available)
                                     if (_currentPosition != null)
                                       CircleLayer(
@@ -683,15 +682,8 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                                         );
                                       }).toList(),
                                     ),
-                                    // OSM attribution (required)
-                                    const RichAttributionWidget(
-                                      attributions: [
-                                        TextSourceAttribution(
-                                          'OpenStreetMap contributors',
-                                          prependCopyright: true,
-                                        ),
-                                      ],
-                                    ),
+                                    // Mapbox + OSM attribution (required)
+                                    buildMapAttribution(),
                                   ],
                                 ),
                                 // Locate button (bottom-right)

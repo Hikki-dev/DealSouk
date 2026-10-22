@@ -154,7 +154,7 @@ describe("auth verify", () => {
       .set("Authorization", "Bearer good-token");
 
     expect(res.status).toBe(200);
-    expect(mockVerifyIdToken).toHaveBeenCalledWith("good-token", true);
+    expect(mockVerifyIdToken).toHaveBeenCalledWith("good-token", false);
   });
 });
 

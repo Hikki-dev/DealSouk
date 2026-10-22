@@ -11,6 +11,7 @@ import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/features/admin/domain/admin_submission.dart';
 import 'package:dealsouk/features/admin/domain/voucher_request.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:dealsouk/core/util/map_tiles.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:dealsouk/features/products/domain/product.dart';
 import 'package:dealsouk/features/profile/data/profile_service.dart';
@@ -2280,14 +2281,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                     initialZoom: 11.0,
                   ),
                   children: [
-                    TileLayer(
-                      urlTemplate:
-                          'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-                      subdomains: const ['a', 'b', 'c', 'd'],
-                      userAgentPackageName: 'com.dealsouk.app',
-                      retinaMode: RetinaMode.isHighDensity(context),
-                      maxZoom: 20,
-                    ),
+                    buildBaseTileLayer(context),
                     CircleLayer(
                       circles: filteredStores.map<CircleMarker>((store) {
                         final double lat = (store['lat'] is num)
@@ -2384,6 +2378,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                         );
                       }).toList(),
                     ),
+                    buildMapAttribution(),
                   ],
                 ),
               ),

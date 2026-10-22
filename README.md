@@ -172,6 +172,7 @@ All build-time environment values must be passed when compiling or running the F
 |---|---|---|---|
 | `API_BASE_URL` | `https://your-domain.com` | Base endpoint of the backend Express API. | **Required**. Release builds will crash with a `StateError` if left blank or configured as non-HTTPS. |
 | `GOOGLE_WEB_CLIENT_ID` | `548247...apps.googleusercontent.com` | OAuth client ID required for Google Sign-In on Web. | **Required** for web client authentication. |
+| `MAPBOX_ACCESS_TOKEN` | `pk.eyJ1...` | Mapbox public token used for the base-map tiles on the shopper and admin maps. Restrict it by URL/bundle ID in the Mapbox dashboard. Never commit it. | **Required**. Without it, maps show blank/failed tiles. |
 | `ADMIN_MODE` | `true` or `false` | Sets the application target view. Toggles between the Moderator Portal (`true`) and Shopper Companion (`false`). | Defaults to `false` (Shopper). |
 
 ---
@@ -180,7 +181,7 @@ All build-time environment values must be passed when compiling or running the F
 
 ### PRD Mismatch Notice
 * **PRD Requirement**: The DealSouk PRD mandates the usage of the **Google Maps SDK** for rendering supermarket pin markers.
-* **MVP Implementation**: The MVP uses **OpenStreetMap (`flutter_map`)** with **CartoDB Voyager** tiles. This wrapper was chosen for local development to prevent billing, credential setup, and API key restrictions from blocking engineers.
+* **MVP Implementation**: The MVP uses **OpenStreetMap (`flutter_map`)** with **Mapbox Streets** raster tiles (CARTO's free Voyager endpoint now returns an "API KEY REQUIRED" placeholder). This wrapper was chosen for local development to prevent billing, credential setup, and API key restrictions from blocking engineers.
 * **Release Path**: The app contains `google_maps_flutter` in `pubspec.yaml`. For the post-MVP production release launch, developers should replace the `FlutterMap` widget wrapper with native `GoogleMap` views and inject restricted Google Maps API keys via build config profiles.
 
 ### Unused Dependency Audits

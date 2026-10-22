@@ -1,0 +1,78 @@
+name: Demo check
+
+# Proves that demo mode (see docs/Demo mode.md) still works: the database migrates and seeds,
+# the demo people are made, and both Flutter apps build with the fake Firebase settings.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - demo/**
+      - backend/**
+      - lib/**
+      - pubspec.yaml
+      - .github/workflows/demo.yml
+  pull_request:
+    paths:
+      - demo/**
+      - backend/**
+      - lib/**
+      - pubspec.yaml
+      - .github/workflows/demo.yml
+
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: dealsouk
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Make the fake config files
+        run: bash demo/prepare.sh
+      - name: Migrate and seed the database
+        working-directory: backend
+        run: |
+          set -a; . ./.env; set +a
+          npm install --no-audit --no-fund
+          npx prisma generate
+          npx prisma migrate deploy
+          npm run seed
+          npm run seed:demo
+      - name: Check that the API starts and answers
+        working-directory: backend
+        run: |
+          set -a; . ./.env; set +a
+          npm run build
+          node dist/index.js &
+          for i in $(seq 1 30); do curl -fs http://127.0.0.1:3000/health && break || sleep 1; done
+          curl -fs "http://127.0.0.1:3000/products/search?q=milk"
+      - run: flutter pub get
+      - name: Build the shopper app
+        run: >
+          flutter build web --profile
+          --dart-define=API_BASE_URL=http://127.0.0.1:3000
+          --dart-define=USE_FIREBASE_EMULATORS=true
+      - name: Build the moderator portal
+        run: >
+          flutter build web --profile
+          --dart-define=API_BASE_URL=http://127.0.0.1:3000
+          --dart-define=USE_FIREBASE_EMULATORS=true
+          --dart-define=ADMIN_MODE=true

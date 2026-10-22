@@ -16,7 +16,8 @@
     "prisma:studio": "prisma studio",
     "seed": "ts-node prisma/seed.ts",
     "admin:set": "ts-node scripts/set-admin.ts",
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "seed:demo": "ts-node prisma/demo.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.1",

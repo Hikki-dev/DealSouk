@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -34,6 +35,16 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    // Demo mode: sign in against the local Firebase Auth emulator instead of a
+    // real project. Off unless started with --dart-define=USE_FIREBASE_EMULATORS=true.
+    // See docs/Demo mode.md.
+    if (const bool.fromEnvironment('USE_FIREBASE_EMULATORS')) {
+      const emulatorHost = String.fromEnvironment(
+        'EMULATOR_HOST',
+        defaultValue: '127.0.0.1',
+      );
+      await FirebaseAuth.instance.useAuthEmulator(emulatorHost, 9099);
+    }
   } catch (e) {
     debugPrint(
       'Firebase initialization failed: $e. Running in mock/offline mode.',

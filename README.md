@@ -7,6 +7,152 @@ The project consists of three main components:
 2. **DealSouk Admin (Web Portal)**: A moderator dashboard to review submitted receipt photos, flag fraudulent submissions, approve supermarket voucher requests, manage configurations, and analyze platform stats.
 3. **DealSouk Backend (API Server)**: A Node.js & TypeScript REST API powered by Express, Prisma ORM, Neon Serverless PostgreSQL, and Firebase Admin.
 
+![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)
+![Node](https://img.shields.io/badge/Node.js-20-339933?logo=nodedotjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-Express-3178C6?logo=typescript&logoColor=white)
+![Postgres](https://img.shields.io/badge/Postgres-Neon%20%2B%20Prisma-4169E1?logo=postgresql&logoColor=white)
+![Firebase](https://img.shields.io/badge/Firebase-Auth%20%7C%20FCM%20%7C%20Storage-FFCA28?logo=firebase&logoColor=black)
+
+**Live services**: backend API on Render (`/health` for a status check), admin portal at [deal-souk.vercel.app](https://deal-souk.vercel.app).
+
+---
+
+## ✨ Features
+
+### Shoppers
+- **Search and compare** prices across Dubai supermarkets. Each product shows its cheapest fresh price, and prices expire after **72 hours**.
+- **Smart cart**: compare a basket across stores and find the cheapest complete basket.
+- **Barcode scanner** to look up a product instantly.
+- **Nearby stores** on a map, with per-store price lists and price history charts.
+- **Submit prices** with a shelf or receipt photo and earn tokens.
+- **Price requests board**: ask for a price check, or fulfil someone else's request.
+- **Rewards**: tokens, daily challenges, streaks, badges, a monthly **leaderboard**, and supermarket **voucher** redemptions.
+- **Saved items**, push notifications, **English and Arabic** (with RTL), and an offline queue that syncs when the connection returns.
+
+### Moderators (admin portal)
+- **Moderation queue**: approve, reject or edit submissions, and review flagged ones (a submission is auto-hidden after 3 unique flags).
+- **User actions**: warn, suspend or ban, all written to an audit log.
+- **Catalog and user management**, voucher approval and **voucher inventory import**.
+- **Analytics**, a store map view, and **CSV / PDF exports**.
+- Platform **settings** (for example voucher thresholds) and a maintenance mode switch.
+
+---
+
+## 🏗️ Architecture
+
+```
+ Shopper app (Flutter)      Admin portal (Flutter web, ADMIN_MODE=true)
+          \                         /
+           \   HTTPS + Firebase ID token
+            v                     v
+        Express API (TypeScript) ── Prisma ──> Neon PostgreSQL
+            |        \
+            |         +── Firebase Admin (verify tokens, FCM push)
+            |         +── Redis (optional, rate limiting)
+            v
+   Firebase Storage  ──> Cloud Functions (EXIF strip) ──> malware-scanner (ClamAV on Cloud Run)
+```
+
+- **One Flutter codebase, two apps.** `ADMIN_MODE` chooses the shopper or moderator UI at build time.
+- **Auth**: Firebase Authentication signs users in (Google, Apple, phone OTP). The API verifies the Firebase ID token and keeps a matching user row. The admin role is stored in the database and as a Firebase custom claim.
+- **Token ledger**: every token change is written as a hash-chained transaction, so the history can be verified.
+- **Uploads**: the client asks the API for a signed URL, uploads straight to Firebase Storage, and a Cloud Function and a malware scanner process the file.
+
+### Project structure
+
+```
+lib/                     Flutter client
+├── app/                 App, router, route guard
+├── core/                Network, offline queue, theme, l10n helpers, shared widgets
+├── features/            One folder per feature: admin, auth, cart, home, leaderboard,
+│                        legal, products, profile, requests, saved, stores,
+│                        submissions, tokens  (data / domain / presentation)
+└── l10n/                English and Arabic strings
+backend/                 Express + TypeScript + Prisma API
+├── src/routes/          One router per module (admin is split into 3 routers)
+├── src/services/        Token engine, notifications, encryption, PDF, Redis, storage
+├── prisma/              Schema, migrations, seed
+├── scripts/             Admin promotion and claim audit
+└── test/                Jest tests
+firebase/                Storage rules and Cloud Functions
+services/malware-scanner Cloud Run ClamAV service
+scripts/                 secret_scan.py, history purge helper
+.github/workflows/       CI, Android and iOS builds, admin web build, keep-warm
+```
+
+---
+
+## 🔌 API overview
+
+All routes are served by the Express app in `backend/src/index.ts`. Write endpoints are rate limited. Routes marked "auth" need a Firebase ID token, and `/admin/*` additionally needs the admin role.
+
+| Module | Base path | Highlights |
+|---|---|---|
+| Auth | `/auth` | `POST /verify` exchanges a Firebase token for a DealSouk user |
+| Products | `/products` | `GET /search`, `/:id`, `/:id/prices`, `/:id/history` |
+| Stores | `/stores` | `GET /nearby`, `/:id`, `/:id/prices` |
+| Submissions | `/submissions` | `GET /feed`, `GET /estimate`, `POST /` (auth), `POST /:id/flag` (auth) |
+| Requests | `/requests` | `GET /board`, `GET /mine`, `POST /`, `POST /:id/fulfill`, `DELETE /:id` |
+| Profile | `/profile` | `/me`, `/me/transactions`, `/me/vouchers`, `/me/submissions`, `/me/cart`, `/me/requests`, `/me/fcm-token`, `DELETE /me` |
+| Leaderboard | `/leaderboard` | `GET /monthly` |
+| Challenges | `/challenges` | `GET /today` |
+| Uploads | `/uploads` | `POST /signed-url` |
+| Translate, Logos, Config | `/translate`, `/logos/:slug`, `/config` | Helpers and client configuration |
+| Admin | `/admin` | `/queue`, `/submissions/:id/{approve,reject}`, `/users/:id/{warn,suspend,ban}`, `/products`, `/users`, `/vouchers`, `/analytics`, `/settings`, `/exports/*` |
+
+The server also exposes `/health`.
+
+---
+
+## 🧪 Testing
+
+```bash
+# Flutter client
+flutter analyze
+flutter test
+
+# Backend
+cd backend
+npm install
+npm test          # Jest, runs in band
+
+# Secret scan (also runs in CI)
+python3 scripts/secret_scan.py
+```
+
+CI (`.github/workflows/ci.yml`) checks formatting, `flutter analyze`, `flutter test`, the secret scan, the Prisma client generation, the backend build and the backend tests on every pull request. Manual test plans are in [docs/TEST_PLAN.md](docs/TEST_PLAN.md) and [docs/AUTOMATED_TEST_PLAN.md](docs/AUTOMATED_TEST_PLAN.md).
+
+---
+
+## 🔐 Security
+
+- Helmet, CORS allow-list, request body size limit and per-route **rate limiting** (Redis-backed in production).
+- Phone numbers are **encrypted at rest** (`DATABASE_ENCRYPTION_KEY`).
+- Admin actions are written to an **audit log**, and admin MFA can be required (`ADMIN_MFA_REQUIRED`).
+- Uploads are limited by user, type and size, have EXIF stripped and are malware scanned.
+- Never commit `.env`, service-account files, `google-services.json`, `GoogleService-Info.plist` or `firebase_options.dart`.
+
+See [SECURITY_AUDIT.md](SECURITY_AUDIT.md) and the pre-launch [SECURITY_CHECKLIST.md](SECURITY_CHECKLIST.md).
+
+---
+
+## ⚙️ Backend environment variables
+
+Copy `backend/.env.example` to `backend/.env`. Main keys:
+
+| Key | Purpose |
+|---|---|
+| `DATABASE_URL` | Postgres connection string (Neon) |
+| `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` | Firebase Admin credentials |
+| `DATABASE_ENCRYPTION_KEY` | Encrypts phone numbers at rest |
+| `ALLOWED_ORIGINS` | CORS allow-list |
+| `REDIS_URL`, `RATE_LIMIT_REDIS` | Optional Redis-backed rate limiting |
+| `*_RATE_LIMIT_PER_MINUTE` | Per-route rate limits |
+| `ADMIN_MFA_REQUIRED` | Require MFA for admin API access |
+| `GOOGLE_TRANSLATE_API_KEY` | `/translate` endpoint |
+| `SMTP_*`, `FROM_EMAIL` | Optional email |
+| `MAINTENANCE_MODE`, `MAINTENANCE_MESSAGE` | Maintenance switch |
+
 ---
 
 ## 🛠️ Technology Stack

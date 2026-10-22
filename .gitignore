@@ -94,3 +94,14 @@ CLAUDE.md
 # Security docs are intentionally tracked
 !SECURITY_AUDIT.md
 !SECURITY_CHECKLIST.md
+
+# Public documentation: the README, the guides in docs/ and their pictures.
+# (Private notes such as CLAUDE.md, AGENTS.md and AUDIT_REPORT.md stay ignored above.)
+!README.md
+!CONTRIBUTING.md
+!SECURITY.md
+!CHANGELOG.md
+!/docs/
+!/docs/**
+!.github/pull_request_template.md
+!.github/ISSUE_TEMPLATE/*.md

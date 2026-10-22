@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="380" viewBox="0 0 1500 380" font-family="Arial, Helvetica, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">Life of a shared price</title><desc id="d">A shopper shares a price with a photo. It waits for a moderator. Once approved it is shown to everyone for 72 hours and earns the shopper tokens. Enough tokens can be exchanged for a supermarket voucher.</desc><defs>
+<marker id="a64748b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#64748b"/></marker>
+<style>.t{font-size:22px;font-weight:700;fill:#0f172a;text-anchor:middle}.s{font-size:16px;fill:#475569;text-anchor:middle}.l{font-size:15px;font-weight:700;fill:#334155;text-anchor:middle}.h{font-size:32px;font-weight:700;fill:#0f172a;text-anchor:middle}.g{font-size:15px;font-weight:700;fill:#94a3b8;letter-spacing:.08em}</style></defs>
+<rect width="1500" height="380" fill="#f8fafc"/>
+<text x="750.0" y="46" class="h">Life of a shared price</text>
+<line x1="274" y1="230" x2="294" y2="230" stroke="#64748b" stroke-width="2.4" marker-end="url(#a64748b)"/>
+<line x1="544" y1="230" x2="564" y2="230" stroke="#64748b" stroke-width="2.4" marker-end="url(#a64748b)"/>
+<line x1="814" y1="230" x2="834" y2="230" stroke="#64748b" stroke-width="2.4" marker-end="url(#a64748b)"/>
+<line x1="1084" y1="230" x2="1104" y2="230" stroke="#64748b" stroke-width="2.4" marker-end="url(#a64748b)"/>
+<rect x="32" y="180" width="235" height="100" rx="16" fill="#ffffff" stroke="#7b4a1e" stroke-width="2.4"/>
+<rect x="32" y="180" width="9" height="100" rx="4" fill="#7b4a1e"/>
+<text x="154" y="226" class="t">Share</text>
+<text x="154" y="252" class="s">a price, with a photo</text>
+<rect x="302" y="180" width="235" height="100" rx="16" fill="#ffffff" stroke="#0f766e" stroke-width="2.4"/>
+<rect x="302" y="180" width="9" height="100" rx="4" fill="#0f766e"/>
+<text x="424" y="226" class="t">Review</text>
+<text x="424" y="252" class="s">a moderator checks it</text>
+<rect x="572" y="180" width="235" height="100" rx="16" fill="#ffffff" stroke="#3178c6" stroke-width="2.4"/>
+<rect x="572" y="180" width="9" height="100" rx="4" fill="#3178c6"/>
+<text x="694" y="226" class="t">Live</text>
+<text x="694" y="252" class="s">shown for 72 hours</text>
+<rect x="842" y="180" width="235" height="100" rx="16" fill="#ffffff" stroke="#d97706" stroke-width="2.4"/>
+<rect x="842" y="180" width="9" height="100" rx="4" fill="#d97706"/>
+<text x="964" y="226" class="t">Earn</text>
+<text x="964" y="252" class="s">50 tokens on approval</text>
+<rect x="1112" y="180" width="235" height="100" rx="16" fill="#ffffff" stroke="#16a34a" stroke-width="2.4"/>
+<rect x="1112" y="180" width="9" height="100" rx="4" fill="#16a34a"/>
+<text x="1234" y="226" class="t">Redeem</text>
+<text x="1234" y="252" class="s">500 tokens, a store voucher</text>
+<text x="750.0" y="358" class="s">Other shoppers can flag a wrong price, and three different flags hide it</text>
+</svg>

@@ -1,29 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
     The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
+    it to work correctly. Replaced by the value of `--base-href` at build time.
   -->
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Compare supermarket prices in Dubai. See fresh prices shared by shoppers near you, ask for a price check and earn rewards.">
+  <meta name="theme-color" content="#0B6B6B">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="dealsouk">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DealSouk">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
@@ -31,8 +24,43 @@
 
   <title>DealSouk</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- Loading screen: painted by the browser at once, removed on first Flutter frame. -->
+  <style>
+    html, body { margin: 0; height: 100%; background: #FBF6EC; }
+    #splash {
+      position: fixed; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 20px;
+      background: #0B6B6B; color: #fff; z-index: 10;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      transition: opacity .25s ease;
+    }
+    #splash .mark {
+      width: 84px; height: 84px; border-radius: 50%; background: #fff; color: #0B6B6B;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px; font-weight: 700; letter-spacing: -1px;
+    }
+    #splash .name { font-size: 22px; font-weight: 700; }
+    #splash .bar { width: 120px; height: 4px; border-radius: 2px; background: rgba(255,255,255,.3); overflow: hidden; }
+    #splash .bar i { display: block; width: 40%; height: 100%; background: #F2A91B; border-radius: 2px; animation: slide 1.1s ease-in-out infinite; }
+    @keyframes slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
+    @media (prefers-reduced-motion: reduce) { #splash .bar i { animation: none; width: 100%; } }
+  </style>
 </head>
 <body>
+  <div id="splash" role="status" aria-label="Loading DealSouk">
+    <div class="mark">DS</div>
+    <div class="name">DealSouk</div>
+    <div class="bar"><i></i></div>
+  </div>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var s = document.getElementById('splash');
+      if (!s) return;
+      s.style.opacity = '0';
+      setTimeout(function () { s.remove(); }, 300);
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

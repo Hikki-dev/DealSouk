@@ -173,18 +173,23 @@ All build-time environment values must be passed when compiling or running the F
 | `API_BASE_URL` | `https://your-domain.com` | Base endpoint of the backend Express API. | **Required**. Release builds will crash with a `StateError` if left blank or configured as non-HTTPS. |
 | `GOOGLE_WEB_CLIENT_ID` | `548247...apps.googleusercontent.com` | OAuth client ID required for Google Sign-In on Web. | **Required** for web client authentication. |
 | `ADMIN_MODE` | `true` or `false` | Sets the application target view. Toggles between the Moderator Portal (`true`) and Shopper Companion (`false`). | Defaults to `false` (Shopper). |
+| `MAP_TILE_URL` | `https://.../{z}/{x}/{y}.png?key=...` | Raster tile source for every map. Defaults to OpenStreetMap's own server, which is for development only. | **Required for production**: use a licensed provider (MapTiler, Stadia, Mapbox, Thunderforest...). |
+| `MAP_ATTRIBUTION` | text | Attribution shown on the map. Must match your provider's terms. | Set together with `MAP_TILE_URL`. |
 
 ---
 
 ## 🗺️ Maps Implementation & Mismatch
+
+### Tile provider (important)
+The public CARTO Voyager URL this app used before now answers with a placeholder tile that reads "API KEY REQUIRED". All map screens now read their tiles from `lib/core/config/map_config.dart`, which takes `MAP_TILE_URL` and `MAP_ATTRIBUTION` from `--dart-define`. OpenStreetMap's own tile server is the default for development only. Its usage policy forbids heavy production traffic, so ship a licensed provider.
 
 ### PRD Mismatch Notice
 * **PRD Requirement**: The DealSouk PRD mandates the usage of the **Google Maps SDK** for rendering supermarket pin markers.
 * **MVP Implementation**: The MVP uses **OpenStreetMap (`flutter_map`)** with **CartoDB Voyager** tiles. This wrapper was chosen for local development to prevent billing, credential setup, and API key restrictions from blocking engineers.
 * **Release Path**: The app contains `google_maps_flutter` in `pubspec.yaml`. For the post-MVP production release launch, developers should replace the `FlutterMap` widget wrapper with native `GoogleMap` views and inject restricted Google Maps API keys via build config profiles.
 
-### Unused Dependency Audits
-* **`google_maps_flutter`**: Included in `pubspec.yaml` but not currently imported in Dart views. Kept as a placeholder to allow transition to Google Maps post-MVP.
+### Dependencies
+`google_maps_flutter`, `cloud_firestore`, `firebase_analytics`, `firebase_crashlytics` and `google_fonts` were removed because nothing in `lib/` imported them (crash reporting is `sentry_flutter`). Fonts are bundled, see below.
 
 ---
 
@@ -261,3 +266,12 @@ We build two targeted flavors of the app:
 2. Create a new **Release** in your GitHub repository sidebar.
 3. Give it a version tag (e.g., `v1.0.0-rc1`).
 4. Once published, a GitHub runner will build both **DealSouk-Shopper.apk** and **DealSouk-Admin.apk** in parallel and automatically attach them as download assets on the release page.
+
+---
+
+## 🎨 Design assets and credits
+
+- **Font**: Readex Pro (SIL Open Font License) is bundled in `assets/fonts/`. One family covers Latin and Arabic, so nothing loads from the network and Arabic no longer falls back to a system font.
+- **Images**: `assets/images/` holds the optimised photos used on the welcome screen and home carousel. `assets/logos/` holds 256px chain logos.
+- **Photo credits**: Dubai Marina by Norlando Pobre (CC BY 2.0), vegetable market by Ithra Dubai (CC BY-SA 4.0), Carrefour UAE (CC BY-SA 4.0, Wikimedia Commons "Dates at Carrefour, UAE"), Dubai Creek (public domain). The same credits appear in the app under Privacy & Terms. The market photo shows a real person and has no confirmed model release, so replace it before launch.
+- **Maps**: © OpenStreetMap contributors.

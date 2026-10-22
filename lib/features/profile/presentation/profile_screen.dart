@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dealsouk/core/widgets/avatar_image.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:dealsouk/core/theme/app_fonts.dart';
 import 'package:dealsouk/features/admin/domain/admin_settings.dart';
 import 'package:dealsouk/features/requests/presentation/requests_providers.dart';
 import 'package:dealsouk/features/profile/data/profile_service.dart';
@@ -116,7 +116,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   const SizedBox(height: 14),
                   Text(
                     profile.name,
-                    style: GoogleFonts.fredoka(
+                    style: AppFonts.display(
                       color: Colors.white,
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -355,7 +355,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             leading: Icon(icon, color: AppTheme.forestDeep, size: 20),
             title: Text(
               title,
-              style: GoogleFonts.fredoka(
+              style: AppFonts.display(
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
                 color: AppTheme.textDark,

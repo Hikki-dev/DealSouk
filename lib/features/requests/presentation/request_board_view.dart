@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:dealsouk/core/theme/app_fonts.dart';
 import 'package:dealsouk/features/requests/presentation/requests_providers.dart';
 import 'package:dealsouk/features/profile/presentation/profile_providers.dart';
 import 'package:dealsouk/features/admin/presentation/admin_providers.dart';
@@ -55,7 +55,7 @@ class RequestBoardView extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     l.requestBannerExplanation,
-                    style: GoogleFonts.nunito(
+                    style: AppFonts.body(
                       fontSize: 12,
                       color: const Color(0xFF5D4037),
                       fontWeight: FontWeight.bold,
@@ -71,7 +71,7 @@ class RequestBoardView extends ConsumerWidget {
           if (myRequests.isNotEmpty) ...[
             Text(
               'My Price Requests (${myRequests.length})',
-              style: GoogleFonts.fredoka(
+              style: AppFonts.display(
                 fontSize: 16.5,
                 fontWeight: FontWeight.bold,
                 color: AppTheme.forestDeep,
@@ -96,7 +96,7 @@ class RequestBoardView extends ConsumerWidget {
               Expanded(
                 child: Text(
                   l.requestBoardTitle(activeRequests.length),
-                  style: GoogleFonts.fredoka(
+                  style: AppFonts.display(
                     fontSize: 16.5,
                     fontWeight: FontWeight.bold,
                     color: AppTheme.textDark,
@@ -148,7 +148,7 @@ class RequestBoardView extends ConsumerWidget {
                   const SizedBox(height: 12),
                   Text(
                     l.requestEmptyTitle,
-                    style: GoogleFonts.fredoka(
+                    style: AppFonts.display(
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
                     ),
@@ -157,7 +157,7 @@ class RequestBoardView extends ConsumerWidget {
                   Text(
                     l.requestEmptySubtitle,
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.nunito(
+                    style: AppFonts.body(
                       color: Colors.grey,
                       fontSize: 11.5,
                       fontWeight: FontWeight.bold,
@@ -244,7 +244,7 @@ class RequestBoardView extends ConsumerWidget {
                 const SizedBox(height: 20),
                 Text(
                   l.requestFormTitle,
-                  style: GoogleFonts.fredoka(
+                  style: AppFonts.display(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: AppTheme.forestDeep,
@@ -253,7 +253,7 @@ class RequestBoardView extends ConsumerWidget {
                 const SizedBox(height: 8),
                 Text(
                   l.requestFormSubtitle(requestCost),
-                  style: GoogleFonts.nunito(
+                  style: AppFonts.body(
                     color: Colors.grey.shade500,
                     fontSize: 12.5,
                   ),
@@ -346,7 +346,7 @@ class RequestBoardView extends ConsumerWidget {
                                 selectedStore,
                                 requestCost,
                               ),
-                              style: GoogleFonts.nunito(
+                              style: AppFonts.body(
                                 fontSize: 13,
                                 height: 1.4,
                                 fontWeight: FontWeight.bold,
@@ -432,7 +432,7 @@ class _RequestItemCard extends StatelessWidget {
                   request.productName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.nunito(
+                  style: AppFonts.body(
                     fontWeight: FontWeight.bold,
                     fontSize: 13.5,
                     color: AppTheme.textDark,
@@ -446,7 +446,7 @@ class _RequestItemCard extends StatelessWidget {
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.nunito(
+                  style: AppFonts.body(
                     color: Colors.grey.shade500,
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
@@ -547,7 +547,7 @@ class _MyRequestItemCard extends ConsumerWidget {
                   request.productName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.nunito(
+                  style: AppFonts.body(
                     fontWeight: FontWeight.bold,
                     fontSize: 13.5,
                     color: AppTheme.textDark,
@@ -558,7 +558,7 @@ class _MyRequestItemCard extends ConsumerWidget {
                   '${request.storeName} • ${request.timestampLabel}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.nunito(
+                  style: AppFonts.body(
                     color: Colors.grey.shade500,
                     fontSize: 11,
                     fontWeight: FontWeight.w700,

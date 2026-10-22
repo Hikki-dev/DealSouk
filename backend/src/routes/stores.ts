@@ -26,6 +26,9 @@ router.get('/nearby', async (req, res) => {
     return;
   }
 
+  // Public store list for a location: safe to reuse for a short while.
+  res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=60');
+
   // Load up to 500 stores (bounding box pre-filter uses lat/lng ranges; exact
   // Haversine distance is applied in JS below to avoid a raw-SQL extension dep).
   const latDelta = radiusKm / 111.0;

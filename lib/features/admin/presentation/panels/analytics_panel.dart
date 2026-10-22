@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:dealsouk/core/theme/app_fonts.dart';
 import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/core/network/api_client.dart';
 import 'package:dealsouk/core/network/file_download_helper.dart';
@@ -91,7 +91,7 @@ class AnalyticsPanel extends ConsumerWidget {
             children: [
               Text(
                 'Data Exports & Reports',
-                style: GoogleFonts.fredoka(
+                style: AppFonts.display(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.textDark,

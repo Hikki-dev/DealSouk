@@ -75,6 +75,17 @@ class PrivacyPolicyScreen extends StatelessWidget {
               l.privacyArabicItem4,
             ],
           ),
+          const _PolicySection(
+            title: 'Photo and map credits',
+            items: [
+              'Dubai Marina: Norlando Pobre, CC BY 2.0 (Wikimedia Commons).',
+              'Vegetable market: Ithra Dubai, CC BY-SA 4.0 (Wikimedia Commons).',
+              'Carrefour, UAE: CC BY-SA 4.0 (Wikimedia Commons, "Dates at Carrefour, UAE").',
+              'Dubai Creek: public domain (Wikimedia Commons).',
+              'Maps: OpenStreetMap contributors.',
+              'Supermarket names and logos belong to their owners.',
+            ],
+          ),
         ],
       ),
     );

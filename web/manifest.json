@@ -1,11 +1,11 @@
 {
-    "name": "dealsouk",
-    "short_name": "dealsouk",
+    "name": "DealSouk",
+    "short_name": "DealSouk",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#FBF6EC",
+    "theme_color": "#0B6B6B",
+    "description": "Compare supermarket prices in Dubai. Fresh prices shared by shoppers near you.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

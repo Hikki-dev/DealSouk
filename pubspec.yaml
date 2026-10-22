@@ -36,13 +36,11 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_riverpod: ^3.3.2
   go_router: ^17.3.0
-  google_fonts: ^6.3.3
   intl: ^0.20.2
 
   # Firebase
   firebase_core: ^3.13.1
   firebase_auth: ^5.5.4
-  cloud_firestore: ^5.6.9
   firebase_storage: ^12.4.5
   firebase_messaging: ^15.2.5
 
@@ -55,7 +53,6 @@ dependencies:
 
   # Location & Maps
   geolocator: ^13.0.4
-  google_maps_flutter: ^2.17.1
   flutter_map: ^8.1.1
   latlong2: ^0.9.1
 
@@ -63,9 +60,7 @@ dependencies:
   image_picker: ^1.1.2
   mobile_scanner: ^7.2.0
 
-  # Production telemetry and secure local storage
-  firebase_analytics: ^11.6.0
-  firebase_crashlytics: ^4.3.10
+  # Secure local storage (crash reporting is handled by sentry_flutter)
   flutter_secure_storage: ^10.3.1
 
   # Crypto (Apple Sign-In nonce)
@@ -98,6 +93,20 @@ flutter:
 
   assets:
     - assets/logos/
+    - assets/images/
+
+  # Bundled so text never waits on a network fetch; one family covers Latin and Arabic.
+  fonts:
+    - family: ReadexPro
+      fonts:
+        - asset: assets/fonts/ReadexPro-400.ttf
+          weight: 400
+        - asset: assets/fonts/ReadexPro-500.ttf
+          weight: 500
+        - asset: assets/fonts/ReadexPro-600.ttf
+          weight: 600
+        - asset: assets/fonts/ReadexPro-700.ttf
+          weight: 700
 
   # To add assets to your application, add an assets section, like this:
   # assets:

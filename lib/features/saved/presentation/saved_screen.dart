@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:dealsouk/core/theme/app_fonts.dart';
 import 'package:dealsouk/features/products/presentation/products_providers.dart';
 import 'package:dealsouk/features/saved/presentation/saved_providers.dart';
 import 'package:dealsouk/core/theme/theme.dart';
@@ -38,7 +38,7 @@ class SavedScreen extends ConsumerWidget {
           ),
           title: Text(
             l.savedTitle,
-            style: GoogleFonts.fredoka(
+            style: AppFonts.display(
               color: Colors.black,
               fontWeight: FontWeight.bold,
               fontSize: 18,

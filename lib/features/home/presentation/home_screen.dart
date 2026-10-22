@@ -11,7 +11,7 @@ import 'package:dealsouk/core/util/greeting.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:dealsouk/core/theme/app_fonts.dart';
 import 'package:dealsouk/features/products/presentation/products_providers.dart';
 import 'package:dealsouk/features/stores/presentation/stores_providers.dart';
 import 'package:dealsouk/features/cart/presentation/cart_providers.dart';
@@ -90,7 +90,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             children: [
               Text(
                 'Select Home Area',
-                style: GoogleFonts.fredoka(
+                style: AppFonts.display(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.textDark,
@@ -316,11 +316,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          Color(0xFF7A4A1D),
-                          Color(0xFFC46A2D),
-                          Color(0xFFFFD8A8),
-                          Color(0xFFFFFAF2),
-                          Color(0xFFFFFAF2),
+                          Color(0xFF084F52),
+                          Color(0xFF0B6B6B),
+                          Color(0xFFDCF0EE),
+                          Color(0xFFFBF6EC),
+                          Color(0xFFFBF6EC),
                         ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
@@ -390,7 +390,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 children: [
                                   Text(
                                     l.homeGreetingLine(greeting, firstName),
-                                    style: GoogleFonts.fredoka(
+                                    style: AppFonts.display(
                                       fontSize: 16.5,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white,
@@ -399,7 +399,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   const SizedBox(height: 2),
                                   Text(
                                     l.homeFindNearbyPrices,
-                                    style: GoogleFonts.nunito(
+                                    style: AppFonts.body(
                                       fontSize: 12.5,
                                       color: Colors.white.withValues(
                                         alpha: 0.85,
@@ -569,7 +569,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       children: [
                         Text(
                           l.homeCategories,
-                          style: GoogleFonts.fredoka(
+                          style: AppFonts.display(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Colors.black,
@@ -639,7 +639,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 const SizedBox(height: 6),
                                 Text(
                                   cat.label,
-                                  style: GoogleFonts.nunito(
+                                  style: AppFonts.body(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
                                     color: Colors.grey.shade600,
@@ -712,7 +712,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       Expanded(
                         child: Text(
                           l.homeHowItWorks,
-                          style: GoogleFonts.nunito(
+                          style: AppFonts.body(
                             fontSize: 12,
                             color: AppTheme.forestDeep,
                             fontWeight: FontWeight.bold,
@@ -743,7 +743,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   children: [
                     Text(
                       l.homeBestPricesNearYou,
-                      style: GoogleFonts.fredoka(
+                      style: AppFonts.display(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Colors.black,
@@ -887,7 +887,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   children: [
                     Text(
                       l.homeBrowseItems,
-                      style: GoogleFonts.fredoka(
+                      style: AppFonts.display(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Colors.black,
@@ -939,7 +939,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   children: [
                     Text(
                       l.homeFeaturedStores,
-                      style: GoogleFonts.fredoka(
+                      style: AppFonts.display(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Colors.black,
@@ -1025,7 +1025,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     const SizedBox(height: 20),
                     Text(
                       'Filter & Sort Products',
-                      style: GoogleFonts.fredoka(
+                      style: AppFonts.display(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: AppTheme.textDark,
@@ -1034,7 +1034,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     const SizedBox(height: 20),
                     Text(
                       'Category',
-                      style: GoogleFonts.nunito(
+                      style: AppFonts.body(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                         color: AppTheme.textDark,
@@ -1088,7 +1088,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     const SizedBox(height: 16),
                     Text(
                       'Freshness Filter',
-                      style: GoogleFonts.nunito(
+                      style: AppFonts.body(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                         color: AppTheme.textDark,
@@ -1138,7 +1138,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     const SizedBox(height: 16),
                     Text(
                       'Sort Products By',
-                      style: GoogleFonts.nunito(
+                      style: AppFonts.body(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                         color: AppTheme.textDark,
@@ -1487,7 +1487,7 @@ class _DailyChallengeCard extends ConsumerWidget {
                       children: [
                         Text(
                           l.homeDailyChallengeDetails,
-                          style: GoogleFonts.fredoka(
+                          style: AppFonts.display(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: AppTheme.forestDeep,
@@ -1497,7 +1497,7 @@ class _DailyChallengeCard extends ConsumerWidget {
                           challenge.completed
                               ? l.homeChallengeFinished
                               : l.homeChallengeEarnBonus,
-                          style: GoogleFonts.nunito(
+                          style: AppFonts.body(
                             color: Colors.grey.shade500,
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -1524,7 +1524,7 @@ class _DailyChallengeCard extends ConsumerWidget {
                 ),
                 child: Text(
                   challenge.description,
-                  style: GoogleFonts.fredoka(
+                  style: AppFonts.display(
                     fontSize: 15,
                     color: AppTheme.forestDeep,
                     fontWeight: FontWeight.w600,
@@ -1562,7 +1562,7 @@ class _DailyChallengeCard extends ConsumerWidget {
                           const SizedBox(width: 8),
                           Text(
                             l.homeYourProgress,
-                            style: GoogleFonts.nunito(
+                            style: AppFonts.body(
                               fontSize: 13.5,
                               fontWeight: FontWeight.bold,
                               color: AppTheme.textDark,
@@ -1575,7 +1575,7 @@ class _DailyChallengeCard extends ConsumerWidget {
                           challenge.progressCount,
                           challenge.targetCount,
                         ),
-                        style: GoogleFonts.nunito(
+                        style: AppFonts.body(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w900,
                           color: AppTheme.forestDeep,
@@ -1633,7 +1633,7 @@ class _DailyChallengeCard extends ConsumerWidget {
                           const SizedBox(width: 8),
                           Text(
                             l.homeCompletedRewardClaimed,
-                            style: GoogleFonts.fredoka(
+                            style: AppFonts.display(
                               color: AppTheme.forestDeep,
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
@@ -1657,7 +1657,7 @@ class _DailyChallengeCard extends ConsumerWidget {
                       ),
                       child: Text(
                         l.homeStartChallengeNow,
-                        style: GoogleFonts.fredoka(
+                        style: AppFonts.display(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                         ),
@@ -1719,7 +1719,7 @@ class _DailyChallengeCard extends ConsumerWidget {
             const SizedBox(width: 8),
             Text(
               title,
-              style: GoogleFonts.nunito(
+              style: AppFonts.body(
                 fontSize: 13.5,
                 fontWeight: FontWeight.bold,
                 color: AppTheme.textDark,
@@ -1729,7 +1729,7 @@ class _DailyChallengeCard extends ConsumerWidget {
         ),
         Text(
           value,
-          style: GoogleFonts.nunito(
+          style: AppFonts.body(
             fontSize: 13.5,
             fontWeight: FontWeight.w900,
             color: valueColor ?? AppTheme.textDark,
@@ -2151,17 +2151,17 @@ class _OfferCarouselState extends State<_OfferCarousel> {
       _OfferCardData(
         title: l.homeOffer1Title,
         subtitle: l.homeOffer1Subtitle,
-        icon: Icons.savings_rounded,
+        image: 'assets/images/offer_shelf.jpg',
       ),
       _OfferCardData(
         title: l.homeOffer2Title,
         subtitle: l.homeOffer2Subtitle,
-        icon: Icons.route_rounded,
+        image: 'assets/images/offer_creek.jpg',
       ),
       _OfferCardData(
         title: l.homeOffer3Title,
         subtitle: l.homeOffer3Subtitle,
-        icon: Icons.add_a_photo_rounded,
+        image: 'assets/images/offer_market.jpg',
       ),
     ];
 
@@ -2182,61 +2182,78 @@ class _OfferCarouselState extends State<_OfferCarousel> {
               final offer = offers[index];
               return Container(
                 margin: const EdgeInsets.symmetric(horizontal: 4),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(10, 16, 10, 10),
-                        child: FractionallySizedBox(
-                          widthFactor: 0.58,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                offer.title,
-                                style: GoogleFonts.fredoka(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF1F2937),
-                                  height: 1.25,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                offer.subtitle,
-                                style: GoogleFonts.nunito(
-                                  fontSize: 13,
-                                  color: Colors.grey.shade600,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.asset(
+                        offer.image,
+                        fit: BoxFit.cover,
+                        cacheWidth: 900,
+                        excludeFromSemantics: true,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const ColoredBox(color: AppTheme.forestDeep),
+                      ),
+                      // Dark teal fade on the text side keeps white text above
+                      // 4.5:1 whatever the photo underneath.
+                      const DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: AlignmentDirectional.centerStart,
+                            end: AlignmentDirectional.centerEnd,
+                            colors: [
+                              Color(0xE6063A3D),
+                              Color(0x99063A3D),
+                              Color(0x1A063A3D),
                             ],
+                            stops: [0.0, 0.55, 1.0],
                           ),
                         ),
                       ),
-                    ),
-                    // Vertically centered, pinned to the trailing edge: right
-                    // in English, auto-mirrored to the left in Arabic. Spanning
-                    // top:0/bottom:0 lets Center balance it within the card so
-                    // the circle is fully visible instead of clipped at the
-                    // bottom-right corner.
-                    PositionedDirectional(
-                      end: 16,
-                      top: 0,
-                      bottom: 0,
-                      child: Center(child: _OfferIconArt(icon: offer.icon)),
-                    ),
-                  ],
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(18, 16, 18, 28),
+                          child: FractionallySizedBox(
+                            widthFactor: 0.66,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  offer.title,
+                                  style: AppFonts.display(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                    height: 1.25,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  offer.subtitle,
+                                  style: AppFonts.body(
+                                    fontSize: 14,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
           ),
         ),
-        Positioned(
-          left: 14,
-          bottom: 22,
+        PositionedDirectional(
+          start: 22,
+          bottom: 12,
           child: Row(
             children: List.generate(
               offers.length,
@@ -2248,8 +2265,8 @@ class _OfferCarouselState extends State<_OfferCarousel> {
                   height: 6,
                   decoration: BoxDecoration(
                     color: _currentIndex == index
-                        ? const Color(0xFF2E7D32)
-                        : const Color(0xFFE0E0E0),
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),
@@ -2262,51 +2279,15 @@ class _OfferCarouselState extends State<_OfferCarousel> {
   }
 }
 
-class _OfferIconArt extends StatelessWidget {
-  final IconData icon;
-
-  const _OfferIconArt({required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        Container(
-          width: 112,
-          height: 112,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.56),
-            shape: BoxShape.circle,
-          ),
-        ),
-        Container(
-          width: 82,
-          height: 82,
-          decoration: BoxDecoration(
-            color: AppTheme.forestDeep.withValues(alpha: 0.10),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            icon,
-            color: AppTheme.forestDeep.withValues(alpha: 0.78),
-            size: 40,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _OfferCardData {
   final String title;
   final String subtitle;
-  final IconData icon;
+  final String image;
 
   const _OfferCardData({
     required this.title,
     required this.subtitle,
-    required this.icon,
+    required this.image,
   });
 }
 
@@ -2348,7 +2329,7 @@ class _SearchResultsPanel extends ConsumerWidget {
             Text(
               l.searchEmptyQueryTitle(query),
               textAlign: TextAlign.center,
-              style: GoogleFonts.fredoka(
+              style: AppFonts.display(
                 color: AppTheme.textDark,
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
@@ -2397,7 +2378,7 @@ class _SearchResultsPanel extends ConsumerWidget {
             padding: const EdgeInsets.only(bottom: 10, left: 2),
             child: Text(
               l.homeSearchResultsCount(matches.length),
-              style: GoogleFonts.fredoka(
+              style: AppFonts.display(
                 fontSize: 14.5,
                 fontWeight: FontWeight.bold,
                 color: AppTheme.textDark,
@@ -2537,7 +2518,7 @@ void _showItemRequestSheet(
             children: [
               Text(
                 l.searchRequestPriceCheckTitle,
-                style: GoogleFonts.fredoka(
+                style: AppFonts.display(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.textDark,
@@ -2546,10 +2527,7 @@ void _showItemRequestSheet(
               const SizedBox(height: 6),
               Text(
                 l.searchRequestPriceCheckDescription(requestCost),
-                style: GoogleFonts.nunito(
-                  fontSize: 13,
-                  color: Colors.grey.shade600,
-                ),
+                style: AppFonts.body(fontSize: 13, color: Colors.grey.shade600),
               ),
               const SizedBox(height: 18),
               TextFormField(

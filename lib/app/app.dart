@@ -78,9 +78,16 @@ class _DealSoukAppState extends ConsumerState<DealSoukApp> {
       theme: AppTheme.lightTheme,
       scrollBehavior: const DealSoukScrollBehavior(),
       routerConfig: ref.watch(routerProvider),
-      builder: (context, child) {
+      builder: (context, rawChild) {
+        // Respect each person's system text size up to 160%, so the app stays
+        // usable at 65 without letting extreme sizes break the layout.
+        final child = MediaQuery.withClampedTextScaling(
+          minScaleFactor: 1.0,
+          maxScaleFactor: 1.6,
+          child: rawChild ?? const SizedBox(),
+        );
         final status = systemStatus.asData?.value;
-        if (status?.maintenance != true) return child ?? const SizedBox();
+        if (status?.maintenance != true) return child;
         return Column(
           children: [
             Material(
@@ -99,13 +106,13 @@ class _DealSoukAppState extends ConsumerState<DealSoukApp> {
                     style: const TextStyle(
                       color: Color(0xFF3E2F00),
                       fontWeight: FontWeight.w800,
-                      fontSize: 12,
+                      fontSize: 14,
                     ),
                   ),
                 ),
               ),
             ),
-            Expanded(child: child ?? const SizedBox()),
+            Expanded(child: child),
           ],
         );
       },

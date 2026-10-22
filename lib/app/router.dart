@@ -14,7 +14,9 @@ import 'package:dealsouk/features/stores/presentation/store_screen.dart';
 import 'package:dealsouk/features/cart/presentation/cart_screen.dart';
 import 'package:dealsouk/features/submissions/presentation/submit_price_screen.dart';
 import 'package:dealsouk/features/leaderboard/presentation/leaderboard_screen.dart';
-import 'package:dealsouk/features/admin/presentation/admin_screen.dart';
+// Loaded on demand so shoppers on web never download the moderator console.
+import 'package:dealsouk/features/admin/presentation/admin_screen.dart'
+    deferred as admin_screen;
 import 'package:dealsouk/features/profile/presentation/profile_screen.dart';
 import 'package:dealsouk/features/auth/presentation/unauthorized_screen.dart';
 import 'package:dealsouk/features/legal/presentation/privacy_policy_screen.dart';
@@ -81,7 +83,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
-      GoRoute(path: '/admin', builder: (context, state) => const AdminScreen()),
+      GoRoute(
+        path: '/admin',
+        builder: (context, state) => const _DeferredAdminScreen(),
+      ),
       GoRoute(path: '/saved', builder: (context, state) => const SavedScreen()),
       GoRoute(
         path: '/unauthorized',
@@ -116,3 +121,34 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+class _DeferredAdminScreen extends StatefulWidget {
+  const _DeferredAdminScreen();
+
+  @override
+  State<_DeferredAdminScreen> createState() => _DeferredAdminScreenState();
+}
+
+class _DeferredAdminScreenState extends State<_DeferredAdminScreen> {
+  late final Future<void> _loaded = admin_screen.loadLibrary();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<void>(
+      future: _loaded,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snapshot.hasError) {
+          return const Scaffold(
+            body: Center(child: Text('Could not load the moderator console.')),
+          );
+        }
+        return admin_screen.AdminScreen();
+      },
+    );
+  }
+}

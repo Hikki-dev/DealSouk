@@ -1,10 +1,11 @@
+import 'package:dealsouk/core/config/map_config.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:dealsouk/features/admin/presentation/widgets/admin_panel_widgets.dart';
 import 'package:dealsouk/features/admin/presentation/panels/analytics_panel.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:dealsouk/core/theme/app_fonts.dart';
 import 'package:dealsouk/features/admin/presentation/admin_providers.dart';
 import 'package:dealsouk/features/auth/presentation/auth_providers.dart';
 import 'package:dealsouk/core/theme/theme.dart';
@@ -143,7 +144,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                     children: [
                       Text(
                         'DealSouk',
-                        style: GoogleFonts.fredoka(
+                        style: AppFonts.display(
                           color: Colors.white,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -151,7 +152,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                       ),
                       Text(
                         'Moderator Console',
-                        style: GoogleFonts.nunito(
+                        style: AppFonts.body(
                           color: Colors.grey.shade500,
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
@@ -243,7 +244,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 ),
                 title: Text(
                   'Back to App',
-                  style: GoogleFonts.nunito(
+                  style: AppFonts.body(
                     color: Colors.white,
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
@@ -251,7 +252,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 ),
                 subtitle: Text(
                   'Return to Profile',
-                  style: GoogleFonts.nunito(
+                  style: AppFonts.body(
                     color: Colors.grey.shade500,
                     fontSize: 10,
                   ),
@@ -276,7 +277,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 ),
                 title: Text(
                   'Log Out',
-                  style: GoogleFonts.nunito(
+                  style: AppFonts.body(
                     color: Colors.white,
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
@@ -284,7 +285,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 ),
                 subtitle: Text(
                   'Exit console',
-                  style: GoogleFonts.nunito(
+                  style: AppFonts.body(
                     color: Colors.grey.shade500,
                     fontSize: 10,
                   ),
@@ -333,7 +334,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                           : _activeTab == 'users_crud'
                           ? 'Users Directory Management'
                           : 'Sourcers Index',
-                      style: GoogleFonts.fredoka(
+                      style: AppFonts.display(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: AppTheme.textDark,
@@ -361,7 +362,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                               const SizedBox(width: 6),
                               Text(
                                 'Role: Admin Auditor',
-                                style: GoogleFonts.nunito(
+                                style: AppFonts.body(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
                                   color: Colors.red.shade900,
@@ -485,7 +486,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                     ),
                                     child: Text(
                                       'Submissions Review Queue',
-                                      style: GoogleFonts.fredoka(
+                                      style: AppFonts.display(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                         color: AppTheme.textDark,
@@ -616,7 +617,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 child: Text(
                   'Admin Review',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.fredoka(
+                  style: AppFonts.display(
                     color: AppTheme.forestDeep,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -670,7 +671,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                   child: Text(
                     'Price Submissions (${pendingSubs.length})',
-                    style: GoogleFonts.fredoka(
+                    style: AppFonts.display(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: AppTheme.textDark,
@@ -744,7 +745,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 Expanded(
                   child: Text(
                     label,
-                    style: GoogleFonts.nunito(
+                    style: AppFonts.body(
                       color: isActive ? Colors.white : Colors.grey.shade400,
                       fontSize: 13.5,
                       fontWeight: isActive ? FontWeight.bold : FontWeight.w600,
@@ -793,7 +794,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         children: [
           Text(
             label.toUpperCase(),
-            style: GoogleFonts.nunito(
+            style: AppFonts.body(
               fontSize: 9,
               color: Colors.grey.shade500,
               fontWeight: FontWeight.w800,
@@ -810,7 +811,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               const SizedBox(width: 6),
               Text(
                 value,
-                style: GoogleFonts.fredoka(
+                style: AppFonts.display(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.textDark,
@@ -849,7 +850,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           const SizedBox(height: 18),
           Text(
             'Queue Cleared!',
-            style: GoogleFonts.fredoka(
+            style: AppFonts.display(
               fontWeight: FontWeight.bold,
               fontSize: 17,
               color: AppTheme.textDark,
@@ -859,7 +860,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           Text(
             'No pending grocery price reports require verification.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.nunito(
+            style: AppFonts.body(
               color: Colors.grey.shade500,
               fontSize: 12.5,
               fontWeight: FontWeight.w600,
@@ -940,7 +941,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                               Expanded(
                                 child: Text(
                                   sub.productName,
-                                  style: GoogleFonts.fredoka(
+                                  style: AppFonts.display(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 15,
                                     color: AppTheme.textDark,
@@ -952,7 +953,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                           const SizedBox(height: 2),
                           Text(
                             'Brand: ${sub.brand} • Store: ${sub.storeName}',
-                            style: GoogleFonts.nunito(
+                            style: AppFonts.body(
                               color: Colors.grey.shade600,
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
@@ -963,7 +964,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                     ),
                     Text(
                       'AED ${sub.price.toStringAsFixed(2)}',
-                      style: GoogleFonts.fredoka(
+                      style: AppFonts.display(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: isFlaggedReport
@@ -1015,7 +1016,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                         ),
                         child: Text(
                           'Community Flagged',
-                          style: GoogleFonts.nunito(
+                          style: AppFonts.body(
                             fontWeight: FontWeight.w900,
                             fontSize: 10,
                             color: Colors.red.shade700,
@@ -1034,7 +1035,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                         ),
                         child: Text(
                           'Reward: +${sub.tokensReward}T',
-                          style: GoogleFonts.nunito(
+                          style: AppFonts.body(
                             fontWeight: FontWeight.w900,
                             fontSize: 10,
                             color: const Color(0xFFC77C02),
@@ -1057,7 +1058,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            textStyle: GoogleFonts.nunito(
+                            textStyle: AppFonts.body(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
                             ),
@@ -1081,7 +1082,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            textStyle: GoogleFonts.nunito(
+                            textStyle: AppFonts.body(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
                             ),
@@ -1099,7 +1100,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            textStyle: GoogleFonts.nunito(
+                            textStyle: AppFonts.body(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
                             ),
@@ -1141,7 +1142,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           const SizedBox(height: 14),
           Text(
             'System Idle',
-            style: GoogleFonts.fredoka(
+            style: AppFonts.display(
               fontWeight: FontWeight.bold,
               color: Colors.grey.shade600,
             ),
@@ -1149,10 +1150,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           const SizedBox(height: 4),
           Text(
             'Select a queue item to audit',
-            style: GoogleFonts.nunito(
-              fontSize: 12,
-              color: Colors.grey.shade500,
-            ),
+            style: AppFonts.body(fontSize: 12, color: Colors.grey.shade500),
           ),
         ],
       ),
@@ -1170,7 +1168,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             Expanded(
               child: Text(
                 isFlaggedReport ? 'Moderation Review' : 'Submission Audit',
-                style: GoogleFonts.fredoka(
+                style: AppFonts.display(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.textDark,
@@ -1192,7 +1190,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               ),
               child: Text(
                 isFlaggedReport ? 'FLAGGED' : 'PENDING',
-                style: GoogleFonts.nunito(
+                style: AppFonts.body(
                   fontSize: 9,
                   fontWeight: FontWeight.w900,
                   color: isFlaggedReport
@@ -1207,7 +1205,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         const SizedBox(height: 4),
         Text(
           'ID: ${sub.id}  ·  Submitted ${sub.timestampLabel}',
-          style: GoogleFonts.nunito(
+          style: AppFonts.body(
             fontSize: 11,
             color: Colors.grey.shade500,
             fontWeight: FontWeight.w600,
@@ -1236,7 +1234,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                     const SizedBox(width: 8),
                     Text(
                       'Accuracy Verification Alert',
-                      style: GoogleFonts.fredoka(
+                      style: AppFonts.display(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
                         color: Colors.red.shade900,
@@ -1247,7 +1245,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 const SizedBox(height: 8),
                 Text(
                   'This price entry has been flagged 3+ times by DealSouk shoppers. The price of AED ${sub.price.toStringAsFixed(2)} is reported as incorrect for ${sub.productName} at ${sub.storeName}.',
-                  style: GoogleFonts.nunito(
+                  style: AppFonts.body(
                     fontSize: 11.5,
                     color: Colors.red.shade800,
                     fontWeight: FontWeight.w600,
@@ -1262,7 +1260,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           // Visual Thumbnail previews of attachments
           Text(
             'ATTACHED EVIDENCE (TAP TO VIEW):',
-            style: GoogleFonts.nunito(
+            style: AppFonts.body(
               fontSize: 10,
               fontWeight: FontWeight.w800,
               color: Colors.grey.shade500,
@@ -1300,7 +1298,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         const SizedBox(height: 20),
         Text(
           isFlaggedReport ? 'INVESTIGATION PROTOCOLS:' : 'CHECKLIST PROTOCOLS:',
-          style: GoogleFonts.nunito(
+          style: AppFonts.body(
             fontSize: 10,
             fontWeight: FontWeight.w800,
             color: Colors.grey.shade500,
@@ -1384,7 +1382,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                       isFlaggedReport
                           ? 'Community Trust Level'
                           : 'Auditing Accuracy Score',
-                      style: GoogleFonts.fredoka(
+                      style: AppFonts.display(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                         color: isFlaggedReport
@@ -1396,7 +1394,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                       isFlaggedReport
                           ? 'Based on reporter history'
                           : 'Sourcer trustworthiness KPI',
-                      style: GoogleFonts.nunito(
+                      style: AppFonts.body(
                         fontSize: 9,
                         color: Colors.grey.shade600,
                         fontWeight: FontWeight.w600,
@@ -1407,7 +1405,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               ),
               Text(
                 isFlaggedReport ? '92.0%' : '98.4%',
-                style: GoogleFonts.fredoka(
+                style: AppFonts.display(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: isFlaggedReport
@@ -1429,7 +1427,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               icon: const Icon(Icons.edit_outlined, size: 16),
               label: Text(
                 'Edit Submission',
-                style: GoogleFonts.nunito(fontWeight: FontWeight.bold),
+                style: AppFonts.body(fontWeight: FontWeight.bold),
               ),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.forestDeep,
@@ -1458,7 +1456,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 ),
                 child: Text(
                   isFlaggedReport ? 'Confirm Deletion' : 'Reject',
-                  style: GoogleFonts.nunito(fontWeight: FontWeight.bold),
+                  style: AppFonts.body(fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -1476,7 +1474,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 ),
                 child: Text(
                   isFlaggedReport ? 'Reinstate Price' : 'Approve',
-                  style: GoogleFonts.nunito(fontWeight: FontWeight.bold),
+                  style: AppFonts.body(fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -1494,7 +1492,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
       children: [
         Text(
           'Sourcer controls',
-          style: GoogleFonts.nunito(
+          style: AppFonts.body(
             fontSize: 12,
             fontWeight: FontWeight.w900,
             color: Colors.grey.shade700,
@@ -1543,7 +1541,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           Expanded(
             child: Text(
               label,
-              style: GoogleFonts.nunito(
+              style: AppFonts.body(
                 fontSize: 12,
                 color: Colors.grey.shade700,
                 fontWeight: FontWeight.w600,
@@ -1733,7 +1731,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             const SizedBox(width: 4),
             Text(
               label,
-              style: GoogleFonts.nunito(
+              style: AppFonts.body(
                 fontSize: 9.5,
                 fontWeight: FontWeight.bold,
                 color: isAttached ? AppTheme.forestDeep : Colors.grey.shade600,
@@ -1779,14 +1777,14 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               ),
               title: Text(
                 'Edit Submission',
-                style: GoogleFonts.fredoka(fontWeight: FontWeight.bold),
+                style: AppFonts.display(fontWeight: FontWeight.bold),
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     sub.productName,
-                    style: GoogleFonts.nunito(
+                    style: AppFonts.body(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                       color: AppTheme.textDark,
@@ -1890,7 +1888,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               const SizedBox(height: 12),
               Text(
                 'No voucher requests',
-                style: GoogleFonts.fredoka(
+                style: AppFonts.display(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.textDark,
@@ -1900,7 +1898,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               Text(
                 'New requests appear here when shoppers reach the token threshold.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.nunito(
+                style: AppFonts.body(
                   color: Colors.grey.shade600,
                   fontSize: 12.5,
                 ),
@@ -1945,7 +1943,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                   children: [
                     Text(
                       '${voucher.userName} - AED ${voucher.denominationAed} ${voucher.supermarket}',
-                      style: GoogleFonts.fredoka(
+                      style: AppFonts.display(
                         fontWeight: FontWeight.bold,
                         color: AppTheme.textDark,
                         fontSize: 15,
@@ -1954,7 +1952,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                     const SizedBox(height: 3),
                     Text(
                       '${voucher.userHomeArea ?? 'Dubai'} | ${voucher.userTokenBalance} tokens available | cost ${voucher.tokenCost}',
-                      style: GoogleFonts.nunito(
+                      style: AppFonts.body(
                         color: Colors.grey.shade600,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -2001,7 +1999,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           children: [
             Text(
               '${voucher.userName} - AED ${voucher.denominationAed} ${voucher.supermarket}',
-              style: GoogleFonts.nunito(fontWeight: FontWeight.bold),
+              style: AppFonts.body(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             if (approve) ...[
@@ -2019,7 +2017,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                     Expanded(
                       child: Text(
                         'A voucher code will be automatically selected and assigned from the active ${voucher.supermarket} (AED ${voucher.denominationAed}) inventory stock.',
-                        style: GoogleFonts.nunito(
+                        style: AppFonts.body(
                           fontSize: 11,
                           color: Colors.green.shade900,
                           fontWeight: FontWeight.bold,
@@ -2133,7 +2131,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                   Expanded(
                     child: Text(
                       'Visualizing active grocery price submissions across Dubai. Circles show submission density. Tap any marker pin to inspect store details.',
-                      style: GoogleFonts.nunito(
+                      style: AppFonts.body(
                         fontWeight: FontWeight.w600,
                         color: AppTheme.textDark,
                         fontSize: 13,
@@ -2183,7 +2181,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                             value: c,
                             child: Text(
                               c,
-                              style: GoogleFonts.nunito(
+                              style: AppFonts.body(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -2222,7 +2220,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                     ? Center(
                         child: Text(
                           'No stores match filters.',
-                          style: GoogleFonts.nunito(color: Colors.grey),
+                          style: AppFonts.body(color: Colors.grey),
                         ),
                       )
                     : ListView.separated(
@@ -2248,7 +2246,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                           return ListTile(
                             title: Text(
                               '$chain $branchName',
-                              style: GoogleFonts.nunito(
+                              style: AppFonts.body(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
                                 color: AppTheme.textDark,
@@ -2256,7 +2254,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                             ),
                             subtitle: Text(
                               'Area: $area • Approved: $count',
-                              style: GoogleFonts.nunito(
+                              style: AppFonts.body(
                                 fontSize: 11,
                                 color: Colors.grey.shade600,
                               ),
@@ -2280,14 +2278,8 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                     initialZoom: 11.0,
                   ),
                   children: [
-                    TileLayer(
-                      urlTemplate:
-                          'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-                      subdomains: const ['a', 'b', 'c', 'd'],
-                      userAgentPackageName: 'com.dealsouk.app',
-                      retinaMode: RetinaMode.isHighDensity(context),
-                      maxZoom: 20,
-                    ),
+                    MapConfig.tileLayer(context),
+                    MapConfig.attributionWidget(),
                     CircleLayer(
                       circles: filteredStores.map<CircleMarker>((store) {
                         final double lat = (store['lat'] is num)
@@ -2341,7 +2333,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                   ),
                                   title: Text(
                                     '$chain $branchName',
-                                    style: GoogleFonts.fredoka(
+                                    style: AppFonts.display(
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -2352,14 +2344,14 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                     children: [
                                       Text(
                                         'Area: ${store['area'] ?? 'Dubai'}',
-                                        style: GoogleFonts.nunito(
+                                        style: AppFonts.body(
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
                                         'Approved submissions count: $count',
-                                        style: GoogleFonts.nunito(
+                                        style: AppFonts.body(
                                           color: AppTheme.forestDeep,
                                           fontWeight: FontWeight.w700,
                                         ),
@@ -2407,7 +2399,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             children: [
               Text(
                 'Voucher Stock Levels',
-                style: GoogleFonts.fredoka(
+                style: AppFonts.display(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.textDark,
@@ -2433,7 +2425,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 ? Center(
                     child: Text(
                       'No voucher stock records. Click import to add voucher codes.',
-                      style: GoogleFonts.nunito(
+                      style: AppFonts.body(
                         color: Colors.grey.shade500,
                         fontWeight: FontWeight.bold,
                       ),
@@ -2489,7 +2481,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                   children: [
                                     Text(
                                       '$supermarket (AED $denom)',
-                                      style: GoogleFonts.fredoka(
+                                      style: AppFonts.display(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                         color: AppTheme.textDark,
@@ -2500,7 +2492,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                       isUsed
                                           ? 'Used Vouchers'
                                           : 'Available Unused Stock',
-                                      style: GoogleFonts.nunito(
+                                      style: AppFonts.body(
                                         fontSize: 12,
                                         color: Colors.grey.shade600,
                                         fontWeight: FontWeight.w600,
@@ -2523,7 +2515,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                               ),
                               child: Text(
                                 '$count codes',
-                                style: GoogleFonts.nunito(
+                                style: AppFonts.body(
                                   fontWeight: FontWeight.w900,
                                   color: isUsed
                                       ? Colors.grey.shade700
@@ -2556,7 +2548,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           ),
           title: Text(
             'Import Voucher Codes',
-            style: GoogleFonts.fredoka(fontWeight: FontWeight.bold),
+            style: AppFonts.display(fontWeight: FontWeight.bold),
           ),
           content: SingleChildScrollView(
             child: Column(
@@ -2678,7 +2670,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           const SizedBox(height: 14),
           Text(
             'Restricted View',
-            style: GoogleFonts.fredoka(
+            style: AppFonts.display(
               fontWeight: FontWeight.bold,
               color: Colors.grey.shade600,
             ),
@@ -2686,10 +2678,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           const SizedBox(height: 4),
           Text(
             'This tab is mock-only in the DealSouk prototype.',
-            style: GoogleFonts.nunito(
-              fontSize: 12.5,
-              color: Colors.grey.shade500,
-            ),
+            style: AppFonts.body(fontSize: 12.5, color: Colors.grey.shade500),
           ),
         ],
       ),
@@ -2707,7 +2696,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         children: [
           Text(
             'Token Economy Settings',
-            style: GoogleFonts.fredoka(
+            style: AppFonts.display(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: AppTheme.textDark,
@@ -2772,7 +2761,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 Expanded(
                   child: Text(
                     'Changes take effect immediately across the live demo session.',
-                    style: GoogleFonts.nunito(
+                    style: AppFonts.body(
                       fontSize: 12,
                       color: AppTheme.forestDeep,
                       fontWeight: FontWeight.w600,
@@ -2804,7 +2793,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           children: [
             Text(
               label,
-              style: GoogleFonts.nunito(
+              style: AppFonts.body(
                 fontWeight: FontWeight.bold,
                 fontSize: 13,
                 color: AppTheme.textDark,
@@ -3170,7 +3159,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             children: [
               Text(
                 'Products Catalog Management',
-                style: GoogleFonts.fredoka(
+                style: AppFonts.display(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.textDark,
@@ -3228,7 +3217,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                         value: c,
                         child: Text(
                           c,
-                          style: GoogleFonts.nunito(
+                          style: AppFonts.body(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
@@ -3251,10 +3240,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 ? Center(
                     child: Text(
                       'No products found matching filters.',
-                      style: GoogleFonts.nunito(
-                        color: Colors.grey,
-                        fontSize: 15,
-                      ),
+                      style: AppFonts.body(color: Colors.grey, fontSize: 15),
                     ),
                   )
                 : Container(
@@ -3313,14 +3299,14 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                       ),
                                 title: Text(
                                   p.name,
-                                  style: GoogleFonts.nunito(
+                                  style: AppFonts.body(
                                     fontWeight: FontWeight.bold,
                                     color: AppTheme.textDark,
                                   ),
                                 ),
                                 subtitle: Text(
                                   'Brand: ${p.brand.isNotEmpty ? p.brand : "—"} • Size: ${p.packSize.isNotEmpty ? p.packSize : "—"} • Category: ${p.category} • Barcode: ${p.barcode.isNotEmpty ? p.barcode : "—"}',
-                                  style: GoogleFonts.nunito(
+                                  style: AppFonts.body(
                                     fontSize: 12,
                                     color: Colors.grey.shade600,
                                   ),
@@ -3365,7 +3351,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                             children: [
                               Text(
                                 'Total Products: ${state.total}',
-                                style: GoogleFonts.nunito(
+                                style: AppFonts.body(
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.grey.shade700,
@@ -3383,7 +3369,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                   ),
                                   Text(
                                     'Page ${state.currentPage + 1}',
-                                    style: GoogleFonts.nunito(
+                                    style: AppFonts.body(
                                       fontSize: 13,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -3441,7 +3427,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               ),
               title: Text(
                 isEdit ? 'Edit Product' : 'Add New Product',
-                style: GoogleFonts.fredoka(fontWeight: FontWeight.bold),
+                style: AppFonts.display(fontWeight: FontWeight.bold),
               ),
               content: SingleChildScrollView(
                 child: SizedBox(
@@ -3584,7 +3570,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               const SizedBox(width: 10),
               Text(
                 'Are you sure?',
-                style: GoogleFonts.fredoka(
+                style: AppFonts.display(
                   fontWeight: FontWeight.bold,
                   color: Colors.red.shade900,
                 ),
@@ -3599,7 +3585,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               children: [
                 Text(
                   'You are about to delete: ${product.name}',
-                  style: GoogleFonts.nunito(
+                  style: AppFonts.body(
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                   ),
@@ -3607,7 +3593,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 const SizedBox(height: 12),
                 Text(
                   'Explanation of Permanent Consequences:',
-                  style: GoogleFonts.nunito(
+                  style: AppFonts.body(
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
                     color: Colors.red.shade800,
@@ -3620,7 +3606,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                   '• Shoppers will no longer be able to find this product or see its price history.\n'
                   '• This product will be removed from any active user carts.\n\n'
                   'This action is destructive, final, and cannot be undone.',
-                  style: GoogleFonts.nunito(
+                  style: AppFonts.body(
                     fontSize: 13,
                     color: Colors.grey.shade700,
                   ),
@@ -3682,7 +3668,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             children: [
               Text(
                 'Users Directory Management',
-                style: GoogleFonts.fredoka(
+                style: AppFonts.display(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.textDark,
@@ -3735,10 +3721,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 ? Center(
                     child: Text(
                       'No users found matching search.',
-                      style: GoogleFonts.nunito(
-                        color: Colors.grey,
-                        fontSize: 15,
-                      ),
+                      style: AppFonts.body(color: Colors.grey, fontSize: 15),
                     ),
                   )
                 : Container(
@@ -3774,7 +3757,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                   children: [
                                     Text(
                                       u.displayName,
-                                      style: GoogleFonts.nunito(
+                                      style: AppFonts.body(
                                         fontWeight: FontWeight.bold,
                                         color: AppTheme.textDark,
                                       ),
@@ -3806,7 +3789,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                 ),
                                 subtitle: Text(
                                   'ID: ${u.id} • Locale: ${u.preferredLocale} • Home Area: ${u.homeArea ?? "—"} • Tokens: ${u.tokenBalance} • Accuracy: ${u.accuracyRating.toStringAsFixed(1)}%',
-                                  style: GoogleFonts.nunito(
+                                  style: AppFonts.body(
                                     fontSize: 12,
                                     color: Colors.grey.shade600,
                                   ),
@@ -3851,7 +3834,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                             children: [
                               Text(
                                 'Total Users: ${state.total}',
-                                style: GoogleFonts.nunito(
+                                style: AppFonts.body(
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.grey.shade700,
@@ -3869,7 +3852,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                   ),
                                   Text(
                                     'Page ${state.currentPage + 1}',
-                                    style: GoogleFonts.nunito(
+                                    style: AppFonts.body(
                                       fontSize: 13,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -3921,7 +3904,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               ),
               title: Text(
                 isEdit ? 'Edit User Profile' : 'Add New User',
-                style: GoogleFonts.fredoka(fontWeight: FontWeight.bold),
+                style: AppFonts.display(fontWeight: FontWeight.bold),
               ),
               content: SingleChildScrollView(
                 child: SizedBox(
@@ -4100,7 +4083,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               const SizedBox(width: 10),
               Text(
                 'Are you sure?',
-                style: GoogleFonts.fredoka(
+                style: AppFonts.display(
                   fontWeight: FontWeight.bold,
                   color: Colors.red.shade900,
                 ),
@@ -4115,7 +4098,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               children: [
                 Text(
                   'You are about to delete user: ${user.displayName}',
-                  style: GoogleFonts.nunito(
+                  style: AppFonts.body(
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                   ),
@@ -4123,7 +4106,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 const SizedBox(height: 12),
                 Text(
                   'Explanation of Permanent Consequences:',
-                  style: GoogleFonts.nunito(
+                  style: AppFonts.body(
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
                     color: Colors.red.shade800,
@@ -4137,7 +4120,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                   '• All vouchers claimed or requested by this user will be removed or canceled.\n'
                   '• The user will be immediately logged out and will not be able to log back in.\n\n'
                   'This action is destructive, final, and cannot be undone.',
-                  style: GoogleFonts.nunito(
+                  style: AppFonts.body(
                     fontSize: 13,
                     color: Colors.grey.shade700,
                   ),

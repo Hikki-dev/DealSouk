@@ -2,7 +2,7 @@ import 'package:dealsouk/core/util/format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:dealsouk/core/theme/app_fonts.dart';
 import 'package:dealsouk/features/products/presentation/products_providers.dart';
 import 'package:dealsouk/features/saved/presentation/saved_providers.dart';
 import 'package:dealsouk/features/stores/presentation/stores_providers.dart';
@@ -133,7 +133,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           ),
           title: Text(
             l.productDetailsTitle,
-            style: GoogleFonts.fredoka(
+            style: AppFonts.display(
               color: Colors.black,
               fontWeight: FontWeight.bold,
               fontSize: 18,
@@ -205,7 +205,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                   children: [
                                     Text(
                                       coreName,
-                                      style: GoogleFonts.fredoka(
+                                      style: AppFonts.display(
                                         fontSize: 22,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.black,
@@ -214,7 +214,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                     const SizedBox(height: 4),
                                     Text(
                                       '${product.brand} • ${product.packSize}',
-                                      style: GoogleFonts.nunito(
+                                      style: AppFonts.body(
                                         fontSize: 14,
                                         color: Colors.grey.shade500,
                                         fontWeight: FontWeight.w600,
@@ -625,7 +625,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           // 6. Recommended Products Slider
                           Text(
                             l.productYouMayAlsoLike,
-                            style: GoogleFonts.fredoka(
+                            style: AppFonts.display(
                               fontSize: 16.5,
                               fontWeight: FontWeight.bold,
                               color: Colors.black,
@@ -803,7 +803,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                   Expanded(
                     child: Text(
                       title,
-                      style: GoogleFonts.fredoka(
+                      style: AppFonts.display(
                         fontWeight: FontWeight.bold,
                         fontSize: 14.5,
                         color: Colors.black,

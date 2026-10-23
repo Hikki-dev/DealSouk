@@ -44,6 +44,7 @@ The project consists of three main components:
 - [Screens](docs/SCREENS.md): every screen with its mockup and implementing file
 - [Redesign notes](docs/REDESIGN.md): what changed, how it was verified, known gaps
 - [Admin access and showcase](docs/ACCESS_AND_SHOWCASE.md)
+- [Deployment and setup checklist](docs/DEPLOYMENT.md): Vercel projects, env vars, Firebase authorized domains
 
 ## 🏗️ Architecture
 

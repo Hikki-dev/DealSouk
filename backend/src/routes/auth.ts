@@ -3,6 +3,7 @@ import * as admin from 'firebase-admin';
 import { prisma } from '../index';
 import { encrypt } from '../services/encryption';
 import { ipRateLimit } from '../middleware/rateLimits';
+import { isDemoViewerEnabled } from '../services/demoViewer';
 
 const router = Router();
 const verifyLimiter = ipRateLimit({
@@ -84,6 +85,7 @@ router.post('/verify', verifyLimiter, async (req, res) => {
       role: user.isAdmin ? 'admin' : 'user',
       roles,
       isAdmin: user.isAdmin,
+      demoViewer: !user.isAdmin && isDemoViewerEnabled(),
       isSuspended: user.isSuspended,
       createdAt: user.createdAt,
     });

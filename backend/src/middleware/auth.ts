@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import * as admin from 'firebase-admin';
 import { prisma } from '../index';
 import { requireEnv } from '../config/env';
+import { isDemoViewerEnabled, maskForDemo } from '../services/demoViewer';
 
 if (!admin.apps.length) {
   admin.initializeApp({
@@ -17,6 +18,7 @@ export interface AuthRequest extends Request {
   userId?: string;
   firebaseUid?: string;
   isAdmin?: boolean;
+  isDemoViewer?: boolean;
   firebaseToken?: admin.auth.DecodedIdToken;
 }
 
@@ -135,5 +137,27 @@ export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction
     res.status(403).json({ error: 'Admin multi-factor authentication required', code: 'ADMIN_MFA_REQUIRED' });
     return;
   }
+  next();
+}
+
+// Moderator console gate. Admins pass exactly as with requireAdmin. When demo
+// viewers are enabled, any other signed-in user may read (GET) with personal data
+// masked, and every write is refused. Exports are admin-only.
+export function requireAdminOrDemo(req: AuthRequest, res: Response, next: NextFunction) {
+  if (req.isAdmin) return requireAdmin(req, res, next);
+  if (!isDemoViewerEnabled()) {
+    res.status(403).json({ error: 'Admin access required' });
+    return;
+  }
+  if (req.method !== 'GET' || req.path.startsWith('/exports/')) {
+    res.status(403).json({
+      error: 'Demo mode is view-only. Only the owner can make changes.',
+      code: 'DEMO_READ_ONLY',
+    });
+    return;
+  }
+  req.isDemoViewer = true;
+  const json = res.json.bind(res);
+  res.json = (body?: unknown) => json(maskForDemo(body));
   next();
 }

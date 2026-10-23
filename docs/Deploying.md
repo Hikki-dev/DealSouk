@@ -16,7 +16,7 @@ Android APKs for both apps come from the **Android APK** GitHub workflow (artifa
 | `APP_MODE` | shopper project only | `shopper`. Already set on `deal-souk-shopper`. |
 | `MAPBOX_ACCESS_TOKEN` | recommended | A restricted public `pk.` token. Without it, maps show blank tiles. |
 
-## Firebase: authorized domains (fixes `auth/unauthorized-domain`)
+## Firebase authorized domains
 Web sign-in is refused until every site address is listed in Firebase.
 
 Firebase console, Authentication, Settings, Authorized domains, Add domain:
@@ -28,7 +28,7 @@ Firebase console, Authentication, Settings, Authorized domains, Add domain:
 Also in Firebase: enable the **Google**, **Phone** and **Apple** providers you want to offer. Apple needs an Apple developer setup; hide that button if you do not use it.
 
 ## Making someone a moderator
-New accounts are shoppers. Grant the admin role as described in [ACCESS_AND_SHOWCASE.md](ACCESS_AND_SHOWCASE.md), then sign out and in again.
+New accounts are shoppers. Grant the admin role as described in [Moderator%20access.md](Moderator%20access.md), then sign out and in again.
 
 ## First deploy of the shopper project
 1. Vercel project `deal-souk-shopper` already exists, linked to this repository, with `APP_MODE=shopper`.

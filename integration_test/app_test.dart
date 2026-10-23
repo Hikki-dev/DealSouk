@@ -4,7 +4,7 @@
 //   flutter test integration_test
 //
 // For the auth-dependent flows, start the Firebase Auth Emulator first and use a
-// registered test phone number (fixed OTP) — see docs/AUTOMATED_TEST_PLAN.md §5.
+// registered test phone number (fixed OTP) — see docs/Automated test plan.md §5.
 // These drive the REAL app against a backend, so point API_BASE_URL at a staging
 // instance:
 //   flutter test integration_test \

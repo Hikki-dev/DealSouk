@@ -66,7 +66,7 @@ Changing a variable needs a redeploy: Deployments, the latest one, Redeploy.
 
 ## 2. Why desktop still looks like a phone
 
-On a wide screen the shopper app now has a real desktop layout: a top navigation bar, a split-screen sign-in, a multi-column home, search with filters, a map with a side panel, a comparison table on the product page, and a two-column rewards page. Tablets get a side rail. See [REDESIGN.md](REDESIGN.md) and [SCREENS.md](SCREENS.md).
+On a wide screen the shopper app now has a real desktop layout: a top navigation bar, a split-screen sign-in, a multi-column home, search with filters, a map with a side panel, a comparison table on the product page, and a two-column rewards page. Tablets get a side rail. See [The%20redesign.md](The%20redesign.md) and [Screens.md](Screens.md).
 
 ---
 

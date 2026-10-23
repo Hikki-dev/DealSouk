@@ -4,6 +4,7 @@ import 'package:dealsouk/features/admin/presentation/widgets/admin_panel_widgets
 import 'package:dealsouk/features/admin/presentation/panels/analytics_panel.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dealsouk/core/design/design.dart';
 import 'package:dealsouk/core/theme/app_fonts.dart';
 import 'package:dealsouk/features/admin/presentation/admin_providers.dart';
 import 'package:dealsouk/features/auth/presentation/auth_providers.dart';
@@ -17,7 +18,11 @@ import 'package:dealsouk/features/products/domain/product.dart';
 import 'package:dealsouk/features/profile/data/profile_service.dart';
 
 class AdminScreen extends ConsumerStatefulWidget {
-  const AdminScreen({super.key});
+  const AdminScreen({super.key, this.initialTab = 'moderation'});
+
+  /// Tab shown first: moderation, map, analytics, vouchers, stock, settings,
+  /// products_crud or users_crud.
+  final String initialTab;
 
   @override
   ConsumerState<AdminScreen> createState() => _AdminScreenState();
@@ -25,7 +30,7 @@ class AdminScreen extends ConsumerStatefulWidget {
 
 class _AdminScreenState extends ConsumerState<AdminScreen> {
   String? _selectedSubId;
-  String _activeTab = 'moderation'; // 'moderation', 'analytics', 'settings'
+  late String _activeTab = widget.initialTab;
   String _mapSearchQuery = '';
   String _mapSelectedChain = 'All';
   final MapController _mapController = MapController();
@@ -71,802 +76,519 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           )
         : null;
 
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final isDesktop = constraints.maxWidth > 840;
-          if (isDesktop) {
-            return _buildDesktopLayout(
-              context,
-              pendingSubs,
-              currentSub,
-              pendingCount,
-              approvedCount,
-              tokensIssuedCount,
-              vouchers,
-              voucherCount,
-            );
-          } else {
-            return _buildMobileLayout(
-              context,
-              pendingSubs,
-              pendingCount,
-              approvedCount,
-              tokensIssuedCount,
-            );
-          }
-        },
+    final pending = pendingSubs.length;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide = constraints.maxWidth >= 1024;
+        final nav = _navItems(pending, voucherCount);
+        final content = _buildContent(
+          context,
+          wide: wide,
+          pendingSubs: pendingSubs,
+          currentSub: currentSub,
+          pendingCount: pendingCount,
+          approvedCount: approvedCount,
+          tokensIssuedCount: tokensIssuedCount,
+          vouchers: vouchers,
+        );
+        if (wide) {
+          return Scaffold(
+            backgroundColor: AppTheme.background,
+            body: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(width: 264, child: _buildSidebar(context, nav)),
+                Expanded(
+                  child: Column(
+                    children: [
+                      _buildHeader(context, wide: true),
+                      Expanded(child: content),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+        return Scaffold(
+          backgroundColor: AppTheme.background,
+          drawer: Drawer(
+            backgroundColor: AppTheme.forestDeep,
+            child: _buildSidebar(context, nav, inDrawer: true),
+          ),
+          body: Column(
+            children: [
+              _buildHeader(context, wide: false),
+              Expanded(child: content),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // --- NAVIGATION MODEL ---
+  List<_AdminNavItem> _navItems(int pending, int vouchers) => [
+    _AdminNavItem(
+      'moderation',
+      Icons.gavel_rounded,
+      'Price moderation',
+      'Price moderation',
+      badge: pending,
+    ),
+    const _AdminNavItem('map', Icons.map_rounded, 'Map density', 'Map density'),
+    const _AdminNavItem(
+      'analytics',
+      Icons.bar_chart_rounded,
+      'Analytics',
+      'Analytics',
+    ),
+    _AdminNavItem(
+      'vouchers',
+      Icons.confirmation_num_rounded,
+      'Voucher queue',
+      'Voucher queue',
+      badge: vouchers,
+    ),
+    const _AdminNavItem(
+      'stock',
+      Icons.inventory_2_rounded,
+      'Voucher stock',
+      'Voucher stock',
+    ),
+    const _AdminNavItem(
+      'settings',
+      Icons.settings_rounded,
+      'System settings',
+      'System settings',
+    ),
+    const _AdminNavItem(
+      'products_crud',
+      Icons.shopping_bag_rounded,
+      'Manage products',
+      'Manage products',
+    ),
+    const _AdminNavItem(
+      'users_crud',
+      Icons.people_rounded,
+      'Manage users',
+      'Manage users',
+    ),
+  ];
+
+  void _selectTab(String tab) {
+    setState(() => _activeTab = tab);
+    if (tab == 'products_crud') {
+      ref.read(adminProductsProvider.notifier).fetch();
+    } else if (tab == 'users_crud') {
+      ref.read(adminUsersProvider.notifier).fetch();
+    }
+  }
+
+  void _refresh() {
+    switch (_activeTab) {
+      case 'vouchers':
+        ref.read(adminVouchersProvider.notifier).fetchVouchers();
+      case 'analytics':
+        ref.read(adminAnalyticsProvider.notifier).fetchAnalytics();
+      case 'moderation':
+        ref.read(adminSubmissionsProvider.notifier).fetchQueue();
+      case 'map':
+        ref.read(adminMapDataProvider.notifier).fetchMapData();
+      case 'stock':
+        ref.read(adminVoucherInventoryProvider.notifier).fetchInventoryStatus();
+      case 'products_crud':
+        ref.read(adminProductsProvider.notifier).fetch();
+      case 'users_crud':
+        ref.read(adminUsersProvider.notifier).fetch();
+    }
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Syncing with server...')));
+  }
+
+  // --- SIDEBAR (desktop) / DRAWER (phone, tablet) ---
+  Widget _buildSidebar(
+    BuildContext context,
+    List<_AdminNavItem> nav, {
+    bool inDrawer = false,
+  }) {
+    final hasRouter = GoRouter.maybeOf(context) != null;
+    return Container(
+      color: AppTheme.forestDeep,
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 20, 12, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  children: [
+                    const DsBrandMark(size: 44, onDark: true),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Moderator',
+                      style: AppFonts.display(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              Expanded(
+                child: ListView(
+                  children: [
+                    for (final item in nav)
+                      _sidebarItem(
+                        item,
+                        onTap: () {
+                          if (inDrawer) Navigator.of(context).pop();
+                          _selectTab(item.tab);
+                        },
+                      ),
+                  ],
+                ),
+              ),
+              const Divider(color: Colors.white24, height: 1),
+              const SizedBox(height: 8),
+              if (hasRouter)
+                _footerAction(
+                  Icons.arrow_back_rounded,
+                  'Back to app',
+                  () => context.go('/profile'),
+                ),
+              _footerAction(Icons.logout_rounded, 'Log out', () async {
+                await ref.read(authProvider.notifier).signOut();
+                if (context.mounted && GoRouter.maybeOf(context) != null) {
+                  context.go('/welcome');
+                }
+              }),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  // --- DESKTOP SAAS SIDEBAR + MAIN AREA ---
-  Widget _buildDesktopLayout(
+  Widget _sidebarItem(_AdminNavItem item, {required VoidCallback onTap}) {
+    final active = _activeTab == item.tab;
+    final fg = active ? AppTheme.forestDeep : Colors.white;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Semantics(
+        button: true,
+        selected: active,
+        label: item.label,
+        excludeSemantics: true,
+        child: Material(
+          color: active ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(12),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                child: Row(
+                  children: [
+                    Icon(item.icon, color: fg, size: 22),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        item.label,
+                        style: AppFonts.body(
+                          color: fg,
+                          fontSize: 16,
+                          fontWeight: active
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    if (item.badge > 0) DsCountBadge(item.badge),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _footerAction(IconData icon, String label, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: Row(
+            children: [
+              Icon(icon, color: Colors.white70, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: AppFonts.body(
+                    color: Colors.white70,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, {required bool wide}) {
+    final title = _navItems(0, 0).firstWhere((n) => n.tab == _activeTab).title;
+    if (!wide) {
+      return Container(
+        color: AppTheme.background,
+        padding: EdgeInsets.fromLTRB(
+          4,
+          MediaQuery.paddingOf(context).top + 4,
+          4,
+          4,
+        ),
+        child: Row(
+          children: [
+            Builder(
+              builder: (ctx) => IconButton(
+                iconSize: 26,
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                tooltip: 'Menu',
+                icon: const Icon(Icons.menu_rounded),
+                onPressed: () => Scaffold.of(ctx).openDrawer(),
+              ),
+            ),
+            Expanded(
+              child: Semantics(
+                header: true,
+                child: Text(
+                  title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppFonts.display(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.ink,
+                  ),
+                ),
+              ),
+            ),
+            IconButton(
+              iconSize: 26,
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              tooltip: 'Refresh',
+              icon: const Icon(Icons.sync_rounded),
+              onPressed: _refresh,
+            ),
+          ],
+        ),
+      );
+    }
+    return Container(
+      color: AppTheme.background,
+      padding: const EdgeInsets.fromLTRB(28, 20, 28, 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Semantics(
+              header: true,
+              child: Text(
+                title,
+                style: AppFonts.display(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.ink,
+                ),
+              ),
+            ),
+          ),
+          const DsTag('Role: Moderator', icon: Icons.verified_user_rounded),
+          const SizedBox(width: 12),
+          DsButton(
+            label: 'Refresh',
+            style: DsButtonStyle.secondary,
+            icon: Icons.sync_rounded,
+            expanded: false,
+            compact: true,
+            onPressed: _refresh,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- CONTENT ---
+  Widget _buildContent(
+    BuildContext context, {
+    required bool wide,
+    required List<AdminSubmission> pendingSubs,
+    required AdminSubmission? currentSub,
+    required int pendingCount,
+    required int approvedCount,
+    required int tokensIssuedCount,
+    required List<VoucherRequest> vouchers,
+  }) {
+    switch (_activeTab) {
+      case 'moderation':
+        return wide
+            ? _buildModerationWide(
+                context,
+                pendingSubs,
+                currentSub,
+                pendingCount,
+                approvedCount,
+                tokensIssuedCount,
+              )
+            : _buildModerationNarrow(
+                context,
+                pendingSubs,
+                pendingCount,
+                approvedCount,
+                tokensIssuedCount,
+              );
+      case 'map':
+        return _buildMapDensityPanel();
+      case 'analytics':
+        return const AnalyticsPanel();
+      case 'vouchers':
+        return _buildVoucherQueuePanel(vouchers);
+      case 'stock':
+        return _buildVoucherStockPanel();
+      case 'products_crud':
+        return _buildProductsCrudPanel();
+      case 'users_crud':
+        return _buildUsersCrudPanel();
+      default:
+        return _buildMockPanelContent();
+    }
+  }
+
+  Widget _statsRow(int pending, int approved, int tokens) {
+    return AdaptiveGrid(
+      minTileWidth: 150,
+      spacing: 12,
+      maxColumns: 3,
+      mainAxisExtent: 112,
+      children: [
+        adminStatCard(
+          'Pending reviews',
+          '$pending',
+          Icons.hourglass_empty_rounded,
+          AppTheme.warnText,
+        ),
+        adminStatCard(
+          'Approved today',
+          '$approved',
+          Icons.check_circle_outline_rounded,
+          AppTheme.good,
+        ),
+        adminStatCard(
+          'Tokens issued',
+          '$tokens',
+          Icons.bolt_rounded,
+          AppTheme.limeAccent,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildModerationWide(
     BuildContext context,
     List<AdminSubmission> pendingSubs,
     AdminSubmission? currentSub,
     int pendingCount,
     int approvedCount,
     int tokensIssuedCount,
-    List<VoucherRequest> vouchers,
-    int voucherCount,
   ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // 1. LEFT SIDEBAR (Dark Slate)
-        Container(
-          width: 240,
-          color: const Color(0xFF0F172A), // Slate 900
-          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        Expanded(
+          flex: 5,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(28, 8, 14, 40),
             children: [
-              // Logo area
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: AppTheme.limeAccent,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.storefront_outlined,
-                      color: Color(0xFF0F172A),
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'DealSouk',
-                        style: AppFonts.display(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        'Moderator Console',
-                        style: AppFonts.body(
-                          color: Colors.grey.shade500,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 36),
-
-              // Menu navigation
-              _sidebarMenuItem(
-                icon: Icons.gavel_rounded,
-                label: 'Price Moderation',
-                badgeCount: pendingCount,
-                isActive: _activeTab == 'moderation',
-                onTap: () => setState(() => _activeTab = 'moderation'),
-              ),
-              _sidebarMenuItem(
-                icon: Icons.map_rounded,
-                label: 'Map Density',
-                isActive: _activeTab == 'map',
-                onTap: () => setState(() => _activeTab = 'map'),
-              ),
-              _sidebarMenuItem(
-                icon: Icons.bar_chart_rounded,
-                label: 'Analytics',
-                isActive: _activeTab == 'analytics',
-                onTap: () => setState(() => _activeTab = 'analytics'),
-              ),
-              _sidebarMenuItem(
-                icon: Icons.confirmation_num_rounded,
-                label: 'Voucher Queue',
-                badgeCount: voucherCount,
-                isActive: _activeTab == 'vouchers',
-                onTap: () => setState(() => _activeTab = 'vouchers'),
-              ),
-              _sidebarMenuItem(
-                icon: Icons.inventory_2_rounded,
-                label: 'Voucher Stock',
-                isActive: _activeTab == 'stock',
-                onTap: () => setState(() => _activeTab = 'stock'),
-              ),
-              _sidebarMenuItem(
-                icon: Icons.settings_rounded,
-                label: 'System Settings',
-                isActive: _activeTab == 'settings',
-                onTap: () => setState(() => _activeTab = 'settings'),
-              ),
-              _sidebarMenuItem(
-                icon: Icons.shopping_bag_rounded,
-                label: 'Manage Products',
-                isActive: _activeTab == 'products_crud',
-                onTap: () {
-                  setState(() => _activeTab = 'products_crud');
-                  ref.read(adminProductsProvider.notifier).fetch();
-                },
-              ),
-              _sidebarMenuItem(
-                icon: Icons.people_rounded,
-                label: 'Manage Users',
-                isActive: _activeTab == 'users_crud',
-                onTap: () {
-                  setState(() => _activeTab = 'users_crud');
-                  ref.read(adminUsersProvider.notifier).fetch();
-                },
-              ),
-
-              const Spacer(),
-
-              // Bottom logout/back to app
-              const Divider(color: Colors.white12, height: 1),
-              const SizedBox(height: 16),
-              ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-                leading: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: const BoxDecoration(
-                    color: Colors.white10,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.arrow_back_rounded,
-                    color: Colors.white,
-                    size: 16,
-                  ),
-                ),
-                title: Text(
-                  'Back to App',
-                  style: AppFonts.body(
-                    color: Colors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                subtitle: Text(
-                  'Return to Profile',
-                  style: AppFonts.body(
-                    color: Colors.grey.shade500,
-                    fontSize: 10,
-                  ),
-                ),
-                onTap: () => context.go('/profile'),
-              ),
+              _statsRow(pendingCount, approvedCount, tokensIssuedCount),
+              const SizedBox(height: 20),
+              DsSectionHeader('Submissions (${pendingSubs.length})'),
               const SizedBox(height: 8),
-              ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-                leading: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: Colors.red.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
+              if (pendingSubs.isEmpty)
+                _buildEmptyQueueCard()
+              else
+                for (final sub in pendingSubs)
+                  _buildSubmissionCard(
+                    context,
+                    sub,
+                    sub.id == _selectedSubId,
+                    true,
                   ),
-                  child: const Icon(
-                    Icons.logout_rounded,
-                    color: Colors.redAccent,
-                    size: 16,
-                  ),
-                ),
-                title: Text(
-                  'Log Out',
-                  style: AppFonts.body(
-                    color: Colors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                subtitle: Text(
-                  'Exit console',
-                  style: AppFonts.body(
-                    color: Colors.grey.shade500,
-                    fontSize: 10,
-                  ),
-                ),
-                onTap: () async {
-                  await ref.read(authProvider.notifier).signOut();
-                  if (context.mounted) {
-                    context.go('/welcome');
-                  }
-                },
-              ),
             ],
           ),
         ),
-
-        // 2. MAIN CONSOLE PANEL
         Expanded(
-          child: Column(
-            children: [
-              // Sticky Header
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border(
-                    bottom: BorderSide(color: Colors.grey.shade200),
-                  ),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 16,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      _activeTab == 'moderation'
-                          ? 'Audit & Verification'
-                          : _activeTab == 'analytics'
-                          ? 'Analytics & Performance'
-                          : _activeTab == 'settings'
-                          ? 'System Settings'
-                          : _activeTab == 'vouchers'
-                          ? 'Voucher Queue'
-                          : _activeTab == 'products_crud'
-                          ? 'Products Catalog Management'
-                          : _activeTab == 'users_crud'
-                          ? 'Users Directory Management'
-                          : 'Sourcers Index',
-                      style: AppFonts.display(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.textDark,
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFEBEE),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: const Color(0xFFFFCDD2)),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.security,
-                                color: Colors.red,
-                                size: 12,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                'Role: Admin Auditor',
-                                style: AppFonts.body(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.red.shade900,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        OutlinedButton.icon(
-                          onPressed: () {
-                            if (_activeTab == 'vouchers') {
-                              ref
-                                  .read(adminVouchersProvider.notifier)
-                                  .fetchVouchers();
-                            } else if (_activeTab == 'analytics') {
-                              ref
-                                  .read(adminAnalyticsProvider.notifier)
-                                  .fetchAnalytics();
-                            } else if (_activeTab == 'moderation') {
-                              ref
-                                  .read(adminSubmissionsProvider.notifier)
-                                  .fetchQueue();
-                            } else if (_activeTab == 'map') {
-                              ref
-                                  .read(adminMapDataProvider.notifier)
-                                  .fetchMapData();
-                            } else if (_activeTab == 'stock') {
-                              ref
-                                  .read(adminVoucherInventoryProvider.notifier)
-                                  .fetchInventoryStatus();
-                            } else if (_activeTab == 'products_crud') {
-                              ref.read(adminProductsProvider.notifier).fetch();
-                            } else if (_activeTab == 'users_crud') {
-                              ref.read(adminUsersProvider.notifier).fetch();
-                            }
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Syncing queue with server...'),
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.sync_rounded, size: 15),
-                          label: const Text('Refresh'),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            minimumSize: Size.zero,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              // Content Area
-              Expanded(
-                child: _activeTab == 'moderation'
-                    ? Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // Left side: stats and list
-                          Expanded(
-                            flex: 5,
-                            child: CustomScrollView(
-                              physics: const BouncingScrollPhysics(),
-                              slivers: [
-                                // Stats Section
-                                SliverToBoxAdapter(
-                                  child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                      24,
-                                      20,
-                                      24,
-                                      8,
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: adminStatCard(
-                                            'PENDING REVIEWS',
-                                            '$pendingCount',
-                                            Icons.hourglass_empty_rounded,
-                                            Colors.orange,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 14),
-                                        Expanded(
-                                          child: adminStatCard(
-                                            'APPROVED TODAY',
-                                            '$approvedCount',
-                                            Icons.check_circle_outline_rounded,
-                                            Colors.green,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 14),
-                                        Expanded(
-                                          child: adminStatCard(
-                                            'TOKENS ISSUED',
-                                            '$tokensIssuedCount',
-                                            Icons.bolt_rounded,
-                                            Colors.amber,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-
-                                // Header Row for queue
-                                SliverToBoxAdapter(
-                                  child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                      24,
-                                      20,
-                                      24,
-                                      12,
-                                    ),
-                                    child: Text(
-                                      'Submissions Review Queue',
-                                      style: AppFonts.display(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppTheme.textDark,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-
-                                // Submission items
-                                SliverPadding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 24,
-                                  ),
-                                  sliver: pendingSubs.isEmpty
-                                      ? SliverToBoxAdapter(
-                                          child: _buildEmptyQueueCard(),
-                                        )
-                                      : SliverList(
-                                          delegate: SliverChildBuilderDelegate((
-                                            context,
-                                            index,
-                                          ) {
-                                            final sub = pendingSubs[index];
-                                            final isSelected =
-                                                sub.id == _selectedSubId;
-                                            return _buildSubmissionCard(
-                                              context,
-                                              sub,
-                                              isSelected,
-                                              true,
-                                            );
-                                          }, childCount: pendingSubs.length),
-                                        ),
-                                ),
-                                const SliverPadding(
-                                  padding: EdgeInsets.only(bottom: 40),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          // Right side: Sticky detailed audit panel
-                          VerticalDivider(
-                            width: 1,
-                            color: Colors.grey.shade200,
-                          ),
-                          Expanded(
-                            flex: 3,
-                            child: Container(
-                              color: Colors.white,
-                              padding: const EdgeInsets.all(24),
-                              child: currentSub == null
-                                  ? _buildSidebarIdleState()
-                                  : _buildSidebarAuditState(
-                                      context,
-                                      currentSub,
-                                    ),
-                            ),
-                          ),
-                        ],
-                      )
-                    : _activeTab == 'map'
-                    ? _buildMapDensityPanel()
-                    : _activeTab == 'analytics'
-                    ? const AnalyticsPanel()
-                    : _activeTab == 'vouchers'
-                    ? _buildVoucherQueuePanel(vouchers)
-                    : _activeTab == 'stock'
-                    ? _buildVoucherStockPanel()
-                    : _activeTab == 'products_crud'
-                    ? _buildProductsCrudPanel()
-                    : _activeTab == 'users_crud'
-                    ? _buildUsersCrudPanel()
-                    : _buildMockPanelContent(),
-              ),
-            ],
+          flex: 4,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 8, 28, 28),
+            child: DsCard(
+              padding: const EdgeInsets.all(20),
+              child: currentSub == null
+                  ? _buildSidebarIdleState()
+                  : _buildSidebarAuditState(context, currentSub),
+            ),
           ),
         ),
       ],
     );
   }
 
-  // --- MOBILE LAYOUT ---
-  Widget _buildMobileLayout(
+  Widget _buildModerationNarrow(
     BuildContext context,
     List<AdminSubmission> pendingSubs,
     int pendingCount,
     int approvedCount,
     int tokensIssuedCount,
   ) {
-    return Column(
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 40),
       children: [
-        // App bar
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border(bottom: BorderSide(color: Colors.grey.shade100)),
-          ),
-          padding: EdgeInsets.fromLTRB(
-            16,
-            MediaQuery.of(context).padding.top + 8,
-            16,
-            12,
-          ),
-          child: Row(
-            children: [
-              GestureDetector(
-                onTap: () => context.go('/profile'),
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: const Color(0xFFE8EEE4),
-                      width: 1.2,
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.arrow_back_ios_new_rounded,
-                    color: AppTheme.forestDeep,
-                    size: 16,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  'Admin Review',
-                  textAlign: TextAlign.center,
-                  style: AppFonts.display(
-                    color: AppTheme.forestDeep,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 36),
-            ],
-          ),
-        ),
-
-        // Scrollable list
-        Expanded(
-          child: CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              // Stats horizontally scrolling
-              SliverToBoxAdapter(
-                child: Container(
-                  height: 94,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    children: [
-                      _mobileStatCard(
-                        'Pending reviews',
-                        '$pendingCount',
-                        Colors.orange,
-                      ),
-                      const SizedBox(width: 10),
-                      _mobileStatCard(
-                        'Approved today',
-                        '$approvedCount',
-                        Colors.green,
-                      ),
-                      const SizedBox(width: 10),
-                      _mobileStatCard(
-                        'Tokens issued',
-                        '$tokensIssuedCount',
-                        Colors.amber,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Title
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                  child: Text(
-                    'Price Submissions (${pendingSubs.length})',
-                    style: AppFonts.display(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textDark,
-                    ),
-                  ),
-                ),
-              ),
-
-              // List items
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: pendingSubs.isEmpty
-                    ? SliverToBoxAdapter(child: _buildEmptyQueueCard())
-                    : SliverList(
-                        delegate: SliverChildBuilderDelegate((context, index) {
-                          final sub = pendingSubs[index];
-                          return _buildSubmissionCard(
-                            context,
-                            sub,
-                            false,
-                            false,
-                          );
-                        }, childCount: pendingSubs.length),
-                      ),
-              ),
-              const SliverPadding(padding: EdgeInsets.only(bottom: 60)),
-            ],
-          ),
-        ),
+        _statsRow(pendingCount, approvedCount, tokensIssuedCount),
+        const SizedBox(height: 20),
+        DsSectionHeader('Price submissions (${pendingSubs.length})'),
+        const SizedBox(height: 8),
+        if (pendingSubs.isEmpty)
+          _buildEmptyQueueCard()
+        else
+          for (final sub in pendingSubs)
+            _buildSubmissionCard(context, sub, false, false),
       ],
     );
   }
 
-  // --- REUSABLE SAAS CARD COMPONENTS ---
-  Widget _sidebarMenuItem({
-    required IconData icon,
-    required String label,
-    int? badgeCount,
-    required bool isActive,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(10),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            decoration: BoxDecoration(
-              color: isActive
-                  ? Colors.white.withValues(alpha: 0.08)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(10),
-              border: isActive
-                  ? const Border(
-                      left: BorderSide(color: AppTheme.limeAccent, width: 3.5),
-                    )
-                  : null,
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  icon,
-                  color: isActive ? AppTheme.limeAccent : Colors.grey.shade400,
-                  size: 18,
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: AppFonts.body(
-                      color: isActive ? Colors.white : Colors.grey.shade400,
-                      fontSize: 13.5,
-                      fontWeight: isActive ? FontWeight.bold : FontWeight.w600,
-                    ),
-                  ),
-                ),
-                if (badgeCount != null && badgeCount > 0)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      '$badgeCount',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _mobileStatCard(String label, String value, Color color) {
-    return Container(
-      width: 140,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE8EEE4), width: 1.1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            label.toUpperCase(),
-            style: AppFonts.body(
-              fontSize: 9,
-              color: Colors.grey.shade500,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              Container(
-                width: 6,
-                height: 6,
-                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                value,
-                style: AppFonts.display(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textDark,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildEmptyQueueCard() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE8EEE4), width: 1.2),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.green.shade50,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.done_all_rounded,
-              color: Colors.green,
-              size: 48,
-            ),
-          ),
-          const SizedBox(height: 18),
-          Text(
-            'Queue Cleared!',
-            style: AppFonts.display(
-              fontWeight: FontWeight.bold,
-              fontSize: 17,
-              color: AppTheme.textDark,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'No pending grocery price reports require verification.',
-            textAlign: TextAlign.center,
-            style: AppFonts.body(
-              color: Colors.grey.shade500,
-              fontSize: 12.5,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
+    return const DsCard(
+      padding: EdgeInsets.symmetric(vertical: 16),
+      child: DsEmptyState(
+        icon: Icons.done_all_rounded,
+        title: 'Queue cleared',
+        message: 'No pending price reports need verification.',
       ),
     );
   }
@@ -877,245 +599,116 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     bool isSelected,
     bool isDesktop,
   ) {
-    final isFlaggedReport = sub.promoType == 'Flagged Report';
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: isFlaggedReport
-            ? const Color(
-                0xFFFFF8F8,
-              ) // Subtle red background for flagged reports
-            : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isSelected
-              ? AppTheme.forestDeep
-              : (isFlaggedReport
-                    ? Colors.red.shade300
-                    : const Color(0xFFE8EEE4)),
-          width: isSelected ? 1.8 : 1.2,
-        ),
-        boxShadow: isSelected
-            ? [
-                BoxShadow(
-                  color: AppTheme.forestDeep.withValues(alpha: 0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ]
-            : [],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: isDesktop
-              ? () {
-                  setState(() {
-                    _selectedSubId = sub.id;
-                  });
-                }
-              : null,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
+    final flagged = sub.promoType == 'Flagged Report';
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: DsCard(
+        selected: isSelected,
+        color: flagged ? AppTheme.badLight : null,
+        onTap: isDesktop ? () => setState(() => _selectedSubId = sub.id) : null,
+        semanticLabel: '${sub.productName}, ${sub.storeName}',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              if (isFlaggedReport) ...[
-                                Icon(
-                                  Icons.report_problem_rounded,
-                                  color: Colors.red.shade700,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 6),
-                              ],
-                              Expanded(
-                                child: Text(
-                                  sub.productName,
-                                  style: AppFonts.display(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15,
-                                    color: AppTheme.textDark,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Brand: ${sub.brand} • Store: ${sub.storeName}',
-                            style: AppFonts.body(
-                              color: Colors.grey.shade600,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Text(
-                      'AED ${sub.price.toStringAsFixed(2)}',
-                      style: AppFonts.display(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: isFlaggedReport
-                            ? Colors.red
-                            : AppTheme.forestDeep,
-                        decoration: isFlaggedReport
-                            ? TextDecoration.lineThrough
-                            : null,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                const Divider(height: 1),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        _attachmentChip(
-                          icon: Icons.camera_alt_outlined,
-                          label: 'Price Photo',
-                          isAttached: sub.hasPhoto,
-                          onTap: sub.hasPhoto
-                              ? () => _showPricePhotoDialog(context, sub)
-                              : null,
-                        ),
-                        const SizedBox(width: 8),
-                        _attachmentChip(
-                          icon: Icons.receipt_long_outlined,
-                          label: 'Receipt',
-                          isAttached: sub.hasReceipt,
-                          onTap: sub.hasReceipt
-                              ? () => _showReceiptDialog(context, sub)
-                              : null,
-                        ),
-                      ],
-                    ),
-                    if (isFlaggedReport)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          'Community Flagged',
-                          style: AppFonts.body(
-                            fontWeight: FontWeight.w900,
-                            fontSize: 10,
-                            color: Colors.red.shade700,
-                          ),
-                        ),
-                      )
-                    else
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.amberAccent.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          'Reward: +${sub.tokensReward}T',
-                          style: AppFonts.body(
-                            fontWeight: FontWeight.w900,
-                            fontSize: 10,
-                            color: const Color(0xFFC77C02),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                if (!isDesktop) ...[
-                  const SizedBox(height: 16),
-                  Row(
+                DsProductThumb(imageUrl: sub.productImageUrl, size: 56),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => _reject(sub.id),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.red,
-                            side: const BorderSide(color: Colors.red),
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            textStyle: AppFonts.body(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          child: Text(
-                            isFlaggedReport ? 'Confirm Deletion' : 'Reject',
-                          ),
+                      Text(
+                        sub.productName,
+                        style: AppFonts.display(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                          color: AppTheme.ink,
                         ),
                       ),
-                      if (!isFlaggedReport) ...[
-                        const SizedBox(width: 8),
-                        OutlinedButton(
-                          onPressed: () => _showEditDialog(context, sub),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppTheme.forestDeep,
-                            side: const BorderSide(color: AppTheme.forestDeep),
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 10,
-                              horizontal: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            textStyle: AppFonts.body(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          child: const Text('Edit'),
-                        ),
-                      ],
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () => _approve(sub.id, sub),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            textStyle: AppFonts.body(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          child: Text(
-                            isFlaggedReport ? 'Reinstate Price' : 'Approve',
-                          ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${sub.brand} · ${sub.storeName}',
+                        style: AppFonts.body(
+                          color: AppTheme.textLight,
+                          fontSize: 14,
                         ),
                       ),
                     ],
                   ),
-                ],
+                ),
+                const SizedBox(width: 8),
+                DsPrice(
+                  sub.price,
+                  size: 20,
+                  color: flagged ? AppTheme.badText : null,
+                ),
               ],
             ),
-          ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                _attachmentChip(
+                  icon: Icons.camera_alt_outlined,
+                  label: 'Price photo',
+                  isAttached: sub.hasPhoto,
+                  onTap: sub.hasPhoto
+                      ? () => _showPricePhotoDialog(context, sub)
+                      : null,
+                ),
+                _attachmentChip(
+                  icon: Icons.receipt_long_outlined,
+                  label: 'Receipt',
+                  isAttached: sub.hasReceipt,
+                  onTap: sub.hasReceipt
+                      ? () => _showReceiptDialog(context, sub)
+                      : null,
+                ),
+                if (flagged)
+                  const DsTag('Community flagged', tone: DsTone.bad)
+                else
+                  DsTag('Reward +${sub.tokensReward}', tone: DsTone.warn),
+              ],
+            ),
+            if (!isDesktop) ...[
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: DsButton(
+                      label: flagged ? 'Delete' : 'Reject',
+                      style: DsButtonStyle.danger,
+                      compact: true,
+                      onPressed: () => _reject(sub.id),
+                    ),
+                  ),
+                  if (!flagged) ...[
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: DsButton(
+                        label: 'Edit',
+                        style: DsButtonStyle.secondary,
+                        compact: true,
+                        onPressed: () => _showEditDialog(context, sub),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: DsButton(
+                      label: flagged ? 'Reinstate' : 'Approve',
+                      compact: true,
+                      onPressed: () => _approve(sub.id, sub),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
         ),
       ),
     );
@@ -4291,4 +3884,20 @@ class _EvidenceThumbnail extends StatelessWidget {
       ),
     );
   }
+}
+
+class _AdminNavItem {
+  const _AdminNavItem(
+    this.tab,
+    this.icon,
+    this.label,
+    this.title, {
+    this.badge = 0,
+  });
+
+  final String tab;
+  final IconData icon;
+  final String label;
+  final String title;
+  final int badge;
 }

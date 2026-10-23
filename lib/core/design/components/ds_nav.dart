@@ -155,18 +155,21 @@ class DsCountBadge extends StatelessWidget {
     return Container(
       constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
       padding: const EdgeInsets.symmetric(horizontal: 4),
-      alignment: Alignment.center,
       decoration: BoxDecoration(
         color: AppTheme.redAccent,
         borderRadius: BorderRadius.circular(9),
         border: Border.all(color: Colors.white, width: 1.5),
       ),
-      child: Text(
-        count > 99 ? '99+' : '$count',
-        style: AppFonts.body(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
+      child: Center(
+        widthFactor: 1,
+        heightFactor: 1,
+        child: Text(
+          count > 99 ? '99+' : '$count',
+          style: AppFonts.body(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
         ),
       ),
     );
@@ -438,32 +441,37 @@ class DsTopNav extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 14),
-                      Semantics(
-                        button: true,
-                        label: languageLabel,
-                        excludeSemantics: true,
-                        child: Material(
-                          color: Colors.white,
-                          shape: const StadiumBorder(
-                            side: BorderSide(color: AppTheme.line),
-                          ),
-                          child: InkWell(
-                            onTap: onToggleLanguage,
-                            customBorder: const StadiumBorder(),
-                            child: Container(
-                              constraints: const BoxConstraints(
-                                minHeight: 48,
-                                minWidth: 64,
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                languageLabel,
-                                style: AppFonts.body(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
+                      Center(
+                        child: Semantics(
+                          button: true,
+                          label: languageLabel,
+                          excludeSemantics: true,
+                          child: Material(
+                            color: Colors.white,
+                            shape: const StadiumBorder(
+                              side: BorderSide(color: AppTheme.line),
+                            ),
+                            child: InkWell(
+                              onTap: onToggleLanguage,
+                              customBorder: const StadiumBorder(),
+                              child: Container(
+                                constraints: const BoxConstraints(
+                                  minHeight: 48,
+                                  minWidth: 64,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
+                                child: Center(
+                                  widthFactor: 1,
+                                  heightFactor: 1,
+                                  child: Text(
+                                    languageLabel,
+                                    style: AppFonts.body(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),

@@ -85,13 +85,6 @@ class StoreLogoAvatar extends StatelessWidget {
           color: borderColor ?? color.withValues(alpha: 0.35),
           width: 1.5,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.18),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: _buildContent(slug, radius),
     );

@@ -1,17 +1,26 @@
-import 'dart:ui';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:dealsouk/features/cart/presentation/cart_providers.dart';
-import 'package:dealsouk/features/profile/presentation/profile_providers.dart';
-import 'package:dealsouk/core/theme/theme.dart';
+import 'package:dealsouk/core/design/breakpoints.dart';
+import 'package:dealsouk/core/design/components/ds_nav.dart';
+import 'package:dealsouk/core/design/components/ds_surfaces.dart';
+import 'package:dealsouk/core/localization/locale_provider.dart';
 import 'package:dealsouk/core/offline/connectivity_service.dart';
 import 'package:dealsouk/core/offline/sync_service.dart';
-import 'package:dealsouk/core/widgets/responsive_container.dart';
+import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/core/widgets/tutorial_overlay.dart';
+import 'package:dealsouk/features/cart/presentation/cart_providers.dart';
+import 'package:dealsouk/features/profile/presentation/profile_providers.dart';
 import 'package:dealsouk/l10n/app_localizations.dart';
 
+/// The frame around the five main tabs.
+///
+/// * phones: bottom navigation
+/// * tablets: a navigation rail on the leading edge
+/// * desktop: a top bar with links, search, language and profile
+///
+/// Each tab screen draws its own content; wide screens centre it with a
+/// `PageContainer`.
 class ShellLayout extends StatefulWidget {
   final Widget child;
 
@@ -41,286 +50,163 @@ class _ShellLayoutState extends State<ShellLayout> {
 
   @override
   Widget build(BuildContext context) {
-    return _ShellLayoutBody(child: widget.child);
+    return ShellFrame(child: widget.child);
   }
 }
 
-class _ShellLayoutBody extends ConsumerWidget {
+/// Pure layout of the shell, separated from the one-time tutorial check so it
+/// can be rendered in screenshot tests.
+class ShellFrame extends ConsumerWidget {
+  const ShellFrame({super.key, required this.child, this.locationOverride});
+
   final Widget child;
 
-  const _ShellLayoutBody({required this.child});
+  /// Test hook: the route to treat as current. Null reads it from go_router.
+  final String? locationOverride;
+
+  static const _routes = ['/', '/stores', '/cart', '/leaderboard', '/profile'];
+
+  static int indexForLocation(String location) {
+    if (location == '/' || location.isEmpty) return 0;
+    if (location.startsWith('/stores')) return 1;
+    if (location.startsWith('/cart')) return 2;
+    if (location.startsWith('/leaderboard')) return 3;
+    if (location.startsWith('/profile')) return 4;
+    return -1;
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cartItems = ref.watch(cartProvider);
-    final savedCount = cartItems.length;
+    final l = AppLocalizations.of(context)!;
+    final savedCount = ref.watch(cartProvider).length;
     final isNavbarVisible = ref.watch(navbarVisibleProvider);
     // Watching here also constructs the SyncController, arming its auto-sync
     // listener for the whole authenticated session (NFR-22).
     final isOnline = ref.watch(isOnlineProvider);
     final pendingSync = ref.watch(syncControllerProvider);
     final showOfflineBanner = !isOnline || pendingSync > 0;
+    final profile = ref.watch(userProfileProvider);
+    final locale = ref.watch(localeProvider);
 
-    final String location = GoRouterState.of(context).uri.toString();
-    int selectedIndex = -1;
-    if (location == '/' || location.isEmpty) {
-      selectedIndex = 0;
-    } else if (location.startsWith('/stores')) {
-      selectedIndex = 1;
-    } else if (location.startsWith('/cart')) {
-      selectedIndex = 2;
-    } else if (location.startsWith('/leaderboard')) {
-      selectedIndex = 3;
-    } else if (location.startsWith('/profile')) {
-      selectedIndex = 4;
-    }
+    final location =
+        locationOverride ?? GoRouterState.of(context).uri.toString();
+    final selected = indexForLocation(location);
 
-    final double bottomPad = MediaQuery.of(context).padding.bottom;
-
-    // Floating pill navigation bar matching the mockup
-    return ResponsiveContainer(
-      maxWidth: 600,
-      extendBody: true,
-      bottomNavigationBar: AnimatedSlide(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-        offset: isNavbarVisible ? Offset.zero : const Offset(0, 1.5),
-        child: AnimatedOpacity(
-          duration: const Duration(milliseconds: 200),
-          opacity: isNavbarVisible ? 1.0 : 0.0,
-          child: (() {
-            final isIos =
-                defaultTargetPlatform == TargetPlatform.iOS ||
-                defaultTargetPlatform == TargetPlatform.macOS;
-
-            final l = AppLocalizations.of(context)!;
-            final navItems = Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _SoukNavItem(
-                  icon: Icons.home_outlined,
-                  selectedIcon: Icons.home_rounded,
-                  label: l.home,
-                  selected: selectedIndex == 0,
-                  onTap: () => context.go('/'),
-                ),
-                _SoukNavItem(
-                  icon: Icons.map_outlined,
-                  selectedIcon: Icons.map_rounded,
-                  label: l.map,
-                  selected: selectedIndex == 1,
-                  onTap: () => context.go('/stores'),
-                ),
-                _SoukNavItem(
-                  icon: Icons.bookmark_border_rounded,
-                  selectedIcon: Icons.bookmark_rounded,
-                  label: l.cart,
-                  selected: selectedIndex == 2,
-                  badge: savedCount,
-                  onTap: () => context.go('/cart'),
-                ),
-                _SoukNavItem(
-                  icon: Icons.emoji_events_outlined,
-                  selectedIcon: Icons.emoji_events_rounded,
-                  label: l.leaderboard,
-                  selected: selectedIndex == 3,
-                  onTap: () => context.go('/leaderboard'),
-                ),
-                _SoukNavItem(
-                  icon: Icons.person_outline_rounded,
-                  selectedIcon: Icons.person_rounded,
-                  label: l.profile,
-                  selected: selectedIndex == 4,
-                  onTap: () => context.go('/profile'),
-                ),
-              ],
-            );
-
-            final double glassOpacity = isIos ? 0.65 : 0.72;
-            final Color glassBorderColor = isIos
-                ? Colors.white.withValues(alpha: 0.35)
-                : Colors.white.withValues(alpha: 0.5);
-
-            return Container(
-              margin: EdgeInsets.fromLTRB(24, 0, 24, bottomPad + 16),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(32),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 16.0, sigmaY: 16.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: glassOpacity),
-                      borderRadius: BorderRadius.circular(32),
-                      border: Border.all(color: glassBorderColor, width: 1.5),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.04),
-                          blurRadius: 16,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 6,
-                      horizontal: 16,
-                    ),
-                    child: navItems,
-                  ),
-                ),
-              ),
-            );
-          })(),
-        ),
+    final destinations = [
+      DsNavDestination(
+        label: l.home,
+        icon: Icons.home_outlined,
+        selectedIcon: Icons.home_rounded,
+        route: '/',
       ),
-      child: Stack(
-        children: [
-          child,
-          if (showOfflineBanner)
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom: bottomPad + 96,
-              child: _OfflineBanner(online: isOnline, pending: pendingSync),
+      DsNavDestination(
+        label: l.map,
+        icon: Icons.location_on_outlined,
+        selectedIcon: Icons.location_on_rounded,
+        route: '/stores',
+      ),
+      DsNavDestination(
+        label: l.cart,
+        icon: Icons.bookmark_border_rounded,
+        selectedIcon: Icons.bookmark_rounded,
+        route: '/cart',
+        badge: savedCount,
+      ),
+      DsNavDestination(
+        label: l.leaderboard,
+        icon: Icons.emoji_events_outlined,
+        selectedIcon: Icons.emoji_events_rounded,
+        route: '/leaderboard',
+      ),
+      DsNavDestination(
+        label: l.profile,
+        icon: Icons.person_outline_rounded,
+        selectedIcon: Icons.person_rounded,
+        route: '/profile',
+      ),
+    ];
+
+    void go(int i) => context.go(_routes[i]);
+
+    final banner = showOfflineBanner
+        ? DsBanner(
+            !isOnline ? l.offlineBanner : l.offlinePendingSync(pendingSync),
+            tone: DsBannerTone.offline,
+            icon: !isOnline ? Icons.cloud_off_rounded : Icons.sync_rounded,
+          )
+        : null;
+
+    final cls = context.screenClass;
+    final content = Stack(
+      children: [
+        child,
+        if (banner != null)
+          PositionedDirectional(
+            start: 16,
+            end: 16,
+            bottom: 12,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 520),
+                child: banner,
+              ),
             ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Slim status pill shown above the navbar while offline or while queued
-/// changes are still waiting to sync (NFR-22).
-class _OfflineBanner extends StatelessWidget {
-  const _OfflineBanner({required this.online, required this.pending});
-
-  final bool online;
-  final int pending;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    final message = !online ? l.offlineBanner : l.offlinePendingSync(pending);
-    final color = !online ? const Color(0xFF6B5B4A) : AppTheme.forestDeep;
-    return SafeArea(
-      top: false,
-      child: Material(
-        color: Colors.transparent,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.18),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
+      ],
+    );
+
+    switch (cls) {
+      case ScreenClass.compact:
+        return Scaffold(
+          backgroundColor: AppTheme.background,
+          body: content,
+          bottomNavigationBar: isNavbarVisible
+              ? DsBottomNav(
+                  destinations: destinations,
+                  selectedIndex: selected,
+                  onSelected: go,
+                )
+              : null,
+        );
+      case ScreenClass.medium:
+        return Scaffold(
+          backgroundColor: AppTheme.background,
+          body: Row(
             children: [
-              Icon(
-                online ? Icons.sync_rounded : Icons.cloud_off_rounded,
-                color: Colors.white,
-                size: 16,
+              DsRail(
+                destinations: destinations,
+                selectedIndex: selected,
+                onSelected: go,
               ),
-              const SizedBox(width: 10),
-              Flexible(
-                child: Text(
-                  message,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
+              Expanded(child: content),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SoukNavItem extends StatelessWidget {
-  final IconData icon;
-  final IconData selectedIcon;
-  final String label;
-  final bool selected;
-  final int badge;
-  final VoidCallback onTap;
-
-  const _SoukNavItem({
-    required this.icon,
-    required this.selectedIcon,
-    required this.label,
-    required this.selected,
-    this.badge = 0,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: label,
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Container(
-          width: 46,
-          height: 46,
-          alignment: Alignment.center,
-          child: Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
+        );
+      case ScreenClass.expanded:
+        final name = profile.name.trim();
+        return Scaffold(
+          backgroundColor: AppTheme.background,
+          body: Column(
             children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: selected ? 40 : 0,
-                height: selected ? 40 : 0,
-                decoration: const BoxDecoration(
-                  color: AppTheme.cream,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              Icon(
-                selected ? selectedIcon : icon,
-                color: selected ? AppTheme.forestDeep : Colors.grey.shade400,
-                size: 22,
-              ),
-              if (badge > 0)
-                Positioned(
-                  right: -4,
-                  top: -4,
-                  child: Container(
-                    width: 16,
-                    height: 16,
-                    decoration: BoxDecoration(
-                      color: AppTheme.redAccent,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 1.5),
+              DsTopNav(
+                destinations: destinations.take(4).toList(),
+                selectedIndex: selected,
+                onSelected: go,
+                searchHint: l.homeSearchHint,
+                onSearch: () => context.go('/search'),
+                languageLabel: locale.languageCode == 'ar' ? 'EN' : 'عربي',
+                onToggleLanguage: () => ref
+                    .read(localeProvider.notifier)
+                    .setLocale(
+                      Locale(locale.languageCode == 'ar' ? 'en' : 'ar'),
                     ),
-                    child: Center(
-                      child: Text(
-                        '$badge',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 8,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                profileInitial: name.isEmpty ? '?' : name.characters.first,
+                profileLabel: l.profile,
+              ),
+              Expanded(child: content),
             ],
           ),
-        ),
-      ),
-    );
+        );
+    }
   }
 }

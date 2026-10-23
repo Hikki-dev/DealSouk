@@ -94,6 +94,7 @@ flutter:
   assets:
     - assets/logos/
     - assets/images/
+    - assets/images/samples/
 
   # Bundled so text never waits on a network fetch; one family covers Latin and Arabic.
   fonts:

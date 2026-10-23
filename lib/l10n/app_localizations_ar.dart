@@ -18,10 +18,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get map => 'الخريطة';
 
   @override
-  String get cart => 'السلة';
+  String get cart => 'قائمتي';
 
   @override
-  String get leaderboard => 'المتصدرون';
+  String get leaderboard => 'المكافآت';
 
   @override
   String get profile => 'الملف الشخصي';
@@ -1168,13 +1168,13 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get profileTabSubmissions => 'المساهمات';
+  String get profileTabSubmissions => 'أسعاري';
 
   @override
-  String get profileTabTokens => 'النقاط';
+  String get profileTabTokens => 'الرموز';
 
   @override
-  String get profileTabRequests => 'الطلبات';
+  String get profileTabRequests => 'طلباتي';
 
   @override
   String get profileTabSettings => 'الإعدادات';
@@ -1663,6 +1663,58 @@ class AppLocalizationsAr extends AppLocalizations {
   String get storeRetryButton => 'إعادة المحاولة';
 
   @override
+  String get storeChainAll => 'الكل';
+
+  @override
+  String get storeFilterTitle => 'تصفية المتاجر';
+
+  @override
+  String storeMaxDistance(Object km) {
+    return 'أقصى مسافة: $km كم';
+  }
+
+  @override
+  String get storeSortBy => 'ترتيب حسب';
+
+  @override
+  String get storeSortClosest => 'الأقرب أولاً';
+
+  @override
+  String get storeSortAlpha => 'أبجدياً';
+
+  @override
+  String get storeSortRecent => 'الأحدث تحديثاً';
+
+  @override
+  String get storeApplyFilters => 'تطبيق';
+
+  @override
+  String get storeGpsOnlyNote =>
+      'تصفية المسافة تعمل فقط عندما تكون في دبي والموقع مفعّل.';
+
+  @override
+  String get storeRequiresGps => 'يتطلب موقعك';
+
+  @override
+  String get storeDirections => 'الاتجاهات';
+
+  @override
+  String get storeFresh => 'محدّث';
+
+  @override
+  String storePricesCountLabel(Object count) {
+    return '$count سعراً';
+  }
+
+  @override
+  String storeUpdatedAgo(Object label) {
+    return 'آخر تحديث $label';
+  }
+
+  @override
+  String get storeSelectedHint => 'اختر متجراً لعرض أسعاره';
+
+  @override
   String get leaderRewardsTitle => 'المكافآت ولوحة المتصدرين';
 
   @override
@@ -1903,4 +1955,451 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tutorialGetStarted => 'ابدأ الآن';
+
+  @override
+  String get profileTextSize => 'حجم الخط';
+
+  @override
+  String get textSizeStandard => 'عادي';
+
+  @override
+  String get textSizeLarge => 'كبير';
+
+  @override
+  String get textSizeExtraLarge => 'كبير جداً';
+
+  @override
+  String get profileTextSizeSubtitle => 'يكبّر كل النصوص في التطبيق';
+
+  @override
+  String get privacyCreditsTitle => 'حقوق الصور والخرائط';
+
+  @override
+  String get tutorialBack => 'رجوع';
+
+  @override
+  String tutorialStep(int current, int total) {
+    return 'الخطوة $current من $total';
+  }
+
+  @override
+  String get unauthorizedTitle => 'للمشرفين فقط';
+
+  @override
+  String get unauthorizedBody =>
+      'هذه المنطقة متاحة لحسابات المشرفين فقط. إذا كان يجب أن يكون لديك وصول، اطلب من المسؤول إضافة حسابك.';
+
+  @override
+  String get unauthorizedAction => 'تسجيل الدخول بحساب آخر';
+
+  @override
+  String get modTitle => 'المشرف';
+
+  @override
+  String get navModeration => 'مراجعة الأسعار';
+
+  @override
+  String get navMap => 'كثافة الخريطة';
+
+  @override
+  String get navAnalytics => 'التحليلات';
+
+  @override
+  String get navVouchers => 'طلبات القسائم';
+
+  @override
+  String get navStock => 'مخزون القسائم';
+
+  @override
+  String get navSettings => 'إعدادات النظام';
+
+  @override
+  String get navProducts => 'إدارة المنتجات';
+
+  @override
+  String get navUsers => 'إدارة المستخدمين';
+
+  @override
+  String get modBackToApp => 'العودة إلى التطبيق';
+
+  @override
+  String get modLogOut => 'تسجيل الخروج';
+
+  @override
+  String get modRoleTag => 'الدور: مشرف';
+
+  @override
+  String get modRefresh => 'تحديث';
+
+  @override
+  String get modExportCsv => 'تصدير CSV';
+
+  @override
+  String get modMenu => 'القائمة';
+
+  @override
+  String get modSyncing => 'جارٍ المزامنة مع الخادم...';
+
+  @override
+  String get modPendingReviews => 'مراجعات معلّقة';
+
+  @override
+  String get modApprovedToday => 'اعتُمد اليوم';
+
+  @override
+  String get modTokensIssued => 'الرموز الممنوحة';
+
+  @override
+  String modSubmissionsHeader(int count) {
+    return 'المساهمات ($count)';
+  }
+
+  @override
+  String modTabPending(int count) {
+    return 'معلّقة ($count)';
+  }
+
+  @override
+  String modTabFlagged(int count) {
+    return 'مُبلَّغ عنها ($count)';
+  }
+
+  @override
+  String get modQueueClearedTitle => 'القائمة فارغة';
+
+  @override
+  String get modQueueClearedBody => 'لا توجد تقارير أسعار تحتاج إلى مراجعة.';
+
+  @override
+  String get modPricePhoto => 'صورة السعر';
+
+  @override
+  String get modReceipt => 'الإيصال';
+
+  @override
+  String get modCommunityFlagged => 'أبلغ عنها المجتمع';
+
+  @override
+  String modRewardPlus(int tokens) {
+    return 'المكافأة +$tokens';
+  }
+
+  @override
+  String get modReject => 'رفض';
+
+  @override
+  String get modDelete => 'حذف';
+
+  @override
+  String get modEdit => 'تعديل';
+
+  @override
+  String get modApprove => 'اعتماد';
+
+  @override
+  String get modReinstate => 'إعادة السعر';
+
+  @override
+  String get modAuditTitle => 'مراجعة المساهمة';
+
+  @override
+  String get modFlaggedReview => 'مراجعة بلاغ';
+
+  @override
+  String get modStatusPending => 'معلّقة';
+
+  @override
+  String get modStatusFlagged => 'مُبلَّغ عنها';
+
+  @override
+  String modIdSubmitted(String id, String time) {
+    return 'المعرّف: $id · أُرسلت $time';
+  }
+
+  @override
+  String get modFlaggedAlertTitle => 'تنبيه دقة';
+
+  @override
+  String modFlaggedAlertBody(String price, String product, String store) {
+    return 'أبلغ المتسوقون عن هذا السعر 3 مرات أو أكثر. السعر $price د.إ لـ $product في $store يُعتبر غير صحيح.';
+  }
+
+  @override
+  String get modEvidence => 'الأدلة المرفقة (اضغط للعرض)';
+
+  @override
+  String get modPriceLabel => 'ملصق السعر';
+
+  @override
+  String get modChecklist => 'قائمة التحقق';
+
+  @override
+  String get modInvestigation => 'خطوات التحقق';
+
+  @override
+  String modChkStore(String store) {
+    return 'الإيصال يطابق المتجر: $store';
+  }
+
+  @override
+  String get modChkSize => 'السعر يطابق حجم العبوة';
+
+  @override
+  String get modChkPromo => 'تحقق من وجود خصم أو عرض';
+
+  @override
+  String get modChkFresh => 'تاريخ الإيصال حديث';
+
+  @override
+  String get modInvCatalog => 'قارن مع كتالوج المتجر على الإنترنت';
+
+  @override
+  String get modInvDistributor => 'تحقق من تغيّر سعر الموزّع';
+
+  @override
+  String get modInvTrusted => 'تحقق إن كان مستخدم موثوق قد أرسله';
+
+  @override
+  String get modInvReason => 'السبب: المتسوق يقول إن السعر خاطئ';
+
+  @override
+  String get modAccuracyTitle => 'دقة المساهم';
+
+  @override
+  String get modAccuracySub => 'درجة الثقة من المراجعات السابقة';
+
+  @override
+  String get modTrustTitle => 'مستوى ثقة المُبلِّغ';
+
+  @override
+  String get modTrustSub => 'بناءً على سجل المُبلِّغ';
+
+  @override
+  String get modEditSubmission => 'تعديل المساهمة';
+
+  @override
+  String get modConfirmDeletion => 'تأكيد الحذف';
+
+  @override
+  String get modNothingSelected => 'لم يتم اختيار شيء';
+
+  @override
+  String get modSelectToAudit => 'اختر مساهمة لمراجعتها';
+
+  @override
+  String get modSourcerControls => 'إجراءات المساهم';
+
+  @override
+  String get modWarn => 'تحذير';
+
+  @override
+  String get modSuspend => 'إيقاف مؤقت';
+
+  @override
+  String get modBan => 'حظر';
+
+  @override
+  String modCsvCopied(int count) {
+    return 'تم نسخ $count صفًا بصيغة CSV';
+  }
+
+  @override
+  String modPriceSubmissions(int count) {
+    return 'مساهمات الأسعار ($count)';
+  }
+
+  @override
+  String get vqEmptyTitle => 'لا توجد طلبات قسائم';
+
+  @override
+  String get vqEmptyBody =>
+      'تظهر الطلبات الجديدة هنا عندما يصل المتسوقون إلى حد الرموز.';
+
+  @override
+  String vqLine(String user, int amount, String store) {
+    return '$user · $amount د.إ $store';
+  }
+
+  @override
+  String vqMeta(String area, int balance, int cost) {
+    return '$area · $balance رمزًا متاحًا · التكلفة $cost';
+  }
+
+  @override
+  String get mapInfo =>
+      'مساهمات الأسعار النشطة في دبي. الدوائر الأكبر تعني مساهمات أكثر. اضغط على الدبوس لعرض تفاصيل المتجر.';
+
+  @override
+  String get mapSearchHint => 'ابحث عن المتاجر بالاسم أو الفرع أو المنطقة';
+
+  @override
+  String get mapNoStores => 'لا توجد متاجر تطابق التصفية.';
+
+  @override
+  String mapStoreMeta(String area, int count) {
+    return '$area · المعتمدة: $count';
+  }
+
+  @override
+  String mapApprovedCount(int count) {
+    return 'المساهمات المعتمدة: $count';
+  }
+
+  @override
+  String mapArea(String area) {
+    return 'المنطقة: $area';
+  }
+
+  @override
+  String get mapClose => 'إغلاق';
+
+  @override
+  String get vsTitle => 'مخزون القسائم';
+
+  @override
+  String get vsImport => 'استيراد رموز القسائم';
+
+  @override
+  String get vsEmpty => 'لا يوجد مخزون قسائم بعد. استورد الرموز لإضافته.';
+
+  @override
+  String vsItem(String store, int amount) {
+    return '$store ($amount د.إ)';
+  }
+
+  @override
+  String get vsUsed => 'قسائم مستخدمة';
+
+  @override
+  String get vsAvailable => 'المخزون المتاح';
+
+  @override
+  String vsCodes(int count) {
+    return '$count رمزًا';
+  }
+
+  @override
+  String get setTitle => 'إعدادات اقتصاد الرموز';
+
+  @override
+  String get setEarn => 'معدل كسب الرموز (الأساسي)';
+
+  @override
+  String get setThreshold => 'حد القسيمة';
+
+  @override
+  String get setCap => 'الحد اليومي للمساهمات';
+
+  @override
+  String get setRequestCost => 'تكلفة الطلب';
+
+  @override
+  String setTokens(int count) {
+    return '$count رمزًا';
+  }
+
+  @override
+  String setPerDay(int count) {
+    return '$count يوميًا';
+  }
+
+  @override
+  String get setNote => 'تسري التغييرات فورًا.';
+
+  @override
+  String get prSearch => 'ابحث عن المنتجات بالاسم أو العلامة أو الباركود';
+
+  @override
+  String get prAdd => 'إضافة منتج';
+
+  @override
+  String get prEmpty => 'لا توجد منتجات تطابق التصفية.';
+
+  @override
+  String prMeta(String brand, String size, String category) {
+    return '$brand · $size · $category';
+  }
+
+  @override
+  String prTotal(int count) {
+    return 'إجمالي المنتجات: $count';
+  }
+
+  @override
+  String prPage(int page) {
+    return 'صفحة $page';
+  }
+
+  @override
+  String get usSearch => 'ابحث عن المستخدمين بالاسم أو الهاتف أو المعرّف';
+
+  @override
+  String get usAdd => 'إضافة مستخدم';
+
+  @override
+  String get usEmpty => 'لا يوجد مستخدمون يطابقون البحث.';
+
+  @override
+  String get usAdminTag => 'مشرف';
+
+  @override
+  String usMeta(String area, int tokens, String accuracy) {
+    return '$area · $tokens رمزًا · دقة $accuracy%';
+  }
+
+  @override
+  String usTotal(int count) {
+    return 'إجمالي المستخدمين: $count';
+  }
+
+  @override
+  String get anToday => 'اليوم';
+
+  @override
+  String get anMonth => 'هذا الشهر';
+
+  @override
+  String get anPendingVouchers => 'قسائم معلّقة';
+
+  @override
+  String get anTrending => 'المنتجات الرائجة';
+
+  @override
+  String get anTrendingEmpty => 'لا توجد اتجاهات للمنتجات بعد.';
+
+  @override
+  String get anCoverage => 'مناطق التغطية';
+
+  @override
+  String get anCoverageEmpty => 'لا توجد بيانات تغطية بعد.';
+
+  @override
+  String anSubmissions(int count) {
+    return '$count مساهمة';
+  }
+
+  @override
+  String anRecent(int count) {
+    return '$count حديثة';
+  }
+
+  @override
+  String get anExports => 'تصدير البيانات والتقارير';
+
+  @override
+  String get anCsvBtn => 'تنزيل تقرير CSV';
+
+  @override
+  String get anPdfBtn => 'تصدير تقرير PDF';
+
+  @override
+  String get anDownloadingCsv => 'جارٍ تنزيل CSV...';
+
+  @override
+  String get anGeneratingPdf => 'جارٍ إنشاء PDF...';
+
+  @override
+  String anFailed(String error) {
+    return 'تعذّر إكمال التصدير: $error';
+  }
 }

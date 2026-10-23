@@ -38,6 +38,13 @@ The project consists of three main components:
 
 ---
 
+## 🎨 Design and screens
+
+- [Design system](docs/DESIGN_SYSTEM.md): tokens, breakpoints, components, accessibility
+- [Screens](docs/SCREENS.md): every screen with its mockup and implementing file
+- [Redesign notes](docs/REDESIGN.md): what changed, how it was verified, known gaps
+- [Admin access and showcase](docs/ACCESS_AND_SHOWCASE.md)
+
 ## 🏗️ Architecture
 
 ```

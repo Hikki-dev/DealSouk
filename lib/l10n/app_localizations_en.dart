@@ -18,10 +18,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get map => 'Map';
 
   @override
-  String get cart => 'Cart';
+  String get cart => 'My list';
 
   @override
-  String get leaderboard => 'Leaderboard';
+  String get leaderboard => 'Rewards';
 
   @override
   String get profile => 'Profile';
@@ -1174,7 +1174,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get profileTabSubmissions => 'Submissions';
+  String get profileTabSubmissions => 'Prices';
 
   @override
   String get profileTabTokens => 'Tokens';
@@ -1669,6 +1669,58 @@ class AppLocalizationsEn extends AppLocalizations {
   String get storeRetryButton => 'Retry';
 
   @override
+  String get storeChainAll => 'All';
+
+  @override
+  String get storeFilterTitle => 'Filter stores';
+
+  @override
+  String storeMaxDistance(Object km) {
+    return 'Maximum distance: $km km';
+  }
+
+  @override
+  String get storeSortBy => 'Sort by';
+
+  @override
+  String get storeSortClosest => 'Closest first';
+
+  @override
+  String get storeSortAlpha => 'Alphabetical (A–Z)';
+
+  @override
+  String get storeSortRecent => 'Recently updated';
+
+  @override
+  String get storeApplyFilters => 'Apply filters';
+
+  @override
+  String get storeGpsOnlyNote =>
+      'The distance filter only applies when you are in Dubai with location turned on.';
+
+  @override
+  String get storeRequiresGps => 'Needs your location';
+
+  @override
+  String get storeDirections => 'Directions';
+
+  @override
+  String get storeFresh => 'Fresh';
+
+  @override
+  String storePricesCountLabel(Object count) {
+    return '$count prices';
+  }
+
+  @override
+  String storeUpdatedAgo(Object label) {
+    return 'Updated $label';
+  }
+
+  @override
+  String get storeSelectedHint => 'Select a store to see its prices';
+
+  @override
   String get leaderRewardsTitle => 'Rewards & Leaderboard';
 
   @override
@@ -1913,4 +1965,452 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tutorialGetStarted => 'Get Started';
+
+  @override
+  String get profileTextSize => 'Text size';
+
+  @override
+  String get textSizeStandard => 'Standard';
+
+  @override
+  String get textSizeLarge => 'Large';
+
+  @override
+  String get textSizeExtraLarge => 'Extra large';
+
+  @override
+  String get profileTextSizeSubtitle => 'Makes all text in the app bigger';
+
+  @override
+  String get privacyCreditsTitle => 'Photo and map credits';
+
+  @override
+  String get tutorialBack => 'Back';
+
+  @override
+  String tutorialStep(int current, int total) {
+    return 'STEP $current OF $total';
+  }
+
+  @override
+  String get unauthorizedTitle => 'Moderators only';
+
+  @override
+  String get unauthorizedBody =>
+      'This area is only available to moderator accounts. If you should have access, ask an administrator to add your account.';
+
+  @override
+  String get unauthorizedAction => 'Sign in with a different account';
+
+  @override
+  String get modTitle => 'Moderator';
+
+  @override
+  String get navModeration => 'Price moderation';
+
+  @override
+  String get navMap => 'Map density';
+
+  @override
+  String get navAnalytics => 'Analytics';
+
+  @override
+  String get navVouchers => 'Voucher queue';
+
+  @override
+  String get navStock => 'Voucher stock';
+
+  @override
+  String get navSettings => 'System settings';
+
+  @override
+  String get navProducts => 'Manage products';
+
+  @override
+  String get navUsers => 'Manage users';
+
+  @override
+  String get modBackToApp => 'Back to app';
+
+  @override
+  String get modLogOut => 'Log out';
+
+  @override
+  String get modRoleTag => 'Role: Moderator';
+
+  @override
+  String get modRefresh => 'Refresh';
+
+  @override
+  String get modExportCsv => 'Export CSV';
+
+  @override
+  String get modMenu => 'Menu';
+
+  @override
+  String get modSyncing => 'Syncing with server...';
+
+  @override
+  String get modPendingReviews => 'Pending reviews';
+
+  @override
+  String get modApprovedToday => 'Approved today';
+
+  @override
+  String get modTokensIssued => 'Tokens issued';
+
+  @override
+  String modSubmissionsHeader(int count) {
+    return 'Submissions ($count)';
+  }
+
+  @override
+  String modTabPending(int count) {
+    return 'Pending ($count)';
+  }
+
+  @override
+  String modTabFlagged(int count) {
+    return 'Flagged ($count)';
+  }
+
+  @override
+  String get modQueueClearedTitle => 'Queue cleared';
+
+  @override
+  String get modQueueClearedBody =>
+      'No pending price reports need verification.';
+
+  @override
+  String get modPricePhoto => 'Price photo';
+
+  @override
+  String get modReceipt => 'Receipt';
+
+  @override
+  String get modCommunityFlagged => 'Community flagged';
+
+  @override
+  String modRewardPlus(int tokens) {
+    return 'Reward +$tokens';
+  }
+
+  @override
+  String get modReject => 'Reject';
+
+  @override
+  String get modDelete => 'Delete';
+
+  @override
+  String get modEdit => 'Edit';
+
+  @override
+  String get modApprove => 'Approve';
+
+  @override
+  String get modReinstate => 'Reinstate';
+
+  @override
+  String get modAuditTitle => 'Review submission';
+
+  @override
+  String get modFlaggedReview => 'Flagged report review';
+
+  @override
+  String get modStatusPending => 'Pending';
+
+  @override
+  String get modStatusFlagged => 'Flagged';
+
+  @override
+  String modIdSubmitted(String id, String time) {
+    return 'ID: $id · Submitted $time';
+  }
+
+  @override
+  String get modFlaggedAlertTitle => 'Accuracy alert';
+
+  @override
+  String modFlaggedAlertBody(String price, String product, String store) {
+    return 'Shoppers flagged this price 3+ times. AED $price for $product at $store is reported as incorrect.';
+  }
+
+  @override
+  String get modEvidence => 'Attached evidence (tap to view)';
+
+  @override
+  String get modPriceLabel => 'Price label';
+
+  @override
+  String get modChecklist => 'Checklist';
+
+  @override
+  String get modInvestigation => 'Investigation steps';
+
+  @override
+  String modChkStore(String store) {
+    return 'Receipt matches store: $store';
+  }
+
+  @override
+  String get modChkSize => 'Price matches the pack size';
+
+  @override
+  String get modChkPromo => 'Check for discount or promo tags';
+
+  @override
+  String get modChkFresh => 'Receipt date is recent';
+
+  @override
+  String get modInvCatalog => 'Compare with the store\'s online catalogue';
+
+  @override
+  String get modInvDistributor => 'Check for a distributor price change';
+
+  @override
+  String get modInvTrusted => 'Check whether a trusted user submitted it';
+
+  @override
+  String get modInvReason => 'Reason: shopper says the price is wrong';
+
+  @override
+  String get modAccuracyTitle => 'Submitter accuracy';
+
+  @override
+  String get modAccuracySub => 'Trust score from past reviews';
+
+  @override
+  String get modTrustTitle => 'Reporter trust level';
+
+  @override
+  String get modTrustSub => 'Based on reporter history';
+
+  @override
+  String get modEditSubmission => 'Edit submission';
+
+  @override
+  String get modConfirmDeletion => 'Confirm deletion';
+
+  @override
+  String get modNothingSelected => 'Nothing selected';
+
+  @override
+  String get modSelectToAudit => 'Pick a submission to review it';
+
+  @override
+  String get modSourcerControls => 'Contributor controls';
+
+  @override
+  String get modWarn => 'Warn user';
+
+  @override
+  String get modSuspend => 'Suspend';
+
+  @override
+  String get modBan => 'Ban';
+
+  @override
+  String modCsvCopied(int count) {
+    return 'Copied $count rows as CSV';
+  }
+
+  @override
+  String modPriceSubmissions(int count) {
+    return 'Price submissions ($count)';
+  }
+
+  @override
+  String get vqEmptyTitle => 'No voucher requests';
+
+  @override
+  String get vqEmptyBody =>
+      'New requests appear here when shoppers reach the token threshold.';
+
+  @override
+  String vqLine(String user, int amount, String store) {
+    return '$user · AED $amount $store';
+  }
+
+  @override
+  String vqMeta(String area, int balance, int cost) {
+    return '$area · $balance tokens available · cost $cost';
+  }
+
+  @override
+  String get mapInfo =>
+      'Active price submissions across Dubai. Bigger circles mean more submissions. Tap a pin for store details.';
+
+  @override
+  String get mapSearchHint => 'Search stores by name, branch or area';
+
+  @override
+  String get mapNoStores => 'No stores match the filters.';
+
+  @override
+  String mapStoreMeta(String area, int count) {
+    return '$area · Approved: $count';
+  }
+
+  @override
+  String mapApprovedCount(int count) {
+    return 'Approved submissions: $count';
+  }
+
+  @override
+  String mapArea(String area) {
+    return 'Area: $area';
+  }
+
+  @override
+  String get mapClose => 'Close';
+
+  @override
+  String get vsTitle => 'Voucher stock';
+
+  @override
+  String get vsImport => 'Import voucher codes';
+
+  @override
+  String get vsEmpty => 'No voucher stock yet. Import codes to add some.';
+
+  @override
+  String vsItem(String store, int amount) {
+    return '$store (AED $amount)';
+  }
+
+  @override
+  String get vsUsed => 'Used vouchers';
+
+  @override
+  String get vsAvailable => 'Available stock';
+
+  @override
+  String vsCodes(int count) {
+    return '$count codes';
+  }
+
+  @override
+  String get setTitle => 'Token economy settings';
+
+  @override
+  String get setEarn => 'Token earn rate (base)';
+
+  @override
+  String get setThreshold => 'Voucher threshold';
+
+  @override
+  String get setCap => 'Daily submission cap';
+
+  @override
+  String get setRequestCost => 'Request cost';
+
+  @override
+  String setTokens(int count) {
+    return '$count tokens';
+  }
+
+  @override
+  String setPerDay(int count) {
+    return '$count per day';
+  }
+
+  @override
+  String get setNote => 'Changes take effect immediately.';
+
+  @override
+  String get prSearch => 'Search products by name, brand or barcode';
+
+  @override
+  String get prAdd => 'Add product';
+
+  @override
+  String get prEmpty => 'No products match the filters.';
+
+  @override
+  String prMeta(String brand, String size, String category) {
+    return '$brand · $size · $category';
+  }
+
+  @override
+  String prTotal(int count) {
+    return 'Total products: $count';
+  }
+
+  @override
+  String prPage(int page) {
+    return 'Page $page';
+  }
+
+  @override
+  String get usSearch => 'Search users by name, phone or ID';
+
+  @override
+  String get usAdd => 'Add user';
+
+  @override
+  String get usEmpty => 'No users match the search.';
+
+  @override
+  String get usAdminTag => 'Admin';
+
+  @override
+  String usMeta(String area, int tokens, String accuracy) {
+    return '$area · $tokens tokens · $accuracy% accuracy';
+  }
+
+  @override
+  String usTotal(int count) {
+    return 'Total users: $count';
+  }
+
+  @override
+  String get anToday => 'Today';
+
+  @override
+  String get anMonth => 'This month';
+
+  @override
+  String get anPendingVouchers => 'Pending vouchers';
+
+  @override
+  String get anTrending => 'Trending products';
+
+  @override
+  String get anTrendingEmpty => 'No product trends yet.';
+
+  @override
+  String get anCoverage => 'Coverage hotspots';
+
+  @override
+  String get anCoverageEmpty => 'No coverage data yet.';
+
+  @override
+  String anSubmissions(int count) {
+    return '$count submissions';
+  }
+
+  @override
+  String anRecent(int count) {
+    return '$count recent';
+  }
+
+  @override
+  String get anExports => 'Data exports and reports';
+
+  @override
+  String get anCsvBtn => 'Download CSV report';
+
+  @override
+  String get anPdfBtn => 'Export PDF report';
+
+  @override
+  String get anDownloadingCsv => 'Downloading CSV...';
+
+  @override
+  String get anGeneratingPdf => 'Generating PDF...';
+
+  @override
+  String anFailed(String error) {
+    return 'Could not complete the export: $error';
+  }
 }

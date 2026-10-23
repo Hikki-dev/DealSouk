@@ -1669,6 +1669,58 @@ class AppLocalizationsEn extends AppLocalizations {
   String get storeRetryButton => 'Retry';
 
   @override
+  String get storeChainAll => 'All';
+
+  @override
+  String get storeFilterTitle => 'Filter stores';
+
+  @override
+  String storeMaxDistance(Object km) {
+    return 'Maximum distance: $km km';
+  }
+
+  @override
+  String get storeSortBy => 'Sort by';
+
+  @override
+  String get storeSortClosest => 'Closest first';
+
+  @override
+  String get storeSortAlpha => 'Alphabetical (A–Z)';
+
+  @override
+  String get storeSortRecent => 'Recently updated';
+
+  @override
+  String get storeApplyFilters => 'Apply filters';
+
+  @override
+  String get storeGpsOnlyNote =>
+      'The distance filter only applies when you are in Dubai with location turned on.';
+
+  @override
+  String get storeRequiresGps => 'Needs your location';
+
+  @override
+  String get storeDirections => 'Directions';
+
+  @override
+  String get storeFresh => 'Fresh';
+
+  @override
+  String storePricesCountLabel(Object count) {
+    return '$count prices';
+  }
+
+  @override
+  String storeUpdatedAgo(Object label) {
+    return 'Updated $label';
+  }
+
+  @override
+  String get storeSelectedHint => 'Select a store to see its prices';
+
+  @override
   String get leaderRewardsTitle => 'Rewards & Leaderboard';
 
   @override

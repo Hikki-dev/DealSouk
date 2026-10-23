@@ -192,7 +192,7 @@ class DsPrice extends StatelessWidget {
       style: AppFonts.body(
         fontSize: (size * 0.6).clamp(12, 18),
         fontWeight: FontWeight.w600,
-        color: AppTheme.textLight,
+        color: color?.withValues(alpha: 0.85) ?? AppTheme.textLight,
       ),
     );
     final gap = SizedBox(width: lerpDouble(3, 5, size / 44)!);

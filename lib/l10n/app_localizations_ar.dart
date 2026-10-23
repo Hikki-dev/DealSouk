@@ -1663,6 +1663,58 @@ class AppLocalizationsAr extends AppLocalizations {
   String get storeRetryButton => 'إعادة المحاولة';
 
   @override
+  String get storeChainAll => 'الكل';
+
+  @override
+  String get storeFilterTitle => 'تصفية المتاجر';
+
+  @override
+  String storeMaxDistance(Object km) {
+    return 'أقصى مسافة: $km كم';
+  }
+
+  @override
+  String get storeSortBy => 'ترتيب حسب';
+
+  @override
+  String get storeSortClosest => 'الأقرب أولاً';
+
+  @override
+  String get storeSortAlpha => 'أبجدياً';
+
+  @override
+  String get storeSortRecent => 'الأحدث تحديثاً';
+
+  @override
+  String get storeApplyFilters => 'تطبيق';
+
+  @override
+  String get storeGpsOnlyNote =>
+      'تصفية المسافة تعمل فقط عندما تكون في دبي والموقع مفعّل.';
+
+  @override
+  String get storeRequiresGps => 'يتطلب موقعك';
+
+  @override
+  String get storeDirections => 'الاتجاهات';
+
+  @override
+  String get storeFresh => 'محدّث';
+
+  @override
+  String storePricesCountLabel(Object count) {
+    return '$count سعراً';
+  }
+
+  @override
+  String storeUpdatedAgo(Object label) {
+    return 'آخر تحديث $label';
+  }
+
+  @override
+  String get storeSelectedHint => 'اختر متجراً لعرض أسعاره';
+
+  @override
   String get leaderRewardsTitle => 'المكافآت ولوحة المتصدرين';
 
   @override

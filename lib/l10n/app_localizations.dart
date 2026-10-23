@@ -2970,6 +2970,96 @@ abstract class AppLocalizations {
   /// **'Retry'**
   String get storeRetryButton;
 
+  /// No description provided for @storeChainAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get storeChainAll;
+
+  /// No description provided for @storeFilterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter stores'**
+  String get storeFilterTitle;
+
+  /// No description provided for @storeMaxDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum distance: {km} km'**
+  String storeMaxDistance(Object km);
+
+  /// No description provided for @storeSortBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by'**
+  String get storeSortBy;
+
+  /// No description provided for @storeSortClosest.
+  ///
+  /// In en, this message translates to:
+  /// **'Closest first'**
+  String get storeSortClosest;
+
+  /// No description provided for @storeSortAlpha.
+  ///
+  /// In en, this message translates to:
+  /// **'Alphabetical (A–Z)'**
+  String get storeSortAlpha;
+
+  /// No description provided for @storeSortRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently updated'**
+  String get storeSortRecent;
+
+  /// No description provided for @storeApplyFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply filters'**
+  String get storeApplyFilters;
+
+  /// No description provided for @storeGpsOnlyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The distance filter only applies when you are in Dubai with location turned on.'**
+  String get storeGpsOnlyNote;
+
+  /// No description provided for @storeRequiresGps.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs your location'**
+  String get storeRequiresGps;
+
+  /// No description provided for @storeDirections.
+  ///
+  /// In en, this message translates to:
+  /// **'Directions'**
+  String get storeDirections;
+
+  /// No description provided for @storeFresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Fresh'**
+  String get storeFresh;
+
+  /// No description provided for @storePricesCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} prices'**
+  String storePricesCountLabel(Object count);
+
+  /// No description provided for @storeUpdatedAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {label}'**
+  String storeUpdatedAgo(Object label);
+
+  /// No description provided for @storeSelectedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a store to see its prices'**
+  String get storeSelectedHint;
+
   /// No description provided for @leaderRewardsTitle.
   ///
   /// In en, this message translates to:

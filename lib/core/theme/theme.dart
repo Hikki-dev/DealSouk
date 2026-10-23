@@ -22,6 +22,18 @@ class AppTheme {
   static const Color textDark = Color(0xFF1B2730);
   static const Color textLight = Color(0xFF56626B);
 
+  // Semantic colours used by the design-system components.
+  static const Color line = Color(0xFFE6DAC4);
+  static const Color sand2 = Color(0xFFF3EADB);
+  static const Color good = Color(0xFF17744A);
+  static const Color goodLight = Color(0xFFDDF3E6);
+  static const Color goodText = Color(0xFF0F5A37);
+  static const Color badLight = Color(0xFFFBE3DD);
+  static const Color badText = Color(0xFF8E2616);
+  static const Color warnLight = Color(0xFFFFF1CF);
+  static const Color warnText = Color(0xFF5E3F00);
+  static const Color ink = textDark;
+
   /// Minimum touch target for every tappable control (ages 14 to 65).
   static const double minTap = 48;
 
@@ -77,14 +89,15 @@ class AppTheme {
       ),
       scaffoldBackgroundColor: background,
       appBarTheme: AppBarTheme(
-        backgroundColor: forestDeep,
-        foregroundColor: Colors.white,
+        backgroundColor: background,
+        foregroundColor: ink,
         elevation: 0,
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        iconTheme: const IconThemeData(color: ink),
         titleTextStyle: AppFonts.display(
-          color: Colors.white,
-          fontSize: 18,
+          color: ink,
+          fontSize: 20,
           fontWeight: FontWeight.w700,
         ),
       ),

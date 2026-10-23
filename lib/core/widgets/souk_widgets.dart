@@ -357,10 +357,18 @@ class SoukProductVisual extends StatelessWidget {
       borderRadius: BorderRadius.circular(borderRadius),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFFF7F3EA),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(borderRadius),
         ),
-        child: product.imageUrl.isNotEmpty
+        child: product.imageUrl.startsWith('asset:')
+            ? Image.asset(
+                product.imageUrl.substring(6),
+                fit: fit,
+                cacheWidth: 360,
+                errorBuilder: (context, error, stackTrace) =>
+                    _FallbackProductIcon(product: product, color: color),
+              )
+            : product.imageUrl.isNotEmpty
             ? CachedNetworkImage(
                 imageUrl: product.imageUrl,
                 fit: fit,

@@ -18,10 +18,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get map => 'الخريطة';
 
   @override
-  String get cart => 'السلة';
+  String get cart => 'قائمتي';
 
   @override
-  String get leaderboard => 'المتصدرون';
+  String get leaderboard => 'المكافآت';
 
   @override
   String get profile => 'الملف الشخصي';

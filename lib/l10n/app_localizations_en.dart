@@ -18,10 +18,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get map => 'Map';
 
   @override
-  String get cart => 'Cart';
+  String get cart => 'My list';
 
   @override
-  String get leaderboard => 'Leaderboard';
+  String get leaderboard => 'Rewards';
 
   @override
   String get profile => 'Profile';

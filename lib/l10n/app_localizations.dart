@@ -119,13 +119,13 @@ abstract class AppLocalizations {
   /// No description provided for @cart.
   ///
   /// In en, this message translates to:
-  /// **'Cart'**
+  /// **'My list'**
   String get cart;
 
   /// No description provided for @leaderboard.
   ///
   /// In en, this message translates to:
-  /// **'Leaderboard'**
+  /// **'Rewards'**
   String get leaderboard;
 
   /// No description provided for @profile.

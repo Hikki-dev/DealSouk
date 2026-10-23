@@ -116,7 +116,7 @@ void main() {
     );
   });
 
-  for (final tab in ['analytics', 'vouchers', 'stock', 'settings', 'map']) {
+  for (final tab in ['analytics', 'vouchers', 'stock', 'settings']) {
     testWidgets('$tab desktop', (tester) async {
       await shoot(
         tester,

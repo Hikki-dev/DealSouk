@@ -482,11 +482,12 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
   }
 
   Widget _statsRow(int pending, int approved, int tokens) {
+    final scale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.7);
     return AdaptiveGrid(
       minTileWidth: 150,
       spacing: 12,
       maxColumns: 3,
-      mainAxisExtent: 112,
+      mainAxisExtent: 112 * scale,
       children: [
         adminStatCard(
           'Pending reviews',
@@ -593,6 +594,28 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     );
   }
 
+  Widget _actionRow({required bool stacked, required List<Widget> children}) {
+    if (stacked) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < children.length; i++) ...[
+            if (i > 0) const SizedBox(height: 8),
+            children[i],
+          ],
+        ],
+      );
+    }
+    return Row(
+      children: [
+        for (var i = 0; i < children.length; i++) ...[
+          if (i > 0) const SizedBox(width: 8),
+          Expanded(child: children[i]),
+        ],
+      ],
+    );
+  }
+
   Widget _buildSubmissionCard(
     BuildContext context,
     AdminSubmission sub,
@@ -676,34 +699,26 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             ),
             if (!isDesktop) ...[
               const SizedBox(height: 14),
-              Row(
+              _actionRow(
+                stacked: MediaQuery.textScalerOf(context).scale(1) > 1.3,
                 children: [
-                  Expanded(
-                    child: DsButton(
-                      label: flagged ? 'Delete' : 'Reject',
-                      style: DsButtonStyle.danger,
-                      compact: true,
-                      onPressed: () => _reject(sub.id),
-                    ),
+                  DsButton(
+                    label: flagged ? 'Delete' : 'Reject',
+                    style: DsButtonStyle.danger,
+                    compact: true,
+                    onPressed: () => _reject(sub.id),
                   ),
-                  if (!flagged) ...[
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: DsButton(
-                        label: 'Edit',
-                        style: DsButtonStyle.secondary,
-                        compact: true,
-                        onPressed: () => _showEditDialog(context, sub),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: DsButton(
-                      label: flagged ? 'Reinstate' : 'Approve',
+                  if (!flagged)
+                    DsButton(
+                      label: 'Edit',
+                      style: DsButtonStyle.secondary,
                       compact: true,
-                      onPressed: () => _approve(sub.id, sub),
+                      onPressed: () => _showEditDialog(context, sub),
                     ),
+                  DsButton(
+                    label: flagged ? 'Reinstate' : 'Approve',
+                    compact: true,
+                    onPressed: () => _approve(sub.id, sub),
                   ),
                 ],
               ),

@@ -2,6 +2,14 @@
 
 Newest first.
 
+## Demo mode for the moderator console
+
+1. Anyone who signs in can now look around the console in **demo mode**, read-only. Only moderator accounts, which you make with `npm run admin:set`, can change anything. It is off until `ADMIN_DEMO_VIEWERS=true` is set on the API. See [Demo mode](docs/Demo%20mode.md).
+2. Viewers see a banner, shoppers' names are shortened, and phone numbers, voucher codes, receipt photos and exports are hidden or refused.
+3. The API refuses every write from a viewer, so the protection does not rely on the buttons.
+4. Fixed the Android and iOS release builds, which had been failing: `sentry_flutter` upgraded to 9.30.1, and the unused Google Maps plugin removed.
+5. Rewrote the Moderator access guide, which still said the shopper app was not on the web.
+
 ## Deploying and documentation
 
 1. Two live websites, one for each audience: the moderator console at `deal-souk.vercel.app` and the shopper app at `deal-souk-shopper.vercel.app`. Both are built from the same code; `APP_MODE=shopper` picks the customer app.

@@ -209,6 +209,70 @@ describe("admin gate (FR-57, requireAdmin)", () => {
   });
 });
 
+describe("demo viewers (read-only console)", () => {
+  const original = process.env.ADMIN_DEMO_VIEWERS;
+  beforeEach(() => {
+    process.env.ADMIN_DEMO_VIEWERS = "true";
+  });
+  afterEach(() => {
+    if (original == null) delete process.env.ADMIN_DEMO_VIEWERS;
+    else process.env.ADMIN_DEMO_VIEWERS = original;
+  });
+
+  it("a non-admin can read the queue, with names and photos masked", async () => {
+    signInAs({ isAdmin: false });
+    mockPrisma.priceSubmission.findMany.mockResolvedValue([
+      {
+        id: "s1", priceAed: 4.5, status: "pending", flagCount: 0, hasReceipt: true,
+        receiptUrl: "https://example.com/r.jpg", priceLabelUrl: null, submittedAt: new Date(),
+        product: { id: "p1", name: "Milk", brand: "Almarai", imageUrl: null },
+        store: { id: "st1", chain: "Spinneys", branchName: "Marina" },
+        sourcer: { id: "u2", displayName: "Fatima Ali", accuracyRating: 0.9 },
+        flags: [],
+      },
+    ] as any);
+    const res = await request(app).get("/admin/queue").set("Authorization", "Bearer good-token");
+    expect(res.status).toBe(200);
+    expect(res.body[0].sourcer.displayName).toBe("F•••");
+    expect(res.body[0].receiptUrl).toBeNull();
+    expect(res.body[0].product.name).toBe("Milk");
+  });
+
+  it("a non-admin cannot write", async () => {
+    signInAs({ isAdmin: false });
+    const res = await request(app)
+      .post("/admin/submissions/s1/approve")
+      .set("Authorization", "Bearer good-token");
+    expect(res.status).toBe(403);
+    expect(res.body.code).toBe("DEMO_READ_ONLY");
+  });
+
+  it("a non-admin cannot download exports", async () => {
+    signInAs({ isAdmin: false });
+    const res = await request(app)
+      .get("/admin/exports/submissions.csv")
+      .set("Authorization", "Bearer good-token");
+    expect(res.status).toBe(403);
+    expect(res.body.code).toBe("DEMO_READ_ONLY");
+  });
+
+  it("an admin still sees unmasked data", async () => {
+    signInAs({ isAdmin: true });
+    mockPrisma.priceSubmission.findMany.mockResolvedValue([
+      {
+        id: "s1", priceAed: 4.5, status: "pending", flagCount: 0, hasReceipt: false,
+        receiptUrl: null, priceLabelUrl: null, submittedAt: new Date(),
+        product: { id: "p1", name: "Milk", brand: null, imageUrl: null },
+        store: { id: "st1", chain: "Spinneys", branchName: "Marina" },
+        sourcer: { id: "u2", displayName: "Fatima Ali", accuracyRating: 0.9 },
+        flags: [],
+      },
+    ] as any);
+    const res = await request(app).get("/admin/queue").set("Authorization", "Bearer good-token");
+    expect(res.body[0].sourcer.displayName).toBe("Fatima Ali");
+  });
+});
+
 describe("admin security hardening", () => {
   it("creates users with encrypted phone numbers and ledger-backed initial balance", async () => {
     signInAs({ isAdmin: true });

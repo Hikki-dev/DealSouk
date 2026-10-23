@@ -3618,6 +3618,12 @@ abstract class AppLocalizations {
   /// **'Menu'**
   String get modMenu;
 
+  /// No description provided for @modDemoBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Demo mode: you can look around, but changes are turned off. Only the owner can make changes, and personal details are hidden.'**
+  String get modDemoBanner;
+
   /// No description provided for @modSyncing.
   ///
   /// In en, this message translates to:

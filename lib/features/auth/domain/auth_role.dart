@@ -1,6 +1,9 @@
 enum AuthRole {
   user,
-  admin;
+  admin,
+
+  /// Signed in, may look around the moderator console but not change anything.
+  demo;
 
   static AuthRole? fromClaim(Object? claim) {
     final value = claim?.toString().trim().toLowerCase();
@@ -27,6 +30,8 @@ enum AuthRole {
 
     // Backward-compatible bridge while the backend still exposes isAdmin.
     if (claims['isAdmin'] == true) roles.add(AuthRole.admin);
+
+    if (claims['demoViewer'] == true) roles.add(AuthRole.demo);
 
     if (roles.isEmpty) roles.add(AuthRole.user);
     return roles;

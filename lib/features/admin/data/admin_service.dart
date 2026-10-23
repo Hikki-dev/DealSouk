@@ -7,7 +7,23 @@ import 'package:dealsouk/core/network/api_client.dart';
 import 'package:dealsouk/features/products/domain/product.dart';
 import 'package:dealsouk/features/profile/data/profile_service.dart';
 
+/// Thrown instead of calling the API when the console is in demo (view-only) mode.
+class AdminReadOnlyException implements Exception {
+  const AdminReadOnlyException();
+  @override
+  String toString() =>
+      'Demo mode is view-only. Only the owner can make changes.';
+}
+
 class AdminService {
+  /// True for demo viewers. The API refuses their writes anyway; this just gives
+  /// a clear message without a round trip.
+  bool readOnly = false;
+
+  void _guardWrite() {
+    if (readOnly) throw const AdminReadOnlyException();
+  }
+
   Future<List<AdminSubmission>> getQueue() async {
     final res = await apiClient.get('/admin/queue');
     final list = res.data as List<dynamic>;
@@ -17,6 +33,7 @@ class AdminService {
   }
 
   Future<void> approveSubmission(String id, {String? productImageUrl}) async {
+    _guardWrite();
     await apiClient.post(
       '/admin/submissions/$id/approve',
       data: {'productImageUrl': ?productImageUrl},
@@ -24,6 +41,7 @@ class AdminService {
   }
 
   Future<void> rejectSubmission(String id, {String? reason}) async {
+    _guardWrite();
     await apiClient.post(
       '/admin/submissions/$id/reject',
       data: {'reason': ?reason},
@@ -37,6 +55,7 @@ class AdminService {
     String? productImageUrl,
     double? price,
   }) async {
+    _guardWrite();
     await apiClient.patch(
       '/admin/submissions/$id',
       data: {
@@ -49,6 +68,7 @@ class AdminService {
   }
 
   Future<void> warnUser(String userId, {required String reason}) async {
+    _guardWrite();
     await apiClient.post('/admin/users/$userId/warn', data: {'reason': reason});
   }
 
@@ -57,6 +77,7 @@ class AdminService {
     required String reason,
     int days = 7,
   }) async {
+    _guardWrite();
     await apiClient.post(
       '/admin/users/$userId/suspend',
       data: {'reason': reason, 'days': days},
@@ -64,6 +85,7 @@ class AdminService {
   }
 
   Future<void> banUser(String userId, {required String reason}) async {
+    _guardWrite();
     await apiClient.post('/admin/users/$userId/ban', data: {'reason': reason});
   }
 
@@ -79,6 +101,7 @@ class AdminService {
   }
 
   Future<void> updateSettings(AdminSettings settings) async {
+    _guardWrite();
     await apiClient.patch(
       '/admin/settings',
       data: {
@@ -111,6 +134,7 @@ class AdminService {
     required String voucherCode,
     String? adminNote,
   }) async {
+    _guardWrite();
     await apiClient.post(
       '/admin/vouchers/$id/approve',
       data: {'voucherCode': voucherCode, 'adminNote': ?adminNote},
@@ -118,6 +142,7 @@ class AdminService {
   }
 
   Future<void> rejectVoucher(String id, {String? adminNote}) async {
+    _guardWrite();
     await apiClient.post(
       '/admin/vouchers/$id/reject',
       data: {'adminNote': ?adminNote},
@@ -130,6 +155,7 @@ class AdminService {
     required int denominationAed,
     required List<String> codes,
   }) async {
+    _guardWrite();
     await apiClient.post(
       '/admin/vouchers/inventory/import',
       data: {
@@ -183,16 +209,19 @@ class AdminService {
   }
 
   Future<Product> createProduct(Map<String, dynamic> data) async {
+    _guardWrite();
     final res = await apiClient.post('/admin/products', data: data);
     return Product.fromJson(res.data as Map<String, dynamic>);
   }
 
   Future<Product> updateProduct(String id, Map<String, dynamic> data) async {
+    _guardWrite();
     final res = await apiClient.put('/admin/products/$id', data: data);
     return Product.fromJson(res.data as Map<String, dynamic>);
   }
 
   Future<void> deleteProduct(String id) async {
+    _guardWrite();
     await apiClient.delete('/admin/products/$id');
   }
 
@@ -214,16 +243,19 @@ class AdminService {
   }
 
   Future<ProfileData> createUser(Map<String, dynamic> data) async {
+    _guardWrite();
     final res = await apiClient.post('/admin/users', data: data);
     return ProfileData.fromJson(res.data as Map<String, dynamic>);
   }
 
   Future<ProfileData> updateUser(String id, Map<String, dynamic> data) async {
+    _guardWrite();
     final res = await apiClient.put('/admin/users/$id', data: data);
     return ProfileData.fromJson(res.data as Map<String, dynamic>);
   }
 
   Future<void> deleteUser(String id) async {
+    _guardWrite();
     await apiClient.delete('/admin/users/$id');
   }
 }

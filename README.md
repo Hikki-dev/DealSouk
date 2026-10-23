@@ -84,7 +84,7 @@ The longer version, with the folders and the code behind each step, is in [How i
 
 ## Try it first
 
-* **[Moderator console](https://deal-souk.vercel.app)**: sign in with a moderator account. How to get one is in [Moderator access](docs/Moderator%20access.md).
+* **[Moderator console](https://deal-souk.vercel.app)**: sign in with any account to look around in read-only **demo mode**. Only the owner's account can make changes. See [Demo mode](docs/Demo%20mode.md) and [Moderator access](docs/Moderator%20access.md).
 * **[Shopper app on the web](https://deal-souk-shopper.vercel.app)**: the customer app, on phones and desktops. It is a separate website from the console, built from the same code. How both are set up is in [Deploying](docs/Deploying.md).
 * **Android**: every release has two downloads, `DealSouk-Shopper.apk` and `DealSouk-Admin.apk`. See [Putting it online](#putting-it-online).
 
@@ -243,7 +243,7 @@ Please report a security problem privately. How is in [SECURITY.md](SECURITY.md)
 * [API overview](docs/API%20overview.md): every route
 * [Design system](docs/Design%20system.md) and [Screens](docs/Screens.md): the look, and every screen
 * [The redesign](docs/The%20redesign.md): what changed in the redesign and what is left
-* [Deploying](docs/Deploying.md) and [Moderator access](docs/Moderator%20access.md)
+* [Deploying](docs/Deploying.md), [Demo mode](docs/Demo%20mode.md) and [Moderator access](docs/Moderator%20access.md)
 * [Fixing problems](docs/Fixing%20problems.md) and [FAQ](docs/FAQ.md)
 * [Test plan](docs/Test%20plan.md) and [Automated test plan](docs/Automated%20test%20plan.md)
 * [Changes](CHANGELOG.md): what is new, newest first

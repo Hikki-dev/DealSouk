@@ -41,6 +41,11 @@ class AuthState {
   bool get isGuest => status == AuthStatus.guest;
   bool get canSubmit => status == AuthStatus.authenticated;
   bool get isAdmin => roles.contains(AuthRole.admin);
+  bool get isDemoViewer => !isAdmin && roles.contains(AuthRole.demo);
+
+  /// May open the moderator console. Demo viewers only in the admin build, and
+  /// the API still refuses every change they try.
+  bool get canViewAdmin => isAdmin || (_adminMode && isDemoViewer);
 
   AuthState copyWith({
     AuthStatus? status,

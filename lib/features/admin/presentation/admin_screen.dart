@@ -9,6 +9,7 @@ import 'package:dealsouk/core/design/design.dart';
 import 'package:dealsouk/core/theme/app_fonts.dart';
 import 'package:dealsouk/features/admin/presentation/admin_providers.dart';
 import 'package:dealsouk/features/auth/presentation/auth_providers.dart';
+import 'package:dealsouk/features/admin/data/admin_service.dart';
 import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/l10n/app_localizations.dart';
 import 'package:dealsouk/features/admin/domain/admin_submission.dart';
@@ -20,7 +21,14 @@ import 'package:dealsouk/features/products/domain/product.dart';
 import 'package:dealsouk/features/profile/data/profile_service.dart';
 
 class AdminScreen extends ConsumerStatefulWidget {
-  const AdminScreen({super.key, this.initialTab = 'moderation'});
+  const AdminScreen({
+    super.key,
+    this.initialTab = 'moderation',
+    this.readOnly = false,
+  });
+
+  /// Demo viewers: show the banner and refuse writes.
+  final bool readOnly;
 
   /// Tab shown first: moderation, map, analytics, vouchers, stock, settings,
   /// products_crud or users_crud.
@@ -80,6 +88,8 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         : null;
 
     final pending = pendingSubs.length;
+    final isDemo = widget.readOnly;
+    adminService.readOnly = isDemo;
     return LayoutBuilder(
       builder: (context, constraints) {
         final wide = constraints.maxWidth >= 1024;
@@ -98,6 +108,12 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           tokensIssuedCount: tokensIssuedCount,
           vouchers: vouchers,
         );
+        final body = Column(
+          children: [
+            if (isDemo) const _DemoBanner(),
+            Expanded(child: content),
+          ],
+        );
         if (wide) {
           return Scaffold(
             backgroundColor: AppTheme.background,
@@ -109,7 +125,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                   child: Column(
                     children: [
                       _buildHeader(context, wide: true),
-                      Expanded(child: content),
+                      Expanded(child: body),
                     ],
                   ),
                 ),
@@ -126,7 +142,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           body: Column(
             children: [
               _buildHeader(context, wide: false),
-              Expanded(child: content),
+              Expanded(child: body),
             ],
           ),
         );
@@ -3552,4 +3568,30 @@ class _AdminNavItem {
   final IconData icon;
   final String label;
   final int badge;
+}
+
+/// Shown to demo viewers: the console is real, but read-only.
+class _DemoBanner extends StatelessWidget {
+  const _DemoBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: AppTheme.forestDeep,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        children: [
+          const Icon(Icons.visibility_rounded, size: 18, color: Colors.white),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              AppLocalizations.of(context)!.modDemoBanner,
+              style: const TextStyle(color: Colors.white, fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

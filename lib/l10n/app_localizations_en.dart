@@ -2048,6 +2048,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get modMenu => 'Menu';
 
   @override
+  String get modDemoBanner =>
+      'Demo mode: you can look around, but changes are turned off. Only the owner can make changes, and personal details are hidden.';
+
+  @override
   String get modSyncing => 'Syncing with server...';
 
   @override

@@ -2038,6 +2038,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get modMenu => 'القائمة';
 
   @override
+  String get modDemoBanner =>
+      'وضع العرض التجريبي: يمكنك التصفح فقط، والتعديلات معطّلة. المالك وحده يستطيع إجراء التغييرات، والبيانات الشخصية مخفية.';
+
+  @override
   String get modSyncing => 'جارٍ المزامنة مع الخادم...';
 
   @override

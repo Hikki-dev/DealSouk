@@ -47,7 +47,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         isAuthUnknown: authState.status == AuthStatus.unknown,
         isUnauthenticated: authState.status == AuthStatus.unauthenticated,
         isGuest: authState.isGuest,
-        isAdmin: authState.isAdmin,
+        isAdmin: authState.canViewAdmin,
         // Browser QA convenience only — never relaxes the guard in release.
         allowGuestProfile: kDebugMode,
       );

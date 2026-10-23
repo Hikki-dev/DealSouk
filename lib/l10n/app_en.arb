@@ -1099,6 +1099,7 @@
   "modRefresh": "Refresh",
   "modExportCsv": "Export CSV",
   "modMenu": "Menu",
+  "modDemoBanner": "Demo mode: you can look around, but changes are turned off. Only the owner can make changes, and personal details are hidden.",
   "modSyncing": "Syncing with server...",
   "modPendingReviews": "Pending reviews",
   "modApprovedToday": "Approved today",

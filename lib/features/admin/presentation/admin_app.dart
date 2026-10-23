@@ -38,7 +38,9 @@ class AdminApp extends ConsumerWidget {
         AuthStatus.unknown => const Scaffold(
           body: Center(child: CircularProgressIndicator()),
         ),
-        AuthStatus.authenticated when auth.isAdmin => const AdminScreen(),
+        AuthStatus.authenticated when auth.canViewAdmin => AdminScreen(
+          readOnly: auth.isDemoViewer,
+        ),
         AuthStatus.authenticated => const UnauthorizedScreen(),
         _ => const WelcomeScreen(),
       },

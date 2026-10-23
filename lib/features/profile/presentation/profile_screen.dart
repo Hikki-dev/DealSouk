@@ -99,16 +99,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       streak: streak.currentStreak,
     );
     final voucher = _voucherCard(l, tokens, settings, vouchers);
-    final tabs = DsSegmented(
-      labels: [
-        l.profileTabSubmissions,
-        l.profileTabTokens,
-        l.profileTabRequests,
-        l.profileTabSettings,
-      ],
-      selected: _tab,
-      onChanged: (i) => setState(() => _tab = i),
-    );
+    final tabLabels = [
+      l.profileTabSubmissions,
+      l.profileTabTokens,
+      l.profileTabRequests,
+      l.profileTabSettings,
+    ];
+    // At large text sizes four tabs no longer fit in one row, so they wrap.
+    final tabs = MediaQuery.textScalerOf(context).scale(1.0) > 1.2
+        ? Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (var i = 0; i < tabLabels.length; i++)
+                DsChip(
+                  label: tabLabels[i],
+                  selected: _tab == i,
+                  onTap: () => setState(() => _tab = i),
+                ),
+            ],
+          )
+        : DsSegmented(
+            labels: tabLabels,
+            selected: _tab,
+            onChanged: (i) => setState(() => _tab = i),
+          );
     final content = switch (_tab) {
       0 => _buildSubmissionsTab(mySubmissions, accuracyPct),
       1 => _buildTokenHistoryTab(transactions, tokens),
@@ -725,7 +740,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ),
               ],
-              if (action != null) action,
+              ?action,
             ],
           ),
         ],

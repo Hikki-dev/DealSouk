@@ -1174,7 +1174,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get profileTabSubmissions => 'Submissions';
+  String get profileTabSubmissions => 'Prices';
 
   @override
   String get profileTabTokens => 'Tokens';

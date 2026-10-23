@@ -668,7 +668,7 @@
       "days": {}
     }
   },
-  "profileTabSubmissions": "Submissions",
+  "profileTabSubmissions": "Prices",
   "profileTabTokens": "Tokens",
   "profileTabRequests": "Requests",
   "profileTabSettings": "Settings",
@@ -927,7 +927,11 @@
   "storeChainAll": "All",
   "storeFilterTitle": "Filter stores",
   "storeMaxDistance": "Maximum distance: {km} km",
-  "@storeMaxDistance": {"placeholders": {"km": {}}},
+  "@storeMaxDistance": {
+    "placeholders": {
+      "km": {}
+    }
+  },
   "storeSortBy": "Sort by",
   "storeSortClosest": "Closest first",
   "storeSortAlpha": "Alphabetical (A–Z)",
@@ -938,9 +942,17 @@
   "storeDirections": "Directions",
   "storeFresh": "Fresh",
   "storePricesCountLabel": "{count} prices",
-  "@storePricesCountLabel": {"placeholders": {"count": {}}},
+  "@storePricesCountLabel": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "storeUpdatedAgo": "Updated {label}",
-  "@storeUpdatedAgo": {"placeholders": {"label": {}}},
+  "@storeUpdatedAgo": {
+    "placeholders": {
+      "label": {}
+    }
+  },
   "storeSelectedHint": "Select a store to see its prices",
   "leaderRewardsTitle": "Rewards & Leaderboard",
   "leaderToggleStreaks": "Leaderboard & Streaks",

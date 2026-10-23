@@ -1168,7 +1168,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get profileTabSubmissions => 'مساهماتي';
+  String get profileTabSubmissions => 'أسعاري';
 
   @override
   String get profileTabTokens => 'الرموز';

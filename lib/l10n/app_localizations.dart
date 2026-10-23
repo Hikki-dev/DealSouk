@@ -2109,7 +2109,7 @@ abstract class AppLocalizations {
   /// No description provided for @profileTabSubmissions.
   ///
   /// In en, this message translates to:
-  /// **'Submissions'**
+  /// **'Prices'**
   String get profileTabSubmissions;
 
   /// No description provided for @profileTabTokens.

@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:dealsouk/features/admin/presentation/widgets/admin_panel_widgets.dart';
 import 'package:dealsouk/features/admin/presentation/panels/analytics_panel.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +10,7 @@ import 'package:dealsouk/core/theme/app_fonts.dart';
 import 'package:dealsouk/features/admin/presentation/admin_providers.dart';
 import 'package:dealsouk/features/auth/presentation/auth_providers.dart';
 import 'package:dealsouk/core/theme/theme.dart';
+import 'package:dealsouk/l10n/app_localizations.dart';
 import 'package:dealsouk/features/admin/domain/admin_submission.dart';
 import 'package:dealsouk/features/admin/domain/voucher_request.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -31,6 +33,7 @@ class AdminScreen extends ConsumerStatefulWidget {
 class _AdminScreenState extends ConsumerState<AdminScreen> {
   String? _selectedSubId;
   late String _activeTab = widget.initialTab;
+  int _filter = 0; // 0 pending, 1 flagged
   String _mapSearchQuery = '';
   String _mapSelectedChain = 'All';
   final MapController _mapController = MapController();
@@ -80,7 +83,11 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final wide = constraints.maxWidth >= 1024;
-        final nav = _navItems(pending, voucherCount);
+        final nav = _navItems(
+          AppLocalizations.of(context)!,
+          pending,
+          voucherCount,
+        );
         final content = _buildContent(
           context,
           wide: wide,
@@ -128,52 +135,29 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
   }
 
   // --- NAVIGATION MODEL ---
-  List<_AdminNavItem> _navItems(int pending, int vouchers) => [
+  List<_AdminNavItem> _navItems(
+    AppLocalizations l,
+    int pending,
+    int vouchers,
+  ) => [
     _AdminNavItem(
       'moderation',
       Icons.gavel_rounded,
-      'Price moderation',
-      'Price moderation',
+      l.navModeration,
       badge: pending,
     ),
-    const _AdminNavItem('map', Icons.map_rounded, 'Map density', 'Map density'),
-    const _AdminNavItem(
-      'analytics',
-      Icons.bar_chart_rounded,
-      'Analytics',
-      'Analytics',
-    ),
+    _AdminNavItem('map', Icons.map_rounded, l.navMap),
+    _AdminNavItem('analytics', Icons.bar_chart_rounded, l.navAnalytics),
     _AdminNavItem(
       'vouchers',
       Icons.confirmation_num_rounded,
-      'Voucher queue',
-      'Voucher queue',
+      l.navVouchers,
       badge: vouchers,
     ),
-    const _AdminNavItem(
-      'stock',
-      Icons.inventory_2_rounded,
-      'Voucher stock',
-      'Voucher stock',
-    ),
-    const _AdminNavItem(
-      'settings',
-      Icons.settings_rounded,
-      'System settings',
-      'System settings',
-    ),
-    const _AdminNavItem(
-      'products_crud',
-      Icons.shopping_bag_rounded,
-      'Manage products',
-      'Manage products',
-    ),
-    const _AdminNavItem(
-      'users_crud',
-      Icons.people_rounded,
-      'Manage users',
-      'Manage users',
-    ),
+    _AdminNavItem('stock', Icons.inventory_2_rounded, l.navStock),
+    _AdminNavItem('settings', Icons.settings_rounded, l.navSettings),
+    _AdminNavItem('products_crud', Icons.shopping_bag_rounded, l.navProducts),
+    _AdminNavItem('users_crud', Icons.people_rounded, l.navUsers),
   ];
 
   void _selectTab(String tab) {
@@ -202,9 +186,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
       case 'users_crud':
         ref.read(adminUsersProvider.notifier).fetch();
     }
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Syncing with server...')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(AppLocalizations.of(context)!.modSyncing)),
+    );
   }
 
   // --- SIDEBAR (desktop) / DRAWER (phone, tablet) ---
@@ -229,7 +213,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                     const DsBrandMark(size: 44, onDark: true),
                     const SizedBox(width: 12),
                     Text(
-                      'Moderator',
+                      AppLocalizations.of(context)!.modTitle,
                       style: AppFonts.display(
                         color: Colors.white,
                         fontSize: 20,
@@ -259,15 +243,19 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               if (hasRouter)
                 _footerAction(
                   Icons.arrow_back_rounded,
-                  'Back to app',
+                  AppLocalizations.of(context)!.modBackToApp,
                   () => context.go('/profile'),
                 ),
-              _footerAction(Icons.logout_rounded, 'Log out', () async {
-                await ref.read(authProvider.notifier).signOut();
-                if (context.mounted && GoRouter.maybeOf(context) != null) {
-                  context.go('/welcome');
-                }
-              }),
+              _footerAction(
+                Icons.logout_rounded,
+                AppLocalizations.of(context)!.modLogOut,
+                () async {
+                  await ref.read(authProvider.notifier).signOut();
+                  if (context.mounted && GoRouter.maybeOf(context) != null) {
+                    context.go('/welcome');
+                  }
+                },
+              ),
             ],
           ),
         ),
@@ -355,7 +343,11 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
   }
 
   Widget _buildHeader(BuildContext context, {required bool wide}) {
-    final title = _navItems(0, 0).firstWhere((n) => n.tab == _activeTab).title;
+    final title = _navItems(
+      AppLocalizations.of(context)!,
+      0,
+      0,
+    ).firstWhere((n) => n.tab == _activeTab).label;
     if (!wide) {
       return Container(
         color: AppTheme.background,
@@ -371,7 +363,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               builder: (ctx) => IconButton(
                 iconSize: 26,
                 constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                tooltip: 'Menu',
+                tooltip: AppLocalizations.of(context)!.modMenu,
                 icon: const Icon(Icons.menu_rounded),
                 onPressed: () => Scaffold.of(ctx).openDrawer(),
               ),
@@ -391,10 +383,18 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 ),
               ),
             ),
+            if (_activeTab == 'moderation')
+              IconButton(
+                iconSize: 26,
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                tooltip: AppLocalizations.of(context)!.modExportCsv,
+                icon: const Icon(Icons.download_rounded),
+                onPressed: () => _exportCsv(ref.read(adminSubmissionsProvider)),
+              ),
             IconButton(
               iconSize: 26,
               constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-              tooltip: 'Refresh',
+              tooltip: AppLocalizations.of(context)!.modRefresh,
               icon: const Icon(Icons.sync_rounded),
               onPressed: _refresh,
             ),
@@ -420,16 +420,29 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               ),
             ),
           ),
-          const DsTag('Role: Moderator', icon: Icons.verified_user_rounded),
+          DsTag(
+            AppLocalizations.of(context)!.modRoleTag,
+            icon: Icons.verified_user_rounded,
+          ),
           const SizedBox(width: 12),
           DsButton(
-            label: 'Refresh',
+            label: AppLocalizations.of(context)!.modRefresh,
             style: DsButtonStyle.secondary,
             icon: Icons.sync_rounded,
             expanded: false,
             compact: true,
             onPressed: _refresh,
           ),
+          if (_activeTab == 'moderation') ...[
+            const SizedBox(width: 8),
+            DsButton(
+              label: AppLocalizations.of(context)!.modExportCsv,
+              icon: Icons.download_rounded,
+              expanded: false,
+              compact: true,
+              onPressed: () => _exportCsv(ref.read(adminSubmissionsProvider)),
+            ),
+          ],
         ],
       ),
     );
@@ -490,25 +503,62 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
       mainAxisExtent: 112 * scale,
       children: [
         adminStatCard(
-          'Pending reviews',
+          AppLocalizations.of(context)!.modPendingReviews,
           '$pending',
           Icons.hourglass_empty_rounded,
           AppTheme.warnText,
         ),
         adminStatCard(
-          'Approved today',
+          AppLocalizations.of(context)!.modApprovedToday,
           '$approved',
           Icons.check_circle_outline_rounded,
           AppTheme.good,
         ),
         adminStatCard(
-          'Tokens issued',
+          AppLocalizations.of(context)!.modTokensIssued,
           '$tokens',
           Icons.bolt_rounded,
           AppTheme.limeAccent,
         ),
       ],
     );
+  }
+
+  List<AdminSubmission> _visibleSubs(List<AdminSubmission> all) => all
+      .where((s) => (s.promoType == 'Flagged Report') == (_filter == 1))
+      .toList();
+
+  Widget _buildFilterTabs(AppLocalizations l, List<AdminSubmission> all) {
+    final flagged = all.where((s) => s.promoType == 'Flagged Report').length;
+    return DsSegmented(
+      labels: [l.modTabPending(all.length - flagged), l.modTabFlagged(flagged)],
+      selected: _filter,
+      onChanged: (i) => setState(() => _filter = i),
+    );
+  }
+
+  Future<void> _exportCsv(List<AdminSubmission> subs) async {
+    final l = AppLocalizations.of(context)!;
+    String cell(String v) => '"${v.replaceAll('"', '""')}"';
+    final rows = [
+      'id,product,brand,store,price_aed,type,reward_tokens,submitter',
+      for (final s in subs)
+        [
+          cell(s.id),
+          cell(s.productName),
+          cell(s.brand),
+          cell(s.storeName),
+          s.price.toStringAsFixed(2),
+          cell(s.promoType),
+          s.tokensReward,
+          cell(s.sourcerName),
+        ].join(','),
+    ];
+    await Clipboard.setData(ClipboardData(text: rows.join('\n')));
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l.modCsvCopied(subs.length))));
   }
 
   Widget _buildModerationWide(
@@ -519,40 +569,40 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     int approvedCount,
     int tokensIssuedCount,
   ) {
+    final l = AppLocalizations.of(context)!;
+    final visible = _visibleSubs(pendingSubs);
+    final cur = visible.any((s) => s.id == _selectedSubId)
+        ? visible.firstWhere((s) => s.id == _selectedSubId)
+        : (visible.isEmpty ? null : visible.first);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Expanded(
           flex: 5,
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(28, 8, 14, 40),
+            padding: const EdgeInsetsDirectional.fromSTEB(28, 8, 14, 40),
             children: [
               _statsRow(pendingCount, approvedCount, tokensIssuedCount),
               const SizedBox(height: 20),
-              DsSectionHeader('Submissions (${pendingSubs.length})'),
-              const SizedBox(height: 8),
-              if (pendingSubs.isEmpty)
+              _buildFilterTabs(l, pendingSubs),
+              const SizedBox(height: 16),
+              if (visible.isEmpty)
                 _buildEmptyQueueCard()
               else
-                for (final sub in pendingSubs)
-                  _buildSubmissionCard(
-                    context,
-                    sub,
-                    sub.id == _selectedSubId,
-                    true,
-                  ),
+                for (final sub in visible)
+                  _buildSubmissionCard(context, sub, sub.id == cur?.id, true),
             ],
           ),
         ),
         Expanded(
           flex: 4,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(14, 8, 28, 28),
+            padding: const EdgeInsetsDirectional.fromSTEB(14, 8, 28, 28),
             child: DsCard(
               padding: const EdgeInsets.all(20),
-              child: currentSub == null
+              child: cur == null
                   ? _buildSidebarIdleState()
-                  : _buildSidebarAuditState(context, currentSub),
+                  : _buildSidebarAuditState(context, cur),
             ),
           ),
         ),
@@ -567,29 +617,32 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     int approvedCount,
     int tokensIssuedCount,
   ) {
+    final l = AppLocalizations.of(context)!;
+    final visible = _visibleSubs(pendingSubs);
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 40),
       children: [
         _statsRow(pendingCount, approvedCount, tokensIssuedCount),
         const SizedBox(height: 20),
-        DsSectionHeader('Price submissions (${pendingSubs.length})'),
-        const SizedBox(height: 8),
-        if (pendingSubs.isEmpty)
+        _buildFilterTabs(l, pendingSubs),
+        const SizedBox(height: 16),
+        if (visible.isEmpty)
           _buildEmptyQueueCard()
         else
-          for (final sub in pendingSubs)
+          for (final sub in visible)
             _buildSubmissionCard(context, sub, false, false),
       ],
     );
   }
 
   Widget _buildEmptyQueueCard() {
-    return const DsCard(
-      padding: EdgeInsets.symmetric(vertical: 16),
+    final l = AppLocalizations.of(context)!;
+    return DsCard(
+      padding: const EdgeInsets.symmetric(vertical: 16),
       child: DsEmptyState(
         icon: Icons.done_all_rounded,
-        title: 'Queue cleared',
-        message: 'No pending price reports need verification.',
+        title: l.modQueueClearedTitle,
+        message: l.modQueueClearedBody,
       ),
     );
   }
@@ -616,12 +669,15 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     );
   }
 
+  bool get _largeText => MediaQuery.textScalerOf(context).scale(1) > 1.3;
+
   Widget _buildSubmissionCard(
     BuildContext context,
     AdminSubmission sub,
     bool isSelected,
     bool isDesktop,
   ) {
+    final l = AppLocalizations.of(context)!;
     final flagged = sub.promoType == 'Flagged Report';
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -677,7 +733,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               children: [
                 _attachmentChip(
                   icon: Icons.camera_alt_outlined,
-                  label: 'Price photo',
+                  label: l.modPricePhoto,
                   isAttached: sub.hasPhoto,
                   onTap: sub.hasPhoto
                       ? () => _showPricePhotoDialog(context, sub)
@@ -685,38 +741,38 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 ),
                 _attachmentChip(
                   icon: Icons.receipt_long_outlined,
-                  label: 'Receipt',
+                  label: l.modReceipt,
                   isAttached: sub.hasReceipt,
                   onTap: sub.hasReceipt
                       ? () => _showReceiptDialog(context, sub)
                       : null,
                 ),
                 if (flagged)
-                  const DsTag('Community flagged', tone: DsTone.bad)
+                  DsTag(l.modCommunityFlagged, tone: DsTone.bad)
                 else
-                  DsTag('Reward +${sub.tokensReward}', tone: DsTone.warn),
+                  DsTag(l.modRewardPlus(sub.tokensReward), tone: DsTone.warn),
               ],
             ),
             if (!isDesktop) ...[
               const SizedBox(height: 14),
               _actionRow(
-                stacked: MediaQuery.textScalerOf(context).scale(1) > 1.3,
+                stacked: _largeText,
                 children: [
                   DsButton(
-                    label: flagged ? 'Delete' : 'Reject',
+                    label: flagged ? l.modDelete : l.modReject,
                     style: DsButtonStyle.danger,
                     compact: true,
                     onPressed: () => _reject(sub.id),
                   ),
                   if (!flagged)
                     DsButton(
-                      label: 'Edit',
+                      label: l.modEdit,
                       style: DsButtonStyle.secondary,
                       compact: true,
                       onPressed: () => _showEditDialog(context, sub),
                     ),
                   DsButton(
-                    label: flagged ? 'Reinstate' : 'Approve',
+                    label: flagged ? l.modReinstate : l.modApprove,
                     compact: true,
                     onPressed: () => _approve(sub.id, sub),
                   ),
@@ -731,429 +787,240 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
 
   // --- RIGHT DETAILS PANEL ---
   Widget _buildSidebarIdleState() {
-    return Center(
+    final l = AppLocalizations.of(context)!;
+    return DsEmptyState(
+      icon: Icons.touch_app_outlined,
+      title: l.modNothingSelected,
+      message: l.modSelectToAudit,
+    );
+  }
+
+  Widget _sectionLabel(String text) => Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Text(
+      text,
+      style: AppFonts.body(
+        fontSize: 14,
+        fontWeight: FontWeight.w700,
+        color: AppTheme.textLight,
+      ),
+    ),
+  );
+
+  Widget _buildSidebarAuditState(BuildContext context, AdminSubmission sub) {
+    final l = AppLocalizations.of(context)!;
+    final flagged = sub.promoType == 'Flagged Report';
+    return SingleChildScrollView(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.hourglass_empty_rounded,
-              color: Colors.grey.shade400,
-              size: 40,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            'System Idle',
-            style: AppFonts.display(
-              fontWeight: FontWeight.bold,
-              color: Colors.grey.shade600,
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: Semantics(
+                  header: true,
+                  child: Text(
+                    flagged ? l.modFlaggedReview : l.modAuditTitle,
+                    style: AppFonts.display(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.ink,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              DsTag(
+                flagged ? l.modStatusFlagged : l.modStatusPending,
+                tone: flagged ? DsTone.bad : DsTone.warn,
+              ),
+            ],
           ),
           const SizedBox(height: 4),
           Text(
-            'Select a queue item to audit',
-            style: AppFonts.body(fontSize: 12, color: Colors.grey.shade500),
+            l.modIdSubmitted(sub.id, sub.timestampLabel),
+            style: AppFonts.body(fontSize: 14, color: AppTheme.textLight),
+          ),
+          const SizedBox(height: 16),
+          if (flagged)
+            DsBanner(
+              l.modFlaggedAlertBody(
+                sub.price.toStringAsFixed(2),
+                sub.productName,
+                sub.storeName,
+              ),
+              tone: DsBannerTone.warn,
+            )
+          else ...[
+            _sectionLabel(l.modEvidence),
+            Row(
+              children: [
+                Expanded(
+                  child: _EvidenceThumbnail(
+                    label: l.modPriceLabel,
+                    url: sub.priceLabelUrl,
+                    onTap: sub.hasPhoto
+                        ? () => _showPricePhotoDialog(context, sub)
+                        : null,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _EvidenceThumbnail(
+                    label: l.modReceipt,
+                    url: sub.receiptUrl,
+                    onTap: sub.hasReceipt
+                        ? () => _showReceiptDialog(context, sub)
+                        : null,
+                  ),
+                ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 20),
+          _sectionLabel(flagged ? l.modInvestigation : l.modChecklist),
+          if (flagged) ...[
+            _auditCheckItem(l.modInvCatalog, true),
+            _auditCheckItem(l.modInvDistributor, true),
+            _auditCheckItem(l.modInvTrusted, false),
+            _auditCheckItem(l.modInvReason, true),
+          ] else ...[
+            _auditCheckItem(l.modChkStore(sub.storeName), true),
+            _auditCheckItem(l.modChkSize, true),
+            _auditCheckItem(l.modChkPromo, sub.promoType != 'None'),
+            _auditCheckItem(l.modChkFresh, sub.hasReceipt),
+          ],
+          const SizedBox(height: 12),
+          DsCard(
+            color: flagged ? AppTheme.warnLight : AppTheme.goodLight,
+            borderless: true,
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                Icon(
+                  flagged
+                      ? Icons.warning_amber_rounded
+                      : Icons.health_and_safety_outlined,
+                  color: flagged ? AppTheme.warnText : AppTheme.goodText,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        flagged ? l.modTrustTitle : l.modAccuracyTitle,
+                        style: AppFonts.display(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.ink,
+                        ),
+                      ),
+                      Text(
+                        flagged ? l.modTrustSub : l.modAccuracySub,
+                        style: AppFonts.body(
+                          fontSize: 13,
+                          color: AppTheme.textLight,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  '${sub.sourcerAccuracyRating.toStringAsFixed(0)}%',
+                  style: AppFonts.display(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.ink,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          _actionRow(
+            stacked: _largeText,
+            children: [
+              DsButton(
+                label: flagged ? l.modReinstate : l.modApprove,
+                onPressed: () => _approve(sub.id, sub),
+              ),
+              if (!flagged)
+                DsButton(
+                  label: l.modEdit,
+                  style: DsButtonStyle.secondary,
+                  onPressed: () => _showEditDialog(context, sub),
+                ),
+              DsButton(
+                label: flagged ? l.modConfirmDeletion : l.modReject,
+                style: DsButtonStyle.danger,
+                onPressed: () => _reject(sub.id),
+              ),
+            ],
+          ),
+          _buildUserModerationActions(sub),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUserModerationActions(AdminSubmission sub) {
+    if (sub.sourcerId.isEmpty) return const SizedBox.shrink();
+    final l = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _sectionLabel(l.modSourcerControls),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              DsButton(
+                label: l.modWarn,
+                style: DsButtonStyle.secondary,
+                expanded: false,
+                compact: true,
+                onPressed: () => _moderateUser(sub, action: 'warn'),
+              ),
+              DsButton(
+                label: l.modSuspend,
+                style: DsButtonStyle.secondary,
+                expanded: false,
+                compact: true,
+                onPressed: () => _moderateUser(sub, action: 'suspend'),
+              ),
+              DsButton(
+                label: l.modBan,
+                style: DsButtonStyle.danger,
+                expanded: false,
+                compact: true,
+                onPressed: () => _moderateUser(sub, action: 'ban'),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSidebarAuditState(BuildContext context, AdminSubmission sub) {
-    final isFlaggedReport = sub.promoType == 'Flagged Report';
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Text(
-                isFlaggedReport ? 'Moderation Review' : 'Submission Audit',
-                style: AppFonts.display(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textDark,
-                ),
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: isFlaggedReport
-                    ? Colors.red.shade50
-                    : Colors.orange.shade50,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isFlaggedReport
-                      ? Colors.red.shade200
-                      : Colors.orange.shade200,
-                ),
-              ),
-              child: Text(
-                isFlaggedReport ? 'FLAGGED' : 'PENDING',
-                style: AppFonts.body(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w900,
-                  color: isFlaggedReport
-                      ? Colors.red.shade800
-                      : Colors.orange.shade800,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'ID: ${sub.id}  ·  Submitted ${sub.timestampLabel}',
-          style: AppFonts.body(
-            fontSize: 11,
-            color: Colors.grey.shade500,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 20),
-
-        if (isFlaggedReport) ...[
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.red.shade50,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.red.shade100),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.report_problem_rounded,
-                      color: Colors.red.shade700,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Accuracy Verification Alert',
-                      style: AppFonts.display(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                        color: Colors.red.shade900,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'This price entry has been flagged 3+ times by DealSouk shoppers. The price of AED ${sub.price.toStringAsFixed(2)} is reported as incorrect for ${sub.productName} at ${sub.storeName}.',
-                  style: AppFonts.body(
-                    fontSize: 11.5,
-                    color: Colors.red.shade800,
-                    fontWeight: FontWeight.w600,
-                    height: 1.3,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-        ] else ...[
-          // Visual Thumbnail previews of attachments
-          Text(
-            'ATTACHED EVIDENCE (TAP TO VIEW):',
-            style: AppFonts.body(
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              color: Colors.grey.shade500,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: _EvidenceThumbnail(
-                  label: 'Price Label',
-                  url: sub.priceLabelUrl,
-                  onTap: sub.hasPhoto
-                      ? () => _showPricePhotoDialog(context, sub)
-                      : null,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _EvidenceThumbnail(
-                  label: 'Receipt',
-                  url: sub.receiptUrl,
-                  onTap: sub.hasReceipt
-                      ? () => _showReceiptDialog(context, sub)
-                      : null,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-        ],
-
-        // Guidelines Checklist
-        const Divider(height: 1),
-        const SizedBox(height: 20),
-        Text(
-          isFlaggedReport ? 'INVESTIGATION PROTOCOLS:' : 'CHECKLIST PROTOCOLS:',
-          style: AppFonts.body(
-            fontSize: 10,
-            fontWeight: FontWeight.w800,
-            color: Colors.grey.shade500,
-          ),
-        ),
-        const SizedBox(height: 8),
-        if (isFlaggedReport) ...[
-          _auditCheckItem(
-            'Cross-check price with latest online store catalog',
-            true,
-          ),
-          _auditCheckItem(
-            'Verify if the item has a regional distributor price change',
-            true,
-          ),
-          _auditCheckItem(
-            'Verify if this price entry was submitted by a trusted user',
-            false,
-          ),
-          _auditCheckItem(
-            'Flag reason: Shopper claims price is outdated/wrong',
-            true,
-          ),
-        ] else ...[
-          _auditCheckItem(
-            'Confirm receipt matches store: ${sub.storeName}',
-            true,
-          ),
-          _auditCheckItem('Validate price matches packaging size', true),
-          _auditCheckItem(
-            'Double-check for discount/promo tags',
-            sub.promoType != 'None',
-          ),
-          _auditCheckItem(
-            'Freshness: Check receipt timestamp matches',
-            sub.hasReceipt,
-          ),
-        ],
-        const Spacer(),
-
-        // Audit health KPI
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: isFlaggedReport
-                ? const Color(0xFFFFF3E0)
-                : const Color(0xFFE8F5E9),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: isFlaggedReport
-                  ? const Color(0xFFFFE0B2)
-                  : const Color(0xFFC8E6C9),
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: isFlaggedReport
-                      ? const Color(0xFFFFE0B2)
-                      : const Color(0xFFC8E6C9),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  isFlaggedReport
-                      ? Icons.warning_amber_rounded
-                      : Icons.health_and_safety_outlined,
-                  color: isFlaggedReport
-                      ? Colors.orange.shade800
-                      : AppTheme.forestDeep,
-                  size: 16,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isFlaggedReport
-                          ? 'Community Trust Level'
-                          : 'Auditing Accuracy Score',
-                      style: AppFonts.display(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: isFlaggedReport
-                            ? Colors.orange.shade900
-                            : AppTheme.forestDeep,
-                      ),
-                    ),
-                    Text(
-                      isFlaggedReport
-                          ? 'Based on reporter history'
-                          : 'Sourcer trustworthiness KPI',
-                      style: AppFonts.body(
-                        fontSize: 9,
-                        color: Colors.grey.shade600,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Text(
-                isFlaggedReport ? '92.0%' : '98.4%',
-                style: AppFonts.display(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: isFlaggedReport
-                      ? Colors.orange.shade900
-                      : AppTheme.forestDeep,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 18),
-
-        // Sidebar Actions (Reject / Edit / Approve)
-        if (!isFlaggedReport)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: OutlinedButton.icon(
-              onPressed: () => _showEditDialog(context, sub),
-              icon: const Icon(Icons.edit_outlined, size: 16),
-              label: Text(
-                'Edit Submission',
-                style: AppFonts.body(fontWeight: FontWeight.bold),
-              ),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.forestDeep,
-                side: const BorderSide(color: AppTheme.forestDeep),
-                minimumSize: const Size.fromHeight(40),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-        _buildUserModerationActions(sub),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () => _reject(sub.id),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.red,
-                  side: const BorderSide(color: Colors.red, width: 1.5),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                child: Text(
-                  isFlaggedReport ? 'Confirm Deletion' : 'Reject',
-                  style: AppFonts.body(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () => _approve(sub.id, sub),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                child: Text(
-                  isFlaggedReport ? 'Reinstate Price' : 'Approve',
-                  style: AppFonts.body(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildUserModerationActions(AdminSubmission sub) {
-    if (sub.sourcerId.isEmpty) return const SizedBox.shrink();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          'Sourcer controls',
-          style: AppFonts.body(
-            fontSize: 12,
-            fontWeight: FontWeight.w900,
-            color: Colors.grey.shade700,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            OutlinedButton.icon(
-              onPressed: () => _moderateUser(sub, action: 'warn'),
-              icon: const Icon(Icons.notification_important_outlined, size: 16),
-              label: const Text('Warn'),
-            ),
-            OutlinedButton.icon(
-              onPressed: () => _moderateUser(sub, action: 'suspend'),
-              icon: const Icon(Icons.pause_circle_outline, size: 16),
-              label: const Text('Suspend'),
-            ),
-            OutlinedButton.icon(
-              onPressed: () => _moderateUser(sub, action: 'ban'),
-              icon: const Icon(Icons.block, size: 16),
-              label: const Text('Ban'),
-              style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _auditCheckItem(String label, bool initialVal) {
+  Widget _auditCheckItem(String label, bool done) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
-            initialVal
-                ? Icons.check_circle_rounded
-                : Icons.info_outline_rounded,
-            color: initialVal ? Colors.green : Colors.grey.shade400,
-            size: 16,
+            done ? Icons.check_circle_rounded : Icons.info_outline_rounded,
+            color: done ? AppTheme.good : AppTheme.textLight,
+            size: 20,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               label,
-              style: AppFonts.body(
-                fontSize: 12,
-                color: Colors.grey.shade700,
-                fontWeight: FontWeight.w600,
-              ),
+              style: AppFonts.body(fontSize: 15, color: AppTheme.ink),
             ),
           ),
         ],
@@ -1476,114 +1343,108 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
 
   // Dialog / mock panels support
   Widget _buildVoucherQueuePanel(List<VoucherRequest> vouchers) {
+    final l = AppLocalizations.of(context)!;
     if (vouchers.isEmpty) {
-      return Center(
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 28),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE8EEE4)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.confirmation_num_outlined,
-                size: 46,
-                color: Colors.grey.shade400,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'No voucher requests',
-                style: AppFonts.display(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textDark,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'New requests appear here when shoppers reach the token threshold.',
-                textAlign: TextAlign.center,
-                style: AppFonts.body(
-                  color: Colors.grey.shade600,
-                  fontSize: 12.5,
-                ),
-              ),
-            ],
-          ),
-        ),
+      return DsEmptyState(
+        icon: Icons.confirmation_num_outlined,
+        title: l.vqEmptyTitle,
+        message: l.vqEmptyBody,
       );
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
       itemCount: vouchers.length,
       separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final voucher = vouchers[index];
-        return Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE8EEE4)),
+        final actions = [
+          DsButton(
+            label: l.modReject,
+            style: DsButtonStyle.danger,
+            compact: true,
+            expanded: false,
+            onPressed: () => _reviewVoucher(voucher, approve: false),
           ),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: AppTheme.limeAccent.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.confirmation_num_rounded,
-                  color: AppTheme.forestDeep,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          DsButton(
+            label: l.modApprove,
+            compact: true,
+            expanded: false,
+            onPressed: () => _reviewVoucher(voucher, approve: true),
+          ),
+        ];
+        return DsCard(
+          child: LayoutBuilder(
+            builder: (context, c) {
+              final narrow = c.maxWidth < 560 || _largeText;
+              final info = Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: AppTheme.limeAccent.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(
+                      Icons.confirmation_num_rounded,
+                      color: AppTheme.forestDeep,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l.vqLine(
+                            voucher.userName,
+                            voucher.denominationAed,
+                            voucher.supermarket,
+                          ),
+                          style: AppFonts.display(
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.ink,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          l.vqMeta(
+                            voucher.userHomeArea ?? 'Dubai',
+                            voucher.userTokenBalance,
+                            voucher.tokenCost,
+                          ),
+                          style: AppFonts.body(
+                            color: AppTheme.textLight,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+              if (!narrow) {
+                return Row(
                   children: [
-                    Text(
-                      '${voucher.userName} - AED ${voucher.denominationAed} ${voucher.supermarket}',
-                      style: AppFonts.display(
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.textDark,
-                        fontSize: 15,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      '${voucher.userHomeArea ?? 'Dubai'} | ${voucher.userTokenBalance} tokens available | cost ${voucher.tokenCost}',
-                      style: AppFonts.body(
-                        color: Colors.grey.shade600,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    Expanded(child: info),
+                    const SizedBox(width: 12),
+                    actions[0],
+                    const SizedBox(width: 8),
+                    actions[1],
                   ],
-                ),
-              ),
-              OutlinedButton(
-                onPressed: () => _reviewVoucher(voucher, approve: false),
-                style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
-                child: const Text('Reject'),
-              ),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: () => _reviewVoucher(voucher, approve: true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.forestDeep,
-                  foregroundColor: Colors.white,
-                ),
-                child: const Text('Approve'),
-              ),
-            ],
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  info,
+                  const SizedBox(height: 12),
+                  Wrap(spacing: 8, runSpacing: 8, children: actions),
+                ],
+              );
+            },
           ),
         );
       },
@@ -1698,6 +1559,8 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
   }
 
   Widget _buildMapDensityPanel() {
+    final l = AppLocalizations.of(context)!;
+    final wide = MediaQuery.sizeOf(context).width >= 1024;
     final mapData = ref.watch(adminMapDataProvider);
 
     final chainsSet = mapData
@@ -1728,25 +1591,13 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
       children: [
         Container(
           padding: const EdgeInsets.all(16),
-          color: Colors.white,
+          color: AppTheme.background,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              DsBanner(l.mapInfo),
               Row(
-                children: [
-                  const Icon(Icons.info_outline, color: AppTheme.forestDeep),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Visualizing active grocery price submissions across Dubai. Circles show submission density. Tap any marker pin to inspect store details.',
-                      style: AppFonts.body(
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.textDark,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                ],
+                children: [const SizedBox.shrink(), const SizedBox(width: 8)],
               ),
               const SizedBox(height: 12),
               Row(
@@ -1754,7 +1605,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                   Expanded(
                     child: TextField(
                       decoration: InputDecoration(
-                        hintText: 'Search stores by name, branch, or area...',
+                        hintText: l.mapSearchHint,
                         prefixIcon: const Icon(Icons.search, size: 20),
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(
@@ -1812,68 +1663,80 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           ),
         ),
         Expanded(
-          child: Row(
+          child: Flex(
+            direction: wide ? Axis.horizontal : Axis.vertical,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Store List Panel (Desktop Sidebar)
               Container(
-                width: 300,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border(
-                    right: BorderSide(color: Colors.grey.shade200),
+                width: wide ? 320 : null,
+                height: wide ? null : 200,
+                decoration: const BoxDecoration(
+                  border: BorderDirectional(
+                    end: BorderSide(color: AppTheme.line),
+                    bottom: BorderSide(color: AppTheme.line),
                   ),
                 ),
-                child: filteredStores.isEmpty
-                    ? Center(
-                        child: Text(
-                          'No stores match filters.',
-                          style: AppFonts.body(color: Colors.grey),
-                        ),
-                      )
-                    : ListView.separated(
-                        itemCount: filteredStores.length,
-                        separatorBuilder: (context, index) =>
-                            Divider(color: Colors.grey.shade100, height: 1),
-                        itemBuilder: (context, index) {
-                          final store = filteredStores[index];
-                          final String chain =
-                              store['chain'] as String? ?? 'Store';
-                          final String branchName =
-                              store['branchName'] as String? ?? '';
-                          final String area = store['area'] as String? ?? '';
-                          final int count =
-                              store['activeSubmissionsCount'] as int? ?? 0;
-                          final double lat = (store['lat'] is num)
-                              ? (store['lat'] as num).toDouble()
-                              : 25.2048;
-                          final double lng = (store['lng'] is num)
-                              ? (store['lng'] as num).toDouble()
-                              : 55.2708;
+                child: Material(
+                  color: Colors.white,
+                  child: filteredStores.isEmpty
+                      ? Center(
+                          child: Text(
+                            l.mapNoStores,
+                            style: AppFonts.body(
+                              fontSize: 16,
+                              color: AppTheme.textLight,
+                            ),
+                          ),
+                        )
+                      : ListView.separated(
+                          itemCount: filteredStores.length,
+                          separatorBuilder: (context, index) =>
+                              Divider(color: Colors.grey.shade100, height: 1),
+                          itemBuilder: (context, index) {
+                            final store = filteredStores[index];
+                            final String chain =
+                                store['chain'] as String? ?? 'Store';
+                            final String branchName =
+                                store['branchName'] as String? ?? '';
+                            final String area = store['area'] as String? ?? '';
+                            final int count =
+                                store['activeSubmissionsCount'] as int? ?? 0;
+                            final double lat = (store['lat'] is num)
+                                ? (store['lat'] as num).toDouble()
+                                : 25.2048;
+                            final double lng = (store['lng'] is num)
+                                ? (store['lng'] as num).toDouble()
+                                : 55.2708;
 
-                          return ListTile(
-                            title: Text(
-                              '$chain $branchName',
-                              style: AppFonts.body(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                                color: AppTheme.textDark,
+                            return ListTile(
+                              minVerticalPadding: 10,
+                              title: Text(
+                                '$chain $branchName',
+                                style: AppFonts.body(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 16,
+                                  color: AppTheme.ink,
+                                ),
                               ),
-                            ),
-                            subtitle: Text(
-                              'Area: $area • Approved: $count',
-                              style: AppFonts.body(
-                                fontSize: 11,
-                                color: Colors.grey.shade600,
+                              subtitle: Text(
+                                l.mapStoreMeta(area, count),
+                                style: AppFonts.body(
+                                  fontSize: 14,
+                                  color: AppTheme.textLight,
+                                ),
                               ),
-                            ),
-                            trailing: const Icon(Icons.chevron_right, size: 14),
-                            onTap: () {
-                              _mapController.move(LatLng(lat, lng), 14.0);
-                            },
-                          );
-                        },
-                      ),
+                              trailing: const Icon(
+                                Icons.chevron_right,
+                                size: 22,
+                              ),
+                              onTap: () {
+                                _mapController.move(LatLng(lat, lng), 14.0);
+                              },
+                            );
+                          },
+                        ),
+                ),
               ),
               Expanded(
                 child: FlutterMap(
@@ -1898,10 +1761,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                         final int count =
                             store['activeSubmissionsCount'] as int? ?? 0;
                         final Color circleColor = count < 3
-                            ? Colors.green.withValues(alpha: 0.4)
+                            ? AppTheme.good.withValues(alpha: 0.4)
                             : count < 6
-                            ? Colors.orange.withValues(alpha: 0.4)
-                            : Colors.red.withValues(alpha: 0.4);
+                            ? AppTheme.limeAccent.withValues(alpha: 0.45)
+                            : AppTheme.redAccent.withValues(alpha: 0.4);
                         return CircleMarker(
                           point: LatLng(lat, lng),
                           radius: (count * 6.0 + 12.0).clamp(12.0, 48.0),
@@ -1950,14 +1813,16 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Area: ${store['area'] ?? 'Dubai'}',
+                                        l.mapArea(
+                                          '${store['area'] ?? 'Dubai'}',
+                                        ),
                                         style: AppFonts.body(
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
-                                        'Approved submissions count: $count',
+                                        l.mapApprovedCount(count),
                                         style: AppFonts.body(
                                           color: AppTheme.forestDeep,
                                           fontWeight: FontWeight.w700,
@@ -1968,7 +1833,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                   actions: [
                                     TextButton(
                                       onPressed: () => Navigator.pop(context),
-                                      child: const Text('Close'),
+                                      child: Text(l.mapClose),
                                     ),
                                   ],
                                 ),
@@ -1995,51 +1860,33 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
   }
 
   Widget _buildVoucherStockPanel() {
+    final l = AppLocalizations.of(context)!;
     final inventory = ref.watch(adminVoucherInventoryProvider);
 
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Voucher Stock Levels',
-                style: AppFonts.display(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textDark,
-                ),
-              ),
-              ElevatedButton.icon(
-                onPressed: () => _showImportVouchersDialog(context),
-                icon: const Icon(Icons.add_rounded),
-                label: const Text('Import Voucher Codes'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.forestDeep,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ],
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: DsButton(
+              label: l.vsImport,
+              icon: Icons.add_rounded,
+              expanded: false,
+              onPressed: () => _showImportVouchersDialog(context),
+            ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           Expanded(
             child: inventory.isEmpty
-                ? Center(
-                    child: Text(
-                      'No voucher stock records. Click import to add voucher codes.',
-                      style: AppFonts.body(
-                        color: Colors.grey.shade500,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                ? DsEmptyState(
+                    icon: Icons.inventory_2_outlined,
+                    title: l.vsTitle,
+                    message: l.vsEmpty,
                   )
                 : ListView.separated(
+                    padding: const EdgeInsets.only(bottom: 40),
                     itemCount: inventory.length,
                     separatorBuilder: (context, index) =>
                         const SizedBox(height: 12),
@@ -2051,85 +1898,56 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                       final count = item['count'] as int? ?? 0;
                       final isUsed = item['isUsed'] as bool? ?? false;
 
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 16,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFFE8EEE4)),
-                        ),
+                      return DsCard(
+                        padding: const EdgeInsets.all(16),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: (isUsed
-                                        ? Colors.grey.shade100
-                                        : AppTheme.limeAccent.withValues(
-                                            alpha: 0.2,
-                                          )),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    Icons.confirmation_num_rounded,
-                                    color: isUsed
-                                        ? Colors.grey
-                                        : AppTheme.forestDeep,
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '$supermarket (AED $denom)',
-                                      style: AppFonts.display(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppTheme.textDark,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      isUsed
-                                          ? 'Used Vouchers'
-                                          : 'Available Unused Stock',
-                                      style: AppFonts.body(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade600,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
                             Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 6,
-                              ),
+                              width: 48,
+                              height: 48,
                               decoration: BoxDecoration(
                                 color: isUsed
-                                    ? Colors.grey.shade100
-                                    : Colors.green.shade50,
-                                borderRadius: BorderRadius.circular(12),
+                                    ? AppTheme.sand2
+                                    : AppTheme.limeAccent.withValues(
+                                        alpha: 0.2,
+                                      ),
+                                borderRadius: BorderRadius.circular(14),
                               ),
-                              child: Text(
-                                '$count codes',
-                                style: AppFonts.body(
-                                  fontWeight: FontWeight.w900,
-                                  color: isUsed
-                                      ? Colors.grey.shade700
-                                      : Colors.green.shade800,
-                                ),
+                              child: Icon(
+                                Icons.confirmation_num_rounded,
+                                color: isUsed
+                                    ? AppTheme.textLight
+                                    : AppTheme.forestDeep,
                               ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l.vsItem(supermarket, denom),
+                                    style: AppFonts.display(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppTheme.ink,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    isUsed ? l.vsUsed : l.vsAvailable,
+                                    style: AppFonts.body(
+                                      fontSize: 14,
+                                      color: AppTheme.textLight,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            DsTag(
+                              l.vsCodes(count),
+                              tone: isUsed ? DsTone.neutral : DsTone.good,
                             ),
                           ],
                         ),
@@ -2294,92 +2112,61 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
   }
 
   Widget _buildSettingsPanel() {
+    final l = AppLocalizations.of(context)!;
     final settings = ref.watch(adminSettingsProvider);
     final notifier = ref.read(adminSettingsProvider.notifier);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Token Economy Settings',
-            style: AppFonts.display(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textDark,
-            ),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 760),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              DsSectionHeader(l.setTitle),
+              const SizedBox(height: 8),
+              _settingsSlider(
+                label: l.setEarn,
+                value: settings.tokenEarnRate.toDouble(),
+                min: 10,
+                max: 100,
+                divisions: 18,
+                displayValue: l.setTokens(settings.tokenEarnRate),
+                onChanged: (v) => notifier.setTokenEarnRate(v.round()),
+              ),
+              _settingsSlider(
+                label: l.setThreshold,
+                value: settings.voucherThreshold.toDouble(),
+                min: 200,
+                max: 1000,
+                divisions: 16,
+                displayValue: l.setTokens(settings.voucherThreshold),
+                onChanged: (v) => notifier.setVoucherThreshold(v.round()),
+              ),
+              _settingsSlider(
+                label: l.setCap,
+                value: settings.dailySubmissionCap.toDouble(),
+                min: 5,
+                max: 50,
+                divisions: 9,
+                displayValue: l.setPerDay(settings.dailySubmissionCap),
+                onChanged: (v) => notifier.setDailySubmissionCap(v.round()),
+              ),
+              _settingsSlider(
+                label: l.setRequestCost,
+                value: settings.requestCostTokens.toDouble(),
+                min: 1,
+                max: 50,
+                divisions: 49,
+                displayValue: l.setTokens(settings.requestCostTokens),
+                onChanged: (v) => notifier.setRequestCostTokens(v.round()),
+              ),
+              const SizedBox(height: 4),
+              DsBanner(l.setNote),
+            ],
           ),
-          const SizedBox(height: 20),
-          _settingsSlider(
-            label: 'Token Earn Rate (base)',
-            value: settings.tokenEarnRate.toDouble(),
-            min: 10,
-            max: 100,
-            divisions: 18,
-            displayValue: '${settings.tokenEarnRate} tokens',
-            onChanged: (v) => notifier.setTokenEarnRate(v.round()),
-          ),
-          const SizedBox(height: 20),
-          _settingsSlider(
-            label: 'Voucher Threshold (tokens)',
-            value: settings.voucherThreshold.toDouble(),
-            min: 200,
-            max: 1000,
-            divisions: 16,
-            displayValue: '${settings.voucherThreshold} tokens',
-            onChanged: (v) => notifier.setVoucherThreshold(v.round()),
-          ),
-          const SizedBox(height: 20),
-          _settingsSlider(
-            label: 'Daily Submission Cap',
-            value: settings.dailySubmissionCap.toDouble(),
-            min: 5,
-            max: 50,
-            divisions: 9,
-            displayValue: '${settings.dailySubmissionCap} per day',
-            onChanged: (v) => notifier.setDailySubmissionCap(v.round()),
-          ),
-          const SizedBox(height: 20),
-          _settingsSlider(
-            label: 'Request Cost',
-            value: settings.requestCostTokens.toDouble(),
-            min: 1,
-            max: 50,
-            divisions: 49,
-            displayValue: '${settings.requestCostTokens} tokens',
-            onChanged: (v) => notifier.setRequestCostTokens(v.round()),
-          ),
-          const SizedBox(height: 28),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFE8F5E9),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFC8E6C9)),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.info_outline_rounded,
-                  color: AppTheme.forestDeep,
-                  size: 18,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Changes take effect immediately across the live demo session.',
-                    style: AppFonts.body(
-                      fontSize: 12,
-                      color: AppTheme.forestDeep,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -2393,54 +2180,50 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     required String displayValue,
     required ValueChanged<double> onChanged,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: DsCard(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              label,
-              style: AppFonts.body(
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-                color: AppTheme.textDark,
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppTheme.limeAccent.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                displayValue,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  color: AppTheme.forestDeep,
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    label,
+                    style: AppFonts.body(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      color: AppTheme.ink,
+                    ),
+                  ),
                 ),
+                const SizedBox(width: 8),
+                DsTag(displayValue, tone: DsTone.teal),
+              ],
+            ),
+            SliderTheme(
+              data: SliderThemeData(
+                activeTrackColor: AppTheme.forestDeep,
+                thumbColor: AppTheme.forestDeep,
+                inactiveTrackColor: AppTheme.sand2,
+                overlayColor: AppTheme.forestDeep.withValues(alpha: 0.1),
+                trackHeight: 6,
+                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 12),
+              ),
+              child: Slider(
+                semanticFormatterCallback: (_) => '$label $displayValue',
+                value: value.clamp(min, max),
+                min: min,
+                max: max,
+                divisions: divisions,
+                onChanged: onChanged,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 6),
-        SliderTheme(
-          data: SliderThemeData(
-            activeTrackColor: AppTheme.forestDeep,
-            thumbColor: AppTheme.forestDeep,
-            inactiveTrackColor: Colors.grey.shade200,
-            overlayColor: AppTheme.forestDeep.withValues(alpha: 0.1),
-          ),
-          child: Slider(
-            value: value.clamp(min, max),
-            min: min,
-            max: max,
-            divisions: divisions,
-            onChanged: onChanged,
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -2744,6 +2527,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
 
   // --- PRODUCTS CRUD PANEL ---
   Widget _buildProductsCrudPanel() {
+    final l = AppLocalizations.of(context)!;
     final state = ref.watch(adminProductsProvider);
     final notifier = ref.read(adminProductsProvider.notifier);
     final categories = [
@@ -2758,248 +2542,190 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     ];
 
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Text(
-                'Products Catalog Management',
-                style: AppFonts.display(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textDark,
-                ),
-              ),
-              ElevatedButton.icon(
-                onPressed: () => _showProductFormDialog(context, null),
-                icon: const Icon(Icons.add_rounded),
-                label: const Text('Add Product'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.forestDeep,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
+              ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 240, maxWidth: 520),
                 child: TextField(
                   decoration: InputDecoration(
-                    hintText: 'Search products by name, brand, or barcode...',
-                    prefixIcon: const Icon(Icons.search, size: 20),
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 12,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
+                    hintText: l.prSearch,
+                    prefixIcon: const Icon(Icons.search),
                   ),
-                  onChanged: (val) {
-                    notifier.setSearchQuery(val);
-                  },
+                  onChanged: notifier.setSearchQuery,
                 ),
               ),
-              const SizedBox(width: 16),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: DropdownButtonHideUnderline(
+              DropdownButtonHideUnderline(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  constraints: const BoxConstraints(minHeight: 52),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: AppTheme.line, width: 1.5),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                   child: DropdownButton<String>(
                     value: state.selectedCategory ?? 'All',
-                    items: categories.map((c) {
-                      return DropdownMenuItem<String>(
-                        value: c,
-                        child: Text(
-                          c,
-                          style: AppFonts.body(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
+                    items: [
+                      for (final c in categories)
+                        DropdownMenuItem(
+                          value: c,
+                          child: Text(
+                            c,
+                            style: AppFonts.body(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                      );
-                    }).toList(),
-                    onChanged: (val) {
-                      notifier.setCategory(val);
-                    },
+                    ],
+                    onChanged: notifier.setCategory,
                   ),
                 ),
+              ),
+              DsButton(
+                label: l.prAdd,
+                icon: Icons.add_rounded,
+                expanded: false,
+                compact: true,
+                onPressed: () => _showProductFormDialog(context, null),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Expanded(
             child: state.isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : state.products.isEmpty
-                ? Center(
-                    child: Text(
-                      'No products found matching filters.',
-                      style: AppFonts.body(color: Colors.grey, fontSize: 15),
-                    ),
+                ? DsEmptyState(
+                    icon: Icons.shopping_bag_outlined,
+                    title: l.prEmpty,
                   )
-                : Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade200),
-                    ),
-                    child: Column(
-                      children: [
-                        Expanded(
-                          child: ListView.separated(
-                            itemCount: state.products.length,
-                            separatorBuilder: (context, index) =>
-                                Divider(color: Colors.grey.shade100, height: 1),
-                            itemBuilder: (context, index) {
-                              final p = state.products[index];
-                              return ListTile(
-                                leading: p.imageUrl.isNotEmpty
-                                    ? ClipRRect(
-                                        borderRadius: BorderRadius.circular(6),
-                                        child: Image.network(
-                                          p.imageUrl,
-                                          width: 40,
-                                          height: 40,
-                                          fit: BoxFit.cover,
-                                          errorBuilder:
-                                              (
-                                                context,
-                                                error,
-                                                stackTrace,
-                                              ) => Container(
-                                                width: 40,
-                                                height: 40,
-                                                color: Colors.grey.shade100,
-                                                child: const Icon(
-                                                  Icons.shopping_bag_outlined,
-                                                  color: Colors.grey,
-                                                ),
-                                              ),
-                                        ),
-                                      )
-                                    : Container(
-                                        width: 40,
-                                        height: 40,
-                                        decoration: BoxDecoration(
-                                          color: Colors.grey.shade100,
-                                          borderRadius: BorderRadius.circular(
-                                            6,
+                : Column(
+                    children: [
+                      Expanded(
+                        child: ListView.separated(
+                          itemCount: state.products.length,
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 8),
+                          itemBuilder: (context, index) {
+                            final p = state.products[index];
+                            return DsCard(
+                              padding: const EdgeInsets.all(12),
+                              child: Row(
+                                children: [
+                                  DsProductThumb(
+                                    imageUrl: p.imageUrl,
+                                    size: 56,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          p.name,
+                                          style: AppFonts.display(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w700,
+                                            color: AppTheme.ink,
                                           ),
                                         ),
-                                        child: const Icon(
-                                          Icons.shopping_bag_outlined,
-                                          color: Colors.grey,
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          l.prMeta(
+                                            p.brand.isNotEmpty ? p.brand : '—',
+                                            p.packSize.isNotEmpty
+                                                ? p.packSize
+                                                : '—',
+                                            p.category,
+                                          ),
+                                          style: AppFonts.body(
+                                            fontSize: 14,
+                                            color: AppTheme.textLight,
+                                          ),
                                         ),
-                                      ),
-                                title: Text(
-                                  p.name,
-                                  style: AppFonts.body(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppTheme.textDark,
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  'Brand: ${p.brand.isNotEmpty ? p.brand : "—"} • Size: ${p.packSize.isNotEmpty ? p.packSize : "—"} • Category: ${p.category} • Barcode: ${p.barcode.isNotEmpty ? p.barcode : "—"}',
-                                  style: AppFonts.body(
-                                    fontSize: 12,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.edit_rounded,
-                                        color: Colors.blueAccent,
-                                      ),
-                                      onPressed: () =>
-                                          _showProductFormDialog(context, p),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.delete_outline_rounded,
-                                        color: Colors.redAccent,
-                                      ),
-                                      onPressed: () =>
-                                          _confirmDeleteProduct(context, p),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            border: Border(
-                              top: BorderSide(color: Colors.grey.shade200),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Total Products: ${state.total}',
-                                style: AppFonts.body(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey.shade700,
-                                ),
-                              ),
-                              Row(
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.chevron_left),
-                                    onPressed: state.currentPage > 0
-                                        ? () => notifier.setPage(
-                                            state.currentPage - 1,
-                                          )
-                                        : null,
-                                  ),
-                                  Text(
-                                    'Page ${state.currentPage + 1}',
-                                    style: AppFonts.body(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
+                                      ],
                                     ),
                                   ),
                                   IconButton(
-                                    icon: const Icon(Icons.chevron_right),
-                                    onPressed:
-                                        (state.currentPage + 1) * 20 <
-                                            state.total
-                                        ? () => notifier.setPage(
-                                            state.currentPage + 1,
-                                          )
-                                        : null,
+                                    tooltip: l.modEdit,
+                                    constraints: const BoxConstraints(
+                                      minWidth: 48,
+                                      minHeight: 48,
+                                    ),
+                                    icon: const Icon(
+                                      Icons.edit_rounded,
+                                      color: AppTheme.forestDeep,
+                                    ),
+                                    onPressed: () =>
+                                        _showProductFormDialog(context, p),
+                                  ),
+                                  IconButton(
+                                    tooltip: l.modDelete,
+                                    constraints: const BoxConstraints(
+                                      minWidth: 48,
+                                      minHeight: 48,
+                                    ),
+                                    icon: const Icon(
+                                      Icons.delete_outline_rounded,
+                                      color: AppTheme.redAccent,
+                                    ),
+                                    onPressed: () =>
+                                        _confirmDeleteProduct(context, p),
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
+                            );
+                          },
                         ),
-                      ],
-                    ),
+                      ),
+                      _pager(
+                        l.prTotal(state.total),
+                        state.currentPage,
+                        (state.currentPage + 1) * 20 < state.total,
+                        notifier.setPage,
+                      ),
+                    ],
                   ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _pager(String total, int page, bool hasNext, ValueChanged<int> go) {
+    final l = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              total,
+              style: AppFonts.body(fontSize: 15, color: AppTheme.textLight),
+            ),
+          ),
+          IconButton(
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            icon: const Icon(Icons.chevron_left),
+            onPressed: page > 0 ? () => go(page - 1) : null,
+          ),
+          Text(
+            l.prPage(page + 1),
+            style: AppFonts.body(fontSize: 15, fontWeight: FontWeight.w600),
+          ),
+          IconButton(
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            icon: const Icon(Icons.chevron_right),
+            onPressed: hasNext ? () => go(page + 1) : null,
           ),
         ],
       ),
@@ -3263,225 +2989,143 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
 
   // --- USERS CRUD PANEL ---
   Widget _buildUsersCrudPanel() {
+    final l = AppLocalizations.of(context)!;
     final state = ref.watch(adminUsersProvider);
     final notifier = ref.read(adminUsersProvider.notifier);
 
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Text(
-                'Users Directory Management',
-                style: AppFonts.display(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textDark,
-                ),
-              ),
-              ElevatedButton.icon(
-                onPressed: () => _showUserFormDialog(context, null),
-                icon: const Icon(Icons.person_add_rounded),
-                label: const Text('Add User'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.forestDeep,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
+              ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 240, maxWidth: 520),
                 child: TextField(
                   decoration: InputDecoration(
-                    hintText: 'Search users by name, phone, or UID...',
-                    prefixIcon: const Icon(Icons.search, size: 20),
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 12,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
+                    hintText: l.usSearch,
+                    prefixIcon: const Icon(Icons.search),
                   ),
-                  onChanged: (val) {
-                    notifier.setSearchQuery(val);
-                  },
+                  onChanged: notifier.setSearchQuery,
                 ),
+              ),
+              DsButton(
+                label: l.usAdd,
+                icon: Icons.person_add_rounded,
+                expanded: false,
+                compact: true,
+                onPressed: () => _showUserFormDialog(context, null),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Expanded(
             child: state.isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : state.users.isEmpty
-                ? Center(
-                    child: Text(
-                      'No users found matching search.',
-                      style: AppFonts.body(color: Colors.grey, fontSize: 15),
-                    ),
-                  )
-                : Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade200),
-                    ),
-                    child: Column(
-                      children: [
-                        Expanded(
-                          child: ListView.separated(
-                            itemCount: state.users.length,
-                            separatorBuilder: (context, index) =>
-                                Divider(color: Colors.grey.shade100, height: 1),
-                            itemBuilder: (context, index) {
-                              final u = state.users[index];
-                              return ListTile(
-                                leading:
-                                    u.avatarUrl != null &&
-                                        u.avatarUrl!.isNotEmpty
-                                    ? CircleAvatar(
-                                        backgroundImage: NetworkImage(
-                                          u.avatarUrl!,
-                                        ),
-                                        radius: 20,
-                                      )
-                                    : const CircleAvatar(
-                                        radius: 20,
-                                        child: Icon(Icons.person_outline),
-                                      ),
-                                title: Row(
-                                  children: [
-                                    Text(
-                                      u.displayName,
-                                      style: AppFonts.body(
-                                        fontWeight: FontWeight.bold,
-                                        color: AppTheme.textDark,
-                                      ),
-                                    ),
-                                    if (u.isAdmin) ...[
-                                      const SizedBox(width: 8),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 6,
-                                          vertical: 2,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.red.shade100,
-                                          borderRadius: BorderRadius.circular(
-                                            6,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          'Admin',
-                                          style: TextStyle(
-                                            color: Colors.red.shade900,
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                                subtitle: Text(
-                                  'ID: ${u.id} • Locale: ${u.preferredLocale} • Home Area: ${u.homeArea ?? "—"} • Tokens: ${u.tokenBalance} • Accuracy: ${u.accuracyRating.toStringAsFixed(1)}%',
-                                  style: AppFonts.body(
-                                    fontSize: 12,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.edit_rounded,
-                                        color: Colors.blueAccent,
-                                      ),
-                                      onPressed: () =>
-                                          _showUserFormDialog(context, u),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.delete_outline_rounded,
-                                        color: Colors.redAccent,
-                                      ),
-                                      onPressed: () =>
-                                          _confirmDeleteUser(context, u),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            border: Border(
-                              top: BorderSide(color: Colors.grey.shade200),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Total Users: ${state.total}',
-                                style: AppFonts.body(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey.shade700,
-                                ),
-                              ),
-                              Row(
+                ? DsEmptyState(icon: Icons.people_outline, title: l.usEmpty)
+                : Column(
+                    children: [
+                      Expanded(
+                        child: ListView.separated(
+                          itemCount: state.users.length,
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 8),
+                          itemBuilder: (context, index) {
+                            final u = state.users[index];
+                            return DsCard(
+                              padding: const EdgeInsets.all(12),
+                              child: Row(
                                 children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.chevron_left),
-                                    onPressed: state.currentPage > 0
-                                        ? () => notifier.setPage(
-                                            state.currentPage - 1,
-                                          )
-                                        : null,
+                                  DsAvatar(
+                                    u.displayName,
+                                    size: 48,
+                                    photoUrl: u.avatarUrl,
                                   ),
-                                  Text(
-                                    'Page ${state.currentPage + 1}',
-                                    style: AppFonts.body(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Wrap(
+                                          spacing: 8,
+                                          crossAxisAlignment:
+                                              WrapCrossAlignment.center,
+                                          children: [
+                                            Text(
+                                              u.displayName,
+                                              style: AppFonts.display(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w700,
+                                                color: AppTheme.ink,
+                                              ),
+                                            ),
+                                            if (u.isAdmin)
+                                              DsTag(
+                                                l.usAdminTag,
+                                                tone: DsTone.bad,
+                                              ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          l.usMeta(
+                                            u.homeArea ?? '—',
+                                            u.tokenBalance,
+                                            u.accuracyRating.toStringAsFixed(0),
+                                          ),
+                                          style: AppFonts.body(
+                                            fontSize: 14,
+                                            color: AppTheme.textLight,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                   IconButton(
-                                    icon: const Icon(Icons.chevron_right),
-                                    onPressed:
-                                        (state.currentPage + 1) * 20 <
-                                            state.total
-                                        ? () => notifier.setPage(
-                                            state.currentPage + 1,
-                                          )
-                                        : null,
+                                    tooltip: l.modEdit,
+                                    constraints: const BoxConstraints(
+                                      minWidth: 48,
+                                      minHeight: 48,
+                                    ),
+                                    icon: const Icon(
+                                      Icons.edit_rounded,
+                                      color: AppTheme.forestDeep,
+                                    ),
+                                    onPressed: () =>
+                                        _showUserFormDialog(context, u),
+                                  ),
+                                  IconButton(
+                                    tooltip: l.modDelete,
+                                    constraints: const BoxConstraints(
+                                      minWidth: 48,
+                                      minHeight: 48,
+                                    ),
+                                    icon: const Icon(
+                                      Icons.delete_outline_rounded,
+                                      color: AppTheme.redAccent,
+                                    ),
+                                    onPressed: () =>
+                                        _confirmDeleteUser(context, u),
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
+                            );
+                          },
                         ),
-                      ],
-                    ),
+                      ),
+                      _pager(
+                        l.usTotal(state.total),
+                        state.currentPage,
+                        (state.currentPage + 1) * 20 < state.total,
+                        notifier.setPage,
+                      ),
+                    ],
                   ),
           ),
         ],
@@ -3902,17 +3546,10 @@ class _EvidenceThumbnail extends StatelessWidget {
 }
 
 class _AdminNavItem {
-  const _AdminNavItem(
-    this.tab,
-    this.icon,
-    this.label,
-    this.title, {
-    this.badge = 0,
-  });
+  const _AdminNavItem(this.tab, this.icon, this.label, {this.badge = 0});
 
   final String tab;
   final IconData icon;
   final String label;
-  final String title;
   final int badge;
 }

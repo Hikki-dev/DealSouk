@@ -2,6 +2,7 @@
 // admin_screen State so panels can be split into separate widgets without
 // duplicating these pure, stateless builders.
 import 'package:flutter/material.dart';
+import 'package:dealsouk/core/design/design.dart';
 import 'package:dealsouk/core/theme/app_fonts.dart';
 import 'package:dealsouk/core/theme/theme.dart';
 
@@ -60,27 +61,25 @@ Widget adminAnalyticsSection({
   required String emptyText,
   required List<Widget> children,
 }) {
-  return Container(
+  return DsCard(
     padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(18),
-      border: Border.all(color: const Color(0xFFE8EEE4)),
-    ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
           style: AppFonts.display(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: AppTheme.textDark,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.ink,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         if (children.isEmpty)
-          Text(emptyText, style: TextStyle(color: Colors.grey.shade600))
+          Text(
+            emptyText,
+            style: AppFonts.body(fontSize: 15, color: AppTheme.textLight),
+          )
         else
           ...children,
       ],
@@ -103,29 +102,21 @@ Widget adminAnalyticsRow({
             children: [
               Text(
                 title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                  color: AppTheme.textDark,
+                style: AppFonts.body(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.ink,
                 ),
               ),
               Text(
                 subtitle,
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: AppFonts.body(fontSize: 14, color: AppTheme.textLight),
               ),
             ],
           ),
         ),
-        Text(
-          value,
-          style: const TextStyle(
-            color: AppTheme.forestDeep,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
+        const SizedBox(width: 8),
+        DsTag(value, tone: DsTone.teal),
       ],
     ),
   );

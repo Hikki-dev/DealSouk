@@ -3527,6 +3527,720 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sign in with a different account'**
   String get unauthorizedAction;
+
+  /// No description provided for @modTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderator'**
+  String get modTitle;
+
+  /// No description provided for @navModeration.
+  ///
+  /// In en, this message translates to:
+  /// **'Price moderation'**
+  String get navModeration;
+
+  /// No description provided for @navMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Map density'**
+  String get navMap;
+
+  /// No description provided for @navAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Analytics'**
+  String get navAnalytics;
+
+  /// No description provided for @navVouchers.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher queue'**
+  String get navVouchers;
+
+  /// No description provided for @navStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher stock'**
+  String get navStock;
+
+  /// No description provided for @navSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'System settings'**
+  String get navSettings;
+
+  /// No description provided for @navProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage products'**
+  String get navProducts;
+
+  /// No description provided for @navUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage users'**
+  String get navUsers;
+
+  /// No description provided for @modBackToApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to app'**
+  String get modBackToApp;
+
+  /// No description provided for @modLogOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out'**
+  String get modLogOut;
+
+  /// No description provided for @modRoleTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Role: Moderator'**
+  String get modRoleTag;
+
+  /// No description provided for @modRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get modRefresh;
+
+  /// No description provided for @modExportCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'Export CSV'**
+  String get modExportCsv;
+
+  /// No description provided for @modMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu'**
+  String get modMenu;
+
+  /// No description provided for @modSyncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing with server...'**
+  String get modSyncing;
+
+  /// No description provided for @modPendingReviews.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending reviews'**
+  String get modPendingReviews;
+
+  /// No description provided for @modApprovedToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved today'**
+  String get modApprovedToday;
+
+  /// No description provided for @modTokensIssued.
+  ///
+  /// In en, this message translates to:
+  /// **'Tokens issued'**
+  String get modTokensIssued;
+
+  /// No description provided for @modSubmissionsHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Submissions ({count})'**
+  String modSubmissionsHeader(int count);
+
+  /// No description provided for @modTabPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending ({count})'**
+  String modTabPending(int count);
+
+  /// No description provided for @modTabFlagged.
+  ///
+  /// In en, this message translates to:
+  /// **'Flagged ({count})'**
+  String modTabFlagged(int count);
+
+  /// No description provided for @modQueueClearedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue cleared'**
+  String get modQueueClearedTitle;
+
+  /// No description provided for @modQueueClearedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending price reports need verification.'**
+  String get modQueueClearedBody;
+
+  /// No description provided for @modPricePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Price photo'**
+  String get modPricePhoto;
+
+  /// No description provided for @modReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt'**
+  String get modReceipt;
+
+  /// No description provided for @modCommunityFlagged.
+  ///
+  /// In en, this message translates to:
+  /// **'Community flagged'**
+  String get modCommunityFlagged;
+
+  /// No description provided for @modRewardPlus.
+  ///
+  /// In en, this message translates to:
+  /// **'Reward +{tokens}'**
+  String modRewardPlus(int tokens);
+
+  /// No description provided for @modReject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get modReject;
+
+  /// No description provided for @modDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get modDelete;
+
+  /// No description provided for @modEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get modEdit;
+
+  /// No description provided for @modApprove.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
+  String get modApprove;
+
+  /// No description provided for @modReinstate.
+  ///
+  /// In en, this message translates to:
+  /// **'Reinstate'**
+  String get modReinstate;
+
+  /// No description provided for @modAuditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review submission'**
+  String get modAuditTitle;
+
+  /// No description provided for @modFlaggedReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Flagged report review'**
+  String get modFlaggedReview;
+
+  /// No description provided for @modStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get modStatusPending;
+
+  /// No description provided for @modStatusFlagged.
+  ///
+  /// In en, this message translates to:
+  /// **'Flagged'**
+  String get modStatusFlagged;
+
+  /// No description provided for @modIdSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'ID: {id} · Submitted {time}'**
+  String modIdSubmitted(String id, String time);
+
+  /// No description provided for @modFlaggedAlertTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Accuracy alert'**
+  String get modFlaggedAlertTitle;
+
+  /// No description provided for @modFlaggedAlertBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Shoppers flagged this price 3+ times. AED {price} for {product} at {store} is reported as incorrect.'**
+  String modFlaggedAlertBody(String price, String product, String store);
+
+  /// No description provided for @modEvidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Attached evidence (tap to view)'**
+  String get modEvidence;
+
+  /// No description provided for @modPriceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Price label'**
+  String get modPriceLabel;
+
+  /// No description provided for @modChecklist.
+  ///
+  /// In en, this message translates to:
+  /// **'Checklist'**
+  String get modChecklist;
+
+  /// No description provided for @modInvestigation.
+  ///
+  /// In en, this message translates to:
+  /// **'Investigation steps'**
+  String get modInvestigation;
+
+  /// No description provided for @modChkStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt matches store: {store}'**
+  String modChkStore(String store);
+
+  /// No description provided for @modChkSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Price matches the pack size'**
+  String get modChkSize;
+
+  /// No description provided for @modChkPromo.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for discount or promo tags'**
+  String get modChkPromo;
+
+  /// No description provided for @modChkFresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt date is recent'**
+  String get modChkFresh;
+
+  /// No description provided for @modInvCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare with the store\'s online catalogue'**
+  String get modInvCatalog;
+
+  /// No description provided for @modInvDistributor.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for a distributor price change'**
+  String get modInvDistributor;
+
+  /// No description provided for @modInvTrusted.
+  ///
+  /// In en, this message translates to:
+  /// **'Check whether a trusted user submitted it'**
+  String get modInvTrusted;
+
+  /// No description provided for @modInvReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason: shopper says the price is wrong'**
+  String get modInvReason;
+
+  /// No description provided for @modAccuracyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Submitter accuracy'**
+  String get modAccuracyTitle;
+
+  /// No description provided for @modAccuracySub.
+  ///
+  /// In en, this message translates to:
+  /// **'Trust score from past reviews'**
+  String get modAccuracySub;
+
+  /// No description provided for @modTrustTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reporter trust level'**
+  String get modTrustTitle;
+
+  /// No description provided for @modTrustSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on reporter history'**
+  String get modTrustSub;
+
+  /// No description provided for @modEditSubmission.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit submission'**
+  String get modEditSubmission;
+
+  /// No description provided for @modConfirmDeletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm deletion'**
+  String get modConfirmDeletion;
+
+  /// No description provided for @modNothingSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing selected'**
+  String get modNothingSelected;
+
+  /// No description provided for @modSelectToAudit.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a submission to review it'**
+  String get modSelectToAudit;
+
+  /// No description provided for @modSourcerControls.
+  ///
+  /// In en, this message translates to:
+  /// **'Contributor controls'**
+  String get modSourcerControls;
+
+  /// No description provided for @modWarn.
+  ///
+  /// In en, this message translates to:
+  /// **'Warn user'**
+  String get modWarn;
+
+  /// No description provided for @modSuspend.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspend'**
+  String get modSuspend;
+
+  /// No description provided for @modBan.
+  ///
+  /// In en, this message translates to:
+  /// **'Ban'**
+  String get modBan;
+
+  /// No description provided for @modCsvCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied {count} rows as CSV'**
+  String modCsvCopied(int count);
+
+  /// No description provided for @modPriceSubmissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Price submissions ({count})'**
+  String modPriceSubmissions(int count);
+
+  /// No description provided for @vqEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No voucher requests'**
+  String get vqEmptyTitle;
+
+  /// No description provided for @vqEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'New requests appear here when shoppers reach the token threshold.'**
+  String get vqEmptyBody;
+
+  /// No description provided for @vqLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{user} · AED {amount} {store}'**
+  String vqLine(String user, int amount, String store);
+
+  /// No description provided for @vqMeta.
+  ///
+  /// In en, this message translates to:
+  /// **'{area} · {balance} tokens available · cost {cost}'**
+  String vqMeta(String area, int balance, int cost);
+
+  /// No description provided for @mapInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Active price submissions across Dubai. Bigger circles mean more submissions. Tap a pin for store details.'**
+  String get mapInfo;
+
+  /// No description provided for @mapSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search stores by name, branch or area'**
+  String get mapSearchHint;
+
+  /// No description provided for @mapNoStores.
+  ///
+  /// In en, this message translates to:
+  /// **'No stores match the filters.'**
+  String get mapNoStores;
+
+  /// No description provided for @mapStoreMeta.
+  ///
+  /// In en, this message translates to:
+  /// **'{area} · Approved: {count}'**
+  String mapStoreMeta(String area, int count);
+
+  /// No description provided for @mapApprovedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved submissions: {count}'**
+  String mapApprovedCount(int count);
+
+  /// No description provided for @mapArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Area: {area}'**
+  String mapArea(String area);
+
+  /// No description provided for @mapClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get mapClose;
+
+  /// No description provided for @vsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher stock'**
+  String get vsTitle;
+
+  /// No description provided for @vsImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Import voucher codes'**
+  String get vsImport;
+
+  /// No description provided for @vsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No voucher stock yet. Import codes to add some.'**
+  String get vsEmpty;
+
+  /// No description provided for @vsItem.
+  ///
+  /// In en, this message translates to:
+  /// **'{store} (AED {amount})'**
+  String vsItem(String store, int amount);
+
+  /// No description provided for @vsUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Used vouchers'**
+  String get vsUsed;
+
+  /// No description provided for @vsAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Available stock'**
+  String get vsAvailable;
+
+  /// No description provided for @vsCodes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} codes'**
+  String vsCodes(int count);
+
+  /// No description provided for @setTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Token economy settings'**
+  String get setTitle;
+
+  /// No description provided for @setEarn.
+  ///
+  /// In en, this message translates to:
+  /// **'Token earn rate (base)'**
+  String get setEarn;
+
+  /// No description provided for @setThreshold.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher threshold'**
+  String get setThreshold;
+
+  /// No description provided for @setCap.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily submission cap'**
+  String get setCap;
+
+  /// No description provided for @setRequestCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Request cost'**
+  String get setRequestCost;
+
+  /// No description provided for @setTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tokens'**
+  String setTokens(int count);
+
+  /// No description provided for @setPerDay.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} per day'**
+  String setPerDay(int count);
+
+  /// No description provided for @setNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes take effect immediately.'**
+  String get setNote;
+
+  /// No description provided for @prSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search products by name, brand or barcode'**
+  String get prSearch;
+
+  /// No description provided for @prAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add product'**
+  String get prAdd;
+
+  /// No description provided for @prEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No products match the filters.'**
+  String get prEmpty;
+
+  /// No description provided for @prMeta.
+  ///
+  /// In en, this message translates to:
+  /// **'{brand} · {size} · {category}'**
+  String prMeta(String brand, String size, String category);
+
+  /// No description provided for @prTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total products: {count}'**
+  String prTotal(int count);
+
+  /// No description provided for @prPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page}'**
+  String prPage(int page);
+
+  /// No description provided for @usSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search users by name, phone or ID'**
+  String get usSearch;
+
+  /// No description provided for @usAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add user'**
+  String get usAdd;
+
+  /// No description provided for @usEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No users match the search.'**
+  String get usEmpty;
+
+  /// No description provided for @usAdminTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get usAdminTag;
+
+  /// No description provided for @usMeta.
+  ///
+  /// In en, this message translates to:
+  /// **'{area} · {tokens} tokens · {accuracy}% accuracy'**
+  String usMeta(String area, int tokens, String accuracy);
+
+  /// No description provided for @usTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total users: {count}'**
+  String usTotal(int count);
+
+  /// No description provided for @anToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get anToday;
+
+  /// No description provided for @anMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get anMonth;
+
+  /// No description provided for @anPendingVouchers.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending vouchers'**
+  String get anPendingVouchers;
+
+  /// No description provided for @anTrending.
+  ///
+  /// In en, this message translates to:
+  /// **'Trending products'**
+  String get anTrending;
+
+  /// No description provided for @anTrendingEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No product trends yet.'**
+  String get anTrendingEmpty;
+
+  /// No description provided for @anCoverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Coverage hotspots'**
+  String get anCoverage;
+
+  /// No description provided for @anCoverageEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No coverage data yet.'**
+  String get anCoverageEmpty;
+
+  /// No description provided for @anSubmissions.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} submissions'**
+  String anSubmissions(int count);
+
+  /// No description provided for @anRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} recent'**
+  String anRecent(int count);
+
+  /// No description provided for @anExports.
+  ///
+  /// In en, this message translates to:
+  /// **'Data exports and reports'**
+  String get anExports;
+
+  /// No description provided for @anCsvBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Download CSV report'**
+  String get anCsvBtn;
+
+  /// No description provided for @anPdfBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Export PDF report'**
+  String get anPdfBtn;
+
+  /// No description provided for @anDownloadingCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading CSV...'**
+  String get anDownloadingCsv;
+
+  /// No description provided for @anGeneratingPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating PDF...'**
+  String get anGeneratingPdf;
+
+  /// No description provided for @anFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not complete the export: {error}'**
+  String anFailed(String error);
 }
 
 class _AppLocalizationsDelegate

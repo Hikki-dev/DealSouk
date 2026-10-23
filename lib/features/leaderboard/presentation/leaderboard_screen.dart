@@ -9,9 +9,10 @@ import 'package:dealsouk/features/tokens/presentation/tokens_providers.dart';
 import 'package:dealsouk/features/admin/presentation/admin_providers.dart';
 import 'package:dealsouk/features/leaderboard/domain/leaderboard_user.dart';
 import 'package:dealsouk/features/tokens/domain/user_badge.dart';
+import 'package:dealsouk/features/tokens/domain/daily_challenge.dart';
 import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/features/requests/presentation/request_board_view.dart';
-import 'package:dealsouk/core/widgets/souk_widgets.dart';
+import 'package:dealsouk/core/design/design.dart';
 import 'package:dealsouk/l10n/app_localizations.dart';
 
 class LeaderboardScreen extends ConsumerStatefulWidget {
@@ -37,7 +38,6 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l = AppLocalizations.of(context)!;
     final tokens = ref.watch(userTokensProvider);
     // R4: voucher redemption threshold is admin-configurable (FR-40/61) — read
@@ -94,1018 +94,620 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     );
     final int userRank = userRow?.rank ?? 0;
 
+    final summary = _summaryCard(
+      l,
+      profile.name,
+      profile.avatarUrl,
+      tokens,
+      voucherThreshold,
+      userRank,
+      streak.currentStreak,
+    );
+    final challenge = _challengeCard(l, dailyChallenge);
+    final badgeRow = _badgeSection(
+      l,
+      badges,
+      tokens: tokens,
+      approved: stats?.approvedSubmissions ?? 0,
+      streak: streak.currentStreak,
+      accuracy: stats?.accuracyRating ?? 100,
+    );
+    final board = _boardSection(l, rankedLeaderboard, hallOfFame);
+    final wide = context.isExpanded;
+
+    final Widget content;
+    if (_showRequestBoard) {
+      content = const RequestBoardView();
+    } else if (wide) {
+      content = Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 6,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                summary,
+                const SizedBox(height: 20),
+                challenge,
+                const SizedBox(height: 24),
+                badgeRow,
+              ],
+            ),
+          ),
+          const SizedBox(width: 24),
+          Expanded(flex: 5, child: board),
+        ],
+      );
+    } else {
+      content = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          summary,
+          const SizedBox(height: 16),
+          challenge,
+          const SizedBox(height: 24),
+          badgeRow,
+          const SizedBox(height: 24),
+          board,
+        ],
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: SafeArea(
         bottom: false,
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            // ── Clean Premium White/Light-Green Header ──
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () =>
-                          context.canPop() ? context.pop() : context.go('/'),
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: const Color(0xFFE8EEE4),
-                            width: 1.2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.02),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: const DirectionalIcon(
-                          Icons.arrow_back_ios_new_rounded,
-                          color: AppTheme.forestDeep,
-                          size: 18,
-                        ),
+        child: SingleChildScrollView(
+          child: PageContainer(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Semantics(
+                    header: true,
+                    child: Text(
+                      l.leaderRewardsTitle,
+                      style: AppFonts.display(
+                        fontSize: wide ? 32 : 26,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.ink,
                       ),
                     ),
-                    Expanded(
-                      child: Text(
-                        l.leaderRewardsTitle,
-                        textAlign: TextAlign.center,
-                        style: AppFonts.display(
-                          color: AppTheme.forestDeep,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
+                  ),
+                  const SizedBox(height: 14),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 520),
+                      child: DsSegmented(
+                        labels: [
+                          l.leaderToggleStreaks,
+                          l.leaderToggleRequestBoard,
+                        ],
+                        selected: _showRequestBoard ? 1 : 0,
+                        onChanged: (i) =>
+                            setState(() => _showRequestBoard = i == 1),
                       ),
                     ),
-                    const SizedBox(
-                      width: 40,
-                    ), // Spacer to balance the back button
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 16),
+                  content,
+                ],
               ),
             ),
-
-            // Segmented Mode Toggle
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 8.0,
-                ),
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.grey.shade200),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () =>
-                              setState(() => _showRequestBoard = false),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            decoration: BoxDecoration(
-                              color: !_showRequestBoard
-                                  ? AppTheme.forestDeep
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Center(
-                              child: Text(
-                                l.leaderToggleStreaks,
-                                style: TextStyle(
-                                  color: !_showRequestBoard
-                                      ? Colors.white
-                                      : Colors.grey.shade600,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => setState(() => _showRequestBoard = true),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            decoration: BoxDecoration(
-                              color: _showRequestBoard
-                                  ? AppTheme.forestDeep
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Center(
-                              child: Text(
-                                l.leaderToggleRequestBoard,
-                                style: TextStyle(
-                                  color: _showRequestBoard
-                                      ? Colors.white
-                                      : Colors.grey.shade600,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            if (_showRequestBoard) ...[
-              const SliverToBoxAdapter(child: SizedBox(height: 12)),
-              const SliverToBoxAdapter(child: RequestBoardView()),
-              SliverPadding(
-                padding: EdgeInsets.only(
-                  bottom: 110 + MediaQuery.of(context).padding.bottom,
-                ),
-              ),
-            ] else ...[
-              // Top Profile Card Deck
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          theme.colorScheme.primary.withValues(alpha: 0.06),
-                          theme.colorScheme.primary.withValues(alpha: 0.01),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: theme.colorScheme.primary.withValues(
-                          alpha: 0.12,
-                        ),
-                        width: 1.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.02),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: theme.colorScheme.primary.withValues(
-                                      alpha: 0.2,
-                                    ),
-                                    width: 2,
-                                  ),
-                                ),
-                                child: ClipOval(
-                                  child: profile.avatarUrl.isNotEmpty
-                                      ? Image.network(
-                                          profile.avatarUrl,
-                                          width: 60,
-                                          height: 60,
-                                          fit: BoxFit.cover,
-                                          errorBuilder:
-                                              (context, error, stackTrace) =>
-                                                  CircleAvatar(
-                                                    radius: 30,
-                                                    backgroundColor: theme
-                                                        .colorScheme
-                                                        .primary
-                                                        .withValues(alpha: 0.1),
-                                                    child: Text(
-                                                      profile.name.isNotEmpty
-                                                          ? profile.name[0]
-                                                          : 'H',
-                                                      style: TextStyle(
-                                                        color: theme
-                                                            .colorScheme
-                                                            .primary,
-                                                        fontSize: 24,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                  ),
-                                        )
-                                      : CircleAvatar(
-                                          radius: 30,
-                                          backgroundColor: theme
-                                              .colorScheme
-                                              .primary
-                                              .withValues(alpha: 0.1),
-                                          child: Text(
-                                            profile.name.isNotEmpty
-                                                ? profile.name[0]
-                                                : 'H',
-                                            style: TextStyle(
-                                              color: theme.colorScheme.primary,
-                                              fontSize: 24,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      profile.name,
-                                      style: const TextStyle(
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.w800,
-                                        color: AppTheme.textDark,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Wrap(
-                                      spacing: 6,
-                                      runSpacing: 4,
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 3,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: AppTheme.amberAccent
-                                                .withValues(alpha: 0.15),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const Icon(
-                                                Icons.stars,
-                                                color: AppTheme.amberAccent,
-                                                size: 12,
-                                              ),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                userRank > 0
-                                                    ? l.leaderRankNumber(
-                                                        userRank,
-                                                      )
-                                                    : l.leaderRankUnknown,
-                                                style: const TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Color(0xFFC77C02),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 3,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.orange.shade50,
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const Icon(
-                                                Icons.local_fire_department,
-                                                color: Colors.orange,
-                                                size: 12,
-                                              ),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                l.leaderDayStreak(5),
-                                                style: TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.orange.shade800,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    '$tokens',
-                                    style: TextStyle(
-                                      fontSize: 32,
-                                      fontWeight: FontWeight.w900,
-                                      color: theme.colorScheme.primary,
-                                      height: 1.1,
-                                    ),
-                                  ),
-                                  Text(
-                                    l.leaderTokensLabel,
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.grey,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                          const Divider(height: 1),
-                          const SizedBox(height: 16),
-
-                          // Progress Card to next voucher
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                l.leaderVoucherName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                  color: AppTheme.textDark,
-                                ),
-                              ),
-                              Text(
-                                l.leaderTokenProgress(tokens, voucherThreshold),
-                                style: TextStyle(
-                                  color: theme.colorScheme.primary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(6),
-                            child: LinearProgressIndicator(
-                              value: (tokens / voucherThreshold).clamp(
-                                0.0,
-                                1.0,
-                              ),
-                              backgroundColor: Colors.grey.shade100,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                theme.colorScheme.primary,
-                              ),
-                              minHeight: 8,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          if (tokens >= voucherThreshold) ...[
-                            ElevatedButton.icon(
-                              onPressed: () {
-                                // Deduct tokens and log transaction
-                                ref
-                                    .read(userTokensProvider.notifier)
-                                    .deductTokens(voucherThreshold);
-                                ref
-                                    .read(userTransactionsProvider.notifier)
-                                    .addTransaction(
-                                      -voucherThreshold,
-                                      l.leaderVoucherRedeemed,
-                                    );
-
-                                // Show claimed code popup
-                                ref.read(navbarVisibleProvider.notifier).hide();
-                                showModalBottomSheet(
-                                  context: context,
-                                  useRootNavigator: true,
-                                  backgroundColor: Colors.white,
-                                  isScrollControlled: true,
-                                  shape: const RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.vertical(
-                                      top: Radius.circular(28),
-                                    ),
-                                  ),
-                                  builder: (context) {
-                                    final l = AppLocalizations.of(context)!;
-                                    return Padding(
-                                      padding: EdgeInsets.fromLTRB(
-                                        24.0,
-                                        24.0,
-                                        24.0,
-                                        MediaQuery.of(
-                                              context,
-                                            ).viewInsets.bottom +
-                                            32.0,
-                                      ),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Container(
-                                            width: 40,
-                                            height: 5,
-                                            decoration: BoxDecoration(
-                                              color: Colors.grey.shade300,
-                                              borderRadius:
-                                                  BorderRadius.circular(2.5),
-                                            ),
-                                          ),
-                                          const SizedBox(height: 24),
-                                          Container(
-                                            padding: const EdgeInsets.all(16),
-                                            decoration: BoxDecoration(
-                                              color: Colors.green.shade50,
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: const Icon(
-                                              Icons.check_circle,
-                                              color: Colors.green,
-                                              size: 54,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 16),
-                                          Text(
-                                            l.leaderVoucherClaimedTitle,
-                                            style: const TextStyle(
-                                              fontSize: 22,
-                                              fontWeight: FontWeight.w900,
-                                              color: AppTheme.textDark,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            l.leaderVoucherClaimedBody,
-                                            textAlign: TextAlign.center,
-                                            style: const TextStyle(
-                                              color: Colors.grey,
-                                              fontSize: 13,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 24),
-                                          Container(
-                                            width: double.infinity,
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 24,
-                                              vertical: 20,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: Colors.grey.shade50,
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
-                                              border: Border.all(
-                                                color: Colors.grey.shade200,
-                                                width: 1.5,
-                                              ),
-                                            ),
-                                            child: Column(
-                                              children: [
-                                                // Mock Barcode Lines
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
-                                                  children: List.generate(24, (
-                                                    index,
-                                                  ) {
-                                                    final double width =
-                                                        (index % 3 == 0)
-                                                        ? 4.0
-                                                        : (index % 2 == 0)
-                                                        ? 2.0
-                                                        : 1.0;
-                                                    final double spacing =
-                                                        (index % 4 == 0)
-                                                        ? 3.0
-                                                        : 1.5;
-                                                    return Container(
-                                                      width: width,
-                                                      height: 48,
-                                                      margin: EdgeInsets.only(
-                                                        right: spacing,
-                                                      ),
-                                                      color: Colors.black87,
-                                                    );
-                                                  }),
-                                                ),
-                                                const SizedBox(height: 12),
-                                                const SelectableText(
-                                                  'DS-50-UCOOP-8X92',
-                                                  style: TextStyle(
-                                                    fontFamily: 'monospace',
-                                                    fontSize: 20,
-                                                    fontWeight: FontWeight.bold,
-                                                    letterSpacing: 2,
-                                                    color: Colors.black87,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          const SizedBox(height: 24),
-                                          ElevatedButton(
-                                            onPressed: () =>
-                                                Navigator.pop(context),
-                                            style: ElevatedButton.styleFrom(
-                                              minimumSize: const Size(
-                                                double.infinity,
-                                                50,
-                                              ),
-                                            ),
-                                            child: Text(l.leaderBackToRewards),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                ).whenComplete(() {
-                                  ref
-                                      .read(navbarVisibleProvider.notifier)
-                                      .show();
-                                });
-                              },
-                              icon: const Icon(
-                                Icons.confirmation_num_outlined,
-                                size: 18,
-                              ),
-                              label: Text(l.leaderClaimVoucher),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppTheme.amberAccent,
-                                foregroundColor: Colors.white,
-                                minimumSize: const Size(double.infinity, 44),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                          ] else ...[
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.info_outline,
-                                  size: 14,
-                                  color: Colors.grey.shade600,
-                                ),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    l.leaderEarnMoreTokens(
-                                      voucherThreshold - tokens,
-                                    ),
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.grey.shade600,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              // Achievement Badges Row Label
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 8.0),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.workspace_premium_rounded,
-                        color: AppTheme.amberAccent,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        l.leaderShopperBadges,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Badges horizontal slider (live from badgesProvider)
-              SliverToBoxAdapter(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Row(
-                    children: badges
-                        .map(
-                          (badge) => _liveBadgeCard(
-                            badge,
-                            theme,
-                            tokens: tokens,
-                            approvedSubmissions:
-                                stats?.approvedSubmissions ?? 0,
-                            currentStreak: streak.currentStreak,
-                            accuracyRating: stats?.accuracyRating ?? 100,
-                          ),
-                        )
-                        .toList(),
-                  ),
-                ),
-              ),
-
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 8.0),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.flag_circle_outlined,
-                        color: AppTheme.forestDeep,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        l.leaderTodaysChallenges,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: GestureDetector(
-                    onTap: () => context.push('/submit-price'),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: dailyChallenge.completed
-                            ? const Color(0xFFE8F5E9)
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(
-                          color: dailyChallenge.completed
-                              ? AppTheme.forestDeep
-                              : const Color(0xFFE8EEE4),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 34,
-                                height: 34,
-                                decoration: BoxDecoration(
-                                  color: dailyChallenge.completed
-                                      ? AppTheme.forestDeep
-                                      : AppTheme.limeAccent,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  dailyChallenge.completed
-                                      ? Icons.check_rounded
-                                      : Icons.flag_circle_outlined,
-                                  color: dailyChallenge.completed
-                                      ? Colors.white
-                                      : AppTheme.forestDeep,
-                                  size: 17,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  dailyChallenge.description,
-                                  style: const TextStyle(
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w900,
-                                    color: AppTheme.textDark,
-                                  ),
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 3,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.amberAccent.withValues(
-                                    alpha: 0.14,
-                                  ),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  dailyChallenge.completed
-                                      ? l.leaderChallengeDone(
-                                          dailyChallenge.bonusTokens,
-                                        )
-                                      : l.leaderChallengeBonus(
-                                          dailyChallenge.bonusTokens,
-                                        ),
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFFC77C02),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (!dailyChallenge.completed) ...[
-                            const SizedBox(height: 10),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: LinearProgressIndicator(
-                                value:
-                                    (dailyChallenge.progressCount /
-                                            dailyChallenge.targetCount)
-                                        .clamp(0.0, 1.0),
-                                backgroundColor: Colors.grey.shade100,
-                                valueColor: const AlwaysStoppedAnimation<Color>(
-                                  AppTheme.forestDeep,
-                                ),
-                                minHeight: 6,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              l.leaderChallengeProgress(
-                                dailyChallenge.progressCount,
-                                dailyChallenge.targetCount,
-                              ),
-                              style: TextStyle(
-                                fontSize: 10.5,
-                                color: Colors.grey.shade600,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              // Leaderboard Label
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 8.0),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.leaderboard_rounded,
-                        color: theme.colorScheme.primary,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        l.leaderDubaiLeaderboard,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Leaderboard list
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final user = rankedLeaderboard[index];
-                    final isMe = user.isCurrentUser;
-
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      color: isMe
-                          ? theme.colorScheme.primaryContainer.withValues(
-                              alpha: 0.25,
-                            )
-                          : Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(
-                          color: isMe
-                              ? theme.colorScheme.primary
-                              : Colors.grey.shade100,
-                        ),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16.0,
-                          vertical: 12.0,
-                        ),
-                        child: Row(
-                          children: [
-                            // Rank Circle
-                            Container(
-                              width: 32,
-                              height: 32,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: _getRankColor(user.rank),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Text(
-                                '${user.rank}',
-                                style: TextStyle(
-                                  color: user.rank <= 3
-                                      ? Colors.white
-                                      : Colors.black87,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-
-                            // Name
-                            Expanded(
-                              child: Text(
-                                user.name,
-                                style: TextStyle(
-                                  fontWeight: isMe
-                                      ? FontWeight.bold
-                                      : FontWeight.w500,
-                                  color: isMe
-                                      ? theme.colorScheme.primary
-                                      : Colors.black87,
-                                ),
-                              ),
-                            ),
-
-                            // Streak flame
-                            if (user.streak > 0) ...[
-                              const Icon(
-                                Icons.local_fire_department,
-                                color: Colors.orange,
-                                size: 14,
-                              ),
-                              Text(
-                                '${user.streak}',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.orange.shade700,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                            ],
-                            // Tokens display
-                            Row(
-                              children: [
-                                Text(
-                                  '${user.tokens}',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                const Icon(
-                                  Icons.bolt,
-                                  color: AppTheme.amberAccent,
-                                  size: 16,
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }, childCount: rankedLeaderboard.length),
-                ),
-              ),
-
-              if (hallOfFame.isNotEmpty)
-                SliverToBoxAdapter(child: _hallOfFameCard(hallOfFame, theme)),
-
-              // Clear the floating glass navbar (height + margin + safe area)
-              // so the last card rests fully visible instead of under the bar.
-              SliverPadding(
-                padding: EdgeInsets.only(
-                  bottom: 110 + MediaQuery.of(context).padding.bottom,
-                ),
-              ),
-            ],
-          ],
+          ),
         ),
       ),
     );
   }
 
-  // FR-45: Hall of Fame — previous month's top 3 sourcers.
-  Widget _hallOfFameCard(List<LeaderboardUser> hof, ThemeData theme) {
-    final l = AppLocalizations.of(context)!;
-    const medals = ['🥇', '🥈', '🥉'];
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.amberLight,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.amberAccent.withValues(alpha: 0.4)),
-      ),
+  // ── Tokens, rank and voucher progress ───────────────────────────────────
+  Widget _summaryCard(
+    AppLocalizations l,
+    String name,
+    String avatarUrl,
+    int tokens,
+    int threshold,
+    int rank,
+    int streakDays,
+  ) {
+    final canClaim = tokens >= threshold;
+    return DsCard(
+      padding: const EdgeInsets.all(18),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
-              const Text('🏆', style: TextStyle(fontSize: 20)),
-              const SizedBox(width: 8),
-              Text(
-                l.leaderHallOfFame,
-                style: AppFonts.display(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 17,
-                  color: AppTheme.textDark,
+              DsAvatar(name, size: 56, photoUrl: avatarUrl),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppFonts.display(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.ink,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        DsTag(
+                          rank > 0
+                              ? l.leaderRankNumber(rank)
+                              : l.leaderRankUnknown,
+                          tone: DsTone.warn,
+                          icon: Icons.stars_rounded,
+                        ),
+                        if (streakDays > 0)
+                          DsTag(
+                            l.leaderDayStreak(streakDays),
+                            tone: DsTone.warn,
+                            icon: Icons.local_fire_department_rounded,
+                          ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 2),
-          Text(
-            l.leaderTopChampions,
-            style: TextStyle(fontSize: 12.5, color: Colors.grey.shade700),
-          ),
-          const SizedBox(height: 12),
-          ...List.generate(hof.length, (i) {
-            final user = hof[i];
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 5),
-              child: Row(
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    i < medals.length ? medals[i] : '${i + 1}',
-                    style: const TextStyle(fontSize: 18),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      user.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: AppTheme.textDark,
-                      ),
+                    '$tokens',
+                    style: AppFonts.display(
+                      fontSize: 34,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.forestDeep,
+                      height: 1.1,
                     ),
                   ),
                   Text(
-                    '${user.tokens} 🪙',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
+                    l.leaderTokensLabel,
+                    style: AppFonts.body(
                       fontSize: 13,
-                      color: AppTheme.forestDeep,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textLight,
                     ),
                   ),
                 ],
               ),
-            );
-          }),
+            ],
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Divider(height: 1),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l.leaderVoucherName,
+                  style: AppFonts.body(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.ink,
+                  ),
+                ),
+              ),
+              Text(
+                l.leaderTokenProgress(tokens, threshold),
+                style: AppFonts.body(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.forestDeep,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          DsProgressBar(value: tokens / threshold, height: 12),
+          const SizedBox(height: 14),
+          if (canClaim)
+            DsButton(
+              label: l.leaderClaimVoucher,
+              style: DsButtonStyle.accent,
+              icon: Icons.confirmation_num_outlined,
+              onPressed: () => _claimVoucher(l, threshold),
+            )
+          else
+            DsBanner(l.leaderEarnMoreTokens(threshold - tokens)),
         ],
       ),
     );
   }
 
-  /// Clean monochrome line icon per badge — replaces the emoji set, which read
-  /// as generic/AI. One restrained icon language across all badges.
+  void _claimVoucher(AppLocalizations l, int threshold) {
+    // Deduct tokens and log transaction
+    ref.read(userTokensProvider.notifier).deductTokens(threshold);
+    ref
+        .read(userTransactionsProvider.notifier)
+        .addTransaction(-threshold, l.leaderVoucherRedeemed);
+
+    ref.read(navbarVisibleProvider.notifier).hide();
+    showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: AppTheme.background,
+      isScrollControlled: true,
+      constraints: const BoxConstraints(maxWidth: 520),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) {
+        final l = AppLocalizations.of(context)!;
+        return SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            24,
+            24,
+            24,
+            MediaQuery.of(context).viewInsets.bottom + 32,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Center(
+                child: Icon(
+                  Icons.check_circle_rounded,
+                  color: AppTheme.good,
+                  size: 64,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                l.leaderVoucherClaimedTitle,
+                textAlign: TextAlign.center,
+                style: AppFonts.display(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.ink,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l.leaderVoucherClaimedBody,
+                textAlign: TextAlign.center,
+                style: AppFonts.body(
+                  fontSize: 15,
+                  height: 1.4,
+                  color: AppTheme.textLight,
+                ),
+              ),
+              const SizedBox(height: 20),
+              DsCard(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    // Decorative barcode lines.
+                    ExcludeSemantics(
+                      child: Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(24, (i) {
+                            final w = (i % 3 == 0)
+                                ? 4.0
+                                : (i % 2 == 0)
+                                ? 2.0
+                                : 1.0;
+                            return Container(
+                              width: w,
+                              height: 48,
+                              margin: EdgeInsets.only(
+                                right: (i % 4 == 0) ? 3.0 : 1.5,
+                              ),
+                              color: AppTheme.ink,
+                            );
+                          }),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const SelectableText(
+                      'DS-50-UCOOP-8X92',
+                      textDirection: TextDirection.ltr,
+                      style: TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 2,
+                        color: AppTheme.ink,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              DsButton(
+                label: l.leaderBackToRewards,
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+        );
+      },
+    ).whenComplete(() {
+      ref.read(navbarVisibleProvider.notifier).show();
+    });
+  }
+
+  // ── Daily challenge ─────────────────────────────────────────────────────
+  Widget _challengeCard(AppLocalizations l, DailyChallenge c) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DsSectionHeader(l.leaderTodaysChallenges),
+        const SizedBox(height: 8),
+        DsCard(
+          onTap: () => context.push('/submit-price'),
+          semanticLabel: c.description,
+          color: c.completed ? AppTheme.goodLight : Colors.white,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: c.completed
+                          ? AppTheme.forestDeep
+                          : AppTheme.limeAccent,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      c.completed
+                          ? Icons.check_rounded
+                          : Icons.flag_circle_outlined,
+                      color: c.completed ? Colors.white : AppTheme.ink,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      c.description,
+                      style: AppFonts.body(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.ink,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              DsTag(
+                c.completed
+                    ? l.leaderChallengeDone(c.bonusTokens)
+                    : l.leaderChallengeBonus(c.bonusTokens),
+                tone: c.completed ? DsTone.good : DsTone.warn,
+              ),
+              if (!c.completed) ...[
+                const SizedBox(height: 12),
+                DsProgressBar(
+                  value: c.progressCount / c.targetCount,
+                  color: AppTheme.forestDeep,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  l.leaderChallengeProgress(c.progressCount, c.targetCount),
+                  style: AppFonts.body(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textLight,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Badges ──────────────────────────────────────────────────────────────
+  Widget _badgeSection(
+    AppLocalizations l,
+    List<UserBadge> badges, {
+    required int tokens,
+    required int approved,
+    required int streak,
+    required double accuracy,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DsSectionHeader(l.leaderShopperBadges),
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final b in badges)
+                  _liveBadgeCard(
+                    b,
+                    tokens: tokens,
+                    approvedSubmissions: approved,
+                    currentStreak: streak,
+                    accuracyRating: accuracy,
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Leaderboard + Hall of Fame ──────────────────────────────────────────
+  Widget _boardSection(
+    AppLocalizations l,
+    List<LeaderboardUser> ranked,
+    List<LeaderboardUser> hallOfFame,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DsSectionHeader(l.leaderDubaiLeaderboard),
+        const SizedBox(height: 8),
+        for (final user in ranked)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _rankRow(user),
+          ),
+        if (hallOfFame.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          _hallOfFameCard(hallOfFame),
+        ],
+      ],
+    );
+  }
+
+  Widget _rankRow(LeaderboardUser user) {
+    final isMe = user.isCurrentUser;
+    return DsCard(
+      selected: isMe,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: _getRankColor(user.rank),
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              '${user.rank}',
+              style: AppFonts.display(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.ink,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              user.name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppFonts.body(
+                fontSize: 16,
+                fontWeight: isMe ? FontWeight.w700 : FontWeight.w500,
+                color: isMe ? AppTheme.forestDeep : AppTheme.ink,
+              ),
+            ),
+          ),
+          if (user.streak > 0) ...[
+            const Icon(
+              Icons.local_fire_department_rounded,
+              color: AppTheme.warnText,
+              size: 18,
+            ),
+            Text(
+              '${user.streak}',
+              style: AppFonts.body(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.warnText,
+              ),
+            ),
+            const SizedBox(width: 10),
+          ],
+          Text(
+            '${user.tokens}',
+            style: AppFonts.display(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.ink,
+            ),
+          ),
+          const SizedBox(width: 4),
+          const Icon(Icons.bolt_rounded, color: AppTheme.amberAccent),
+        ],
+      ),
+    );
+  }
+
+  // FR-45: Hall of Fame — previous month's top 3 sourcers.
+  Widget _hallOfFameCard(List<LeaderboardUser> hof) {
+    final l = AppLocalizations.of(context)!;
+    const medals = ['🥇', '🥈', '🥉'];
+    return DsCard(
+      color: AppTheme.amberLight,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '🏆  ${l.leaderHallOfFame}',
+            style: AppFonts.display(
+              fontWeight: FontWeight.w700,
+              fontSize: 18,
+              color: AppTheme.ink,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            l.leaderTopChampions,
+            style: AppFonts.body(fontSize: 14, color: AppTheme.textLight),
+          ),
+          const SizedBox(height: 10),
+          for (var i = 0; i < hof.length; i++)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 5),
+              child: Row(
+                children: [
+                  Text(
+                    i < medals.length ? medals[i] : '${i + 1}',
+                    style: const TextStyle(fontSize: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      hof[i].name,
+                      style: AppFonts.body(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                        color: AppTheme.ink,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${hof[i].tokens} 🪙',
+                    style: AppFonts.body(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      color: AppTheme.forestDeep,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Clean monochrome line icon per badge.
   IconData _badgeIcon(String id) {
     switch (id) {
       case 'first_submission':
@@ -1126,78 +728,63 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   }
 
   Widget _liveBadgeCard(
-    UserBadge badge,
-    ThemeData theme, {
+    UserBadge badge, {
     required int tokens,
     required int approvedSubmissions,
     required int currentStreak,
     required double accuracyRating,
   }) {
     final unlocked = badge.unlocked;
-    const accent = AppTheme.forestDeep;
-    return GestureDetector(
-      onTap: () => _showBadgeDetails(
-        badge,
-        tokens: tokens,
-        approvedSubmissions: approvedSubmissions,
-        currentStreak: currentStreak,
-        accuracyRating: accuracyRating,
-      ),
-      child: Container(
-        width: 132,
-        // Directional margin: cards flow start→end, mirrored under Arabic RTL.
-        margin: const EdgeInsetsDirectional.only(end: 10),
+    return Container(
+      width: 148,
+      margin: const EdgeInsetsDirectional.only(end: 10),
+      child: DsCard(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: unlocked
-                ? accent.withValues(alpha: 0.22)
-                : const Color(0xFFEDEDED),
-          ),
+        semanticLabel: '${badge.name}, ${unlocked ? 'unlocked' : 'locked'}',
+        onTap: () => _showBadgeDetails(
+          badge,
+          tokens: tokens,
+          approvedSubmissions: approvedSubmissions,
+          currentStreak: currentStreak,
+          accuracyRating: accuracyRating,
         ),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 48,
-              height: 48,
+              width: 52,
+              height: 52,
               decoration: BoxDecoration(
-                color: unlocked
-                    ? accent.withValues(alpha: 0.08)
-                    : const Color(0xFFF4F4F4),
+                color: unlocked ? AppTheme.emeraldLight : AppTheme.sand2,
                 shape: BoxShape.circle,
               ),
-              // Locked badges show a single lock glyph — unambiguous, no overlay.
               child: Icon(
                 unlocked ? _badgeIcon(badge.id) : Icons.lock_outline_rounded,
-                size: 22,
-                color: unlocked ? accent : Colors.grey.shade400,
+                size: 26,
+                color: unlocked ? AppTheme.forestDeep : AppTheme.textLight,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Text(
               badge.name,
               textAlign: TextAlign.center,
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
+              style: AppFonts.body(
                 fontWeight: FontWeight.w700,
-                fontSize: 12,
-                color: unlocked ? AppTheme.textDark : Colors.grey.shade500,
+                fontSize: 14,
+                color: unlocked ? AppTheme.ink : AppTheme.textLight,
               ),
             ),
-            const SizedBox(height: 3),
+            const SizedBox(height: 4),
             Text(
               badge.description,
               textAlign: TextAlign.center,
-              maxLines: 2,
+              maxLines: 3,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 9.5,
+              style: AppFonts.body(
+                fontSize: 12,
                 height: 1.3,
-                color: Colors.grey.shade500,
+                color: AppTheme.textLight,
               ),
             ),
           ],
@@ -1409,7 +996,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
       case 3:
         return const Color(0xFFCD7F32); // Bronze
       default:
-        return Colors.grey.shade100;
+        return AppTheme.sand2;
     }
   }
 }

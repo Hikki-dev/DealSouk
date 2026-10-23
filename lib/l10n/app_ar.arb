@@ -449,9 +449,9 @@
   "submitViewTokenBalance": "عرض رصيد التوكنات",
   "profileLevelBadge": "مستوى {level} {title}",
   "profileDayStreak": "سلسلة {days} يوم",
-  "profileTabSubmissions": "المساهمات",
-  "profileTabTokens": "النقاط",
-  "profileTabRequests": "الطلبات",
+  "profileTabSubmissions": "أسعاري",
+  "profileTabTokens": "الرموز",
+  "profileTabRequests": "طلباتي",
   "profileTabSettings": "الإعدادات",
   "profilePhotoUpdated": "تم تحديث صورة الملف الشخصي",
   "profilePhotoRemoved": "تمت إزالة صورة الملف الشخصي",
@@ -598,6 +598,21 @@
   "storeLoadErrorTitle": "تعذّر تحميل المتاجر",
   "storeLoadErrorSubtitle": "تحقق من اتصالك وحاول مرة أخرى.",
   "storeRetryButton": "إعادة المحاولة",
+  "storeChainAll": "الكل",
+  "storeFilterTitle": "تصفية المتاجر",
+  "storeMaxDistance": "أقصى مسافة: {km} كم",
+  "storeSortBy": "ترتيب حسب",
+  "storeSortClosest": "الأقرب أولاً",
+  "storeSortAlpha": "أبجدياً",
+  "storeSortRecent": "الأحدث تحديثاً",
+  "storeApplyFilters": "تطبيق",
+  "storeGpsOnlyNote": "تصفية المسافة تعمل فقط عندما تكون في دبي والموقع مفعّل.",
+  "storeRequiresGps": "يتطلب موقعك",
+  "storeDirections": "الاتجاهات",
+  "storeFresh": "محدّث",
+  "storePricesCountLabel": "{count} سعراً",
+  "storeUpdatedAgo": "آخر تحديث {label}",
+  "storeSelectedHint": "اختر متجراً لعرض أسعاره",
   "leaderRewardsTitle": "المكافآت ولوحة المتصدرين",
   "leaderToggleStreaks": "المتصدرون والسلاسل",
   "leaderToggleRequestBoard": "لوحة الطلبات النشطة",
@@ -664,5 +679,26 @@
   "tutorialCompeteDescription": "حافظ على سلسلتك اليومية، وأكمل التحديات، واكسب الأوسمة، وارتقِ في لوحة متصدري دبي مع مساهماتك.",
   "tutorialSkip": "تخطٍّ",
   "tutorialNext": "التالي",
-  "tutorialGetStarted": "ابدأ الآن"
+  "tutorialGetStarted": "ابدأ الآن",
+  "profileTextSize": "حجم الخط",
+  "textSizeStandard": "عادي",
+  "textSizeLarge": "كبير",
+  "textSizeExtraLarge": "كبير جداً",
+  "profileTextSizeSubtitle": "يكبّر كل النصوص في التطبيق",
+  "privacyCreditsTitle": "حقوق الصور والخرائط",
+  "tutorialBack": "رجوع",
+  "tutorialStep": "الخطوة {current} من {total}",
+  "@tutorialStep": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "unauthorizedTitle": "للمشرفين فقط",
+  "unauthorizedBody": "هذه المنطقة متاحة لحسابات المشرفين فقط. إذا كان يجب أن يكون لديك وصول، اطلب من المسؤول إضافة حسابك.",
+  "unauthorizedAction": "تسجيل الدخول بحساب آخر"
 }

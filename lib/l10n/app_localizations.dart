@@ -2109,7 +2109,7 @@ abstract class AppLocalizations {
   /// No description provided for @profileTabSubmissions.
   ///
   /// In en, this message translates to:
-  /// **'Submissions'**
+  /// **'Prices'**
   String get profileTabSubmissions;
 
   /// No description provided for @profileTabTokens.
@@ -2970,6 +2970,96 @@ abstract class AppLocalizations {
   /// **'Retry'**
   String get storeRetryButton;
 
+  /// No description provided for @storeChainAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get storeChainAll;
+
+  /// No description provided for @storeFilterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter stores'**
+  String get storeFilterTitle;
+
+  /// No description provided for @storeMaxDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum distance: {km} km'**
+  String storeMaxDistance(Object km);
+
+  /// No description provided for @storeSortBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by'**
+  String get storeSortBy;
+
+  /// No description provided for @storeSortClosest.
+  ///
+  /// In en, this message translates to:
+  /// **'Closest first'**
+  String get storeSortClosest;
+
+  /// No description provided for @storeSortAlpha.
+  ///
+  /// In en, this message translates to:
+  /// **'Alphabetical (A–Z)'**
+  String get storeSortAlpha;
+
+  /// No description provided for @storeSortRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently updated'**
+  String get storeSortRecent;
+
+  /// No description provided for @storeApplyFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply filters'**
+  String get storeApplyFilters;
+
+  /// No description provided for @storeGpsOnlyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The distance filter only applies when you are in Dubai with location turned on.'**
+  String get storeGpsOnlyNote;
+
+  /// No description provided for @storeRequiresGps.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs your location'**
+  String get storeRequiresGps;
+
+  /// No description provided for @storeDirections.
+  ///
+  /// In en, this message translates to:
+  /// **'Directions'**
+  String get storeDirections;
+
+  /// No description provided for @storeFresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Fresh'**
+  String get storeFresh;
+
+  /// No description provided for @storePricesCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} prices'**
+  String storePricesCountLabel(Object count);
+
+  /// No description provided for @storeUpdatedAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {label}'**
+  String storeUpdatedAgo(Object label);
+
+  /// No description provided for @storeSelectedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a store to see its prices'**
+  String get storeSelectedHint;
+
   /// No description provided for @leaderRewardsTitle.
   ///
   /// In en, this message translates to:
@@ -3371,6 +3461,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Get Started'**
   String get tutorialGetStarted;
+
+  /// No description provided for @profileTextSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Text size'**
+  String get profileTextSize;
+
+  /// No description provided for @textSizeStandard.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard'**
+  String get textSizeStandard;
+
+  /// No description provided for @textSizeLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Large'**
+  String get textSizeLarge;
+
+  /// No description provided for @textSizeExtraLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra large'**
+  String get textSizeExtraLarge;
+
+  /// No description provided for @profileTextSizeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Makes all text in the app bigger'**
+  String get profileTextSizeSubtitle;
+
+  /// No description provided for @privacyCreditsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo and map credits'**
+  String get privacyCreditsTitle;
+
+  /// No description provided for @tutorialBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get tutorialBack;
+
+  /// No description provided for @tutorialStep.
+  ///
+  /// In en, this message translates to:
+  /// **'STEP {current} OF {total}'**
+  String tutorialStep(int current, int total);
+
+  /// No description provided for @unauthorizedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderators only'**
+  String get unauthorizedTitle;
+
+  /// No description provided for @unauthorizedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This area is only available to moderator accounts. If you should have access, ask an administrator to add your account.'**
+  String get unauthorizedBody;
+
+  /// No description provided for @unauthorizedAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with a different account'**
+  String get unauthorizedAction;
 }
 
 class _AppLocalizationsDelegate

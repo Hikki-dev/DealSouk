@@ -668,7 +668,7 @@
       "days": {}
     }
   },
-  "profileTabSubmissions": "Submissions",
+  "profileTabSubmissions": "Prices",
   "profileTabTokens": "Tokens",
   "profileTabRequests": "Requests",
   "profileTabSettings": "Settings",
@@ -924,6 +924,36 @@
   "storeLoadErrorTitle": "Couldn't load stores",
   "storeLoadErrorSubtitle": "Check your connection and try again.",
   "storeRetryButton": "Retry",
+  "storeChainAll": "All",
+  "storeFilterTitle": "Filter stores",
+  "storeMaxDistance": "Maximum distance: {km} km",
+  "@storeMaxDistance": {
+    "placeholders": {
+      "km": {}
+    }
+  },
+  "storeSortBy": "Sort by",
+  "storeSortClosest": "Closest first",
+  "storeSortAlpha": "Alphabetical (A–Z)",
+  "storeSortRecent": "Recently updated",
+  "storeApplyFilters": "Apply filters",
+  "storeGpsOnlyNote": "The distance filter only applies when you are in Dubai with location turned on.",
+  "storeRequiresGps": "Needs your location",
+  "storeDirections": "Directions",
+  "storeFresh": "Fresh",
+  "storePricesCountLabel": "{count} prices",
+  "@storePricesCountLabel": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "storeUpdatedAgo": "Updated {label}",
+  "@storeUpdatedAgo": {
+    "placeholders": {
+      "label": {}
+    }
+  },
+  "storeSelectedHint": "Select a store to see its prices",
   "leaderRewardsTitle": "Rewards & Leaderboard",
   "leaderToggleStreaks": "Leaderboard & Streaks",
   "leaderToggleRequestBoard": "Active Request Board",
@@ -1032,5 +1062,26 @@
   "tutorialCompeteDescription": "Keep a daily streak, complete challenges, earn badges, and rise up the Dubai leaderboard as you contribute.",
   "tutorialSkip": "Skip",
   "tutorialNext": "Next",
-  "tutorialGetStarted": "Get Started"
+  "tutorialGetStarted": "Get Started",
+  "profileTextSize": "Text size",
+  "textSizeStandard": "Standard",
+  "textSizeLarge": "Large",
+  "textSizeExtraLarge": "Extra large",
+  "profileTextSizeSubtitle": "Makes all text in the app bigger",
+  "privacyCreditsTitle": "Photo and map credits",
+  "tutorialBack": "Back",
+  "tutorialStep": "STEP {current} OF {total}",
+  "@tutorialStep": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "unauthorizedTitle": "Moderators only",
+  "unauthorizedBody": "This area is only available to moderator accounts. If you should have access, ask an administrator to add your account.",
+  "unauthorizedAction": "Sign in with a different account"
 }

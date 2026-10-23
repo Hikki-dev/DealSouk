@@ -1174,7 +1174,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get profileTabSubmissions => 'Submissions';
+  String get profileTabSubmissions => 'Prices';
 
   @override
   String get profileTabTokens => 'Tokens';
@@ -1669,6 +1669,58 @@ class AppLocalizationsEn extends AppLocalizations {
   String get storeRetryButton => 'Retry';
 
   @override
+  String get storeChainAll => 'All';
+
+  @override
+  String get storeFilterTitle => 'Filter stores';
+
+  @override
+  String storeMaxDistance(Object km) {
+    return 'Maximum distance: $km km';
+  }
+
+  @override
+  String get storeSortBy => 'Sort by';
+
+  @override
+  String get storeSortClosest => 'Closest first';
+
+  @override
+  String get storeSortAlpha => 'Alphabetical (A–Z)';
+
+  @override
+  String get storeSortRecent => 'Recently updated';
+
+  @override
+  String get storeApplyFilters => 'Apply filters';
+
+  @override
+  String get storeGpsOnlyNote =>
+      'The distance filter only applies when you are in Dubai with location turned on.';
+
+  @override
+  String get storeRequiresGps => 'Needs your location';
+
+  @override
+  String get storeDirections => 'Directions';
+
+  @override
+  String get storeFresh => 'Fresh';
+
+  @override
+  String storePricesCountLabel(Object count) {
+    return '$count prices';
+  }
+
+  @override
+  String storeUpdatedAgo(Object label) {
+    return 'Updated $label';
+  }
+
+  @override
+  String get storeSelectedHint => 'Select a store to see its prices';
+
+  @override
   String get leaderRewardsTitle => 'Rewards & Leaderboard';
 
   @override
@@ -1913,4 +1965,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tutorialGetStarted => 'Get Started';
+
+  @override
+  String get profileTextSize => 'Text size';
+
+  @override
+  String get textSizeStandard => 'Standard';
+
+  @override
+  String get textSizeLarge => 'Large';
+
+  @override
+  String get textSizeExtraLarge => 'Extra large';
+
+  @override
+  String get profileTextSizeSubtitle => 'Makes all text in the app bigger';
+
+  @override
+  String get privacyCreditsTitle => 'Photo and map credits';
+
+  @override
+  String get tutorialBack => 'Back';
+
+  @override
+  String tutorialStep(int current, int total) {
+    return 'STEP $current OF $total';
+  }
+
+  @override
+  String get unauthorizedTitle => 'Moderators only';
+
+  @override
+  String get unauthorizedBody =>
+      'This area is only available to moderator accounts. If you should have access, ask an administrator to add your account.';
+
+  @override
+  String get unauthorizedAction => 'Sign in with a different account';
 }

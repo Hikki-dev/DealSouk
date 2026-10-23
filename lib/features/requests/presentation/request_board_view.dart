@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dealsouk/core/design/design.dart';
 import 'package:dealsouk/core/theme/app_fonts.dart';
 import 'package:dealsouk/features/requests/presentation/requests_providers.dart';
 import 'package:dealsouk/features/profile/presentation/profile_providers.dart';
@@ -9,6 +10,8 @@ import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/features/requests/domain/price_request.dart';
 import 'package:dealsouk/l10n/app_localizations.dart';
 
+/// The "Ask" tab of Rewards: price checks other shoppers need, plus the
+/// current user's own requests. Two columns on desktop, one on phones.
 class RequestBoardView extends ConsumerWidget {
   const RequestBoardView({super.key});
 
@@ -20,8 +23,8 @@ class RequestBoardView extends ConsumerWidget {
     final requestCost = ref.watch(adminSettingsProvider).requestCostTokens;
     // "Price checks people need" is the COMMUNITY board: only other shoppers'
     // open requests. Exclude the current user's own (they're shown separately
-    // under "My Price Requests" above, and the backend blocks fulfilling your
-    // own request anyway).
+    // under "My Price Requests", and the backend blocks fulfilling your own
+    // request anyway).
     final myRequestIds = myRequests.map((r) => r.id).toSet();
     final activeRequests = requests
         .where(
@@ -31,154 +34,80 @@ class RequestBoardView extends ConsumerWidget {
         )
         .toList();
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Column(
+    final mine = myRequests.isEmpty
+        ? null
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              DsSectionHeader('My Price Requests (${myRequests.length})'),
+              const SizedBox(height: 8),
+              for (final req in myRequests) _MyRequestItemCard(request: req),
+            ],
+          );
+
+    final community = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DsSectionHeader(l.requestBoardTitle(activeRequests.length)),
+        const SizedBox(height: 8),
+        if (activeRequests.isEmpty)
+          DsCard(
+            padding: EdgeInsets.zero,
+            child: DsEmptyState(
+              icon: Icons.check_circle_outline_rounded,
+              title: l.requestEmptyTitle,
+              message: l.requestEmptySubtitle,
+            ),
+          )
+        else
+          for (final req in activeRequests) _RequestItemCard(request: req),
+      ],
+    );
+
+    final ask = DsButton(
+      label: l.requestAskForPrice,
+      icon: Icons.add_comment_rounded,
+      onPressed: () => _showRequestFormSheet(context, ref, requestCost),
+    );
+
+    final banner = DsBanner(
+      l.requestBannerExplanation,
+      tone: DsBannerTone.warn,
+      icon: Icons.help_center_rounded,
+    );
+
+    if (context.isExpanded) {
+      return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Banner explanation
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF8E1),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: const Color(0xFFFFECB3), width: 1.2),
-            ),
-            child: Row(
+          Expanded(
+            flex: 5,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(
-                  Icons.help_center_rounded,
-                  color: AppTheme.amberAccent,
-                  size: 24,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    l.requestBannerExplanation,
-                    style: AppFonts.body(
-                      fontSize: 12,
-                      color: const Color(0xFF5D4037),
-                      fontWeight: FontWeight.bold,
-                      height: 1.3,
-                    ),
-                  ),
-                ),
+                banner,
+                const SizedBox(height: 16),
+                ask,
+                if (mine != null) ...[const SizedBox(height: 24), mine],
               ],
             ),
           ),
-          const SizedBox(height: 20),
-
-          if (myRequests.isNotEmpty) ...[
-            Text(
-              'My Price Requests (${myRequests.length})',
-              style: AppFonts.display(
-                fontSize: 16.5,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.forestDeep,
-              ),
-            ),
-            const SizedBox(height: 10),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: myRequests.length,
-              itemBuilder: (context, index) {
-                final req = myRequests[index];
-                return _MyRequestItemCard(request: req);
-              },
-            ),
-            const SizedBox(height: 20),
-          ],
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  l.requestBoardTitle(activeRequests.length),
-                  style: AppFonts.display(
-                    fontSize: 16.5,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textDark,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              ElevatedButton.icon(
-                onPressed: () =>
-                    _showRequestFormSheet(context, ref, requestCost),
-                icon: const Icon(Icons.add_comment_rounded, size: 16),
-                label: Text(l.requestAskForPrice),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.forestDeep,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  textStyle: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          if (activeRequests.isEmpty)
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.grey.shade100),
-              ),
-              child: Column(
-                children: [
-                  const Icon(
-                    Icons.check_circle_outline_rounded,
-                    color: Colors.green,
-                    size: 44,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    l.requestEmptyTitle,
-                    style: AppFonts.display(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    l.requestEmptySubtitle,
-                    textAlign: TextAlign.center,
-                    style: AppFonts.body(
-                      color: Colors.grey,
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: activeRequests.length,
-              itemBuilder: (context, index) {
-                final req = activeRequests[index];
-                return _RequestItemCard(request: req);
-              },
-            ),
-          const SizedBox(height: 20),
+          const SizedBox(width: 24),
+          Expanded(flex: 6, child: community),
         ],
-      ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        banner,
+        const SizedBox(height: 16),
+        ask,
+        if (mine != null) ...[const SizedBox(height: 24), mine],
+        const SizedBox(height: 24),
+        community,
+      ],
     );
   }
 
@@ -209,16 +138,33 @@ class RequestBoardView extends ConsumerWidget {
     // Hide navbar when sheet opens
     ref.read(navbarVisibleProvider.notifier).hide();
 
+    InputDecoration deco(String label, {String? hint}) => InputDecoration(
+      labelText: label,
+      hintText: hint,
+      filled: true,
+      fillColor: Colors.white,
+      labelStyle: AppFonts.body(fontSize: 16, color: AppTheme.textLight),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: AppTheme.line, width: 1.5),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: AppTheme.forestDeep, width: 2),
+      ),
+    );
+
     showModalBottomSheet(
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.background,
+      constraints: const BoxConstraints(maxWidth: 520),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (context) {
-        return Padding(
+        return SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(
             24,
             24,
@@ -229,50 +175,32 @@ class RequestBoardView extends ConsumerWidget {
             key: formKey,
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(2.5),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
                 Text(
                   l.requestFormTitle,
                   style: AppFonts.display(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.forestDeep,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.ink,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
                   l.requestFormSubtitle(requestCost),
                   style: AppFonts.body(
-                    color: Colors.grey.shade500,
-                    fontSize: 12.5,
+                    color: AppTheme.textLight,
+                    fontSize: 15,
+                    height: 1.4,
                   ),
                 ),
                 const SizedBox(height: 20),
-
-                // Product Name Field
                 TextFormField(
-                  decoration: InputDecoration(
-                    labelText: l.requestItemNameLabel,
-                    hintText: l.requestItemNameHint,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: AppTheme.forestDeep),
-                    ),
+                  decoration: deco(
+                    l.requestItemNameLabel,
+                    hint: l.requestItemNameHint,
                   ),
+                  style: AppFonts.body(fontSize: 17, color: AppTheme.ink),
                   validator: (val) {
                     if (val == null || val.trim().isEmpty) {
                       return l.requestItemNameValidation;
@@ -281,25 +209,19 @@ class RequestBoardView extends ConsumerWidget {
                   },
                   onSaved: (val) => productName = val!.trim(),
                 ),
-                const SizedBox(height: 18),
-
-                // Store Selection
+                const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   initialValue: selectedStore,
-                  decoration: InputDecoration(
-                    labelText: l.requestStoreLabel,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
+                  isExpanded: true,
+                  decoration: deco(l.requestStoreLabel),
                   items: stores.map((s) {
                     return DropdownMenuItem<String>(value: s, child: Text(s));
                   }).toList(),
                   onChanged: (val) => selectedStore = val!,
                 ),
                 const SizedBox(height: 24),
-
-                ElevatedButton(
+                DsButton(
+                  label: l.requestSubmitButton,
                   onPressed: () async {
                     if (formKey.currentState!.validate()) {
                       formKey.currentState!.save();
@@ -320,7 +242,7 @@ class RequestBoardView extends ConsumerWidget {
                         messenger.showSnackBar(
                           SnackBar(
                             content: Text(err),
-                            backgroundColor: Colors.red.shade700,
+                            backgroundColor: AppTheme.badText,
                           ),
                         );
                       } else {
@@ -328,16 +250,16 @@ class RequestBoardView extends ConsumerWidget {
                           context: context,
                           builder: (context) => AlertDialog(
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(24),
+                              borderRadius: BorderRadius.circular(20),
                             ),
                             title: Row(
                               children: [
                                 const Icon(
                                   Icons.check_circle_rounded,
-                                  color: Colors.green,
+                                  color: AppTheme.good,
                                 ),
                                 const SizedBox(width: 8),
-                                Text(l.requestSentTitle),
+                                Expanded(child: Text(l.requestSentTitle)),
                               ],
                             ),
                             content: Text(
@@ -346,11 +268,7 @@ class RequestBoardView extends ConsumerWidget {
                                 selectedStore,
                                 requestCost,
                               ),
-                              style: AppFonts.body(
-                                fontSize: 13,
-                                height: 1.4,
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: AppFonts.body(fontSize: 16, height: 1.4),
                             ),
                             actions: [
                               TextButton(
@@ -363,15 +281,6 @@ class RequestBoardView extends ConsumerWidget {
                       }
                     }
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.forestDeep,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: Text(l.requestSubmitButton),
                 ),
               ],
             ),
@@ -393,98 +302,78 @@ class _RequestItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE8EEE4), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.01),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: AppTheme.limeAccent.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.help_center_outlined,
-              color: AppTheme.forestDeep,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: DsCard(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
               children: [
-                Text(
-                  request.productName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppFonts.body(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13.5,
-                    color: AppTheme.textDark,
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: AppTheme.limeAccent.withValues(alpha: 0.25),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.help_center_outlined,
+                    color: AppTheme.forestDeep,
                   ),
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  l.requestCardSubtitle(
-                    request.storeName,
-                    request.requesterName,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppFonts.body(
-                    color: Colors.grey.shade500,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        request.productName,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppFonts.body(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                          color: AppTheme.ink,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        l.requestCardSubtitle(
+                          request.storeName,
+                          request.requesterName,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppFonts.body(
+                          color: AppTheme.textLight,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(width: 10),
-          GestureDetector(
-            onTap: () {
-              // Navigate to submit price prefilled
-              context.push(
-                '/submit-price',
-                extra: {
-                  'requestId': request.id,
-                  'productName': request.productName,
-                  'storeName': request.storeName,
-                },
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppTheme.forestDeep,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                l.requestCheckPriceButton(request.requestRewardTokens),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+            const SizedBox(height: 12),
+            DsButton(
+              label: l.requestCheckPriceButton(request.requestRewardTokens),
+              compact: true,
+              onPressed: () {
+                // Navigate to submit price prefilled
+                context.push(
+                  '/submit-price',
+                  extra: {
+                    'requestId': request.id,
+                    'productName': request.productName,
+                    'storeName': request.storeName,
+                  },
+                );
+              },
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -498,13 +387,13 @@ class _MyRequestItemCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
-    final statusColor = request.status == 'fulfilled'
-        ? Colors.green
+    final tone = request.status == 'fulfilled'
+        ? DsTone.good
         : request.status == 'refunded'
-        ? Colors.blue
+        ? DsTone.teal
         : request.status == 'open'
-        ? Colors.orange
-        : Colors.grey;
+        ? DsTone.warn
+        : DsTone.neutral;
 
     final displayStatus = request.status == 'open'
         ? 'PENDING'
@@ -512,129 +401,85 @@ class _MyRequestItemCard extends ConsumerWidget {
         ? 'ACCEPTED'
         : request.status.toUpperCase();
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE8EEE4), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.01),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.search_rounded, color: statusColor, size: 18),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  request.productName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppFonts.body(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13.5,
-                    color: AppTheme.textDark,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: DsCard(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    request.productName,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppFonts.body(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                      color: AppTheme.ink,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  '${request.storeName} • ${request.timestampLabel}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppFonts.body(
-                    color: Colors.grey.shade500,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
+                  const SizedBox(height: 3),
+                  Text(
+                    '${request.storeName} • ${request.timestampLabel}',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppFonts.body(
+                      color: AppTheme.textLight,
+                      fontSize: 14,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (request.status == 'open') ...[
-                IconButton(
-                  tooltip: l.profileCancelRequest,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  icon: const Icon(
-                    Icons.cancel_outlined,
-                    color: AppTheme.redAccent,
-                    size: 20,
-                  ),
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        title: Text(l.profileCancelRequestTitle),
-                        content: Text(
-                          l.profileCancelRequestBody(request.productName),
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: Text(l.profileNo),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              ref
-                                  .read(myRequestsProvider.notifier)
-                                  .cancelRequest(request.id);
-                              Navigator.pop(context);
-                            },
-                            child: Text(
-                              l.profileYesCancel,
-                              style: const TextStyle(color: AppTheme.redAccent),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(width: 8),
-              ],
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  displayStatus,
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.bold,
-                    color: statusColor,
-                  ),
-                ),
+                  const SizedBox(height: 8),
+                  DsTag(displayStatus, tone: tone),
+                ],
               ),
-            ],
-          ),
-        ],
+            ),
+            if (request.status == 'open')
+              IconButton(
+                tooltip: l.profileCancelRequest,
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                icon: const Icon(
+                  Icons.cancel_outlined,
+                  color: AppTheme.redAccent,
+                ),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      title: Text(l.profileCancelRequestTitle),
+                      content: Text(
+                        l.profileCancelRequestBody(request.productName),
+                        style: AppFonts.body(fontSize: 16),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: Text(l.profileNo),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            ref
+                                .read(myRequestsProvider.notifier)
+                                .cancelRequest(request.id);
+                            Navigator.pop(context);
+                          },
+                          child: Text(
+                            l.profileYesCancel,
+                            style: const TextStyle(color: AppTheme.redAccent),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+          ],
+        ),
       ),
     );
   }

@@ -262,7 +262,8 @@ class DsSegmented extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 6),
                           child: Text(
                             labels[i],
-                            maxLines: 1,
+                            maxLines: 2,
+                            textAlign: TextAlign.center,
                             overflow: TextOverflow.ellipsis,
                             style: AppFonts.body(
                               fontSize: 15,

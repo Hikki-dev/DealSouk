@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dealsouk/l10n/app_localizations.dart';
 import 'package:dealsouk/app/router.dart';
 import 'package:dealsouk/core/localization/locale_provider.dart';
+import 'package:dealsouk/core/localization/text_scale_provider.dart';
 import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/core/network/fcm_service.dart';
 import 'package:dealsouk/core/network/system_status_service.dart';
@@ -71,6 +72,7 @@ class _DealSoukAppState extends ConsumerState<DealSoukApp> {
   Widget build(BuildContext context) {
     final locale = ref.watch(localeProvider);
     final systemStatus = ref.watch(systemStatusProvider);
+    final textSize = ref.watch(textSizeProvider);
 
     return MaterialApp.router(
       title: 'DealSouk',
@@ -81,9 +83,14 @@ class _DealSoukAppState extends ConsumerState<DealSoukApp> {
       builder: (context, rawChild) {
         // Respect each person's system text size up to 160%, so the app stays
         // usable at 65 without letting extreme sizes break the layout.
-        final child = MediaQuery.withClampedTextScaling(
-          minScaleFactor: 1.0,
-          maxScaleFactor: 1.6,
+        // The in-app Text size setting multiplies that, still capped at 160%.
+        final system = MediaQuery.textScalerOf(context).scale(1.0);
+        final child = MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(
+              (system * textSize.factor).clamp(1.0, 1.6),
+            ),
+          ),
           child: rawChild ?? const SizedBox(),
         );
         final status = systemStatus.asData?.value;

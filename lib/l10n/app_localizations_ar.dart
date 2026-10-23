@@ -1168,13 +1168,13 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get profileTabSubmissions => 'المساهمات';
+  String get profileTabSubmissions => 'أسعاري';
 
   @override
-  String get profileTabTokens => 'النقاط';
+  String get profileTabTokens => 'الرموز';
 
   @override
-  String get profileTabRequests => 'الطلبات';
+  String get profileTabRequests => 'طلباتي';
 
   @override
   String get profileTabSettings => 'الإعدادات';
@@ -1663,6 +1663,58 @@ class AppLocalizationsAr extends AppLocalizations {
   String get storeRetryButton => 'إعادة المحاولة';
 
   @override
+  String get storeChainAll => 'الكل';
+
+  @override
+  String get storeFilterTitle => 'تصفية المتاجر';
+
+  @override
+  String storeMaxDistance(Object km) {
+    return 'أقصى مسافة: $km كم';
+  }
+
+  @override
+  String get storeSortBy => 'ترتيب حسب';
+
+  @override
+  String get storeSortClosest => 'الأقرب أولاً';
+
+  @override
+  String get storeSortAlpha => 'أبجدياً';
+
+  @override
+  String get storeSortRecent => 'الأحدث تحديثاً';
+
+  @override
+  String get storeApplyFilters => 'تطبيق';
+
+  @override
+  String get storeGpsOnlyNote =>
+      'تصفية المسافة تعمل فقط عندما تكون في دبي والموقع مفعّل.';
+
+  @override
+  String get storeRequiresGps => 'يتطلب موقعك';
+
+  @override
+  String get storeDirections => 'الاتجاهات';
+
+  @override
+  String get storeFresh => 'محدّث';
+
+  @override
+  String storePricesCountLabel(Object count) {
+    return '$count سعراً';
+  }
+
+  @override
+  String storeUpdatedAgo(Object label) {
+    return 'آخر تحديث $label';
+  }
+
+  @override
+  String get storeSelectedHint => 'اختر متجراً لعرض أسعاره';
+
+  @override
   String get leaderRewardsTitle => 'المكافآت ولوحة المتصدرين';
 
   @override
@@ -1903,4 +1955,40 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tutorialGetStarted => 'ابدأ الآن';
+
+  @override
+  String get profileTextSize => 'حجم الخط';
+
+  @override
+  String get textSizeStandard => 'عادي';
+
+  @override
+  String get textSizeLarge => 'كبير';
+
+  @override
+  String get textSizeExtraLarge => 'كبير جداً';
+
+  @override
+  String get profileTextSizeSubtitle => 'يكبّر كل النصوص في التطبيق';
+
+  @override
+  String get privacyCreditsTitle => 'حقوق الصور والخرائط';
+
+  @override
+  String get tutorialBack => 'رجوع';
+
+  @override
+  String tutorialStep(int current, int total) {
+    return 'الخطوة $current من $total';
+  }
+
+  @override
+  String get unauthorizedTitle => 'للمشرفين فقط';
+
+  @override
+  String get unauthorizedBody =>
+      'هذه المنطقة متاحة لحسابات المشرفين فقط. إذا كان يجب أن يكون لديك وصول، اطلب من المسؤول إضافة حسابك.';
+
+  @override
+  String get unauthorizedAction => 'تسجيل الدخول بحساب آخر';
 }

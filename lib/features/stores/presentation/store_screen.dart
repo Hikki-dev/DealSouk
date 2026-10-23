@@ -530,7 +530,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                     Marker(
                       point: LatLng(store.lat, store.lng),
                       width: 56,
-                      height: 66,
+                      height: 72,
                       alignment: Alignment.topCenter,
                       child: _StorePin(
                         store: store,
@@ -559,8 +559,9 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
             label: l.storeResetDubai,
             child: Material(
               color: Colors.white,
-              shape: const CircleBorder(),
-              elevation: 3,
+              shape: const CircleBorder(
+                side: BorderSide(color: AppTheme.line, width: 1.5),
+              ),
               child: InkWell(
                 customBorder: const CircleBorder(),
                 onTap: _tryGetLocation,
@@ -591,8 +592,9 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
           start: 12,
           child: Material(
             color: Colors.white,
-            elevation: 3,
-            borderRadius: BorderRadius.circular(24),
+            shape: const StadiumBorder(
+              side: BorderSide(color: AppTheme.line, width: 1.5),
+            ),
             child: InkWell(
               borderRadius: BorderRadius.circular(24),
               onTap: () {
@@ -1200,11 +1202,11 @@ class _StoreRow extends StatelessWidget {
                   meta,
                   style: AppFonts.body(fontSize: 14, color: AppTheme.textLight),
                 ),
+                const SizedBox(height: 6),
+                tag,
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          Flexible(flex: 0, child: tag),
         ],
       ),
     );

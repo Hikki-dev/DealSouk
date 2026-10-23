@@ -287,7 +287,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
           ),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 16),
-            child: Divider(height: 1),
+            child: Divider(height: 1, color: AppTheme.line),
           ),
           Row(
             children: [

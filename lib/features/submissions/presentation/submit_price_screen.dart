@@ -23,7 +23,7 @@ import 'package:dealsouk/core/offline/connectivity_service.dart';
 import 'package:dealsouk/core/offline/sync_service.dart';
 import 'package:dealsouk/core/network/storage_service.dart';
 import 'package:dealsouk/core/theme/theme.dart';
-import 'package:dealsouk/core/widgets/responsive_container.dart';
+import 'package:dealsouk/core/design/design.dart';
 import 'package:dealsouk/core/util/geo_utils.dart';
 
 class SubmitPriceScreen extends ConsumerStatefulWidget {
@@ -151,73 +151,79 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
           p.barcode.toLowerCase().contains(query);
     }).toList();
 
-    return ResponsiveContainer(
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            _currentStep == 0
-                ? l.submitStepSelectSupermarket
-                : _currentStep == 1
-                ? l.submitStepSelectProduct
-                : _currentStep == 2
-                ? l.submitStepEnterPrice
-                : l.submitStepConfirmSubmit,
-            style: AppFonts.display(fontWeight: FontWeight.bold),
-          ),
-          leading: IconButton(
-            icon: const DirectionalIcon(Icons.arrow_back_ios_new_rounded),
-            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-            onPressed: () {
-              if (_currentStep > 0) {
-                setState(() => _currentStep--);
-              } else {
-                context.pop();
-              }
-            },
+    final stepTitle = _currentStep == 0
+        ? l.submitStepSelectSupermarket
+        : _currentStep == 1
+        ? l.submitStepSelectProduct
+        : _currentStep == 2
+        ? l.submitStepEnterPrice
+        : l.submitStepConfirmSubmit;
+
+    return Scaffold(
+      backgroundColor: AppTheme.background,
+      appBar: AppBar(
+        title: Text(
+          stepTitle,
+          style: AppFonts.display(
+            fontWeight: FontWeight.w700,
+            color: AppTheme.ink,
           ),
         ),
-        backgroundColor: AppTheme.background,
-        body: Column(
-          children: [
-            LinearProgressIndicator(
-              value: (_currentStep + 1) / 4.0,
-              backgroundColor: Colors.grey.shade200,
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                AppTheme.limeAccent,
+        leading: IconButton(
+          icon: const DirectionalIcon(Icons.arrow_back_ios_new_rounded),
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+          onPressed: () {
+            if (_currentStep > 0) {
+              setState(() => _currentStep--);
+            } else {
+              context.pop();
+            }
+          },
+        ),
+      ),
+      body: Column(
+        children: [
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 720),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+                child: DsStepBar(total: 4, current: _currentStep),
               ),
-              minHeight: 6,
             ),
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.all(24.0),
-                child: Form(
-                  key: _formKey,
-                  child: AnimatedSize(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                    child: _buildStepContent(
-                      stores: stores,
-                      products: filteredProducts,
-                      priceEntered: priceEntered,
-                      totalReward: totalReward,
-                      remainingToday: remainingToday,
-                      settings: settings,
-                      theme: theme,
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 720),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Form(
+                      key: _formKey,
+                      child: _buildStepContent(
+                        stores: stores,
+                        products: filteredProducts,
+                        priceEntered: priceEntered,
+                        totalReward: totalReward,
+                        remainingToday: remainingToday,
+                        settings: settings,
+                        theme: theme,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-            _buildBottomActionBar(
-              stores: stores,
-              products: products,
-              priceEntered: priceEntered,
-              totalReward: totalReward,
-              theme: theme,
-            ),
-          ],
-        ),
+          ),
+          _buildBottomActionBar(
+            stores: stores,
+            products: products,
+            priceEntered: priceEntered,
+            totalReward: totalReward,
+            theme: theme,
+          ),
+        ],
       ),
     );
   }
@@ -239,6 +245,35 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
     return branch.isEmpty ? distLabel : '$branch • $distLabel';
   }
 
+  Widget _stepHeading(String title, String hint) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Semantics(
+          header: true,
+          child: Text(
+            title,
+            style: AppFonts.display(
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.ink,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          hint,
+          style: AppFonts.body(
+            fontSize: 16,
+            height: 1.4,
+            color: AppTheme.textLight,
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
   Widget _buildStepContent({
     required List<Store> stores,
     required List<Product> products,
@@ -254,117 +289,71 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
+            _stepHeading(
               l.submitWhereDidYouSeePrice,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textDark,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
               l.submitSelectSupermarketHint,
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
             ),
-            const SizedBox(height: 18),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: AppTheme.limeAccent.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: AppTheme.limeAccent.withValues(alpha: 0.5),
-                ),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.info_outline_rounded,
-                    color: AppTheme.forestDeep,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      l.submitSubmissionsLeftToday(
-                        remainingToday,
-                        settings.dailySubmissionCap,
-                      ),
-                      style: const TextStyle(
-                        color: AppTheme.forestDeep,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                ],
+            DsBanner(
+              l.submitSubmissionsLeftToday(
+                remainingToday,
+                settings.dailySubmissionCap,
               ),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
             if (stores.isEmpty)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(24.0),
-                  child: CircularProgressIndicator(),
-                ),
+              const Column(
+                children: [
+                  DsListRowSkeleton(),
+                  SizedBox(height: 10),
+                  DsListRowSkeleton(),
+                  SizedBox(height: 10),
+                  DsListRowSkeleton(),
+                ],
               )
             else
               ...stores.map((store) {
                 final isSelected = selectedStoreId == store.id;
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isSelected
-                          ? AppTheme.forestDeep
-                          : const Color(0xFFFFE2BF),
-                      width: isSelected ? 2 : 1.1,
-                    ),
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    leading: CircleAvatar(
-                      backgroundColor: isSelected
-                          ? AppTheme.cream
-                          : Colors.grey.shade100,
-                      child: Icon(
-                        Icons.store_rounded,
-                        color: isSelected ? AppTheme.forestDeep : Colors.grey,
-                      ),
-                    ),
-                    title: Text(
-                      store.name,
-                      style: AppFonts.display(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                        color: AppTheme.textDark,
-                      ),
-                    ),
-                    subtitle: Text(
-                      _storeSubtitle(store),
-                      style: AppFonts.body(
-                        color: Colors.grey.shade600,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    trailing: isSelected
-                        ? const Icon(
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: DsCard(
+                    selected: isSelected,
+                    semanticLabel: store.name,
+                    onTap: () => setState(() => selectedStoreId = store.id),
+                    child: Row(
+                      children: [
+                        DsStoreLogo(store.name, size: 48),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                store.name,
+                                style: AppFonts.display(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 17,
+                                  color: AppTheme.ink,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                _storeSubtitle(store),
+                                style: AppFonts.body(
+                                  color: AppTheme.textLight,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (isSelected)
+                          const Icon(
                             Icons.check_circle_rounded,
                             color: AppTheme.forestDeep,
-                          )
-                        : null,
-                    onTap: () {
-                      setState(() {
-                        selectedStoreId = store.id;
-                      });
-                    },
+                            size: 28,
+                          ),
+                      ],
+                    ),
                   ),
                 );
               }),
@@ -374,27 +363,19 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              l.submitWhichProduct,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textDark,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              l.submitSearchSelectProductHint,
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-            ),
-            const SizedBox(height: 16),
+            _stepHeading(l.submitWhichProduct, l.submitSearchSelectProductHint),
             TextField(
               controller: _productSearchController,
+              style: AppFonts.body(fontSize: 17, color: AppTheme.ink),
               decoration: InputDecoration(
                 hintText: l.submitSearchBarcodeHint,
                 prefixIcon: const Icon(Icons.search_rounded),
                 suffixIcon: IconButton(
                   tooltip: l.submitScanBarcodeTooltip,
+                  constraints: const BoxConstraints(
+                    minWidth: 48,
+                    minHeight: 48,
+                  ),
                   icon: const Icon(Icons.qr_code_scanner_rounded),
                   onPressed: () async {
                     final code = await context.push<String>(
@@ -410,17 +391,13 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                 fillColor: Colors.white,
                 filled: true,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: Colors.grey.shade200),
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: AppTheme.line),
                 ),
               ),
-              onChanged: (val) {
-                setState(() {
-                  _productSearchQuery = val;
-                });
-              },
+              onChanged: (val) => setState(() => _productSearchQuery = val),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             if (products.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 24),
@@ -428,64 +405,73 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                   child: Text(
                     l.submitNoProductsFound,
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                    style: AppFonts.body(
+                      color: AppTheme.textLight,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               )
             else
               SizedBox(
-                height: 200,
+                height: 280,
                 child: ListView.builder(
-                  shrinkWrap: true,
-                  physics: const BouncingScrollPhysics(),
                   itemCount: products.length,
                   itemBuilder: (context, index) {
                     final product = products[index];
                     final isSelected = selectedProductId == product.id;
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isSelected
-                              ? AppTheme.forestDeep
-                              : Colors.grey.shade200,
-                          width: isSelected ? 2 : 1,
-                        ),
-                      ),
-                      child: ListTile(
-                        dense: true,
-                        leading: SizedBox(
-                          width: 36,
-                          height: 36,
-                          child: SoukProductVisual(
-                            product: product,
-                            borderRadius: 8,
-                          ),
-                        ),
-                        title: Text(
-                          product.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(
-                          '${product.brand} • ${product.packSize}',
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                        trailing: isSelected
-                            ? const Icon(
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: DsCard(
+                        selected: isSelected,
+                        semanticLabel: product.name,
+                        padding: const EdgeInsets.all(10),
+                        onTap: () =>
+                            setState(() => selectedProductId = product.id),
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 52,
+                              height: 52,
+                              child: SoukProductVisual(
+                                product: product,
+                                borderRadius: 10,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    product.name,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppFonts.body(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 16,
+                                      color: AppTheme.ink,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${product.brand} • ${product.packSize}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppFonts.body(
+                                      fontSize: 14,
+                                      color: AppTheme.textLight,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (isSelected)
+                              const Icon(
                                 Icons.check_circle_rounded,
                                 color: AppTheme.forestDeep,
-                                size: 20,
-                              )
-                            : null,
-                        onTap: () {
-                          setState(() {
-                            selectedProductId = product.id;
-                          });
-                        },
+                              ),
+                          ],
+                        ),
                       ),
                     );
                   },
@@ -494,10 +480,10 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
             const SizedBox(height: 20),
             Text(
               l.submitAttachProofRequired,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-                color: AppTheme.textDark,
+              style: AppFonts.body(
+                fontWeight: FontWeight.w700,
+                fontSize: 16,
+                color: AppTheme.ink,
               ),
             ),
             const SizedBox(height: 10),
@@ -521,7 +507,7 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                           },
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 Expanded(
                   child: _photoUploadButton(
                     title: l.submitReceiptPhoto,
@@ -548,35 +534,28 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
+            _stepHeading(
               l.submitEnterPriceDetails,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textDark,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
               l.submitEnterShelfPriceHint,
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
             ),
-            const SizedBox(height: 18),
             TextFormField(
               controller: _priceController,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
               style: AppFonts.display(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textDark,
+                fontSize: 28,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.ink,
               ),
               decoration: InputDecoration(
                 labelText: l.submitEnterPriceAed,
                 prefixIcon: const Icon(Icons.payments_outlined),
                 suffixText: 'AED',
                 helperText: l.submitManualShelfPriceHelper,
+                helperMaxLines: 3,
+                filled: true,
+                fillColor: Colors.white,
               ),
               validator: (val) {
                 if (val == null || val.isEmpty) {
@@ -591,10 +570,10 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
             const SizedBox(height: 24),
             Text(
               l.submitPromotionType,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
-                color: AppTheme.textDark,
+              style: AppFonts.body(
+                fontWeight: FontWeight.w700,
+                fontSize: 16,
+                color: AppTheme.ink,
               ),
             ),
             const SizedBox(height: 10),
@@ -602,26 +581,10 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
               spacing: 8,
               runSpacing: 8,
               children: ['None', 'Discount', 'BOGO', 'Bundle'].map((promo) {
-                final isSelected = selectedPromo == promo;
-                return ChoiceChip(
-                  label: Text(
-                    _promoLabel(l, promo),
-                    style: TextStyle(
-                      color: isSelected ? Colors.white : AppTheme.textDark,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  selected: isSelected,
-                  selectedColor: AppTheme.forestDeep,
-                  backgroundColor: Colors.white,
-                  checkmarkColor: Colors.white,
-                  onSelected: (selected) {
-                    if (selected) {
-                      setState(() {
-                        selectedPromo = promo;
-                      });
-                    }
-                  },
+                return DsChip(
+                  label: _promoLabel(l, promo),
+                  selected: selectedPromo == promo,
+                  onTap: () => setState(() => selectedPromo = promo),
                 );
               }).toList(),
             ),
@@ -645,27 +608,12 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
+            _stepHeading(
               l.submitConfirmDetails,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textDark,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
               l.submitReviewBeforeSubmission,
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
             ),
-            const SizedBox(height: 16),
-            Container(
+            DsCard(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFFFE2BF)),
-              ),
               child: Column(
                 children: [
                   _summaryRow(
@@ -694,136 +642,111 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
-            Card(
-              elevation: 0,
-              color: Colors.grey.shade50,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: Colors.grey.shade200),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
+            const SizedBox(height: 16),
+            DsCard(
+              color: AppTheme.sand2,
+              borderless: true,
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
                           l.submitTokenRewardEstimate,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w900,
-                            fontSize: 13,
+                          style: AppFonts.body(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
                             color: AppTheme.forestDeep,
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
+                      ),
+                      DsTag(
+                        l.submitPlusTokens(totalReward),
+                        tone: DsTone.warn,
+                        icon: Icons.bolt_rounded,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  _tokenRow(
+                    l.submitTokenFreshShelfPrice,
+                    l.submitTokensAmount(10),
+                  ),
+                  const SizedBox(height: 8),
+                  _tokenRow(
+                    l.submitTokenStoreSelected,
+                    l.submitTokensAmount(2),
+                  ),
+                  const SizedBox(height: 8),
+                  _tokenRow(
+                    l.submitTokenProductSelected,
+                    l.submitTokensAmount(2),
+                  ),
+                  const SizedBox(height: 8),
+                  _tokenRow(
+                    l.submitTokenAedPriceEntered,
+                    l.submitTokensAmount(2),
+                  ),
+                  const SizedBox(height: 8),
+                  _tokenRow(
+                    uploadedPriceLabel
+                        ? l.submitTokenPriceLabelAttached
+                        : l.submitTokenAttachPriceLabel,
+                    uploadedPriceLabel
+                        ? l.submitTokensAmount(4)
+                        : l.submitTokensAmount(0),
+                    isEnabled: uploadedPriceLabel,
+                  ),
+                  const SizedBox(height: 8),
+                  _tokenRow(
+                    selectedPromo == 'None'
+                        ? l.submitTokenNoPromotion
+                        : l.submitTokenPromoNoted(
+                            _promoLabel(l, selectedPromo),
                           ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.amberAccent.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.bolt,
-                                color: AppTheme.amberAccent,
-                                size: 14,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                l.submitPlusTokens(totalReward),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                  color: Color(0xFFC77C02),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _tokenRow(
-                      l.submitTokenFreshShelfPrice,
-                      l.submitTokensAmount(10),
-                    ),
-                    const SizedBox(height: 8),
-                    _tokenRow(
-                      l.submitTokenStoreSelected,
-                      l.submitTokensAmount(2),
-                      isEnabled: true,
-                    ),
-                    const SizedBox(height: 8),
-                    _tokenRow(
-                      l.submitTokenProductSelected,
-                      l.submitTokensAmount(2),
-                      isEnabled: true,
-                    ),
-                    const SizedBox(height: 8),
-                    _tokenRow(
-                      l.submitTokenAedPriceEntered,
-                      l.submitTokensAmount(2),
-                      isEnabled: true,
-                    ),
-                    const SizedBox(height: 8),
-                    _tokenRow(
-                      uploadedPriceLabel
-                          ? l.submitTokenPriceLabelAttached
-                          : l.submitTokenAttachPriceLabel,
-                      uploadedPriceLabel
-                          ? l.submitTokensAmount(4)
-                          : l.submitTokensAmount(0),
-                      isEnabled: uploadedPriceLabel,
-                    ),
-                    const SizedBox(height: 8),
-                    _tokenRow(
-                      selectedPromo == 'None'
-                          ? l.submitTokenNoPromotion
-                          : l.submitTokenPromoNoted(
-                              _promoLabel(l, selectedPromo),
-                            ),
-                      selectedPromo == 'None'
-                          ? l.submitTokensAmount(0)
-                          : l.submitTokenAmount(1),
-                      isEnabled: selectedPromo != 'None',
-                    ),
-                    const SizedBox(height: 8),
-                    _tokenRow(
-                      uploadedReceipt
-                          ? l.submitTokenReceiptMultiplier
-                          : l.submitTokenAttachReceiptBonus,
-                      uploadedReceipt
-                          ? l.submitTokenMultiplierApplied
-                          : l.submitTokenNotApplied,
-                      isEnabled: uploadedReceipt,
-                    ),
-                    const SizedBox(height: 12),
-                    const Divider(),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
+                    selectedPromo == 'None'
+                        ? l.submitTokensAmount(0)
+                        : l.submitTokenAmount(1),
+                    isEnabled: selectedPromo != 'None',
+                  ),
+                  const SizedBox(height: 8),
+                  _tokenRow(
+                    uploadedReceipt
+                        ? l.submitTokenReceiptMultiplier
+                        : l.submitTokenAttachReceiptBonus,
+                    uploadedReceipt
+                        ? l.submitTokenMultiplierApplied
+                        : l.submitTokenNotApplied,
+                    isEnabled: uploadedReceipt,
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Divider(height: 1, color: AppTheme.line),
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
                           l.submitTotalRewardEstimate,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          l.submitTokensTotal(totalReward),
-                          style: TextStyle(
-                            fontWeight: FontWeight.w900,
-                            color: theme.colorScheme.primary,
-                            fontSize: 15,
+                          style: AppFonts.body(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                            color: AppTheme.ink,
                           ),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                      Text(
+                        l.submitTokensTotal(totalReward),
+                        style: AppFonts.display(
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.forestDeep,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],
@@ -835,26 +758,29 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
 
   Widget _summaryRow(String label, String value) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: AppFonts.body(
-            fontWeight: FontWeight.w800,
-            fontSize: 13,
-            color: Colors.grey.shade600,
+        Expanded(
+          flex: 2,
+          child: Text(
+            label,
+            style: AppFonts.body(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              color: AppTheme.textLight,
+            ),
           ),
         ),
-        const SizedBox(width: 20),
+        const SizedBox(width: 12),
         Expanded(
+          flex: 3,
           child: Text(
             value,
             textAlign: TextAlign.end,
             style: AppFonts.display(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-              color: AppTheme.textDark,
+              fontWeight: FontWeight.w700,
+              fontSize: 16,
+              color: AppTheme.ink,
             ),
           ),
         ),
@@ -883,299 +809,256 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
 
     return Container(
       padding: EdgeInsets.fromLTRB(
-        24,
-        16,
-        24,
-        MediaQuery.of(context).padding.bottom + 16,
+        20,
+        12,
+        20,
+        MediaQuery.of(context).padding.bottom + 12,
       ),
       decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFEEEEEE))),
+        border: Border(top: BorderSide(color: AppTheme.line)),
       ),
-      child: Row(
-        children: [
-          if (_currentStep > 0) ...[
-            OutlinedButton(
-              onPressed: () {
-                setState(() => _currentStep--);
-              },
-              style: OutlinedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(27),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 720),
+          child: Row(
+            children: [
+              if (_currentStep > 0) ...[
+                SizedBox(
+                  width: 120,
+                  child: DsButton(
+                    label: l.submitBack,
+                    style: DsButtonStyle.secondary,
+                    onPressed: () => setState(() => _currentStep--),
+                  ),
                 ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 14,
-                ),
-              ),
-              child: Text(l.submitBack),
-            ),
-            const SizedBox(width: 12),
-          ],
-          Expanded(
-            child: _currentStep < 3
-                ? ElevatedButton(
-                    onPressed: canGoNext
-                        ? () {
-                            if (_formKey.currentState!.validate() ||
-                                _currentStep < 2) {
-                              HapticFeedback.selectionClick();
-                              setState(() => _currentStep++);
+                const SizedBox(width: 12),
+              ],
+              Expanded(
+                child: _currentStep < 3
+                    ? DsButton(
+                        label: l.submitNext,
+                        onPressed: canGoNext
+                            ? () {
+                                if (_formKey.currentState!.validate() ||
+                                    _currentStep < 2) {
+                                  HapticFeedback.selectionClick();
+                                  setState(() => _currentStep++);
+                                }
+                              }
+                            : null,
+                      )
+                    : DsButton(
+                        label: l.submitSubmitAPrice,
+                        style: DsButtonStyle.accent,
+                        loading: _finalizingUploads || _isSubmitting,
+                        onPressed: () async {
+                          if (_formKey.currentState!.validate()) {
+                            // Await any background uploads still in-flight.
+                            if (_uploadingPriceLabel || _uploadingReceipt) {
+                              setState(() => _finalizingUploads = true);
+                              if (_priceLabelFuture != null &&
+                                  _priceLabelUrl == null) {
+                                _priceLabelUrl = await _priceLabelFuture;
+                              }
+                              if (_receiptFuture != null &&
+                                  _receiptUrl == null) {
+                                _receiptUrl = await _receiptFuture;
+                              }
+                              if (!mounted) return;
+                              setState(() => _finalizingUploads = false);
                             }
-                          }
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.forestDeep,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(27),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    child: Text(l.submitNext),
-                  )
-                : GestureDetector(
-                    onTap: (_finalizingUploads || _isSubmitting)
-                        ? null
-                        : () async {
-                            if (_formKey.currentState!.validate()) {
-                              // Await any background uploads still in-flight.
-                              if (_uploadingPriceLabel || _uploadingReceipt) {
+
+                            if (_priceLabelUrl == null) {
+                              if (_localPriceLabelFile != null) {
                                 setState(() => _finalizingUploads = true);
-                                if (_priceLabelFuture != null &&
-                                    _priceLabelUrl == null) {
-                                  _priceLabelUrl = await _priceLabelFuture;
-                                }
-                                if (_receiptFuture != null &&
-                                    _receiptUrl == null) {
-                                  _receiptUrl = await _receiptFuture;
-                                }
+                                await _retryPhotoUpload(
+                                  isReceipt: false,
+                                  showFailureSnackBar: false,
+                                );
                                 if (!mounted) return;
                                 setState(() => _finalizingUploads = false);
                               }
-
                               if (_priceLabelUrl == null) {
-                                if (_localPriceLabelFile != null) {
-                                  setState(() => _finalizingUploads = true);
-                                  await _retryPhotoUpload(
-                                    isReceipt: false,
-                                    showFailureSnackBar: false,
-                                  );
-                                  if (!mounted) return;
-                                  setState(() => _finalizingUploads = false);
-                                }
-                                if (_priceLabelUrl == null) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      backgroundColor: AppTheme.forestDeep,
-                                      content: Text(l.submitProofPhotoRequired),
-                                    ),
-                                  );
-                                  return;
-                                }
-                              }
-                              if (uploadedReceipt && _receiptUrl == null) {
-                                if (_localReceiptFile != null) {
-                                  setState(() => _finalizingUploads = true);
-                                  await _retryPhotoUpload(
-                                    isReceipt: true,
-                                    showFailureSnackBar: false,
-                                  );
-                                  if (!mounted) return;
-                                  setState(() => _finalizingUploads = false);
-                                }
-                                if (_receiptUrl != null) {
-                                  // The retry recovered the optional receipt,
-                                  // so continue with final submission.
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      backgroundColor: AppTheme.forestDeep,
-                                      content: Text(
-                                        l.submitReceiptPhotoRequired,
-                                      ),
-                                    ),
-                                  );
-                                  return;
-                                }
-                              }
-
-                              final store = stores.firstWhere(
-                                (s) => s.id == selectedStoreId,
-                              );
-                              final product = products.firstWhere(
-                                (p) => p.id == selectedProductId,
-                              );
-                              final price = double.parse(_priceController.text);
-
-                              // Offline (NFR-22): queue the submission and replay it
-                              // on reconnect. Tokens are awarded after it syncs and is
-                              // approved, so we don't credit them optimistically here.
-                              if (!await isCurrentlyOnline()) {
-                                await ref
-                                    .read(syncControllerProvider.notifier)
-                                    .enqueueSubmission(
-                                      productId: selectedProductId!,
-                                      storeId: selectedStoreId!,
-                                      priceAed: price,
-                                      hasReceipt: uploadedReceipt,
-                                      receiptUrl: _receiptUrl,
-                                      priceLabelUrl: _priceLabelUrl,
-                                    );
-                                if (!mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     backgroundColor: AppTheme.forestDeep,
-                                    content: Text(l.submitSavedOffline),
-                                  ),
-                                );
-                                context.pop();
-                                return;
-                              }
-
-                              var awarded = 0;
-                              var submissionStatus = 'pending';
-                              setState(() => _isSubmitting = true);
-                              try {
-                                final result = await submissionsService.create(
-                                  productId: selectedProductId!,
-                                  storeId: selectedStoreId!,
-                                  priceAed: price,
-                                  hasReceipt: uploadedReceipt,
-                                  receiptUrl: _receiptUrl,
-                                  priceLabelUrl: _priceLabelUrl,
-                                );
-                                submissionStatus = result.status;
-                                awarded = result.status == 'approved'
-                                    ? result.tokensAwarded
-                                    : 0;
-                              } catch (_) {
-                                if (!mounted) return;
-                                setState(() => _isSubmitting = false);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    backgroundColor: AppTheme.forestDeep,
-                                    content: Text(l.submitCouldNotSendPrice),
+                                    content: Text(l.submitProofPhotoRequired),
                                   ),
                                 );
                                 return;
                               }
+                            }
+                            if (uploadedReceipt && _receiptUrl == null) {
+                              if (_localReceiptFile != null) {
+                                setState(() => _finalizingUploads = true);
+                                await _retryPhotoUpload(
+                                  isReceipt: true,
+                                  showFailureSnackBar: false,
+                                );
+                                if (!mounted) return;
+                                setState(() => _finalizingUploads = false);
+                              }
+                              if (_receiptUrl != null) {
+                                // The retry recovered the optional receipt,
+                                // so continue with final submission.
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    backgroundColor: AppTheme.forestDeep,
+                                    content: Text(l.submitReceiptPhotoRequired),
+                                  ),
+                                );
+                                return;
+                              }
+                            }
+
+                            final store = stores.firstWhere(
+                              (s) => s.id == selectedStoreId,
+                            );
+                            final product = products.firstWhere(
+                              (p) => p.id == selectedProductId,
+                            );
+                            final price = double.parse(_priceController.text);
+
+                            // Offline (NFR-22): queue the submission and replay it
+                            // on reconnect. Tokens are awarded after it syncs and is
+                            // approved, so we don't credit them optimistically here.
+                            if (!await isCurrentlyOnline()) {
+                              await ref
+                                  .read(syncControllerProvider.notifier)
+                                  .enqueueSubmission(
+                                    productId: selectedProductId!,
+                                    storeId: selectedStoreId!,
+                                    priceAed: price,
+                                    hasReceipt: uploadedReceipt,
+                                    receiptUrl: _receiptUrl,
+                                    priceLabelUrl: _priceLabelUrl,
+                                  );
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  backgroundColor: AppTheme.forestDeep,
+                                  content: Text(l.submitSavedOffline),
+                                ),
+                              );
+                              context.pop();
+                              return;
+                            }
+
+                            var awarded = 0;
+                            var submissionStatus = 'pending';
+                            setState(() => _isSubmitting = true);
+                            try {
+                              final result = await submissionsService.create(
+                                productId: selectedProductId!,
+                                storeId: selectedStoreId!,
+                                priceAed: price,
+                                hasReceipt: uploadedReceipt,
+                                receiptUrl: _receiptUrl,
+                                priceLabelUrl: _priceLabelUrl,
+                              );
+                              submissionStatus = result.status;
+                              awarded = result.status == 'approved'
+                                  ? result.tokensAwarded
+                                  : 0;
+                            } catch (_) {
                               if (!mounted) return;
                               setState(() => _isSubmitting = false);
-
-                              // Only trusted auto-approved submissions earn
-                              // immediately. Normal submissions wait for admin
-                              // approval, so the local balance must not fake it.
-                              if (submissionStatus == 'approved' &&
-                                  awarded > 0) {
-                                ref
-                                    .read(userTokensProvider.notifier)
-                                    .addTokens(awarded);
-                                ref
-                                    .read(userTransactionsProvider.notifier)
-                                    .addTransaction(
-                                      awarded,
-                                      l.submitTransactionDescription(
-                                        awarded,
-                                        product.name,
-                                        store.name,
-                                      ),
-                                    );
-                              }
-                              ref
-                                  .read(userProfileProvider.notifier)
-                                  .incrementSubmissions();
-                              if (submissionStatus == 'approved') {
-                                ref
-                                    .read(streakProvider.notifier)
-                                    .recordActivity();
-                                ref
-                                    .read(dailyChallengeProvider.notifier)
-                                    .recordProgress();
-                              }
-
-                              if (widget.requestId != null) {
-                                ref
-                                    .read(priceRequestsProvider.notifier)
-                                    .fulfillPriceRequest(widget.requestId!);
-                              }
-
-                              // Reconcile optimistic updates with DB truth: pulls the
-                              // real token balance, streak, accuracy, approved/total
-                              // counts, token history, and the new row into "My
-                              // Submissions". Keeps everything consistent across
-                              // restarts and devices.
-                              unawaited(
-                                ref
-                                    .read(authProvider.notifier)
-                                    .refreshProfile(),
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  backgroundColor: AppTheme.forestDeep,
+                                  content: Text(l.submitCouldNotSendPrice),
+                                ),
                               );
-
-                              if (!mounted) return;
-                              _showSuccessDialog(
-                                context,
-                                reward: awarded,
-                                approvedNow: submissionStatus == 'approved',
-                              );
+                              return;
                             }
-                          },
-                    child: Container(
-                      height: 54,
-                      decoration: BoxDecoration(
-                        color: AppTheme.limeAccent,
-                        borderRadius: BorderRadius.circular(27),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.limeAccent.withValues(alpha: 0.45),
-                            blurRadius: 14,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
+                            if (!mounted) return;
+                            setState(() => _isSubmitting = false);
+
+                            // Only trusted auto-approved submissions earn
+                            // immediately. Normal submissions wait for admin
+                            // approval, so the local balance must not fake it.
+                            if (submissionStatus == 'approved' && awarded > 0) {
+                              ref
+                                  .read(userTokensProvider.notifier)
+                                  .addTokens(awarded);
+                              ref
+                                  .read(userTransactionsProvider.notifier)
+                                  .addTransaction(
+                                    awarded,
+                                    l.submitTransactionDescription(
+                                      awarded,
+                                      product.name,
+                                      store.name,
+                                    ),
+                                  );
+                            }
+                            ref
+                                .read(userProfileProvider.notifier)
+                                .incrementSubmissions();
+                            if (submissionStatus == 'approved') {
+                              ref
+                                  .read(streakProvider.notifier)
+                                  .recordActivity();
+                              ref
+                                  .read(dailyChallengeProvider.notifier)
+                                  .recordProgress();
+                            }
+
+                            if (widget.requestId != null) {
+                              ref
+                                  .read(priceRequestsProvider.notifier)
+                                  .fulfillPriceRequest(widget.requestId!);
+                            }
+
+                            // Reconcile optimistic updates with DB truth: pulls the
+                            // real token balance, streak, accuracy, approved/total
+                            // counts, token history, and the new row into "My
+                            // Submissions". Keeps everything consistent across
+                            // restarts and devices.
+                            unawaited(
+                              ref.read(authProvider.notifier).refreshProfile(),
+                            );
+
+                            if (!mounted) return;
+                            _showSuccessDialog(
+                              context,
+                              reward: awarded,
+                              approvedNow: submissionStatus == 'approved',
+                            );
+                          }
+                        },
                       ),
-                      child: Center(
-                        child: (_finalizingUploads || _isSubmitting)
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  color: AppTheme.forestDeep,
-                                ),
-                              )
-                            : Text(
-                                l.submitSubmitAPrice,
-                                style: const TextStyle(
-                                  color: AppTheme.forestDeep,
-                                  fontSize: 15.5,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                      ),
-                    ),
-                  ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _tokenRow(String title, String val, {bool isEnabled = true}) {
+    final fg = isEnabled ? AppTheme.ink : AppTheme.textLight;
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 12,
-            color: isEnabled ? Colors.black87 : Colors.grey,
-            fontWeight: isEnabled ? FontWeight.w500 : FontWeight.normal,
+        Expanded(
+          child: Text(
+            title,
+            style: AppFonts.body(
+              fontSize: 14,
+              color: fg,
+              fontWeight: isEnabled ? FontWeight.w500 : FontWeight.w400,
+            ),
           ),
         ),
+        const SizedBox(width: 8),
         Text(
           val,
-          style: TextStyle(
-            fontSize: 12,
-            color: isEnabled ? AppTheme.emeraldPrimary : Colors.grey,
-            fontWeight: isEnabled ? FontWeight.bold : FontWeight.normal,
+          style: AppFonts.body(
+            fontSize: 14,
+            color: isEnabled ? AppTheme.forestDeep : AppTheme.textLight,
+            fontWeight: isEnabled ? FontWeight.w700 : FontWeight.w400,
           ),
         ),
       ],
@@ -1304,128 +1187,127 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
     final failed =
         (title == l.submitPriceLabelPhoto && _priceLabelUploadFailed) ||
         (title == l.submitReceiptPhoto && _receiptUploadFailed);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        height: 110,
-        decoration: BoxDecoration(
-          color: isUploaded
-              ? AppTheme.limeAccent.withValues(alpha: 0.26)
-              : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
+    return Semantics(
+      button: true,
+      label: title,
+      excludeSemantics: true,
+      child: Material(
+        color: isUploaded ? AppTheme.emeraldLight : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
             color: failed
-                ? Colors.red.shade400
+                ? AppTheme.redAccent
                 : isUploaded
                 ? AppTheme.forestDeep
-                : Colors.grey.shade200,
-            width: (isUploaded || failed) ? 1.5 : 1,
+                : AppTheme.line,
+            width: (isUploaded || failed) ? 2 : 1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.025),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
         ),
-        child: localFile != null
-            ? Stack(
-                fit: StackFit.expand,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Image.file(File(localFile.path), fit: BoxFit.cover),
-                  ),
-                  // Dark scrim at bottom for the retake hint
-                  if (!isUploading)
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: const BorderRadius.vertical(
-                            bottom: Radius.circular(20),
-                          ),
-                          color: Colors.black.withValues(alpha: 0.45),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 5),
-                        child: Text(
-                          failed ? l.submitTapToRetry : l.submitTapToRetake,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: SizedBox(
+            height: 132,
+            child: localFile != null
+                ? Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.file(
+                        File(localFile.path),
+                        fit: BoxFit.cover,
+                        cacheWidth: 400,
                       ),
-                    ),
-                  // Status badge (spinner or checkmark)
-                  Positioned(
-                    top: 6,
-                    right: 6,
-                    child: isUploading
-                        ? Container(
-                            padding: const EdgeInsets.all(3),
-                            decoration: BoxDecoration(
-                              color: Colors.black54,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const SizedBox(
-                              height: 14,
-                              width: 14,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
+                      if (!isUploading)
+                        Positioned(
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          child: Container(
+                            color: Colors.black.withValues(alpha: 0.6),
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Text(
+                              failed ? l.submitTapToRetry : l.submitTapToRetake,
+                              textAlign: TextAlign.center,
+                              style: AppFonts.body(
                                 color: Colors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                          )
-                        : Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              color: failed
-                                  ? Colors.red.shade600
-                                  : AppTheme.forestDeep,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              failed
-                                  ? Icons.priority_high_rounded
-                                  : Icons.check,
-                              size: 14,
-                              color: Colors.white,
-                            ),
                           ),
-                  ),
-                ],
-              )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.camera_alt_outlined,
-                    color: Colors.grey.shade500,
-                    size: 28,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                        ),
+                      Positioned(
+                        top: 6,
+                        right: 6,
+                        child: isUploading
+                            ? Container(
+                                padding: const EdgeInsets.all(5),
+                                decoration: const BoxDecoration(
+                                  color: Colors.black54,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const SizedBox(
+                                  height: 16,
+                                  width: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              )
+                            : Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: failed
+                                      ? AppTheme.redAccent
+                                      : AppTheme.forestDeep,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  failed
+                                      ? Icons.priority_high_rounded
+                                      : Icons.check,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                      ),
+                    ],
+                  )
+                : Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.camera_alt_outlined,
+                          color: AppTheme.forestDeep,
+                          size: 32,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          title,
+                          textAlign: TextAlign.center,
+                          style: AppFonts.body(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.ink,
+                          ),
+                        ),
+                        Text(
+                          l.submitTapToUpload,
+                          textAlign: TextAlign.center,
+                          style: AppFonts.body(
+                            fontSize: 13,
+                            color: AppTheme.textLight,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    l.submitTapToUpload,
-                    style: TextStyle(fontSize: 9, color: Colors.grey.shade500),
-                  ),
-                ],
-              ),
+          ),
+        ),
       ),
     );
   }
@@ -1445,89 +1327,101 @@ class _SubmitPriceScreenState extends ConsumerState<SubmitPriceScreen> {
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: AppTheme.background,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: AppTheme.emeraldLight,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.check_circle_rounded,
-                  color: AppTheme.emeraldPrimary,
-                  size: 48,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                l.submitPriceSubmitted,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              if (approvedNow)
-                TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: reward.toDouble()),
-                  duration: const Duration(milliseconds: 750),
-                  curve: Curves.easeOutBack,
-                  builder: (context, value, child) {
-                    return Text(
-                      l.submitTokensGained(value.round()),
-                      style: const TextStyle(
-                        color: AppTheme.forestDeep,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    );
-                  },
-                )
-              else
-                Text(
-                  l.submitAwaitingApproval,
-                  style: const TextStyle(
-                    color: AppTheme.forestDeep,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 8),
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: const BoxDecoration(
+                      color: AppTheme.goodLight,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.check_circle_rounded,
+                      color: AppTheme.good,
+                      size: 48,
+                    ),
                   ),
                 ),
-              const SizedBox(height: 8),
-              Text(
-                approvedNow
-                    ? l.submitApprovedNowMessage(firstName)
-                    : l.submitPendingReviewMessage(firstName),
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 13, height: 1.4),
-              ),
-              const SizedBox(height: 24),
-              if (isAdmin) ...[
-                ElevatedButton(
+                const SizedBox(height: 16),
+                Text(
+                  l.submitPriceSubmitted,
+                  textAlign: TextAlign.center,
+                  style: AppFonts.display(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.ink,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                if (approvedNow)
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: reward.toDouble()),
+                    duration: const Duration(milliseconds: 750),
+                    curve: Curves.easeOutBack,
+                    builder: (context, value, child) {
+                      return Text(
+                        l.submitTokensGained(value.round()),
+                        textAlign: TextAlign.center,
+                        style: AppFonts.display(
+                          color: AppTheme.forestDeep,
+                          fontSize: 28,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      );
+                    },
+                  )
+                else
+                  Text(
+                    l.submitAwaitingApproval,
+                    textAlign: TextAlign.center,
+                    style: AppFonts.display(
+                      color: AppTheme.forestDeep,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                Text(
+                  approvedNow
+                      ? l.submitApprovedNowMessage(firstName)
+                      : l.submitPendingReviewMessage(firstName),
+                  textAlign: TextAlign.center,
+                  style: AppFonts.body(
+                    fontSize: 15,
+                    height: 1.4,
+                    color: AppTheme.textLight,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                if (isAdmin) ...[
+                  DsButton(
+                    label: l.submitOpenAdminReview,
+                    onPressed: () {
+                      Navigator.pop(context);
+                      context.go('/admin');
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                DsButton(
+                  label: l.submitViewTokenBalance,
+                  style: isAdmin ? DsButtonStyle.ghost : DsButtonStyle.primary,
                   onPressed: () {
                     Navigator.pop(context);
-                    context.go('/admin');
+                    context.go('/leaderboard');
                   },
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48),
-                  ),
-                  child: Text(l.submitOpenAdminReview),
                 ),
-                const SizedBox(height: 10),
               ],
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  context.go('/leaderboard');
-                },
-                child: Text(l.submitViewTokenBalance),
-              ),
-            ],
+            ),
           ),
         );
       },

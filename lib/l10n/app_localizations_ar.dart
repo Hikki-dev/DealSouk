@@ -1168,13 +1168,13 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get profileTabSubmissions => 'المساهمات';
+  String get profileTabSubmissions => 'مساهماتي';
 
   @override
-  String get profileTabTokens => 'النقاط';
+  String get profileTabTokens => 'الرموز';
 
   @override
-  String get profileTabRequests => 'الطلبات';
+  String get profileTabRequests => 'طلباتي';
 
   @override
   String get profileTabSettings => 'الإعدادات';
@@ -1903,4 +1903,40 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tutorialGetStarted => 'ابدأ الآن';
+
+  @override
+  String get profileTextSize => 'حجم الخط';
+
+  @override
+  String get textSizeStandard => 'عادي';
+
+  @override
+  String get textSizeLarge => 'كبير';
+
+  @override
+  String get textSizeExtraLarge => 'كبير جداً';
+
+  @override
+  String get profileTextSizeSubtitle => 'يكبّر كل النصوص في التطبيق';
+
+  @override
+  String get privacyCreditsTitle => 'حقوق الصور والخرائط';
+
+  @override
+  String get tutorialBack => 'رجوع';
+
+  @override
+  String tutorialStep(int current, int total) {
+    return 'الخطوة $current من $total';
+  }
+
+  @override
+  String get unauthorizedTitle => 'للمشرفين فقط';
+
+  @override
+  String get unauthorizedBody =>
+      'هذه المنطقة متاحة لحسابات المشرفين فقط. إذا كان يجب أن يكون لديك وصول، اطلب من المسؤول إضافة حسابك.';
+
+  @override
+  String get unauthorizedAction => 'تسجيل الدخول بحساب آخر';
 }

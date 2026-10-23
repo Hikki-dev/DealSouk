@@ -1913,4 +1913,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tutorialGetStarted => 'Get Started';
+
+  @override
+  String get profileTextSize => 'Text size';
+
+  @override
+  String get textSizeStandard => 'Standard';
+
+  @override
+  String get textSizeLarge => 'Large';
+
+  @override
+  String get textSizeExtraLarge => 'Extra large';
+
+  @override
+  String get profileTextSizeSubtitle => 'Makes all text in the app bigger';
+
+  @override
+  String get privacyCreditsTitle => 'Photo and map credits';
+
+  @override
+  String get tutorialBack => 'Back';
+
+  @override
+  String tutorialStep(int current, int total) {
+    return 'STEP $current OF $total';
+  }
+
+  @override
+  String get unauthorizedTitle => 'Moderators only';
+
+  @override
+  String get unauthorizedBody =>
+      'This area is only available to moderator accounts. If you should have access, ask an administrator to add your account.';
+
+  @override
+  String get unauthorizedAction => 'Sign in with a different account';
 }

@@ -3371,6 +3371,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Get Started'**
   String get tutorialGetStarted;
+
+  /// No description provided for @profileTextSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Text size'**
+  String get profileTextSize;
+
+  /// No description provided for @textSizeStandard.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard'**
+  String get textSizeStandard;
+
+  /// No description provided for @textSizeLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Large'**
+  String get textSizeLarge;
+
+  /// No description provided for @textSizeExtraLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra large'**
+  String get textSizeExtraLarge;
+
+  /// No description provided for @profileTextSizeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Makes all text in the app bigger'**
+  String get profileTextSizeSubtitle;
+
+  /// No description provided for @privacyCreditsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo and map credits'**
+  String get privacyCreditsTitle;
+
+  /// No description provided for @tutorialBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get tutorialBack;
+
+  /// No description provided for @tutorialStep.
+  ///
+  /// In en, this message translates to:
+  /// **'STEP {current} OF {total}'**
+  String tutorialStep(int current, int total);
+
+  /// No description provided for @unauthorizedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderators only'**
+  String get unauthorizedTitle;
+
+  /// No description provided for @unauthorizedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This area is only available to moderator accounts. If you should have access, ask an administrator to add your account.'**
+  String get unauthorizedBody;
+
+  /// No description provided for @unauthorizedAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with a different account'**
+  String get unauthorizedAction;
 }
 
 class _AppLocalizationsDelegate

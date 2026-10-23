@@ -449,9 +449,9 @@
   "submitViewTokenBalance": "عرض رصيد التوكنات",
   "profileLevelBadge": "مستوى {level} {title}",
   "profileDayStreak": "سلسلة {days} يوم",
-  "profileTabSubmissions": "المساهمات",
-  "profileTabTokens": "النقاط",
-  "profileTabRequests": "الطلبات",
+  "profileTabSubmissions": "مساهماتي",
+  "profileTabTokens": "الرموز",
+  "profileTabRequests": "طلباتي",
   "profileTabSettings": "الإعدادات",
   "profilePhotoUpdated": "تم تحديث صورة الملف الشخصي",
   "profilePhotoRemoved": "تمت إزالة صورة الملف الشخصي",
@@ -664,5 +664,26 @@
   "tutorialCompeteDescription": "حافظ على سلسلتك اليومية، وأكمل التحديات، واكسب الأوسمة، وارتقِ في لوحة متصدري دبي مع مساهماتك.",
   "tutorialSkip": "تخطٍّ",
   "tutorialNext": "التالي",
-  "tutorialGetStarted": "ابدأ الآن"
+  "tutorialGetStarted": "ابدأ الآن",
+  "profileTextSize": "حجم الخط",
+  "textSizeStandard": "عادي",
+  "textSizeLarge": "كبير",
+  "textSizeExtraLarge": "كبير جداً",
+  "profileTextSizeSubtitle": "يكبّر كل النصوص في التطبيق",
+  "privacyCreditsTitle": "حقوق الصور والخرائط",
+  "tutorialBack": "رجوع",
+  "tutorialStep": "الخطوة {current} من {total}",
+  "@tutorialStep": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "unauthorizedTitle": "للمشرفين فقط",
+  "unauthorizedBody": "هذه المنطقة متاحة لحسابات المشرفين فقط. إذا كان يجب أن يكون لديك وصول، اطلب من المسؤول إضافة حسابك.",
+  "unauthorizedAction": "تسجيل الدخول بحساب آخر"
 }

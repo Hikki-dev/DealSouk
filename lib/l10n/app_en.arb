@@ -1032,5 +1032,26 @@
   "tutorialCompeteDescription": "Keep a daily streak, complete challenges, earn badges, and rise up the Dubai leaderboard as you contribute.",
   "tutorialSkip": "Skip",
   "tutorialNext": "Next",
-  "tutorialGetStarted": "Get Started"
+  "tutorialGetStarted": "Get Started",
+  "profileTextSize": "Text size",
+  "textSizeStandard": "Standard",
+  "textSizeLarge": "Large",
+  "textSizeExtraLarge": "Extra large",
+  "profileTextSizeSubtitle": "Makes all text in the app bigger",
+  "privacyCreditsTitle": "Photo and map credits",
+  "tutorialBack": "Back",
+  "tutorialStep": "STEP {current} OF {total}",
+  "@tutorialStep": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "unauthorizedTitle": "Moderators only",
+  "unauthorizedBody": "This area is only available to moderator accounts. If you should have access, ask an administrator to add your account.",
+  "unauthorizedAction": "Sign in with a different account"
 }

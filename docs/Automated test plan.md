@@ -2,7 +2,7 @@
 
 **Goal:** A test suite that runs on every push and answers, automatically, one question: *"Is the app ready?"* It exercises every PRD requirement (FR-01–62, NFR-01–25) that can be verified without a human, and clearly marks the few that still need a human.
 
-This is the **automation** companion to [TEST_PLAN.md](TEST_PLAN.md) (the manual hand-off checklist).
+This is the **automation** companion to [Test%20plan.md](Test%20plan.md) (the manual hand-off checklist).
 
 ---
 
@@ -147,7 +147,7 @@ Run on a matrix: Android emulator (API 33) + iOS simulator (iOS 16) → satisfie
 
 ## 8. What stays MANUAL (cannot be automated)
 
-These go in [TEST_PLAN.md](TEST_PLAN.md) for a human, once per release:
+These go in [Test%20plan.md](Test%20plan.md) for a human, once per release:
 - Real **Google popup** + **Apple sheet** consent (only emulator/custom-token in CI).
 - Real **SMS OTP** to a physical SIM.
 - Real **device push notification** delivery (APNs/FCM) — needs Apple Developer Program.

@@ -81,16 +81,20 @@ ios/Runner/GoogleService-Info.plist
 lib/firebase_options.dart
 .vercel
 
-# Internal/private project docs and agent notes
-/docs/
+# Internal/private notes and agent files stay out of git
 AUDIT_REPORT.md
 AGENTS.md
 CLAUDE.md
 
-# Ignore all markdown files globally to prevent any documentation leaks
+# Markdown is ignored by default so stray notes do not leak.
+# The public documentation is tracked on purpose.
 *.md
 **/*.md
-
-# Security docs are intentionally tracked
+!README.md
+!CHANGELOG.md
+!CONTRIBUTING.md
+!SECURITY.md
 !SECURITY_AUDIT.md
 !SECURITY_CHECKLIST.md
+!.github/**/*.md
+!docs/**/*.md

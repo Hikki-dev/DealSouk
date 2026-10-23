@@ -6,7 +6,7 @@ import 'package:dealsouk/core/theme/theme.dart';
 import 'package:dealsouk/core/widgets/store_logo_avatar.dart';
 
 /// Bundled Dubai photographs. Credits are shown in the app under
-/// Privacy & Terms and listed in `docs/DESIGN_SYSTEM.md`.
+/// Privacy & Terms and listed in `docs/Design system.md`.
 class DsPhotos {
   DsPhotos._();
 

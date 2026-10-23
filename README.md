@@ -6,6 +6,7 @@
 ![Postgres](https://img.shields.io/badge/Postgres-Neon%20%2B%20Prisma-4169E1?logo=postgresql&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-Auth%20%7C%20Storage%20%7C%20FCM-FFCA28?logo=firebase&logoColor=black)
 [![Moderator console](https://img.shields.io/badge/live-moderator%20console-0B6B6B)](https://deal-souk.vercel.app)
+[![Shopper app](https://img.shields.io/badge/live-shopper%20app-C8E64B)](https://deal-souk-shopper.vercel.app)
 
 Shoppers in Dubai share what things cost on the shelf, so everyone can see the cheapest supermarket before they leave home.
 
@@ -84,7 +85,7 @@ The longer version, with the folders and the code behind each step, is in [How i
 ## Try it first
 
 * **[Moderator console](https://deal-souk.vercel.app)**: sign in with a moderator account. How to get one is in [Moderator access](docs/Moderator%20access.md).
-* **Shopper app on the web**: a second link that shows the shopper app. How it is set up is in [Deploying](docs/Deploying.md).
+* **[Shopper app on the web](https://deal-souk-shopper.vercel.app)**: the customer app, on phones and desktops. It is a separate website from the console, built from the same code. How both are set up is in [Deploying](docs/Deploying.md).
 * **Android**: every release has two downloads, `DealSouk-Shopper.apk` and `DealSouk-Admin.apk`. See [Putting it online](#putting-it-online).
 
 ## The app, step by step

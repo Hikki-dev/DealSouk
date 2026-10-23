@@ -4,10 +4,12 @@ Newest first.
 
 ## Deploying and documentation
 
-1. New website project for the shopper app, `deal-souk-shopper`, built from the same code with `APP_MODE=shopper`. The moderator console stays on `deal-souk`.
-2. New guides: Deploying (both projects, the settings, the Firebase domains), Fixing problems, FAQ, Getting started, How it works, How a price travels and API overview.
-3. The README now follows the app screen by screen, with real pictures, and the guides have plain names.
-4. New files for contributors: this changes list, CONTRIBUTING, SECURITY, a pull request form and two issue forms.
+1. Two live websites, one for each audience: the moderator console at `deal-souk.vercel.app` and the shopper app at `deal-souk-shopper.vercel.app`. Both are built from the same code; `APP_MODE=shopper` picks the customer app.
+2. Fixed the shopper project's first builds, which failed because `FIREBASE_OPTIONS_DART_B64` and `API_BASE_URL` were missing.
+3. All four production addresses and both `git-main` aliases are now in the Firebase authorized domains, which fixes `auth/unauthorized-domain`.
+4. New guides: Deploying (both projects, the settings, the Firebase domains), Fixing problems, FAQ, Getting started, How it works, How a price travels and API overview.
+5. The README now follows the app screen by screen, with real pictures, and the guides have plain names.
+6. New files for contributors: this changes list, CONTRIBUTING, SECURITY, a pull request form and two issue forms.
 
 ## The redesign
 

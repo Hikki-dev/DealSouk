@@ -14,6 +14,8 @@ import 'package:dealsouk/features/profile/presentation/profile_providers.dart';
 import 'package:dealsouk/features/stores/domain/store.dart';
 import 'package:dealsouk/features/stores/presentation/stores_providers.dart';
 import 'package:dealsouk/core/theme/theme.dart';
+import 'package:dealsouk/core/design/design.dart';
+import 'package:dealsouk/core/offline/connectivity_service.dart';
 import 'package:dealsouk/core/widgets/souk_widgets.dart';
 import 'package:dealsouk/l10n/app_localizations.dart';
 import 'package:dealsouk/core/util/geo_utils.dart';
@@ -209,6 +211,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
           builder: (context) {
             final l = AppLocalizations.of(context)!;
             return AlertDialog(
+              backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -223,9 +226,9 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                     child: Text(
                       l.storeLocationPromptTitle,
                       style: AppFonts.display(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: AppTheme.textDark,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 20,
+                        color: AppTheme.ink,
                       ),
                     ),
                   ),
@@ -233,28 +236,18 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
               ),
               content: Text(
                 l.storeLocationPromptBody,
-                style: AppFonts.body(fontSize: 14, fontWeight: FontWeight.w700),
+                style: AppFonts.body(fontSize: 16, height: 1.4),
               ),
+              actionsOverflowDirection: VerticalDirection.down,
               actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: Text(
-                    l.storeLocationPromptSkip,
-                    style: const TextStyle(color: Colors.grey),
-                  ),
-                ),
-                ElevatedButton(
+                DsButton(
+                  label: l.storeLocationPromptAllow,
                   onPressed: () => Navigator.pop(context, true),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.forestDeep,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    l.storeLocationPromptAllow,
-                    style: const TextStyle(color: Colors.white),
-                  ),
+                ),
+                DsButton(
+                  label: l.storeLocationPromptSkip,
+                  style: DsButtonStyle.ghost,
+                  onPressed: () => Navigator.pop(context, false),
                 ),
               ],
             );
@@ -308,678 +301,445 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
     return result;
   }
 
+  void _focusChain(String chain, List<Store> stores) {
+    setState(() => _selectedChain = chain);
+    if (!_mapReady) return;
+    LatLng target = _dubaiCenter;
+    double zoom = 11.5;
+    if (chain != 'All') {
+      final match = stores.where(
+        (s) => s.name.toLowerCase().contains(chain.toLowerCase()),
+      );
+      if (match.isNotEmpty) {
+        target = LatLng(match.first.lat, match.first.lng);
+        zoom = 13.0;
+      }
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _mapController.move(target, zoom);
+    });
+  }
+
+  void _selectStore(Store store) {
+    _showStorePrices(context, store);
+    if (_mapReady) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _mapController.move(LatLng(store.lat, store.lng), 15.0);
+        }
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
     final stores = ref.watch(storesProvider);
+    final online = ref.watch(isOnlineProvider);
     final filtered = _applyFilters(stores);
+    final l = AppLocalizations.of(context)!;
+
+    final controls = _buildControls(l, stores);
+    final map = _buildMap(l, filtered);
+
+    final Widget body;
+    if (context.isCompact) {
+      body = Column(
+        children: [
+          controls,
+          Expanded(
+            child: Stack(
+              children: [
+                Positioned.fill(child: map),
+                DraggableScrollableSheet(
+                  initialChildSize: 0.42,
+                  minChildSize: 0.16,
+                  maxChildSize: 0.92,
+                  snap: true,
+                  builder: (context, scroll) => DecoratedBox(
+                    decoration: const BoxDecoration(
+                      color: AppTheme.background,
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(24),
+                      ),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black26, blurRadius: 12),
+                      ],
+                    ),
+                    child: _buildList(l, filtered, online, scroll),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    } else {
+      final panelWidth = context.isExpanded ? 400.0 : 340.0;
+      body = Row(
+        children: [
+          SizedBox(
+            width: panelWidth,
+            child: Column(
+              children: [
+                controls,
+                Expanded(child: _buildList(l, filtered, online, null)),
+              ],
+            ),
+          ),
+          const VerticalDivider(width: 1, color: AppTheme.line),
+          Expanded(child: map),
+        ],
+      );
+    }
 
     return Scaffold(
       backgroundColor: AppTheme.background,
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            // ── Header ───────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-              child: Row(
-                children: [
-                  _CircleButton(
-                    icon: Icons.arrow_back_ios_new_rounded,
-                    mirrorInRtl: true,
-                    onTap: () =>
-                        context.canPop() ? context.pop() : context.go('/'),
-                  ),
-                  Expanded(
-                    child: Text(
-                      l.storeMapTitle,
-                      textAlign: TextAlign.center,
-                      style: AppFonts.display(
-                        color: AppTheme.forestDeep,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  _CircleButton(
-                    icon: Icons.tune_rounded,
-                    onTap: () => _showFilterBottomSheet(context),
-                  ),
-                ],
-              ),
-            ),
+      body: SafeArea(bottom: false, child: body),
+    );
+  }
 
-            // ── Chain filter chips ────────────────────────────────────
-            SizedBox(
-              height: 38,
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                scrollDirection: Axis.horizontal,
-                itemCount: _chains.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 8),
-                itemBuilder: (context, index) {
-                  final chain = _chains[index];
-                  final isSelected = chain == _selectedChain;
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() => _selectedChain = chain);
-                      // Snap map to first matching store if one exists
-                      if (_mapReady && chain != 'All') {
-                        final match = stores.firstWhere(
-                          (s) => s.name.toLowerCase().contains(
-                            chain.toLowerCase(),
-                          ),
-                          orElse: () => stores.first,
-                        );
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          _mapController.move(
-                            LatLng(match.lat, match.lng),
-                            13.0,
-                          );
-                        });
-                      } else if (_mapReady) {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          _mapController.move(_dubaiCenter, 11.5);
-                        });
-                      }
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: isSelected ? AppTheme.forestDeep : Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isSelected
-                              ? AppTheme.forestDeep
-                              : const Color(0xFFE8EEE4),
-                        ),
-                      ),
-                      child: Text(
-                        chain,
-                        style: TextStyle(
-                          color: isSelected
-                              ? Colors.white
-                              : AppTheme.forestDeep,
-                          fontSize: 12.5,
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 12),
+  // ── Search, filter button and chain chips ────────────────────────────────
 
-            // ── Body list ─────────────────────────────────────────────
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 112),
-                physics: const BouncingScrollPhysics(),
-                children: [
-                  // ── Search bar (functional) ─────────────────────────
-                  Container(
-                    height: 52,
-                    padding: const EdgeInsets.symmetric(horizontal: 18),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(26),
-                      border: Border.all(
-                        color: const Color(0xFFE8EEE4),
-                        width: 1.2,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.02),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.search_rounded,
-                          color: Colors.grey.shade400,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
+  Widget _buildControls(AppLocalizations l, List<Store> stores) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 52),
+                  padding: const EdgeInsetsDirectional.only(start: 14, end: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppTheme.line, width: 1.5),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.search_rounded, color: AppTheme.ink),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Semantics(
+                          textField: true,
+                          label: l.storeSearchHint,
                           child: TextField(
                             controller: _searchController,
-                            style: const TextStyle(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w500,
-                            ),
+                            style: AppFonts.body(fontSize: 16),
                             decoration: InputDecoration(
                               hintText: l.storeSearchHint,
-                              hintStyle: TextStyle(
-                                color: Colors.grey.shade400,
-                                fontSize: 13.5,
+                              hintStyle: AppFonts.body(
+                                fontSize: 16,
+                                color: AppTheme.textLight,
                               ),
                               border: InputBorder.none,
                               enabledBorder: InputBorder.none,
                               focusedBorder: InputBorder.none,
+                              filled: false,
                               isDense: true,
                             ),
                           ),
                         ),
-                        // Clear button only. Filtering lives in the single
-                        // top-right control (the tune button) so there's just
-                        // one obvious place to filter, not two that do the same
-                        // thing.
-                        if (_searchQuery.isNotEmpty)
-                          GestureDetector(
-                            onTap: () {
-                              _searchController.clear();
-                              FocusScope.of(context).unfocus();
-                            },
-                            child: Icon(
-                              Icons.close_rounded,
-                              color: Colors.grey.shade400,
-                              size: 18,
-                            ),
-                          ),
-                      ],
-                    ),
+                      ),
+                      if (_searchQuery.isNotEmpty)
+                        IconButton(
+                          tooltip: l.welcomeCancel,
+                          icon: const Icon(Icons.close_rounded),
+                          onPressed: () {
+                            _searchController.clear();
+                            FocusScope.of(context).unfocus();
+                          },
+                        ),
+                    ],
                   ),
-                  const SizedBox(height: 18),
-
-                  // ── Map Card ────────────────────────────────────────
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [AppTheme.forestDeep, AppTheme.maroon],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.forestDeep.withValues(alpha: 0.15),
-                          blurRadius: 16,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 38,
-                              height: 38,
-                              decoration: const BoxDecoration(
-                                color: Colors.white24,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.near_me_rounded,
-                                color: Colors.white,
-                                size: 18,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    (_loadingStores && filtered.isEmpty)
-                                        ? l.storeLoadingStores
-                                        : filtered.isEmpty
-                                        ? l.storeNoStoresFound
-                                        : l.storeDubaiStoresCount(
-                                            filtered.length,
-                                          ),
-                                    style: AppFonts.display(
-                                      color: Colors.white,
-                                      fontSize: 14.5,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    l.storeTapPinHint,
-                                    style: AppFonts.body(
-                                      color: Colors.white70,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          height: 280,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(18),
-                            child: Stack(
-                              children: [
-                                FlutterMap(
-                                  mapController: _mapController,
-                                  options: MapOptions(
-                                    initialCenter: _dubaiCenter, // Always Dubai
-                                    initialZoom: 11.5,
-                                    onMapReady: () {
-                                      // Safe to call move() only after map is ready
-                                      setState(() => _mapReady = true);
-                                    },
-                                    interactionOptions:
-                                        const InteractionOptions(
-                                          flags: InteractiveFlag.all,
-                                        ),
-                                  ),
-                                  children: [
-                                    buildBaseTileLayer(context),
-                                    // User location pin (shown when position is available)
-                                    if (_currentPosition != null)
-                                      CircleLayer(
-                                        circles: [
-                                          // Accuracy ring
-                                          CircleMarker(
-                                            point: LatLng(
-                                              _currentPosition!.latitude,
-                                              _currentPosition!.longitude,
-                                            ),
-                                            radius: _maxRadiusKm * 1000 / 50,
-                                            useRadiusInMeter: false,
-                                            color: AppTheme.forestDeep
-                                                .withValues(alpha: 0.06),
-                                            borderColor: AppTheme.forestDeep
-                                                .withValues(alpha: 0.25),
-                                            borderStrokeWidth: 1.5,
-                                          ),
-                                          // You are here dot
-                                          CircleMarker(
-                                            point: LatLng(
-                                              _currentPosition!.latitude,
-                                              _currentPosition!.longitude,
-                                            ),
-                                            radius: 8,
-                                            color: AppTheme.forestDeep
-                                                .withValues(alpha: 0.9),
-                                            borderColor: Colors.white,
-                                            borderStrokeWidth: 3,
-                                          ),
-                                        ],
-                                      ),
-                                    // Store markers
-                                    MarkerLayer(
-                                      markers: filtered.map((store) {
-                                        final isStale =
-                                            store.lastUpdatedHoursAgo > 48;
-                                        final dist = _distanceTo(store);
-                                        return Marker(
-                                          point: LatLng(store.lat, store.lng),
-                                          width: 52,
-                                          height: 52,
-                                          child: GestureDetector(
-                                            onTap: () => _showStorePrices(
-                                              context,
-                                              store,
-                                            ),
-                                            child: Tooltip(
-                                              message: dist != null
-                                                  ? l.storeMarkerTooltipWithDistance(
-                                                      store.name,
-                                                      store.branch,
-                                                      dist.toStringAsFixed(1),
-                                                    )
-                                                  : l.storeMarkerTooltip(
-                                                      store.name,
-                                                      store.branch,
-                                                    ),
-                                              child: Container(
-                                                decoration: BoxDecoration(
-                                                  color: _chainColor(
-                                                    store.name,
-                                                    isStale,
-                                                  ),
-                                                  shape: BoxShape.circle,
-                                                  border: Border.all(
-                                                    color: Colors.white,
-                                                    width: 2.5,
-                                                    strokeAlign: BorderSide
-                                                        .strokeAlignOutside,
-                                                  ),
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      color: Colors.black
-                                                          .withValues(
-                                                            alpha: 0.3,
-                                                          ),
-                                                      blurRadius: 6,
-                                                      offset: const Offset(
-                                                        0,
-                                                        3,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                child: _LogoAvatar(
-                                                  name: store.name,
-                                                  color: _chainColor(
-                                                    store.name,
-                                                    isStale,
-                                                  ),
-                                                  size: 52,
-                                                  padding: 6,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      }).toList(),
-                                    ),
-                                    // Mapbox + OSM attribution (required)
-                                    buildMapAttribution(),
-                                  ],
-                                ),
-                                // Locate button (bottom-right)
-                                Positioned(
-                                  bottom: 44,
-                                  right: 12,
-                                  child: GestureDetector(
-                                    onTap: _tryGetLocation,
-                                    child: Container(
-                                      width: 40,
-                                      height: 40,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(
-                                              alpha: 0.18,
-                                            ),
-                                            blurRadius: 6,
-                                            offset: const Offset(0, 3),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Center(
-                                        child: _isLocating
-                                            ? const SizedBox(
-                                                width: 18,
-                                                height: 18,
-                                                child: CircularProgressIndicator(
-                                                  strokeWidth: 2,
-                                                  valueColor:
-                                                      AlwaysStoppedAnimation<
-                                                        Color
-                                                      >(AppTheme.forestDeep),
-                                                ),
-                                              )
-                                            : Icon(
-                                                _currentPosition != null
-                                                    ? Icons.my_location_rounded
-                                                    : Icons
-                                                          .location_searching_rounded,
-                                                color: _currentPosition != null
-                                                    ? AppTheme.forestDeep
-                                                    : Colors.grey.shade500,
-                                                size: 18,
-                                              ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                // "Reset to Dubai" button
-                                Positioned(
-                                  bottom: 44,
-                                  left: 12,
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      if (_mapReady) {
-                                        _mapController.move(_dubaiCenter, 11.5);
-                                      }
-                                    },
-                                    child: Container(
-                                      height: 32,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(16),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(
-                                              alpha: 0.15,
-                                            ),
-                                            blurRadius: 6,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons.public_rounded,
-                                            size: 13,
-                                            color: AppTheme.forestDeep,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            l.storeResetDubai,
-                                            style: const TextStyle(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.bold,
-                                              color: AppTheme.forestDeep,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // ── Store count + results label ──────────────────────
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Row(
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _userIsInDubai
-                                  ? l.storeNearYouTitle
-                                  : l.storeAllStoresTitle,
-                              style: AppFonts.display(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.textDark,
-                              ),
-                            ),
-                            if (_userIsInDubai)
-                              Text(
-                                l.storeWithinRadiusSorted(_maxRadiusKm.toInt()),
-                                style: AppFonts.body(
-                                  fontSize: 10.5,
-                                  color: Colors.grey.shade500,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                          ],
-                        ),
-                        const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.forestDeep.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            l.storeStoresCount(filtered.length),
-                            style: AppFonts.body(
-                              color: AppTheme.forestDeep,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  if (_loadingStores && filtered.isEmpty)
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 40),
-                        child: Column(
-                          children: [
-                            const CircularProgressIndicator(
-                              color: AppTheme.forestDeep,
-                            ),
-                            const SizedBox(height: 14),
-                            Text(
-                              l.storeLoadingStores,
-                              style: AppFonts.body(
-                                color: Colors.grey.shade600,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  else if (ref.read(storesProvider.notifier).hadError &&
-                      _searchQuery.isEmpty)
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 32),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.cloud_off_rounded,
-                              size: 48,
-                              color: Colors.grey.shade300,
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              l.storeLoadErrorTitle,
-                              style: AppFonts.body(
-                                color: Colors.grey.shade600,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              l.storeLoadErrorSubtitle,
-                              textAlign: TextAlign.center,
-                              style: AppFonts.body(
-                                color: Colors.grey.shade500,
-                                fontSize: 12,
-                              ),
-                            ),
-                            const SizedBox(height: 14),
-                            ElevatedButton.icon(
-                              onPressed: _loadingStores ? null : _reloadStores,
-                              icon: const Icon(Icons.refresh_rounded, size: 18),
-                              label: Text(l.storeRetryButton),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppTheme.forestDeep,
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  else if (filtered.isEmpty)
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 32),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.search_off_rounded,
-                              size: 48,
-                              color: Colors.grey.shade300,
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              l.storeNoStoresMatch(_searchQuery),
-                              style: AppFonts.body(
-                                color: Colors.grey.shade500,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  else
-                    ...filtered.map(
-                      (store) => _StoreChoiceCard(
-                        store: store,
-                        distanceKm: _distanceTo(store),
-                        onTap: () {
-                          _showStorePrices(context, store);
-                          // Animate map to this store (safe: only after map ready)
-                          if (_mapReady) {
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              _mapController.move(
-                                LatLng(store.lat, store.lng),
-                                15.0,
-                              );
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                ],
+                ),
               ),
-            ),
-          ],
-        ),
+              const SizedBox(width: 8),
+              DsIconButton(
+                icon: Icons.tune_rounded,
+                semanticLabel: l.storeFilterTitle,
+                onPressed: () => _showFilterBottomSheet(context),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          DsChipRow(
+            chips: [
+              for (final chain in _chains)
+                DsChip(
+                  label: chain == 'All' ? l.storeChainAll : chain,
+                  selected: chain == _selectedChain,
+                  onTap: () => _focusChain(chain, stores),
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  /// Returns a distinct color per chain for easy visual distinction on the map
-  Color _chainColor(String name, bool isStale) {
-    if (isStale) return Colors.grey.shade500;
-    return switch (name.toLowerCase()) {
-      String n when n.contains('carrefour') => const Color(0xFF0066CC),
-      String n when n.contains('lulu') => const Color(0xFFE63946),
-      String n when n.contains('spinneys') => const Color(0xFF2A9D8F),
-      String n when n.contains('waitrose') => const Color(0xFF457B9D),
-      String n when n.contains('union') => const Color(0xFFE76F51),
-      String n when n.contains('choithrams') => const Color(0xFF6A4C93),
-      String n when n.contains('geant') => const Color(0xFF1D3557),
-      String n when n.contains('nesto') => const Color(0xFFF4A261),
-      String n when n.contains('al maya') => const Color(0xFF264653),
-      String n when n.contains('grandiose') => const Color(0xFF8338EC),
-      String n when n.contains('al madina') || n.contains('madina') =>
-        const Color(0xFF0D9488),
-      _ => AppTheme.forestDeep,
-    };
+  // ── Map ───────────────────────────────────────────────────────────────────
+
+  Widget _buildMap(AppLocalizations l, List<Store> filtered) {
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: _dubaiCenter,
+              initialZoom: 11.5,
+              onMapReady: () => setState(() => _mapReady = true),
+              interactionOptions: const InteractionOptions(
+                flags: InteractiveFlag.all,
+              ),
+            ),
+            children: [
+              buildBaseTileLayer(context),
+              if (_currentPosition != null)
+                CircleLayer(
+                  circles: [
+                    CircleMarker(
+                      point: LatLng(
+                        _currentPosition!.latitude,
+                        _currentPosition!.longitude,
+                      ),
+                      radius: _maxRadiusKm * 1000 / 50,
+                      useRadiusInMeter: false,
+                      color: AppTheme.forestDeep.withValues(alpha: 0.06),
+                      borderColor: AppTheme.forestDeep.withValues(alpha: 0.25),
+                      borderStrokeWidth: 1.5,
+                    ),
+                    CircleMarker(
+                      point: LatLng(
+                        _currentPosition!.latitude,
+                        _currentPosition!.longitude,
+                      ),
+                      radius: 8,
+                      color: const Color(0xFF1A73E8),
+                      borderColor: Colors.white,
+                      borderStrokeWidth: 3,
+                    ),
+                  ],
+                ),
+              MarkerLayer(
+                markers: [
+                  for (final store in filtered)
+                    Marker(
+                      point: LatLng(store.lat, store.lng),
+                      width: 56,
+                      height: 66,
+                      alignment: Alignment.topCenter,
+                      child: _StorePin(
+                        store: store,
+                        label: _distanceTo(store) != null
+                            ? l.storeMarkerTooltipWithDistance(
+                                store.name,
+                                store.branch,
+                                _distanceTo(store)!.toStringAsFixed(1),
+                              )
+                            : l.storeMarkerTooltip(store.name, store.branch),
+                        onTap: () => _selectStore(store),
+                      ),
+                    ),
+                ],
+              ),
+              buildMapAttribution(),
+            ],
+          ),
+        ),
+        // Locate me (48px target).
+        PositionedDirectional(
+          top: 12,
+          end: 12,
+          child: Semantics(
+            button: true,
+            label: l.storeResetDubai,
+            child: Material(
+              color: Colors.white,
+              shape: const CircleBorder(),
+              elevation: 3,
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: _tryGetLocation,
+                child: SizedBox(
+                  width: 52,
+                  height: 52,
+                  child: Center(
+                    child: _isLocating
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2.5),
+                          )
+                        : Icon(
+                            _currentPosition != null
+                                ? Icons.my_location_rounded
+                                : Icons.location_searching_rounded,
+                            color: AppTheme.forestDeep,
+                          ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        PositionedDirectional(
+          top: 12,
+          start: 12,
+          child: Material(
+            color: Colors.white,
+            elevation: 3,
+            borderRadius: BorderRadius.circular(24),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(24),
+              onTap: () {
+                if (_mapReady) _mapController.move(_dubaiCenter, 11.5);
+              },
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 48),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.public_rounded,
+                        size: 18,
+                        color: AppTheme.forestDeep,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        l.storeResetDubai,
+                        style: AppFonts.body(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.forestDeep,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
+
+  // ── List ──────────────────────────────────────────────────────────────────
+
+  Widget _buildList(
+    AppLocalizations l,
+    List<Store> filtered,
+    bool online,
+    ScrollController? scroll,
+  ) {
+    final hadError = ref.read(storesProvider.notifier).hadError;
+    final Widget content;
+    if (_loadingStores && filtered.isEmpty) {
+      content = Column(
+        children: [
+          for (var i = 0; i < 4; i++)
+            const Padding(
+              padding: EdgeInsets.only(bottom: 10),
+              child: DsListRowSkeleton(),
+            ),
+        ],
+      );
+    } else if (hadError && _searchQuery.isEmpty) {
+      content = DsEmptyState(
+        icon: Icons.cloud_off_rounded,
+        tone: DsEmptyTone.error,
+        title: l.storeLoadErrorTitle,
+        message: l.storeLoadErrorSubtitle,
+        primaryLabel: l.storeRetryButton,
+        onPrimary: _loadingStores ? null : _reloadStores,
+      );
+    } else if (filtered.isEmpty) {
+      content = DsEmptyState(
+        icon: Icons.search_off_rounded,
+        title: l.storeNoStoresFound,
+        message: _searchQuery.isEmpty
+            ? null
+            : l.storeNoStoresMatch(_searchQuery),
+      );
+    } else {
+      content = Column(
+        children: [
+          for (final store in filtered)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _StoreRow(
+                store: store,
+                distanceKm: _distanceTo(store),
+                onTap: () => _selectStore(store),
+              ),
+            ),
+        ],
+      );
+    }
+
+    return ListView(
+      controller: scroll,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 112),
+      children: [
+        if (scroll != null)
+          Center(
+            child: Container(
+              width: 44,
+              height: 5,
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: AppTheme.line,
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
+          ),
+        if (!online)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: DsBanner(l.offlineBanner, tone: DsBannerTone.offline),
+          ),
+        Row(
+          children: [
+            Expanded(
+              child: Semantics(
+                header: true,
+                child: Text(
+                  _userIsInDubai ? l.storeNearYouTitle : l.storeAllStoresTitle,
+                  style: AppFonts.display(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.ink,
+                  ),
+                ),
+              ),
+            ),
+            Text(
+              l.storeStoresCount(filtered.length),
+              style: AppFonts.body(fontSize: 15, color: AppTheme.textLight),
+            ),
+          ],
+        ),
+        if (_userIsInDubai)
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(
+              l.storeWithinRadiusSorted(_customMaxRadiusKm.toInt()),
+              style: AppFonts.body(fontSize: 14, color: AppTheme.textLight),
+            ),
+          ),
+        const SizedBox(height: 12),
+        content,
+      ],
+    );
+  }
+
+  // ── Store prices sheet ────────────────────────────────────────────────────
 
   void _showStorePrices(BuildContext context, Store store) {
     final isStale = store.lastUpdatedHoursAgo > 48;
@@ -990,29 +750,30 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
     showModalBottomSheet(
       context: context,
       useRootNavigator: true,
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.background,
+      constraints: const BoxConstraints(maxWidth: 600),
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       isScrollControlled: true,
       builder: (context) {
         final l = AppLocalizations.of(context)!;
         return DraggableScrollableSheet(
           expand: false,
-          initialChildSize: 0.6,
+          initialChildSize: 0.62,
           maxChildSize: 0.92,
           builder: (context, scrollController) {
             return Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Center(
                     child: Container(
-                      width: 42,
+                      width: 44,
                       height: 5,
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
+                        color: AppTheme.line,
                         borderRadius: BorderRadius.circular(3),
                       ),
                     ),
@@ -1020,14 +781,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      // Logo avatar for bottom sheet header
-                      _LogoAvatar(
-                        name: store.name,
-                        color: _chainColor(store.name, false),
-                        size: 52,
-                        padding: 8,
-                        borderRadius: 14,
-                      ),
+                      DsStoreLogo(store.name, size: 56),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -1036,52 +790,22 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                             Text(
                               store.name,
                               style: AppFonts.display(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.forestDeep,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.ink,
                               ),
                             ),
                             Text(
                               store.branch,
                               style: AppFonts.body(
-                                color: Colors.grey.shade500,
-                                fontSize: 12,
+                                color: AppTheme.textLight,
+                                fontSize: 15,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      if (isStale)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.grey.shade300),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.schedule_rounded,
-                                color: Colors.grey.shade500,
-                                size: 12,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                l.storeStaleBadge,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                      if (isStale) DsTag(l.storeStaleBadge, tone: DsTone.bad),
                     ],
                   ),
                   const SizedBox(height: 14),
@@ -1090,65 +814,95 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                       future: pricesFuture,
                       builder: (context, snapshot) {
                         if (snapshot.connectionState != ConnectionState.done) {
-                          return const Center(
-                            child: CircularProgressIndicator(),
+                          return ListView(
+                            children: const [
+                              DsListRowSkeleton(),
+                              SizedBox(height: 10),
+                              DsListRowSkeleton(),
+                              SizedBox(height: 10),
+                              DsListRowSkeleton(),
+                            ],
                           );
                         }
-
                         if (snapshot.hasError) {
-                          return _StorePricesEmptyState(
+                          return DsEmptyState(
                             icon: Icons.wifi_off_rounded,
+                            tone: DsEmptyTone.error,
                             title: l.storePricesLoadErrorTitle,
-                            subtitle: l.storePricesLoadErrorSubtitle,
+                            message: l.storePricesLoadErrorSubtitle,
                           );
                         }
-
                         final prices = snapshot.data ?? [];
                         if (prices.isEmpty) {
-                          return _StorePricesEmptyState(
+                          return DsEmptyState(
                             icon: Icons.price_change_outlined,
                             title: l.storeNoPricesTitle,
-                            subtitle: l.storeNoPricesSubtitle,
+                            message: l.storeNoPricesSubtitle,
                           );
                         }
-
-                        return ListView.builder(
+                        return ListView.separated(
                           controller: scrollController,
                           itemCount: prices.length,
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(height: 10),
                           itemBuilder: (context, index) {
                             final price = prices[index];
-                            return ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              leading: SizedBox(
-                                width: 44,
-                                height: 44,
-                                child: SoukProductVisual(
-                                  product: price.product,
-                                  fit: BoxFit.cover,
-                                  borderRadius: 12,
-                                ),
+                            return DsCard(
+                              child: Row(
+                                children: [
+                                  SizedBox(
+                                    width: 56,
+                                    height: 56,
+                                    child: SoukProductVisual(
+                                      product: price.product,
+                                      fit: BoxFit.contain,
+                                      borderRadius: 12,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          price.product.name,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: AppFonts.body(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppTheme.ink,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Wrap(
+                                          spacing: 6,
+                                          runSpacing: 4,
+                                          crossAxisAlignment:
+                                              WrapCrossAlignment.center,
+                                          children: [
+                                            if (price.verifiedWithPhoto)
+                                              DsTag(
+                                                l.homeVerifiedWithPhoto,
+                                                tone: DsTone.teal,
+                                              ),
+                                            Text(
+                                              price.updatedAtLabel,
+                                              style: AppFonts.body(
+                                                fontSize: 13,
+                                                color: AppTheme.textLight,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  DsPrice(price.priceAed, size: 22),
+                                ],
                               ),
-                              title: Text(
-                                price.product.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppFonts.body(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.textDark,
-                                ),
-                              ),
-                              subtitle: Text(
-                                price.verifiedWithPhoto
-                                    ? l.storePriceVerifiedWithPhoto(
-                                        price.updatedAtLabel,
-                                      )
-                                    : price.updatedAtLabel,
-                                style: AppFonts.body(
-                                  fontSize: 11,
-                                  color: Colors.grey.shade500,
-                                ),
-                              ),
-                              trailing: SoukPrice(price.priceAed, size: 14),
                             );
                           },
                         );
@@ -1156,37 +910,15 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  GestureDetector(
-                    onTap: () {
+                  DsButton(
+                    label: l.storeSubmitPriceHere,
+                    icon: Icons.add_a_photo_outlined,
+                    onPressed: () {
                       Navigator.pop(context);
-                      context.push('/submit-price?store=${store.name}');
+                      context.push(
+                        '/submit-price?store=${Uri.encodeComponent(store.name)}',
+                      );
                     },
-                    child: Container(
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: AppTheme.forestDeep,
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.add_a_photo_outlined,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            l.storeSubmitPriceHere,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14.5,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
                 ],
               ),
@@ -1199,51 +931,108 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
     });
   }
 
+  // ── Filter sheet ──────────────────────────────────────────────────────────
+
   void _showFilterBottomSheet(BuildContext context) {
     ref.read(navbarVisibleProvider.notifier).hide();
     showModalBottomSheet(
       context: context,
       useRootNavigator: true,
-      backgroundColor: Colors.white,
+      isScrollControlled: true,
+      backgroundColor: AppTheme.background,
+      constraints: const BoxConstraints(maxWidth: 600),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
+        final l = AppLocalizations.of(context)!;
         return StatefulBuilder(
-          builder: (context, setBottomSheetState) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          builder: (context, setSheet) {
+            void pick(String? v) {
+              if (v == null) return;
+              setSheet(() => _sortBy = v);
+              setState(() {});
+            }
+
+            Widget sortOption(
+              String value,
+              String label, {
+              bool enabled = true,
+            }) {
+              return DsCard(
+                selected: _sortBy == value,
+                onTap: enabled ? () => pick(value) : null,
+                semanticLabel: label,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            label,
+                            style: AppFonts.body(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: enabled
+                                  ? AppTheme.ink
+                                  : AppTheme.textLight,
+                            ),
+                          ),
+                          if (!enabled)
+                            Text(
+                              l.storeRequiresGps,
+                              style: AppFonts.body(
+                                fontSize: 13,
+                                color: AppTheme.textLight,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    if (_sortBy == value)
+                      const Icon(
+                        Icons.check_circle_rounded,
+                        color: AppTheme.forestDeep,
+                      ),
+                  ],
+                ),
+              );
+            }
+
+            return SafeArea(
               child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Center(
                       child: Container(
-                        width: 40,
+                        width: 44,
                         height: 5,
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade300,
-                          borderRadius: BorderRadius.circular(2.5),
+                          color: AppTheme.line,
+                          borderRadius: BorderRadius.circular(3),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
                     Text(
-                      'Filter Stores',
+                      l.storeFilterTitle,
                       style: AppFonts.display(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.textDark,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.ink,
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
                     Text(
-                      'Maximum Distance: ${_customMaxRadiusKm.toStringAsFixed(0)} km',
+                      l.storeMaxDistance(_customMaxRadiusKm.toStringAsFixed(0)),
                       style: AppFonts.body(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        color: AppTheme.textDark,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.ink,
                       ),
                     ),
                     Slider(
@@ -1254,91 +1043,41 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                       label: '${_customMaxRadiusKm.toStringAsFixed(0)} km',
                       activeColor: AppTheme.forestDeep,
                       onChanged: (val) {
-                        setBottomSheetState(() {
-                          _customMaxRadiusKm = val;
-                        });
+                        setSheet(() => _customMaxRadiusKm = val);
                         setState(() {});
                       },
                     ),
-                    if (!_userIsInDubai) ...[
-                      Padding(
-                        padding: const EdgeInsets.only(left: 8.0, bottom: 8.0),
-                        child: Text(
-                          '(Distance filter applies only when inside Dubai with GPS enabled)',
-                          style: AppFonts.body(
-                            fontSize: 11,
-                            color: Colors.grey,
-                            fontStyle: FontStyle.italic,
-                          ),
+                    if (!_userIsInDubai)
+                      Text(
+                        l.storeGpsOnlyNote,
+                        style: AppFonts.body(
+                          fontSize: 14,
+                          color: AppTheme.textLight,
                         ),
                       ),
-                    ],
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     Text(
-                      'Sort Stores By',
+                      l.storeSortBy,
                       style: AppFonts.body(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        color: AppTheme.textDark,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.ink,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    RadioListTile<String>(
-                      title: const Text('Closest First'),
-                      value: 'distance',
-                      groupValue: _sortBy,
-                      activeColor: AppTheme.forestDeep,
-                      onChanged: _userIsInDubai
-                          ? (val) {
-                              if (val != null) {
-                                setBottomSheetState(() => _sortBy = val);
-                                setState(() {});
-                              }
-                            }
-                          : null,
-                      subtitle: !_userIsInDubai
-                          ? const Text('Requires GPS location')
-                          : null,
+                    sortOption(
+                      'distance',
+                      l.storeSortClosest,
+                      enabled: _userIsInDubai,
                     ),
-                    RadioListTile<String>(
-                      title: const Text('Alphabetical (A-Z)'),
-                      value: 'name',
-                      groupValue: _sortBy,
-                      activeColor: AppTheme.forestDeep,
-                      onChanged: (val) {
-                        if (val != null) {
-                          setBottomSheetState(() => _sortBy = val);
-                          setState(() {});
-                        }
-                      },
-                    ),
-                    RadioListTile<String>(
-                      title: const Text('Recently Updated'),
-                      value: 'last_updated',
-                      groupValue: _sortBy,
-                      activeColor: AppTheme.forestDeep,
-                      onChanged: (val) {
-                        if (val != null) {
-                          setBottomSheetState(() => _sortBy = val);
-                          setState(() {});
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
+                    const SizedBox(height: 8),
+                    sortOption('name', l.storeSortAlpha),
+                    const SizedBox(height: 8),
+                    sortOption('last_updated', l.storeSortRecent),
+                    const SizedBox(height: 20),
+                    DsButton(
+                      label: l.storeApplyFilters,
                       onPressed: () => Navigator.pop(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.forestDeep,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: const Text(
-                        'Apply Filters',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
                     ),
                   ],
                 ),
@@ -1353,432 +1092,120 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
   }
 }
 
-class _StorePricesEmptyState extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
+// ── Map pin ──────────────────────────────────────────────────────────────────
 
-  const _StorePricesEmptyState({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
+/// A teardrop-style pin: the chain logo in a white circle with a coloured ring
+/// (teal fresh, saffron older, grey stale) and a pointer to the exact spot.
+class _StorePin extends StatelessWidget {
+  const _StorePin({
+    required this.store,
+    required this.label,
+    required this.onTap,
   });
 
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 48, color: Colors.grey.shade300),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: AppFonts.display(color: Colors.grey.shade600, fontSize: 16),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            subtitle,
-            textAlign: TextAlign.center,
-            style: AppFonts.body(
-              color: Colors.grey.shade500,
-              fontSize: 12,
-              height: 1.35,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CircleButton extends StatelessWidget {
-  final IconData icon;
+  final Store store;
+  final String label;
   final VoidCallback onTap;
 
-  /// Set for directional glyphs (back arrows) that must flip in RTL.
-  final bool mirrorInRtl;
-
-  const _CircleButton({
-    required this.icon,
-    required this.onTap,
-    this.mirrorInRtl = false,
-  });
-
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          border: Border.all(color: const Color(0xFFE8EEE4), width: 1.2),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+    final h = store.lastUpdatedHoursAgo;
+    final ring = h > 48
+        ? const Color(0xFF8A8F94)
+        : h > 24
+        ? AppTheme.limeAccent
+        : AppTheme.forestDeep;
+    return Semantics(
+      button: true,
+      label: label.replaceAll('\n', ', '),
+      excludeSemantics: true,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: ring,
+                shape: BoxShape.circle,
+                border: Border.all(color: ring, width: 3),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x33000000),
+                    blurRadius: 5,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: DsStoreLogo(store.name, size: 42),
             ),
+            Icon(Icons.arrow_drop_down_rounded, color: ring, size: 24),
           ],
         ),
-        child: mirrorInRtl
-            ? DirectionalIcon(icon, color: AppTheme.forestDeep, size: 18)
-            : Icon(icon, color: AppTheme.forestDeep, size: 18),
       ),
     );
   }
 }
 
-class _StoreChoiceCard extends StatelessWidget {
+// ── List row ─────────────────────────────────────────────────────────────────
+
+class _StoreRow extends StatelessWidget {
+  const _StoreRow({required this.store, required this.onTap, this.distanceKm});
+
   final Store store;
   final VoidCallback onTap;
 
-  /// Distance from user's current position in km — null when user is not in Dubai.
+  /// Null when the user is not in Dubai / location is off.
   final double? distanceKm;
-
-  const _StoreChoiceCard({
-    required this.store,
-    required this.onTap,
-    this.distanceKm,
-  });
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final isStale = store.lastUpdatedHoursAgo > 48;
-    final chainColor = _chainColorStatic(store.name);
+    final h = store.lastUpdatedHoursAgo;
+    final tag = h > 48
+        ? DsTag(l.storeStaleBadge, tone: DsTone.bad)
+        : h > 24
+        ? DsTag(store.freshness, tone: DsTone.warn)
+        : DsTag(l.storeFresh, tone: DsTone.good);
+    final meta = [
+      if (distanceKm != null) l.storeDistanceKm(distanceKm!.toStringAsFixed(1)),
+      l.storePricesCountLabel(store.pricesCount),
+    ].join(' · ');
 
-    return Opacity(
-      opacity: isStale ? 0.7 : 1.0,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isStale ? Colors.grey.shade300 : const Color(0xFFE8EEE4),
-              width: 1.2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.015),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              // Logo avatar for list card
-              _LogoAvatar(
-                name: store.name,
-                color: isStale ? Colors.grey.shade400 : chainColor,
-                size: 44,
-                padding: 6,
-                borderRadius: 12,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      store.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppFonts.display(
-                        color: AppTheme.textDark,
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.place_outlined,
-                          size: 11,
-                          color: Colors.grey.shade400,
-                        ),
-                        const SizedBox(width: 3),
-                        Expanded(
-                          child: Text(
-                            store.branch,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppFonts.body(
-                              color: Colors.grey.shade500,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+    return DsCard(
+      onTap: onTap,
+      semanticLabel: '${store.name}, ${store.branch}. $meta',
+      child: Row(
+        children: [
+          DsStoreLogo(store.name, size: 52),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${store.name}, ${store.branch}',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppFonts.body(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.ink,
+                  ),
                 ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  if (distanceKm != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: distanceKm! <= 3
-                            ? const Color(0xFF2A9D8F).withValues(alpha: 0.12)
-                            : distanceKm! <= 6
-                            ? AppTheme.forestDeep.withValues(alpha: 0.1)
-                            : Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.directions_car_rounded,
-                            size: 9,
-                            color: distanceKm! <= 3
-                                ? const Color(0xFF2A9D8F)
-                                : distanceKm! <= 6
-                                ? AppTheme.forestDeep
-                                : Colors.grey.shade600,
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            l.storeDistanceKm(distanceKm!.toStringAsFixed(1)),
-                            style: AppFonts.body(
-                              color: distanceKm! <= 3
-                                  ? const Color(0xFF2A9D8F)
-                                  : distanceKm! <= 6
-                                  ? AppTheme.forestDeep
-                                  : Colors.grey.shade600,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  else
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: chainColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        l.storeViewPrices,
-                        style: AppFonts.body(
-                          color: chainColor,
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(width: 8),
-              DirectionalIcon(
-                Icons.chevron_right_rounded,
-                color: Colors.grey.shade400,
-              ),
-            ],
+                const SizedBox(height: 2),
+                Text(
+                  meta,
+                  style: AppFonts.body(fontSize: 14, color: AppTheme.textLight),
+                ),
+              ],
+            ),
           ),
-        ),
-      ),
-    );
-  }
-
-  static Color _chainColorStatic(String name) {
-    return switch (name.toLowerCase()) {
-      String n when n.contains('carrefour') => const Color(0xFF0066CC),
-      String n when n.contains('lulu') => const Color(0xFFE63946),
-      String n when n.contains('spinneys') => const Color(0xFF2A9D8F),
-      String n when n.contains('waitrose') => const Color(0xFF457B9D),
-      String n when n.contains('union') => const Color(0xFFE76F51),
-      String n when n.contains('choithrams') => const Color(0xFF6A4C93),
-      String n when n.contains('geant') => const Color(0xFF1D3557),
-      String n when n.contains('nesto') => const Color(0xFFF4A261),
-      String n when n.contains('al maya') => const Color(0xFF264653),
-      String n when n.contains('grandiose') => const Color(0xFF8338EC),
-      String n when n.contains('al madina') || n.contains('madina') =>
-        const Color(0xFF0D9488),
-      _ => AppTheme.forestDeep,
-    };
-  }
-}
-
-// ─── Shared logo URL resolver ────────────────────────────────────────────────
-
-/// Maps a chain name to its publicly available logo URL.
-/// Sourced from Clearbit's logo CDN — no API key required for standard logos.
-/// Maps a store name to its bundled brand-logo asset path.
-/// Resolves a store name to its brand logo, served through our own backend
-/// (`/logos/:slug`). The backend proxies the chain's logo mark and adds CORS +
-/// cache headers, so it renders on Flutter Web (CanvasKit) too — a direct
-/// third-party favicon URL fails there for lack of CORS. Cached after first
-/// load, so repeat views are instant. Returns null for unknown chains;
-/// [_LogoAvatar] then shows a colored letter circle (also used while loading).
-
-// Logos are public assets — always served from the real backend even in debug.
-// This matters on real iOS/Android devices where localhost:3000 is unreachable.
-const _kLogoBaseUrl = String.fromEnvironment(
-  'API_BASE_URL',
-  defaultValue: 'https://dealsouk.onrender.com',
-);
-
-/// Resolves a chain name to its bundled asset slug (e.g. 'carrefour'), or null
-/// for unknown chains. The slug maps to `assets/logos/<slug>.png` and to the
-/// backend proxy route `/logos/<slug>`.
-String? _chainSlug(String name) {
-  final n = name.toLowerCase();
-  if (n.contains('carrefour')) return 'carrefour';
-  if (n.contains('lulu')) return 'lulu';
-  if (n.contains('spinneys')) return 'spinneys';
-  if (n.contains('waitrose')) return 'waitrose';
-  if (n.contains('union')) return 'union_coop';
-  if (n.contains('choithrams')) return 'choithrams';
-  if (n.contains('geant')) return 'geant';
-  if (n.contains('nesto')) return 'nesto';
-  if (n.contains('al maya')) return 'al_maya';
-  if (n.contains('grandiose')) return 'grandiose';
-  if (n.contains('al madina') || n.contains('madina')) return 'al_madina';
-  return null;
-}
-
-/// Network fallback for a chain logo when no bundled asset is present.
-/// Served through our own backend (`/logos/:slug`) so it carries CORS + cache
-/// headers and renders on Flutter Web too. Returns null for unknown chains.
-String? _chainLogoUrl(String name) {
-  final slug = _chainSlug(name);
-  if (slug == null) return null;
-  return '$_kLogoBaseUrl/logos/$slug';
-}
-
-// ─── Logo Avatar Widget ───────────────────────────────────────────────────────
-
-/// Circular (or rounded-square) avatar showing a chain's real logo.
-/// Shows the letter initial as a fallback while loading or on error.
-class _LogoAvatar extends StatelessWidget {
-  final String name;
-  final Color color;
-  final double size;
-
-  /// Inner padding around the logo image.
-  final double padding;
-
-  /// Corner radius. Defaults to size/2 (full circle). Pass a fixed value for
-  /// rounded-square cards.
-  final double? borderRadius;
-
-  const _LogoAvatar({
-    required this.name,
-    required this.color,
-    required this.size,
-    this.padding = 6,
-    this.borderRadius,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final slug = _chainSlug(name);
-    final radius = borderRadius ?? size / 2;
-    final bgColor = slug != null ? Colors.white : color;
-
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: color.withValues(alpha: 0.35), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.18),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
+          const SizedBox(width: 8),
+          Flexible(flex: 0, child: tag),
         ],
-      ),
-      child: _buildContent(slug, radius),
-    );
-  }
-
-  /// Logo resolution order:
-  ///   1. Bundled asset `assets/logos/<slug>.png` (instant, offline, no flicker)
-  ///   2. Backend proxy `/logos/<slug>` (if the asset isn't present)
-  ///   3. Polished brand-colored initial (always renders)
-  Widget _buildContent(String? slug, double radius) {
-    if (slug == null) return _fallback(radius);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(radius - 1.5),
-      child: Image.asset(
-        'assets/logos/$slug.png',
-        fit: BoxFit.contain,
-        // Pad the bundled mark so it sits cleanly inside the circle.
-        frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-          if (wasSynchronouslyLoaded || frame != null) {
-            return Container(
-              color: Colors.white,
-              padding: EdgeInsets.all(padding),
-              child: child,
-            );
-          }
-          return _fallback(radius);
-        },
-        // No bundled asset yet → try the backend proxy, then the initial.
-        errorBuilder: (ctx, assetErr, assetStack) => _networkOrFallback(radius),
-      ),
-    );
-  }
-
-  Widget _networkOrFallback(double radius) {
-    final url = _chainLogoUrl(name);
-    if (url == null) return _fallback(radius);
-    return Image.network(
-      url,
-      fit: BoxFit.contain,
-      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-        if (wasSynchronouslyLoaded || frame != null) {
-          return Container(
-            color: Colors.white,
-            padding: EdgeInsets.all(padding),
-            child: child,
-          );
-        }
-        return _fallback(radius);
-      },
-      errorBuilder: (ctx, error, stack) => _fallback(radius),
-    );
-  }
-
-  Widget _fallback(double radius) {
-    return Container(
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(radius - 1.5),
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        name.substring(0, 1).toUpperCase(),
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w900,
-          fontSize: size * 0.38,
-        ),
       ),
     );
   }

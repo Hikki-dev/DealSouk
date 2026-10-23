@@ -80,7 +80,8 @@ class DsButton extends StatelessWidget {
         Flexible(
           child: Text(
             label,
-            maxLines: 1,
+            maxLines: 2,
+            textAlign: TextAlign.center,
             overflow: TextOverflow.ellipsis,
             style: AppFonts.display(
               fontSize: compact ? 15 : 17,

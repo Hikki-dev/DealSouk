@@ -1,12 +1,12 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dealsouk/features/auth/presentation/auth_providers.dart';
 import 'package:dealsouk/core/theme/theme.dart';
-import 'package:dealsouk/core/widgets/responsive_container.dart';
-import 'package:dealsouk/core/widgets/souk_widgets.dart';
-import 'package:dealsouk/core/widgets/tutorial_overlay.dart';
+import 'package:dealsouk/core/design/design.dart';
+import 'package:dealsouk/core/theme/app_fonts.dart';
 import 'package:dealsouk/l10n/app_localizations.dart';
 
 const bool _adminBuild = bool.fromEnvironment(
@@ -143,7 +143,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.textDark,
+                    color: AppTheme.ink,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -163,7 +163,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                           country.name,
                           style: const TextStyle(
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.textDark,
+                            color: AppTheme.ink,
                           ),
                         ),
                         trailing: Text(
@@ -209,488 +209,312 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
 
   void _showError() {
     final error = ref.read(authProvider).error;
-    if (error != null && mounted) {
-      final isAr = AppLocalizations.of(context)!.localeName == 'ar';
-
-      String displayError = error;
-      if (error == 'Invalid code. Please try again.') {
-        displayError = isAr
-            ? 'الرمز الذي أدخلته غير صحيح. يرجى المحاولة مرة أخرى.'
-            : 'The OTP code you entered is incorrect. Please check and try again.';
-      }
-
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
+    if (error == null || !mounted) return;
+    final isAr = AppLocalizations.of(context)!.localeName == 'ar';
+    var message = error;
+    if (error == 'Invalid code. Please try again.') {
+      message = isAr
+          ? 'الرمز الذي أدخلته غير صحيح. يرجى المحاولة مرة أخرى.'
+          : 'The code you entered is incorrect. Please check and try again.';
+    }
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          margin: const EdgeInsets.only(bottom: 20, left: 16, right: 16),
-          content: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFE53935), Color(0xFFC62828)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.25),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.25),
-                width: 1.5,
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: const BoxDecoration(
-                    color: Colors.white24,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.error_outline_rounded,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        isAr ? 'خطأ في التحقق' : 'Verification Error',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        displayError,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          fontSize: 12.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+          backgroundColor: AppTheme.badText,
+          content: Text(
+            message,
+            style: AppFonts.body(fontSize: 15, color: Colors.white),
           ),
         ),
       );
-    }
+  }
+
+  void _needConsent() {
+    final l = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(l.welcomePrivacyConsentRequired)));
   }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    return ResponsiveContainer(
-      child: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF084F52), Color(0xFF0B6B6B), Color(0xFF1A8782)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: Stack(
-          children: [
-            // Real Dubai Marina photo (bundled, no network), faded into the
-            // teal base so the sign-in content stays readable.
-            Positioned.fill(
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Image.asset(
-                    'assets/images/welcome_marina.jpg',
-                    fit: BoxFit.cover,
-                    alignment: Alignment.topCenter,
-                    cacheWidth: 1000,
-                    excludeFromSemantics: true,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const SizedBox.shrink(),
-                  ),
-                  const DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Color(0x990A3B3E),
-                          Color(0xDD084F52),
-                          Color(0xF50B6B6B),
-                        ],
-                        stops: [0.0, 0.4, 0.75],
-                      ),
+    final benefits = _isAdminMode
+        ? [
+            (Icons.rate_review_rounded, l.welcomePillarAuditQueue),
+            (Icons.security_rounded, l.welcomePillarFraudFilter),
+            (Icons.token_rounded, l.welcomePillarIssueTokens),
+          ]
+        : [
+            (Icons.compare_arrows_rounded, l.welcomePillarComparePrices),
+            (Icons.place_rounded, l.welcomePillarFindNearby),
+            (Icons.help_outline_rounded, l.welcomePillarRequestPrice),
+          ];
+    final tagline = _isAdminMode
+        ? l.welcomeTaglineAdmin
+        : l.welcomeTaglineCustomer;
+
+    final body = context.isExpanded
+        ? Row(
+            children: [
+              Expanded(
+                flex: 11,
+                child: _HeroPanel(
+                  tagline: tagline,
+                  benefits: benefits,
+                  isAdmin: _isAdminMode,
+                ),
+              ),
+              Expanded(
+                flex: 9,
+                child: Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(40),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 440),
+                      child: _buildForm(l),
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: ClipPath(
-                clipper: const ScallopClipper.up(scallopRadius: 8),
-                child: Container(height: 18, color: AppTheme.cream),
-              ),
-            ),
-
-            SafeArea(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24.0,
-                    vertical: 12.0,
+            ],
+          )
+        : SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  height: 280,
+                  child: _HeroPanel(
+                    tagline: tagline,
+                    benefits: const [],
+                    isAdmin: _isAdminMode,
+                    compact: true,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                ),
+                Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 480),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 28),
+                      child: _buildForm(l),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+
+    return Scaffold(
+      backgroundColor: AppTheme.background,
+      body: Stack(
+        children: [
+          Positioned.fill(child: body),
+          if (_loading)
+            const Positioned.fill(
+              child: ColoredBox(
+                color: Colors.black26,
+                child: Center(
+                  child: CircularProgressIndicator(color: Colors.white),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildForm(AppLocalizations l) {
+    final inPhoneFlow = _showPhoneInput || _showOtpInput;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Semantics(
+          header: true,
+          child: Text(
+            _isAdminMode ? l.welcomeAdminModeratorTab : 'DealSouk',
+            style: AppFonts.display(
+              fontSize: 26,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.ink,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          _isAdminMode ? l.welcomeInfoBannerAdmin : l.welcomeInfoBannerCustomer,
+          style: AppFonts.body(
+            fontSize: 16,
+            height: 1.4,
+            color: AppTheme.textLight,
+          ),
+        ),
+        const SizedBox(height: 20),
+        if (_showPhoneInput && !_showOtpInput)
+          _PhoneInputField(
+            controller: _phoneController,
+            onSend: _sendOtp,
+            loading: _loading,
+            onCancel: () => setState(() => _showPhoneInput = false),
+            selectedCountry: _selectedCountry,
+            onCountryTap: _showCountryPicker,
+          ),
+        if (_showOtpInput)
+          _OtpInputField(
+            controller: _otpController,
+            phone: _phoneController.text.trim(),
+            onVerify: _verifyOtp,
+            loading: _loading,
+            onResend: _sendOtp,
+            onCancel: () => setState(() {
+              _showOtpInput = false;
+              _showPhoneInput = false;
+              _otpController.clear();
+            }),
+          ),
+        if (!inPhoneFlow) ...[
+          if (!_isAdminMode) ...[
+            _ConsentRow(
+              value: _agreeToPrivacy,
+              onChanged: (v) => setState(() => _agreeToPrivacy = v),
+              onPolicy: () => context.push('/privacy'),
+            ),
+            const SizedBox(height: 16),
+          ],
+          DsButton(
+            label: l.welcomeContinueWithGoogle,
+            style: DsButtonStyle.google,
+            loading: _loading,
+            onPressed: _handleGoogle,
+          ),
+          const SizedBox(height: 12),
+          DsButton(
+            label: l.welcomeSignInWithApple,
+            style: DsButtonStyle.apple,
+            onPressed: _handleApple,
+          ),
+          const SizedBox(height: 12),
+          DsButton(
+            label: l.welcomeSignInWithPhone,
+            style: DsButtonStyle.secondary,
+            icon: Icons.phone_iphone_rounded,
+            onPressed: () {
+              if (!_isAdminMode && !_agreeToPrivacy) return _needConsent();
+              setState(() => _showPhoneInput = true);
+            },
+          ),
+          if (!_isAdminMode) ...[
+            const SizedBox(height: 4),
+            DsButton(
+              label: l.welcomeBrowseAsGuest,
+              style: DsButtonStyle.ghost,
+              onPressed: () {
+                if (!_agreeToPrivacy) return _needConsent();
+                ref.read(authProvider.notifier).continueAsGuest();
+              },
+            ),
+          ],
+        ],
+        const SizedBox(height: 20),
+        Text(
+          _isAdminMode ? l.welcomeFooterAdmin : l.welcomeFooterCustomer,
+          textAlign: TextAlign.center,
+          style: AppFonts.body(fontSize: 13, color: AppTheme.textLight),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Hero (photo + benefits) ─────────────────────────────────────────────────
+
+class _HeroPanel extends StatelessWidget {
+  const _HeroPanel({
+    required this.tagline,
+    required this.benefits,
+    required this.isAdmin,
+    this.compact = false,
+  });
+
+  final String tagline;
+  final List<(IconData, String)> benefits;
+  final bool isAdmin;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return DsPhotoBanner(
+      asset: DsPhotos.marina,
+      radius: 0,
+      decodeWidth: compact ? 1000 : 1600,
+      alignment: Alignment.topCenter,
+      padding: EdgeInsets.all(compact ? 24 : 56),
+      childAlignment: AlignmentDirectional.bottomStart,
+      child: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const DsBrandMark(size: 44, onDark: true),
+                const SizedBox(width: 12),
+                Text(
+                  'DealSouk',
+                  style: AppFonts.display(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Text(
+                tagline,
+                style: AppFonts.display(
+                  fontSize: compact ? 22 : 38,
+                  height: 1.2,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            if (benefits.isNotEmpty) ...[
+              const SizedBox(height: 28),
+              for (final b in benefits)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      const SizedBox(height: 12),
-
-                      // Logo
-                      Center(
-                        child: Container(
-                          padding: const EdgeInsets.all(18),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.08),
-                                blurRadius: 24,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
-                          ),
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 250),
-                            child: Icon(
-                              _isAdminMode
-                                  ? Icons.gavel_rounded
-                                  : Icons.insights_rounded,
-                              key: ValueKey<bool>(_isAdminMode),
-                              size: 44,
-                              color: AppTheme.forestDeep,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      const Text(
-                        'DealSouk',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900,
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: const BoxDecoration(
                           color: Colors.white,
-                          letterSpacing: -0.5,
-                          fontSize: 40,
+                          shape: BoxShape.circle,
                         ),
+                        child: Icon(b.$1, color: AppTheme.forestDeep),
                       ),
-                      const SizedBox(height: 8),
-
-                      AnimatedSize(
-                        duration: const Duration(milliseconds: 200),
-                        child: Text(
-                          _isAdminMode
-                              ? l.welcomeTaglineAdmin
-                              : l.welcomeTaglineCustomer,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.65),
-                            fontWeight: FontWeight.w500,
-                            fontSize: 15,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Value pillars
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: _isAdminMode
-                            ? [
-                                _ValuePillar(
-                                  icon: Icons.rate_review_rounded,
-                                  label: l.welcomePillarAuditQueue,
-                                ),
-                                const SizedBox(width: 20),
-                                _ValuePillar(
-                                  icon: Icons.security_rounded,
-                                  label: l.welcomePillarFraudFilter,
-                                ),
-                                const SizedBox(width: 20),
-                                _ValuePillar(
-                                  icon: Icons.token_rounded,
-                                  label: l.welcomePillarIssueTokens,
-                                ),
-                              ]
-                            : [
-                                _ValuePillar(
-                                  icon: Icons.compare_arrows_rounded,
-                                  label: l.welcomePillarComparePrices,
-                                ),
-                                const SizedBox(width: 20),
-                                _ValuePillar(
-                                  icon: Icons.place_rounded,
-                                  label: l.welcomePillarFindNearby,
-                                ),
-                                const SizedBox(width: 20),
-                                _ValuePillar(
-                                  icon: Icons.help_outline_rounded,
-                                  label: l.welcomePillarRequestPrice,
-                                ),
-                              ],
-                      ),
-
-                      const SizedBox(height: 32),
-
-                      // Info banner
-                      GestureDetector(
-                        onTap: () {
-                          if (!_isAdminMode) TutorialOverlay.show(context);
-                        },
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 20),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.15),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.info_outline,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  _isAdminMode
-                                      ? l.welcomeInfoBannerAdmin
-                                      : l.welcomeInfoBannerCustomer,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      // Phone input (shown when user taps Sign in with Phone)
-                      if (_showPhoneInput && !_showOtpInput) ...[
-                        _PhoneInputField(
-                          controller: _phoneController,
-                          onSend: _sendOtp,
-                          loading: _loading,
-                          onCancel: () =>
-                              setState(() => _showPhoneInput = false),
-                          selectedCountry: _selectedCountry,
-                          onCountryTap: _showCountryPicker,
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-
-                      // OTP input
-                      if (_showOtpInput) ...[
-                        _OtpInputField(
-                          controller: _otpController,
-                          phone: _phoneController.text.trim(),
-                          onVerify: _verifyOtp,
-                          loading: _loading,
-                          onResend: _sendOtp,
-                          onCancel: () => setState(() {
-                            _showOtpInput = false;
-                            _showPhoneInput = false;
-                            _otpController.clear();
-                          }),
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-
-                      // Privacy consent checkbox
-                      if (!_isAdminMode &&
-                          !_showPhoneInput &&
-                          !_showOtpInput) ...[
-                        Row(
-                          children: [
-                            Checkbox(
-                              value: _agreeToPrivacy,
-                              onChanged: (val) => setState(() {
-                                _agreeToPrivacy = val ?? false;
-                              }),
-                              activeColor: Colors.white,
-                              checkColor: AppTheme.forestDeep,
-                              side: const BorderSide(
-                                color: Colors.white70,
-                                width: 1.5,
-                              ),
-                            ),
-                            Expanded(
-                              child: Wrap(
-                                crossAxisAlignment: WrapCrossAlignment.center,
-                                children: [
-                                  Text(
-                                    l.welcomePrivacyConsentPrefix,
-                                    style: const TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 11.5,
-                                    ),
-                                  ),
-                                  GestureDetector(
-                                    onTap: () => context.push('/privacy'),
-                                    child: Text(
-                                      l.welcomePrivacyPolicyLink,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 11.5,
-                                        fontWeight: FontWeight.w900,
-                                        decoration: TextDecoration.underline,
-                                        decorationColor: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                  Text(
-                                    l.welcomePrivacyConsentSuffix,
-                                    style: const TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 11.5,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-
-                      // Primary CTA
-                      if (!_showPhoneInput && !_showOtpInput) ...[
-                        _PrimaryCta(
-                          label: l.welcomeContinueWithGoogle,
-                          loading: _loading,
-                          onTap: _handleGoogle,
-                        ),
-                        const SizedBox(height: 12),
-
-                        if (!_isAdminMode) ...[
-                          _SignInButton(
-                            icon: Icons.phone_iphone_rounded,
-                            label: l.welcomeSignInWithPhone,
-                            onTap: () {
-                              if (!_agreeToPrivacy) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      l.welcomePrivacyConsentRequired,
-                                    ),
-                                  ),
-                                );
-                                return;
-                              }
-                              setState(() => _showPhoneInput = true);
-                            },
-                          ),
-                          const SizedBox(height: 10),
-                          _SignInButton(
-                            icon: Icons.apple,
-                            iconSize: 22,
-                            label: l.welcomeSignInWithApple,
-                            onTap: _handleApple,
-                          ),
-                          const SizedBox(height: 10),
-                          _SignInButton(
-                            icon: Icons.visibility_outlined,
-                            label: l.welcomeBrowseAsGuest,
-                            onTap: () {
-                              if (!_agreeToPrivacy) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      l.welcomePrivacyConsentRequired,
-                                    ),
-                                  ),
-                                );
-                                return;
-                              }
-                              ref.read(authProvider.notifier).continueAsGuest();
-                            },
-                          ),
-                        ] else ...[
-                          _SignInButton(
-                            icon: Icons.phone_iphone_rounded,
-                            label: l.welcomeSignInWithPhone,
-                            onTap: () => setState(() => _showPhoneInput = true),
-                          ),
-                          const SizedBox(height: 10),
-                          _SignInButton(
-                            icon: Icons.apple,
-                            iconSize: 22,
-                            label: l.welcomeSignInWithApple,
-                            onTap: _handleApple,
-                          ),
-                        ],
-                      ],
-
-                      const SizedBox(height: 20),
+                      const SizedBox(width: 14),
                       Text(
-                        _isAdminMode
-                            ? l.welcomeFooterAdmin
-                            : l.welcomeFooterCustomer,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.4),
-                          fontSize: 11,
+                        b.$2.replaceAll('\n', ' '),
+                        style: AppFonts.body(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
                         ),
                       ),
-                      const SizedBox(height: 12),
                     ],
                   ),
                 ),
-              ),
-            ),
-
-            // Loading overlay
-            if (_loading)
-              const Positioned.fill(
-                child: ColoredBox(
-                  color: Colors.black26,
-                  child: Center(
-                    child: CircularProgressIndicator(color: Colors.white),
-                  ),
-                ),
-              ),
+            ],
           ],
         ),
       ),
@@ -698,7 +522,82 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   }
 }
 
+class _ConsentRow extends StatelessWidget {
+  const _ConsentRow({
+    required this.value,
+    required this.onChanged,
+    required this.onPolicy,
+  });
+
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  final VoidCallback onPolicy;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final base = AppFonts.body(fontSize: 14, height: 1.4, color: AppTheme.ink);
+    return Semantics(
+      checked: value,
+      container: true,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 48,
+            height: 48,
+            child: Checkbox(
+              value: value,
+              onChanged: (v) => onChanged(v ?? false),
+              activeColor: AppTheme.forestDeep,
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 13),
+              child: Text.rich(
+                TextSpan(
+                  style: base,
+                  children: [
+                    TextSpan(text: l.welcomePrivacyConsentPrefix),
+                    TextSpan(
+                      text: l.welcomePrivacyPolicyLink,
+                      recognizer: TapGestureRecognizer()..onTap = onPolicy,
+                      style: base.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.forestDeep,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                    TextSpan(text: l.welcomePrivacyConsentSuffix),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ── Phone input ──────────────────────────────────────────────────────────────
+
+InputDecoration _fieldDecoration(String hint) => InputDecoration(
+  filled: true,
+  fillColor: Colors.white,
+  hintText: hint,
+  hintStyle: AppFonts.body(color: AppTheme.textLight, fontSize: 16),
+  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+  enabledBorder: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(14),
+    borderSide: const BorderSide(color: AppTheme.line, width: 1.5),
+  ),
+  focusedBorder: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(14),
+    borderSide: const BorderSide(color: AppTheme.forestDeep, width: 2),
+  ),
+);
 
 class _PhoneInputField extends StatelessWidget {
   final TextEditingController controller;
@@ -723,117 +622,74 @@ class _PhoneInputField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            GestureDetector(
-              onTap: onCountryTap,
-              child: Container(
-                height: 56,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.08),
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Row(
+            children: [
+              Material(
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.3),
+                  side: const BorderSide(color: AppTheme.line, width: 1.5),
+                ),
+                child: InkWell(
+                  onTap: onCountryTap,
+                  borderRadius: BorderRadius.circular(14),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 15,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          selectedCountry.flag,
+                          style: const TextStyle(fontSize: 22),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          selectedCountry.code,
+                          style: AppFonts.body(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.ink,
+                          ),
+                        ),
+                        const Icon(Icons.arrow_drop_down),
+                      ],
+                    ),
                   ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      selectedCountry.flag,
-                      style: const TextStyle(fontSize: 20),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      selectedCountry.code,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                      ),
-                    ),
-                    const Icon(Icons.arrow_drop_down, color: Colors.white70),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  keyboardType: TextInputType.phone,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(selectedCountry.maxLength),
                   ],
+                  autofocus: true,
+                  style: AppFonts.body(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.ink,
+                  ),
+                  decoration: _fieldDecoration(selectedCountry.formatHint),
                 ),
               ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: TextField(
-                controller: controller,
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(selectedCountry.maxLength),
-                ],
-                autofocus: true,
-                style: const TextStyle(
-                  color: AppTheme.textDark,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.white,
-                  hintText: selectedCountry.formatHint,
-                  hintStyle: TextStyle(color: Colors.grey.shade400),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 18,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(color: Colors.grey.shade300),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(
-                      color: AppTheme.forestDeep,
-                      width: 1.5,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: GestureDetector(
-                onTap: onCancel,
-                child: Container(
-                  height: 50,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(25),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.25),
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      l.welcomeCancel,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              flex: 2,
-              child: _PrimaryCta(
-                label: l.welcomeSendCode,
-                loading: loading,
-                onTap: onSend,
-              ),
-            ),
-          ],
+        const SizedBox(height: 16),
+        DsButton(label: l.welcomeSendCode, loading: loading, onPressed: onSend),
+        const SizedBox(height: 4),
+        DsButton(
+          label: l.welcomeCancel,
+          style: DsButtonStyle.ghost,
+          onPressed: onCancel,
         ),
       ],
     );
@@ -867,243 +723,39 @@ class _OtpInputField extends StatelessWidget {
       children: [
         Text(
           l.welcomeOtpPrompt(phone),
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.7),
-            fontSize: 13,
-          ),
+          style: AppFonts.body(fontSize: 16, color: AppTheme.ink, height: 1.4),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 14),
         TextField(
           controller: controller,
           keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           maxLength: 6,
           autofocus: true,
+          autofillHints: const [AutofillHints.oneTimeCode],
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: AppTheme.textDark,
-            fontSize: 24,
-            letterSpacing: 8,
+          style: AppFonts.display(
+            fontSize: 28,
+            letterSpacing: 10,
             fontWeight: FontWeight.w700,
+            color: AppTheme.ink,
           ),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.white,
-            counterText: '',
-            hintText: '------',
-            hintStyle: TextStyle(color: Colors.grey.shade400, letterSpacing: 8),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(
-                color: AppTheme.forestDeep,
-                width: 1.5,
-              ),
-            ),
-          ),
+          decoration: _fieldDecoration('------').copyWith(counterText: ''),
         ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: GestureDetector(
-                onTap: onCancel,
-                child: Container(
-                  height: 50,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(25),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.25),
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      l.welcomeCancel,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              flex: 2,
-              child: _PrimaryCta(
-                label: l.welcomeVerify,
-                loading: loading,
-                onTap: onVerify,
-              ),
-            ),
-          ],
+        const SizedBox(height: 16),
+        DsButton(label: l.welcomeVerify, loading: loading, onPressed: onVerify),
+        const SizedBox(height: 4),
+        DsButton(
+          label: l.welcomeResendCode,
+          style: DsButtonStyle.ghost,
+          onPressed: onResend,
         ),
-        const SizedBox(height: 8),
-        GestureDetector(
-          onTap: onResend,
-          child: Text(
-            l.welcomeResendCode,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.5),
-              fontSize: 13,
-              decoration: TextDecoration.underline,
-              decorationColor: Colors.white38,
-            ),
-          ),
+        DsButton(
+          label: l.welcomeCancel,
+          style: DsButtonStyle.ghost,
+          onPressed: onCancel,
         ),
       ],
-    );
-  }
-}
-
-// ── Shared widgets ────────────────────────────────────────────────────────────
-
-class _PrimaryCta extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-  final bool loading;
-
-  const _PrimaryCta({
-    required this.label,
-    required this.onTap,
-    this.loading = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: loading ? null : onTap,
-      child: Container(
-        height: 54,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(27),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Center(
-          child: loading
-              ? const SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: AppTheme.forestDeep,
-                  ),
-                )
-              : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Image.asset(
-                      'assets/images/google_g.png',
-                      height: 22,
-                      width: 22,
-                      excludeFromSemantics: true,
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      label,
-                      style: const TextStyle(
-                        color: AppTheme.forestDeep,
-                        fontSize: 16.5,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
-                ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ValuePillar extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _ValuePillar({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-          ),
-          child: Icon(icon, color: Colors.white, size: 22),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          label,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: Colors.white.withValues(alpha: 0.85),
-            height: 1.3,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _SignInButton extends StatelessWidget {
-  final IconData icon;
-  final double iconSize;
-  final String label;
-  final VoidCallback onTap;
-
-  const _SignInButton({
-    required this.icon,
-    this.iconSize = 20,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 50,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(25),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.25),
-            width: 1.3,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: iconSize, color: Colors.white),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14.5,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

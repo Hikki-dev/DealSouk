@@ -10,6 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:dealsouk/core/offline/connectivity_service.dart';
 import 'package:dealsouk/core/offline/sync_service.dart';
 import 'package:dealsouk/core/theme/theme.dart';
+import 'package:dealsouk/features/auth/presentation/auth_providers.dart';
 import 'package:dealsouk/l10n/app_localizations.dart';
 
 /// Screen sizes used across the screenshot tests (logical pixels).
@@ -122,3 +123,16 @@ Future<void> shoot(
     file.writeAsBytesSync(data!.buffer.asUint8List());
   });
 }
+
+/// A signed-out auth notifier that never touches Firebase.
+class FakeAuth extends AuthNotifier {
+  FakeAuth([this._state = const AuthState(status: AuthStatus.unauthenticated)]);
+  final AuthState _state;
+
+  @override
+  AuthState build() => _state;
+}
+
+Override fakeAuth([AuthState? state]) => authProvider.overrideWith(
+  () => state == null ? FakeAuth() : FakeAuth(state),
+);

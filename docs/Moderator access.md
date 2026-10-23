@@ -2,12 +2,12 @@
 
 DealSouk is **one codebase that builds two apps**. A build setting called `ADMIN_MODE` decides which one you get.
 
-| App | Who it is for | `ADMIN_MODE` | Where it lives today |
+| App | Who it is for | `ADMIN_MODE` | Where it lives |
 |---|---|---|---|
-| **Moderator console** | Moderators and admins | `true` | The Vercel site, https://deal-souk.vercel.app |
-| **Shopper app** | Everyone else | `false` (default) | Android APKs from GitHub, or any build you make yourself |
+| **Moderator console** | Moderators and admins | `true` | https://deal-souk.vercel.app |
+| **Shopper app** | Customers | `false` (default) | https://deal-souk-shopper.vercel.app, and Android APKs from GitHub |
 
-That is why the Vercel link only shows the admin side: `vercel_build.sh` builds the moderator console. Nothing is wrong with it. The shopper app is simply not deployed to the web yet. Section 3 shows four ways to show it.
+Each app is its own website (its own Vercel project), built from the same code. Want visitors to look around the console without being able to change anything? See [Demo mode](Demo%20mode.md).
 
 ---
 
@@ -64,15 +64,9 @@ Changing a variable needs a redeploy: Deployments, the latest one, Redeploy.
 
 ---
 
-## 2. Why desktop still looks like a phone
+## 2. Show the shopper app
 
-On a wide screen the shopper app now has a real desktop layout: a top navigation bar, a split-screen sign-in, a multi-column home, search with filters, a map with a side panel, a comparison table on the product page, and a two-column rewards page. Tablets get a side rail. See [The%20redesign.md](The%20redesign.md) and [Screens.md](Screens.md).
-
----
-
-## 3. Show the shopper (mobile) app
-
-Pick whichever suits the moment.
+Pick whichever suits the moment. The quickest is the website: open https://deal-souk-shopper.vercel.app on a phone and use **Share, Add to Home Screen**.
 
 ### A. Android phone (best for a real demo)
 
@@ -84,17 +78,9 @@ Every push to `main` builds the APKs.
 
 When you push a tag such as `v2.1.0`, the same APKs are attached to a GitHub **Release**, which gives you a download link you can share.
 
-### B. The shopper app on the web, on its own link
+### B. The shopper app on the web
 
-`vercel_build.sh` now takes a setting called `APP_MODE`. The default is `admin`, so your current site is unchanged. A second Vercel project with `APP_MODE=shopper` gives you a shopper link that you can open on a phone and add to the home screen.
-
-1. Vercel, **Add New**, **Project**, import the same GitHub repository again, and name it `deal-souk-shopper`.
-2. Leave the build settings alone. The repository's `vercel.json` already sets the build command and output folder.
-3. Add these environment variables: `APP_MODE` = `shopper`, plus the same `API_BASE_URL`, `FIREBASE_OPTIONS_DART_B64` and `MAPBOX_ACCESS_TOKEN` as the admin project.
-4. Deploy.
-5. In Firebase Console, Authentication, Settings, **Authorized domains**, add the new `*.vercel.app` address. Without this, Google sign-in fails on the new link.
-
-On a phone, open the link and use **Share, Add to Home Screen**. On a desktop it appears inside the phone frame.
+https://deal-souk-shopper.vercel.app. How the two Vercel projects are set up is in [Deploying](Deploying.md).
 
 ### C. Run it on your own computer
 
@@ -108,9 +94,9 @@ For the moderator console add `--dart-define=ADMIN_MODE=true`. To fake a phone, 
 
 You need your own `lib/firebase_options.dart`. It is not in git. The README explains `flutterfire configure`.
 
-### D. Demo mode with no accounts at all
+### D. Let visitors look around the console
 
-The branch `claude/ecstatic-shannon-emp5z7` adds a **demo mode** that runs the whole app on one computer with no Firebase project and a made-up Dubai data set. It is not merged yet. Once it is, see `docs/Demo mode.md`.
+See [Demo mode](Demo%20mode.md).
 
 ---
 
@@ -123,3 +109,4 @@ The branch `claude/ecstatic-shannon-emp5z7` adds a **demo mode** that runs the w
 | `MAPBOX_ACCESS_TOKEN` | Flutter build | Map tiles |
 | `APP_MODE` | `vercel_build.sh` | `admin` (default) or `shopper`, sets `ADMIN_MODE` for you |
 | `ADMIN_MFA_REQUIRED` | Backend | Require a second factor for the admin API |
+| `ADMIN_DEMO_VIEWERS` | Backend | Let any signed-in person view the console, read-only. See [Demo mode](Demo%20mode.md) |

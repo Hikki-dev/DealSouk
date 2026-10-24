@@ -80,7 +80,7 @@ jobs:
           echo "IPA size: $(du -sh ../DealSouk-unsigned.ipa | cut -f1)"
 
       - name: Upload IPA artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: DealSouk-iOS-unsigned-ipa
           path: build/ios/DealSouk-unsigned.ipa
@@ -90,7 +90,7 @@ jobs:
       # Also upload the raw .app folder as a fallback in case you want to
       # inspect it or sign it yourself via Xcode Organizer / fastlane.
       - name: Upload raw .app artifact (fallback)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: DealSouk-iOS-app-bundle
           path: build/ios/iphoneos

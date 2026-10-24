@@ -178,7 +178,7 @@ jobs:
           cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build/outputs/DealSouk-Admin.apk
 
       - name: Upload Shopper APK artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Dealsouk-Shopper-APK
           path: |
@@ -189,7 +189,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload Admin APK artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Dealsouk-Admin-APK
           path: build/outputs/DealSouk-Admin.apk

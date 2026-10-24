@@ -386,6 +386,13 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
           DsButton(
             label: l.welcomeContinueWithGoogle,
             style: DsButtonStyle.google,
+            leading: Image.asset(
+              'assets/images/google_g.png',
+              width: 22,
+              height: 22,
+              filterQuality: FilterQuality.high,
+              excludeFromSemantics: true,
+            ),
             loading: _loading,
             onPressed: _handleGoogle,
           ),
@@ -393,6 +400,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
           DsButton(
             label: l.welcomeSignInWithApple,
             style: DsButtonStyle.apple,
+            icon: Icons.apple,
             onPressed: _handleApple,
           ),
           const SizedBox(height: 12),

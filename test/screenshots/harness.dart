@@ -14,6 +14,10 @@ import 'package:dealsouk/features/auth/presentation/auth_providers.dart';
 import 'package:dealsouk/l10n/app_localizations.dart';
 
 /// Screen sizes used across the screenshot tests (logical pixels).
+/// Screenshots are saved at this multiple of the layout size, so a 1440 wide
+/// desktop becomes 3240 pixels wide and text stays crisp in the README.
+const double captureScale = 2.25;
+
 class Sizes {
   static const phone = Size(390, 844);
   static const tablet = Size(820, 1180);
@@ -116,7 +120,7 @@ Future<void> shoot(
   await tester.runAsync(() async {
     final boundary =
         key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
-    final ui.Image image = await boundary.toImage(pixelRatio: 1.0);
+    final ui.Image image = await boundary.toImage(pixelRatio: captureScale);
     final data = await image.toByteData(format: ui.ImageByteFormat.png);
     final file = File('build/screenshots/$name.png');
     file.parent.createSync(recursive: true);

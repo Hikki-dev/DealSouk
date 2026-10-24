@@ -2036,6 +2036,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get modLogOut => 'Log out';
 
   @override
+  String get modRoleViewerTag => 'Role: Viewer';
+
+  @override
   String get modRoleTag => 'Role: Moderator';
 
   @override

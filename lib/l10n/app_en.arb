@@ -1095,6 +1095,7 @@
   "navUsers": "Manage users",
   "modBackToApp": "Back to app",
   "modLogOut": "Log out",
+  "modRoleViewerTag": "Role: Viewer",
   "modRoleTag": "Role: Moderator",
   "modRefresh": "Refresh",
   "modExportCsv": "Export CSV",

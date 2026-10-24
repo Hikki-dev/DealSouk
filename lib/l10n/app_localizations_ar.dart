@@ -2026,6 +2026,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get modLogOut => 'تسجيل الخروج';
 
   @override
+  String get modRoleViewerTag => 'الدور: مشاهد';
+
+  @override
   String get modRoleTag => 'الدور: مشرف';
 
   @override

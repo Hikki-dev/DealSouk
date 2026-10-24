@@ -324,4 +324,14 @@ void main() {
       overrides: _overrides,
     );
   });
+
+  testWidgets('moderation demo viewer desktop', (tester) async {
+    await shoot(
+      tester,
+      const AdminScreen(readOnly: true),
+      name: 'admin_demo_desktop',
+      size: Sizes.desktop,
+      overrides: _overrides,
+    );
+  });
 }

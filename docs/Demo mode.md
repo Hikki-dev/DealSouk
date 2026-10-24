@@ -15,6 +15,8 @@ DealSouk has two apps, and you want to show both of them off: the **shopper app*
 3. Every screen loads real numbers: the queue, the map, analytics, vouchers, stock, settings, products and users.
 4. If the visitor presses **Approve**, **Ban**, **Delete** or any other action, the console says the demo is view-only. Behind that, **the API refuses the request too**, so the protection does not depend on the buttons.
 
+<p align="center"><img src="images/app/admin-demo-desktop.jpg" alt="The moderator console as a demo viewer sees it: a banner across the top says changes are turned off, and the role badge reads Viewer" width="100%"></p>
+
 ## What viewers do not see
 
 Other shoppers are real people, so a viewer sees a safe copy of the data.

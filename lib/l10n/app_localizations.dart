@@ -3594,6 +3594,12 @@ abstract class AppLocalizations {
   /// **'Log out'**
   String get modLogOut;
 
+  /// No description provided for @modRoleViewerTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Role: Viewer'**
+  String get modRoleViewerTag;
+
   /// No description provided for @modRoleTag.
   ///
   /// In en, this message translates to:

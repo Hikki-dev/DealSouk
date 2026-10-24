@@ -437,7 +437,9 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             ),
           ),
           DsTag(
-            AppLocalizations.of(context)!.modRoleTag,
+            widget.readOnly
+                ? AppLocalizations.of(context)!.modRoleViewerTag
+                : AppLocalizations.of(context)!.modRoleTag,
             icon: Icons.verified_user_rounded,
           ),
           const SizedBox(width: 12),

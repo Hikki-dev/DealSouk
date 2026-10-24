@@ -200,7 +200,7 @@ jobs:
       # leave the APKs as downloadable build artifacts above.
       - name: Publish release with APKs
         if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
           name: DealSouk ${{ github.ref_name }}

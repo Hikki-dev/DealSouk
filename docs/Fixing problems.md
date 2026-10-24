@@ -32,6 +32,25 @@ The website build needs the Firebase settings. Add the variable in the Vercel pr
 1. Run `base64 -w0 lib/firebase_options.dart` on a computer where you ran `flutterfire configure`. On a Mac use `base64 -i lib/firebase_options.dart`.
 2. Paste the result as `FIREBASE_OPTIONS_DART_B64`. The shopper and the admin project use the same value.
 
+## The shopper website says "Couldn't load prices"
+
+You are signed in, the home page shows, but the prices never load. The API is fine. It is refusing to let this website read its answers.
+
+The API only answers websites on its allow-list, the `ALLOWED_ORIGINS` setting on Render. A new website address must be added to it.
+
+1. Open the `DealSouk` service on Render, then **Environment**.
+2. Add the shopper address to `ALLOWED_ORIGINS`. Keep the ones that are already there. Separate them with commas, with no spaces, no `https://` missing and no slash at the end. For example: `https://deal-souk.vercel.app,https://deal-souk-shopper.vercel.app`.
+3. Save. Render redeploys by itself. The free server can take about a minute to wake up.
+4. Refresh the website and press **Retry**.
+
+To test it without the app, ask the API what it says to your website's address. A good answer includes a line `access-control-allow-origin` that repeats your address:
+
+```bash
+curl -i -X OPTIONS https://dealsouk.onrender.com/products/search \
+  -H "Origin: https://deal-souk-shopper.vercel.app" \
+  -H "Access-Control-Request-Method: GET"
+```
+
 ## The shopper website shows the moderator console
 
 The two websites are the same code. `APP_MODE` picks which one. Check that the project you opened has `APP_MODE=shopper`. See [Deploying](Deploying.md).

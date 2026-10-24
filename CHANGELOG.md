@@ -2,6 +2,11 @@
 
 Newest first.
 
+## The shopper website can reach the API
+
+1. Fixed "Couldn't load prices" on the shopper website. The API only trusted the moderator website, so it refused to answer the shopper one. Both websites, and their Vercel aliases, are now in `ALLOWED_ORIGINS`.
+2. New entry in [Fixing problems](docs/Fixing%20problems.md) with the steps and a test command, a section in [Deploying](docs/Deploying.md), and the example settings file now lists both websites.
+
 ## Demo mode for the moderator console
 
 1. Anyone who signs in can now look around the console in **demo mode**, read-only. Only moderator accounts, which you make with `npm run admin:set`, can change anything. It is off until `ADMIN_DEMO_VIEWERS=true` is set on the API. See [Demo mode](docs/Demo%20mode.md).

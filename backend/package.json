@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.1",
-    "@prisma/client": "^5.22.0",
+    "@prisma/client": "^7.10.1",
     "@sentry/node": "^10.58.0",
     "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.17",

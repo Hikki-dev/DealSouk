@@ -712,6 +712,7 @@
   "navUsers": "إدارة المستخدمين",
   "modBackToApp": "العودة إلى التطبيق",
   "modLogOut": "تسجيل الخروج",
+  "modRoleViewerTag": "الدور: مشاهد",
   "modRoleTag": "الدور: مشرف",
   "modRefresh": "تحديث",
   "modExportCsv": "تصدير CSV",

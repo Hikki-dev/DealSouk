@@ -17,6 +17,13 @@ Android APKs for both apps come from the **Android APK** GitHub workflow (artifa
 | `API_BASE_URL` | yes | The backend address. Same value in both projects. The build stops without it. |
 | `MAPBOX_ACCESS_TOKEN` | recommended | A restricted public `pk.` token. Without it, maps show blank tiles. |
 
+## The API allow-list (CORS)
+The API on Render only answers the websites listed in `ALLOWED_ORIGINS`. Both websites must be in it, or the shopper app shows "Couldn't load prices". Today it holds:
+
+`https://deal-souk.vercel.app`, `https://deal-souk-hikki-devs-projects.vercel.app`, `https://deal-souk-git-main-hikki-devs-projects.vercel.app`, `https://deal-souk-shopper.vercel.app`, `https://deal-souk-shopper-hikki-devs-projects.vercel.app` and `https://deal-souk-shopper-git-main-hikki-devs-projects.vercel.app`.
+
+Add any custom domain here too. See [Fixing problems](Fixing%20problems.md).
+
 ## Firebase authorized domains
 Web sign-in is refused until every site address is listed in Firebase.
 

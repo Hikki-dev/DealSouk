@@ -27,7 +27,7 @@ cd backend && npm test
 python3 scripts/secret_scan.py
 ```
 
-The same checks run on every pull request. The Flutter tests also draw each screen to `build/screenshots/`, so open the pictures of any screen you changed.
+The same checks run on every pull request. The Flutter tests also draw each screen to `build/screenshots/`, so open the pictures of any screen you changed. They are saved at 2.25 times the layout size (`captureScale` in `test/screenshots/harness.dart`), which makes a desktop picture 3240 pixels wide. To refresh the pictures in the README, run `flutter test test/screenshots`, convert the ones you changed to JPEG (`sips -s format jpeg -s formatOptions 82 in.png --out docs/images/app/name.jpg` on a Mac) and keep each under 1.5 MB.
 
 ## Sending a change
 

@@ -8,7 +8,8 @@ Newest first.
 2. Viewers see a banner, shoppers' names are shortened, and phone numbers, voucher codes, receipt photos and exports are hidden or refused.
 3. The API refuses every write from a viewer, so the protection does not rely on the buttons.
 4. Fixed the Android and iOS release builds, which had been failing: `sentry_flutter` upgraded to 9.30.1, and the unused Google Maps plugin removed.
-5. Rewrote the Moderator access guide, which still said the shopper app was not on the web.
+5. Every picture in the README was taken again at 2.25 times the size (desktop pictures are now 3240 pixels wide instead of 1000), and there is a new one of the demo console. The role badge now says Viewer for demo viewers.
+6. Rewrote the Moderator access guide, which still said the shopper app was not on the web.
 
 ## Deploying and documentation
 

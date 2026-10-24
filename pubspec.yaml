@@ -46,7 +46,7 @@ dependencies:
 
   # Auth providers
   google_sign_in: ^7.2.0
-  sign_in_with_apple: ^6.1.4
+  sign_in_with_apple: ^8.2.0
 
   # HTTP client for backend API
   dio: ^5.8.0+1

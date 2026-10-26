@@ -288,33 +288,74 @@ class _RailItem extends StatelessWidget {
   }
 }
 
-/// The "DS" mark in a teal circle.
+/// The DealSouk mark: a price tag with a down arrow on lime.
 class DsBrandMark extends StatelessWidget {
   const DsBrandMark({super.key, this.size = 40, this.onDark = false});
 
   final double size;
+
+  /// Kept for existing callers: the mark has its own lime field, so it reads
+  /// the same on light and dark backgrounds.
   final bool onDark;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: onDark ? Colors.white : AppTheme.forestDeep,
-      ),
-      child: Text(
-        'DS',
-        style: AppFonts.display(
-          fontSize: size * 0.36,
-          fontWeight: FontWeight.w700,
-          color: onDark ? AppTheme.forestDeep : Colors.white,
-        ),
-      ),
+  Widget build(BuildContext context) => CustomPaint(
+        size: Size.square(size),
+        painter: const _DsMarkPainter(),
+      );
+}
+
+class _DsMarkPainter extends CustomPainter {
+  const _DsMarkPainter();
+
+  static const Color _lime = Color(0xFFC8E64B);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Drawn on a 100 x 100 grid, then scaled to fit.
+    canvas.scale(size.width / 100, size.height / 100);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+          const Rect.fromLTWH(0, 0, 100, 100), const Radius.circular(22)),
+      Paint()..color = _lime,
+    );
+    final tag = Path()
+      ..moveTo(20, 24)
+      ..lineTo(52, 24)
+      ..lineTo(82, 50)
+      ..lineTo(52, 76)
+      ..lineTo(20, 76)
+      ..close();
+    final teal = Paint()..color = AppTheme.forestDeep;
+    canvas.drawPath(
+      tag,
+      Paint()
+        ..color = AppTheme.forestDeep
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 6
+        ..strokeJoin = StrokeJoin.round,
+    );
+    canvas.drawPath(tag, teal);
+    canvas.drawCircle(const Offset(33, 50), 5, Paint()..color = _lime);
+    final arrow = Path()
+      ..moveTo(54, 40)
+      ..lineTo(54, 58)
+      ..moveTo(46, 51)
+      ..lineTo(54, 59)
+      ..lineTo(62, 51);
+    canvas.drawPath(
+      arrow,
+      Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 6
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round,
     );
   }
+
+  @override
+  bool shouldRepaint(_DsMarkPainter old) => false;
 }
 
 /// Top navigation bar for desktop windows: brand, four links with an

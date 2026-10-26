@@ -43,3 +43,7 @@ New accounts are shoppers. Grant the admin role as described in [Moderator acces
 2. Add `FIREBASE_OPTIONS_DART_B64` (and `MAPBOX_ACCESS_TOKEN`).
 3. Redeploy the latest `main` deployment, or push a commit.
 4. Add the new address to Firebase authorized domains.
+
+## Builds only run when the app changes
+
+`vercel.json` has an `ignoreCommand`: a commit that only touches the docs, the README, the backend or the tests does not rebuild the two websites. A Flutter web build is large, so this keeps Vercel's free storage from filling up. Change `lib`, `web`, `assets` or `pubspec.*` and both websites rebuild as usual.

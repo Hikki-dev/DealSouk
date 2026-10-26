@@ -159,10 +159,10 @@ Five screens from steps 1, 2, 5 and 8 above, left to right. Click a picture to s
 
 <table align="center">
 <tr>
-<td valign="top"><a href="docs/images/app/welcome-phone.jpg"><img src="docs/images/app/welcome-phone.jpg" alt="Welcome screen on a phone" width="185"></a></td>
-<td valign="top"><a href="docs/images/app/tutorial-phone.jpg"><img src="docs/images/app/tutorial-phone.jpg" alt="The five-slide tutorial" width="185"></a></td>
-<td valign="top"><a href="docs/images/app/home-phone.jpg"><img src="docs/images/app/home-phone.jpg" alt="Home on a phone: search, offers, share a price card, categories and best prices near you" width="185"></a></td>
-<td valign="top"><a href="docs/images/app/scan-phone.jpg"><img src="docs/images/app/scan-phone.jpg" alt="Barcode scanner with a frame to line up the barcode" width="185"></a></td>
+<td valign="top"><a href="docs/images/app/welcome-phone.jpg"><img src="docs/images/app/welcome-phone.jpg" alt="Welcome screen on a phone" height="400"></a></td>
+<td valign="top"><a href="docs/images/app/tutorial-phone.jpg"><img src="docs/images/app/tutorial-phone.jpg" alt="The five-slide tutorial" height="400"></a></td>
+<td valign="top"><a href="docs/images/app/home-phone.jpg"><img src="docs/images/app/home-phone.jpg" alt="Home on a phone: search, offers, share a price card, categories and best prices near you" height="400"></a></td>
+<td valign="top"><a href="docs/images/app/scan-phone.jpg"><img src="docs/images/app/scan-phone.jpg" alt="Barcode scanner with a frame to line up the barcode" height="400"></a></td>
 </tr>
 <tr>
 <td align="center" valign="top"><b>1</b><br><sub>Welcome</sub></td>
@@ -174,7 +174,7 @@ Five screens from steps 1, 2, 5 and 8 above, left to right. Click a picture to s
 
 <table align="center">
 <tr>
-<td valign="top"><a href="docs/images/app/submit-phone.jpg"><img src="docs/images/app/submit-phone.jpg" alt="First step of sharing a price: choose the store" width="185"></a></td>
+<td valign="top"><a href="docs/images/app/submit-phone.jpg"><img src="docs/images/app/submit-phone.jpg" alt="First step of sharing a price: choose the store" height="400"></a></td>
 </tr>
 <tr>
 <td align="center" valign="top"><b>5</b><br><sub>Share a price</sub></td>

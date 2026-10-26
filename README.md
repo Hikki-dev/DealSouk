@@ -20,7 +20,7 @@ It works on phones, tablets and desktops, in English and in Arabic, and the text
 
 ## On this page
 
-* [What you get](#what-you-get): what shoppers and moderators can do
+* [What you get](#what-you-get): what shoppers and moderators can do, and what it is built with
 * [How everything fits together](#how-everything-fits-together): the pieces, and the journey of one price
 * [Try it first](#try-it-first): the live links
 * [The app, step by step](#the-app-step-by-step)
@@ -69,6 +69,19 @@ There are three parts. Each does one job.
 * Warn, suspend or ban a user. Every action is written to an audit log.
 * Manage products and users, approve vouchers, import voucher stock.
 * See analytics and a map of where prices come from. Export CSV and PDF.
+
+### What it is built with
+
+<table>
+<tr><td width="64"><img src="docs/images/icons/flutter.png" alt="Flutter logo" width="48"></td><td width="170"><b>Flutter</b></td><td>One app for phones, tablets and the web, in English and Arabic</td></tr>
+<tr><td><img src="docs/images/icons/dart.png" alt="Dart logo" width="48"></td><td><b>Dart</b></td><td>The language Flutter is written in</td></tr>
+<tr><td><img src="docs/images/icons/nodedotjs.png" alt="Node.js logo" width="48"></td><td><b>Node.js</b></td><td>Runs the API: sign-in checks, photo checks and the token counts</td></tr>
+<tr><td><img src="docs/images/icons/prisma.png" alt="Prisma logo" width="48"></td><td><b>Prisma</b></td><td>Talks to the database safely, with typed queries</td></tr>
+<tr><td><img src="docs/images/icons/postgresql.png" alt="PostgreSQL logo" width="48"></td><td><b>PostgreSQL</b></td><td>Keeps the products, prices and users (hosted on Neon)</td></tr>
+<tr><td><img src="docs/images/icons/firebase.png" alt="Firebase logo" width="48"></td><td><b>Firebase</b></td><td>Sign-in, photo storage and push alerts</td></tr>
+<tr><td><img src="docs/images/icons/vercel.png" alt="Vercel logo" width="48"></td><td><b>Vercel</b></td><td>Hosts the shopper app and the moderator console as two websites</td></tr>
+<tr><td><img src="docs/images/icons/githubactions.png" alt="GitHub Actions logo" width="48"></td><td><b>GitHub Actions</b></td><td>Runs the checks on every change</td></tr>
+</table>
 
 ## How everything fits together
 

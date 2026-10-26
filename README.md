@@ -34,6 +34,7 @@ It works on phones, tablets and desktops, in English and in Arabic, and the text
   * [8. Share a price](#8-share-a-price)
   * [9. Rewards](#9-rewards)
   * [10. Profile and settings](#10-profile-and-settings)
+  * [On a phone](#on-a-phone): five screens in one row
 * [Made for everyone](#made-for-everyone): Arabic, large text, phones and desktops
 * [The moderator console](#the-moderator-console)
 * [Run it yourself](#run-it-yourself)
@@ -113,13 +114,9 @@ Sign in with Google, Apple or a phone number, or look around as a guest. You agr
 
 On a phone the photo sits on top and the buttons are underneath.
 
-<a href="docs/images/app/welcome-phone.jpg"><img src="docs/images/app/welcome-phone.jpg" alt="Welcome screen on a phone" width="320"></a> <a href="docs/images/app/tutorial-phone.jpg"><img src="docs/images/app/tutorial-phone.jpg" alt="The five-slide tutorial" width="320"></a>
-
 The first time you open the app, a five-slide tutorial shows what it does. You can skip it, and you can watch it again from your profile.
 
 ### 2. Home
-
-<a href="docs/images/app/home-phone.jpg"><img src="docs/images/app/home-phone.jpg" alt="Home on a phone: search, offers, share a price card, categories and best prices near you" width="320"></a>
 
 Home shows the best prices near you, a daily challenge, and a button to share a price. The search box and the barcode button are always on top.
 
@@ -137,8 +134,6 @@ The product page lists every store with its price, how far away it is and how ol
 
 ### 5. Scan a barcode
 
-<a href="docs/images/app/scan-phone.jpg"><img src="docs/images/app/scan-phone.jpg" alt="Barcode scanner with a frame to line up the barcode" width="320"></a>
-
 Point the camera at a barcode. If the camera does not work, you can type the number instead.
 
 ### 6. The map
@@ -155,8 +150,6 @@ Add the things you plan to buy. DealSouk shows the cheapest store for the whole 
 
 ### 8. Share a price
 
-<a href="docs/images/app/submit-phone.jpg"><img src="docs/images/app/submit-phone.jpg" alt="First step of sharing a price: choose the store" width="320"></a>
-
 Sharing takes four short steps: choose the store, choose the product, enter the price, then add a photo as proof. Nothing is lost if you are offline. It is sent when the connection comes back.
 
 You can also **ask** for a price. Other shoppers see the request and can answer it, and both of you earn tokens.
@@ -172,6 +165,34 @@ Approved prices earn tokens. A bar shows how close you are to the next voucher. 
 <a href="docs/images/app/profile-desktop.jpg"><img src="docs/images/app/profile-desktop.jpg" alt="Profile on desktop with your stats, vouchers and settings" width="100%"></a>
 
 Your profile shows your level, your tokens, your vouchers and your past prices. Settings let you change the language and the **text size**, replay the tutorial and read the privacy policy.
+
+### On a phone
+
+Five screens from steps 1, 2, 5 and 8 above, left to right. Click a picture to see it full size.
+
+<table align="center">
+<tr>
+<td valign="top"><a href="docs/images/app/welcome-phone.jpg"><img src="docs/images/app/welcome-phone.jpg" alt="Welcome screen on a phone" height="400"></a></td>
+<td valign="top"><a href="docs/images/app/tutorial-phone.jpg"><img src="docs/images/app/tutorial-phone.jpg" alt="The five-slide tutorial" height="400"></a></td>
+<td valign="top"><a href="docs/images/app/home-phone.jpg"><img src="docs/images/app/home-phone.jpg" alt="Home on a phone: search, offers, share a price card, categories and best prices near you" height="400"></a></td>
+<td valign="top"><a href="docs/images/app/scan-phone.jpg"><img src="docs/images/app/scan-phone.jpg" alt="Barcode scanner with a frame to line up the barcode" height="400"></a></td>
+</tr>
+<tr>
+<td align="center" valign="top"><b>1</b><br><sub>Welcome</sub></td>
+<td align="center" valign="top"><b>2</b><br><sub>Tutorial</sub></td>
+<td align="center" valign="top"><b>3</b><br><sub>Home</sub></td>
+<td align="center" valign="top"><b>4</b><br><sub>Scan a barcode</sub></td>
+</tr>
+</table>
+
+<table align="center">
+<tr>
+<td valign="top"><a href="docs/images/app/submit-phone.jpg"><img src="docs/images/app/submit-phone.jpg" alt="First step of sharing a price: choose the store" height="400"></a></td>
+</tr>
+<tr>
+<td align="center" valign="top"><b>5</b><br><sub>Share a price</sub></td>
+</tr>
+</table>
 
 ## Made for everyone
 

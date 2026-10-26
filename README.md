@@ -157,12 +157,12 @@ Your profile shows your level, your tokens, your vouchers and your past prices. 
 
 Five screens from steps 1, 2, 5 and 8 above, left to right. Click a picture to see it full size.
 
-<table>
+<table align="center">
 <tr>
-<td valign="top" width="25%"><a href="docs/images/app/welcome-phone.jpg"><img src="docs/images/app/welcome-phone.jpg" alt="Welcome screen on a phone" width="185"></a></td>
-<td valign="top" width="25%"><a href="docs/images/app/tutorial-phone.jpg"><img src="docs/images/app/tutorial-phone.jpg" alt="The five-slide tutorial" width="185"></a></td>
-<td valign="top" width="25%"><a href="docs/images/app/home-phone.jpg"><img src="docs/images/app/home-phone.jpg" alt="Home on a phone: search, offers, share a price card, categories and best prices near you" width="185"></a></td>
-<td valign="top" width="25%"><a href="docs/images/app/scan-phone.jpg"><img src="docs/images/app/scan-phone.jpg" alt="Barcode scanner with a frame to line up the barcode" width="185"></a></td>
+<td valign="top"><a href="docs/images/app/welcome-phone.jpg"><img src="docs/images/app/welcome-phone.jpg" alt="Welcome screen on a phone" width="185"></a></td>
+<td valign="top"><a href="docs/images/app/tutorial-phone.jpg"><img src="docs/images/app/tutorial-phone.jpg" alt="The five-slide tutorial" width="185"></a></td>
+<td valign="top"><a href="docs/images/app/home-phone.jpg"><img src="docs/images/app/home-phone.jpg" alt="Home on a phone: search, offers, share a price card, categories and best prices near you" width="185"></a></td>
+<td valign="top"><a href="docs/images/app/scan-phone.jpg"><img src="docs/images/app/scan-phone.jpg" alt="Barcode scanner with a frame to line up the barcode" width="185"></a></td>
 </tr>
 <tr>
 <td align="center" valign="top"><b>1</b><br><sub>Welcome</sub></td>
@@ -172,18 +172,12 @@ Five screens from steps 1, 2, 5 and 8 above, left to right. Click a picture to s
 </tr>
 </table>
 
-<table>
+<table align="center">
 <tr>
-<td valign="top" width="25%"><a href="docs/images/app/submit-phone.jpg"><img src="docs/images/app/submit-phone.jpg" alt="First step of sharing a price: choose the store" width="185"></a></td>
-<td></td>
-<td></td>
-<td></td>
+<td valign="top"><a href="docs/images/app/submit-phone.jpg"><img src="docs/images/app/submit-phone.jpg" alt="First step of sharing a price: choose the store" width="185"></a></td>
 </tr>
 <tr>
 <td align="center" valign="top"><b>5</b><br><sub>Share a price</sub></td>
-<td></td>
-<td></td>
-<td></td>
 </tr>
 </table>
 

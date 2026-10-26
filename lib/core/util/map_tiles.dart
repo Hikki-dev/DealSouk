@@ -5,12 +5,17 @@ import 'package:flutter_map/flutter_map.dart';
 /// `--dart-define=MAPBOX_ACCESS_TOKEN=pk...`. Never commit a value.
 const _kMapboxToken = String.fromEnvironment('MAPBOX_ACCESS_TOKEN');
 
+/// Without a token the maps use OpenStreetMap's own tiles instead of showing
+/// a blank grey map. Set the token to get the Mapbox street style.
+const _kHasMapbox = _kMapboxToken != '';
+
 /// Base-map raster tile layer shared by the shopper and admin maps.
 TileLayer buildBaseTileLayer(BuildContext context) {
-  if (_kMapboxToken.isEmpty) {
-    debugPrint(
-      'MAPBOX_ACCESS_TOKEN is not set; map tiles will fail to load. '
-      'Pass --dart-define=MAPBOX_ACCESS_TOKEN=<token>.',
+  if (!_kHasMapbox) {
+    return TileLayer(
+      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+      userAgentPackageName: 'com.dealsouk.app',
+      maxZoom: 19,
     );
   }
   return TileLayer(
@@ -23,11 +28,11 @@ TileLayer buildBaseTileLayer(BuildContext context) {
   );
 }
 
-/// Attribution required by Mapbox and OpenStreetMap terms.
+/// Attribution required by the tile provider and OpenStreetMap terms.
 Widget buildMapAttribution() {
   return RichAttributionWidget(
     attributions: [
-      TextSourceAttribution('Mapbox', prependCopyright: true),
+      if (_kHasMapbox) TextSourceAttribution('Mapbox', prependCopyright: true),
       TextSourceAttribution(
         'OpenStreetMap contributors',
         prependCopyright: true,

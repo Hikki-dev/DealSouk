@@ -18,12 +18,14 @@ New accounts are shoppers. The moderator console only opens for moderators.
 1. Make the account a moderator, as shown in [Moderator access](Moderator%20access.md).
 2. Sign out of the console and sign in again. Your sign-in carries your role, so an old session still says shopper.
 
-## The map is blank or grey
+## The map looks plain, or is blank or grey
 
-The map needs a Mapbox token. Without it, the tiles do not load.
+Without a Mapbox token the map uses the free OpenStreetMap tiles, so it still shows streets. For the Mapbox street style:
 
 1. Make a restricted public token (it starts with `pk.`) in the Mapbox dashboard.
 2. Give it to the build as `MAPBOX_ACCESS_TOKEN`. On Vercel, add it as an environment variable and redeploy.
+
+An older build made without a token shows a blank grey map. Redeploy to fix it.
 
 ## The Vercel build says "Missing FIREBASE_OPTIONS_DART_B64"
 

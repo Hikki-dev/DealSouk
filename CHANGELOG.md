@@ -2,6 +2,11 @@
 
 Newest first.
 
+## The map works without a Mapbox token
+
+1. The shopper and moderator maps were grey on the live websites because the Vercel builds had no `MAPBOX_ACCESS_TOKEN`. Without a token the maps now use OpenStreetMap's tiles, so they always show streets. Add the token to get the Mapbox style.
+2. Updated [Fixing problems](docs/Fixing%20problems.md) and the build script's message.
+
 ## The shopper website can reach the API
 
 1. Fixed "Couldn't load prices" on the shopper website. The API only trusted the moderator website, so it refused to answer the shopper one. Both websites, and their Vercel aliases, are now in `ALLOWED_ORIGINS`.

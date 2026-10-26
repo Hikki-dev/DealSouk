@@ -23,8 +23,8 @@ if [ -z "$API_BASE_URL" ]; then
 fi
 
 if [ -z "$MAPBOX_ACCESS_TOKEN" ]; then
-  echo "WARNING: MAPBOX_ACCESS_TOKEN is not set. The maps will show blank tiles."
-  echo "         Add it as a Vercel Environment Variable (a restricted public pk. token)."
+  echo "NOTE: MAPBOX_ACCESS_TOKEN is not set. The maps will use OpenStreetMap tiles."
+  echo "      Add it as a Vercel Environment Variable (a restricted public pk. token) for the Mapbox style."
 fi
 
 echo "==> Restoring generated Firebase options from Vercel env..."

@@ -58,7 +58,7 @@ dependencies:
 
   # Media
   image_picker: ^1.1.2
-  mobile_scanner: ^7.2.0
+  mobile_scanner: ^7.4.2
 
   # Secure local storage (crash reporting is handled by sentry_flutter)
   flutter_secure_storage: ^10.3.1
